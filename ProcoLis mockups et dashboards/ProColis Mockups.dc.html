@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/procolis-design-system-1720b415-2c92-4c1a-8e75-dc0a6cdaa9b8/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/procolis-design-system-1720b415-2c92-4c1a-8e75-dc0a6cdaa9b8/tokens/colors.css">
+<link rel="stylesheet" href="_ds/procolis-design-system-1720b415-2c92-4c1a-8e75-dc0a6cdaa9b8/tokens/typography.css">
+<link rel="stylesheet" href="_ds/procolis-design-system-1720b415-2c92-4c1a-8e75-dc0a6cdaa9b8/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/procolis-design-system-1720b415-2c92-4c1a-8e75-dc0a6cdaa9b8/tokens/base.css">
+<link rel="stylesheet" href="_ds/procolis-design-system-1720b415-2c92-4c1a-8e75-dc0a6cdaa9b8/styles.css">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet">
+<script src="_ds/procolis-design-system-1720b415-2c92-4c1a-8e75-dc0a6cdaa9b8/_ds_bundle.js"></script>
+</helmet>
+
+<!-- ============ SECTION LABELS ============ -->
+<div data-drags-parent="1" style="position:absolute;left:80px;top:32px;font-family:var(--font-display);font-weight:800;font-size:26px;letter-spacing:-.02em;color:var(--slate-800)">01 · Site vitrine <span style="color:var(--text-faint);font-weight:600;font-size:16px">— desktop, marketing</span></div>
+<div data-drags-parent="1" style="position:absolute;left:80px;top:1980px;font-family:var(--font-display);font-weight:800;font-size:26px;letter-spacing:-.02em;color:var(--slate-800)">02 · Authentification web <span style="color:var(--text-faint);font-weight:600;font-size:16px">— connexion, inscription, OTP</span></div>
+<div data-drags-parent="1" style="position:absolute;left:80px;top:2820px;font-family:var(--font-display);font-weight:800;font-size:26px;letter-spacing:-.02em;color:var(--slate-800)">03 · Tableau de bord — Client <span style="color:var(--text-faint);font-weight:600;font-size:16px">— web</span></div>
+<div data-drags-parent="1" style="position:absolute;left:80px;top:3830px;font-family:var(--font-display);font-weight:800;font-size:26px;letter-spacing:-.02em;color:var(--slate-800)">04 · Tableau de bord — Chauffeur <span style="color:var(--text-faint);font-weight:600;font-size:16px">— web</span></div>
+<div data-drags-parent="1" style="position:absolute;left:80px;top:4840px;font-family:var(--font-display);font-weight:800;font-size:26px;letter-spacing:-.02em;color:var(--slate-800)">05 · Console Super Admin <span style="color:var(--text-faint);font-weight:600;font-size:16px">— web</span></div>
+
+<!-- ============ FRAME: VITRINE DESKTOP ============ -->
+<div style="position:absolute;left:80px;top:88px;width:1320px;background:var(--surface-card);border-radius:6px;box-shadow:0 4px 24px rgba(11,70,79,.12);overflow:hidden;font-family:var(--font-body)">
+
+  <!-- top nav -->
+  <div style="display:flex;align-items:center;gap:28px;height:72px;padding:0 40px;border-bottom:1px solid var(--border-subtle);background:var(--surface-card)">
+    <div style="display:flex;align-items:center;gap:11px">
+      <img src="assets/logo-procolis.png" alt="Procolis" style="width:34px;height:34px;object-fit:contain"/>
+      <span style="font-family:var(--font-display);font-weight:800;font-size:20px;letter-spacing:-.01em;color:var(--slate-900)">PRO<span style="color:var(--amber-400)">COLIS</span></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:26px;margin-left:18px">
+      <span style="font-weight:600;font-size:14.5px;color:var(--text-body)">Comment ça marche</span>
+      <span style="font-weight:600;font-size:14.5px;color:var(--text-body)">Tarifs</span>
+      <span style="font-weight:600;font-size:14.5px;color:var(--text-body)">Devenir chauffeur</span>
+      <span style="font-weight:600;font-size:14.5px;color:var(--text-body)">Aide</span>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" variant="ghost" hint-size="auto,46px">Se connecter</x-import>
+      <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" icon="arrow_forward" hint-size="auto,46px">Créer un compte</x-import>
+    </div>
+  </div>
+
+  <!-- hero -->
+  <div style="position:relative;background:var(--gradient-brand);color:#fff;padding:64px 40px 72px;overflow:hidden">
+    <div style="position:absolute;right:-80px;top:-60px;width:420px;height:420px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
+    <div style="position:absolute;right:120px;bottom:-120px;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
+    <div style="display:flex;gap:48px;align-items:center;position:relative">
+      <div style="flex:1;max-width:560px">
+        <div style="display:inline-flex;align-items:center;gap:7px;padding:6px 13px;background:rgba(255,255,255,.16);border-radius:999px;font-family:var(--font-display);font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:22px">
+          <span style="font-weight:800;letter-spacing:-1px;color:var(--amber-300)">»</span> Livraison interurbaine
+        </div>
+        <h1 style="font-family:var(--font-display);font-weight:800;font-size:52px;line-height:1.05;letter-spacing:-.025em;margin:0 0 18px">Vos colis,<br/>de ville en ville.</h1>
+        <p style="font-size:18px;line-height:1.55;opacity:.92;margin:0 0 30px;max-width:480px">Déclarez un colis, fixez votre trajet et votre prix, publiez-le en libre service et laissez nos chauffeurs vérifiés vous faire leurs meilleures offres. Suivi en temps réel jusqu'à la livraison.</p>
+        <div style="display:flex;gap:14px;align-items:center">
+          <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" variant="amber" size="lg" icon="add_box" hint-size="auto,54px">Envoyer un colis</x-import>
+          <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" variant="secondary" size="lg" icon="local_shipping" hint-size="auto,54px">Devenir chauffeur</x-import>
+        </div>
+      </div>
+      <!-- tracking card -->
+      <div style="width:380px;flex:none;background:var(--surface-card);border-radius:var(--radius-lg);box-shadow:0 24px 50px rgba(0,0,0,.22);padding:24px;color:var(--text-body)">
+        <div style="font-family:var(--font-display);font-weight:800;font-size:17px;color:var(--text-strong);margin-bottom:4px">Suivez votre colis</div>
+        <div style="font-size:13.5px;color:var(--text-muted);margin-bottom:16px">Entrez votre numéro de suivi.</div>
+        <div style="display:flex;align-items:center;gap:8px;height:50px;padding:0 14px;border:1px solid var(--border-default);border-radius:var(--radius-md);margin-bottom:14px">
+          <span class="material-symbols-rounded" style="font-size:20px;color:var(--text-faint)">qr_code_2</span>
+          <span style="font-family:var(--font-mono);font-weight:600;font-size:15px;color:var(--text-strong);letter-spacing:.02em">PC-7F3K-2291</span>
+        </div>
+        <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" block="true" size="lg" iconTrailing="arrow_forward" hint-size="100%,54px">Suivre</x-import>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border-subtle)">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:var(--radius-sm);background:var(--green-50);color:var(--green-700)"><span class="material-symbols-rounded fill" style="font-size:21px">local_shipping</span></span>
+          <div style="flex:1"><div style="font-family:var(--font-display);font-weight:700;font-size:13.5px;color:var(--text-strong)">Douala → Yaoundé</div><div style="font-size:12px;color:var(--text-muted)">En transit · arrive dans ~4 h</div></div>
+          <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.StatusBadge" status="transit" size="sm" hint-size="auto,22px"></x-import>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- stats band -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);background:var(--slate-900)">
+    <div style="padding:30px 40px;border-right:1px solid rgba(255,255,255,.08)"><div style="font-family:var(--font-display);font-weight:800;font-size:32px;color:#fff">28 villes</div><div style="font-size:13.5px;color:rgba(255,255,255,.6);margin-top:3px">desservies au Cameroun</div></div>
+    <div style="padding:30px 40px;border-right:1px solid rgba(255,255,255,.08)"><div style="font-family:var(--font-display);font-weight:800;font-size:32px;color:#fff">1 200+</div><div style="font-size:13.5px;color:rgba(255,255,255,.6);margin-top:3px">chauffeurs vérifiés</div></div>
+    <div style="padding:30px 40px;border-right:1px solid rgba(255,255,255,.08)"><div style="font-family:var(--font-display);font-weight:800;font-size:32px;color:var(--amber-400)">45 min</div><div style="font-size:13.5px;color:rgba(255,255,255,.6);margin-top:3px">délai moyen avant 1ʳᵉ offre</div></div>
+    <div style="padding:30px 40px"><div style="font-family:var(--font-display);font-weight:800;font-size:32px;color:#fff">98,4 %</div><div style="font-size:13.5px;color:rgba(255,255,255,.6);margin-top:3px">colis livrés à temps</div></div>
+  </div>
+
+  <!-- how it works -->
+  <div style="padding:64px 40px 56px">
+    <div style="text-align:center;max-width:560px;margin:0 auto 44px">
+      <div style="font-family:var(--font-display);font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-primary);margin-bottom:10px">Comment ça marche</div>
+      <h2 style="font-family:var(--font-display);font-weight:800;font-size:34px;letter-spacing:-.02em;color:var(--text-strong);margin:0 0 12px">Trois étapes, d'un quai à l'autre</h2>
+      <p style="font-size:16px;color:var(--text-muted);margin:0;line-height:1.55">Pas d'intermédiaire opaque : vous gardez la main sur le prix et le chauffeur.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+      <div style="background:var(--surface-page);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:28px">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:var(--radius-md);background:var(--color-primary-soft);color:var(--color-primary);margin-bottom:18px"><span class="material-symbols-rounded fill" style="font-size:28px">add_box</span></span>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-faint);font-weight:600;margin-bottom:4px">ÉTAPE 01</div>
+        <div style="font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--text-strong);margin-bottom:8px">Déclarez le colis</div>
+        <p style="font-size:14.5px;color:var(--text-muted);line-height:1.55;margin:0">Trajet, destinataire, poids et prix souhaité. Ajoutez l'option express ou l'assurance.</p>
+      </div>
+      <div style="background:var(--surface-page);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:28px">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:var(--radius-md);background:#E7EEFC;color:#2563EB;margin-bottom:18px"><span class="material-symbols-rounded fill" style="font-size:28px">sell</span></span>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-faint);font-weight:600;margin-bottom:4px">ÉTAPE 02</div>
+        <div style="font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--text-strong);margin-bottom:8px">Recevez des offres</div>
+        <p style="font-size:14.5px;color:var(--text-muted);line-height:1.55;margin:0">Les chauffeurs disponibles sur votre trajet enchérissent — prix, note vocale, message. Vous acceptez la meilleure.</p>
+      </div>
+      <div style="background:var(--surface-page);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:28px">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:var(--radius-md);background:var(--green-50);color:var(--green-700);margin-bottom:18px"><span class="material-symbols-rounded fill" style="font-size:28px">local_shipping</span></span>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-faint);font-weight:600;margin-bottom:4px">ÉTAPE 03</div>
+        <div style="font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--text-strong);margin-bottom:8px">Suivez la livraison</div>
+        <p style="font-size:14.5px;color:var(--text-muted);line-height:1.55;margin:0">Statuts en temps réel, contact direct du chauffeur et preuve de livraison à l'arrivée.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- express callout -->
+  <div style="margin:0 40px 64px;background:var(--slate-900);border-radius:var(--radius-xl);padding:44px 48px;display:flex;align-items:center;gap:40px;overflow:hidden;position:relative">
+    <div style="flex:1">
+      <div style="display:inline-flex;align-items:center;gap:7px;color:var(--red-300);font-family:var(--font-display);font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px"><span style="font-size:22px;letter-spacing:-2px">»»</span> Option express</div>
+      <h2 style="font-family:var(--font-display);font-weight:800;font-size:30px;letter-spacing:-.02em;color:#fff;margin:0 0 12px;line-height:1.15">Un colis urgent ? Priorité haute, départ immédiat.</h2>
+      <p style="font-size:15.5px;color:rgba(255,255,255,.7);margin:0 0 24px;max-width:520px;line-height:1.55">Votre annonce passe en tête du libre service et n'est proposée qu'aux chauffeurs déjà sur la route. Supplément à partir de 2 000 FCFA.</p>
+      <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" variant="amber" size="lg" icon="bolt" hint-size="auto,54px">Envoyer en express</x-import>
+    </div>
+    <div style="flex:none;width:300px">
+      <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.ParcelCard" parcel="{{ expressParcel }}" hint-size="100%,170px"></x-import>
+    </div>
+  </div>
+
+  <!-- footer -->
+  <div style="background:var(--deep-800);color:rgba(255,255,255,.7);padding:40px;display:flex;justify-content:space-between;align-items:flex-start;gap:40px">
+    <div style="max-width:300px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><img src="assets/logo-procolis.png" style="width:30px;height:30px"/><span style="font-family:var(--font-display);font-weight:800;font-size:18px;color:#fff">PRO<span style="color:var(--amber-400)">COLIS</span></span></div>
+      <p style="font-size:13.5px;line-height:1.6;margin:0">La plateforme qui connecte expéditeurs et chauffeurs pour le transport de colis entre les villes d'Afrique centrale.</p>
+    </div>
+    <div style="display:flex;gap:64px">
+      <div><div style="font-family:var(--font-display);font-weight:700;font-size:13px;color:#fff;margin-bottom:12px">Produit</div><div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px"><span>Envoyer un colis</span><span>Suivre un colis</span><span>Tarifs</span></div></div>
+      <div><div style="font-family:var(--font-display);font-weight:700;font-size:13px;color:#fff;margin-bottom:12px">Chauffeurs</div><div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px"><span>Devenir chauffeur</span><span>Garages partenaires</span><span>Libre service</span></div></div>
+      <div><div style="font-family:var(--font-display);font-weight:700;font-size:13px;color:#fff;margin-bottom:12px">Société</div><div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px"><span>À propos</span><span>Aide & support</span><span>Conditions</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 02: AUTH WEB (split-screen) ============ -->
+
+<!-- AUTH: Login -->
+<div style="position:absolute;left:80px;top:2030px;width:1120px">
+  <div data-drags-parent="1" style="position:absolute;top:-26px;left:4px;font-family:var(--font-display);font-weight:600;font-size:12.5px;color:var(--text-muted)">Connexion</div>
+  <div style="display:flex;height:680px;background:var(--surface-card);border-radius:8px;box-shadow:0 4px 24px rgba(11,70,79,.12);overflow:hidden">
+    <!-- brand panel -->
+    <div style="position:relative;width:460px;flex:none;background:var(--gradient-brand);color:#fff;padding:48px 44px;display:flex;flex-direction:column;overflow:hidden">
+      <div style="position:absolute;right:-90px;top:-70px;width:360px;height:360px;border-radius:50%;background:rgba(255,255,255,.07)"></div>
+      <div style="position:absolute;left:-60px;bottom:-90px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
+      <div style="display:flex;align-items:center;gap:11px;position:relative"><img src="assets/logo-procolis.png" style="width:38px;height:38px"/><span style="font-family:var(--font-display);font-weight:800;font-size:21px">PRO COLIS</span></div>
+      <div style="margin-top:auto;position:relative">
+        <div style="display:inline-flex;align-items:center;justify-content:center;width:84px;height:84px;border-radius:24px;background:rgba(255,255,255,.16);margin-bottom:24px"><span class="material-symbols-rounded fill" style="font-size:46px">local_shipping</span></div>
+        <h2 style="font-family:var(--font-display);font-weight:800;font-size:30px;line-height:1.15;letter-spacing:-.02em;margin:0 0 12px">Pilotez vos colis<br/>depuis le web.</h2>
+        <p style="font-size:15px;opacity:.9;line-height:1.55;margin:0;max-width:320px">Connectez-vous pour créer des colis, comparer les offres et suivre vos livraisons en temps réel.</p>
+      </div>
+    </div>
+    <!-- form -->
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:56px 72px">
+      <h1 style="font-family:var(--font-display);font-weight:800;font-size:30px;color:var(--text-strong);margin:0 0 8px;letter-spacing:-.01em">Bon retour 👋</h1>
+      <p style="font-size:15px;color:var(--text-muted);margin:0 0 32px">Entrez votre numéro pour recevoir un code de vérification.</p>
+      <label style="font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--text-body);margin-bottom:8px;display:block">Numéro de téléphone</label>
+      <div style="display:flex;gap:10px;margin-bottom:22px">
+        <div style="display:flex;align-items:center;gap:6px;padding:0 14px;height:50px;border:1px solid var(--border-default);border-radius:var(--radius-md);background:var(--surface-card);font-weight:700;color:var(--text-body);font-size:15px">🇨🇲 +237</div>
+        <div style="flex:1;display:flex;align-items:center;height:50px;padding:0 14px;border:1px solid var(--border-default);border-radius:var(--radius-md);background:var(--surface-card);font-family:var(--font-mono);font-weight:600;font-size:16px;color:var(--text-strong)">6 78 45 90 12</div>
+      </div>
+      <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" block="true" size="lg" iconTrailing="arrow_forward" hint-size="100%,54px">Recevoir le code</x-import>
+      <div style="display:flex;align-items:center;gap:12px;margin:26px 0"><span style="flex:1;height:1px;background:var(--border-subtle)"></span><span style="font-size:12px;color:var(--text-faint)">ou</span><span style="flex:1;height:1px;background:var(--border-subtle)"></span></div>
+      <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" block="true" variant="secondary" size="lg" icon="pin" hint-size="100%,54px">Se connecter avec un code PIN</x-import>
+      <p style="text-align:center;font-size:14px;color:var(--text-muted);margin:28px 0 0">Pas encore de compte ? <span style="color:var(--text-link);font-weight:700">Créer un compte</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH: Register -->
+<div style="position:absolute;left:1280px;top:2030px;width:1120px">
+  <div data-drags-parent="1" style="position:absolute;top:-26px;left:4px;font-family:var(--font-display);font-weight:600;font-size:12.5px;color:var(--text-muted)">Inscription</div>
+  <div style="display:flex;height:680px;background:var(--surface-card);border-radius:8px;box-shadow:0 4px 24px rgba(11,70,79,.12);overflow:hidden">
+    <div style="position:relative;width:400px;flex:none;background:var(--gradient-brand);color:#fff;padding:48px 40px;display:flex;flex-direction:column;overflow:hidden">
+      <div style="position:absolute;right:-90px;top:-70px;width:340px;height:340px;border-radius:50%;background:rgba(255,255,255,.07)"></div>
+      <div style="display:flex;align-items:center;gap:11px;position:relative"><img src="assets/logo-procolis.png" style="width:38px;height:38px"/><span style="font-family:var(--font-display);font-weight:800;font-size:21px">PRO COLIS</span></div>
+      <div style="margin-top:auto;position:relative">
+        <h2 style="font-family:var(--font-display);font-weight:800;font-size:27px;line-height:1.18;letter-spacing:-.02em;margin:0 0 18px">Rejoignez le réseau Procolis.</h2>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;align-items:center;gap:11px;font-size:14.5px"><span class="material-symbols-rounded" style="font-size:22px;color:var(--amber-300)">verified</span>Chauffeurs vérifiés & notés</div>
+          <div style="display:flex;align-items:center;gap:11px;font-size:14.5px"><span class="material-symbols-rounded" style="font-size:22px;color:var(--amber-300)">sell</span>Vous fixez le prix, les offres viennent</div>
+          <div style="display:flex;align-items:center;gap:11px;font-size:14.5px"><span class="material-symbols-rounded" style="font-size:22px;color:var(--amber-300)">qr_code_2</span>Suivi de bout en bout</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:44px 64px;overflow:hidden">
+      <h1 style="font-family:var(--font-display);font-weight:800;font-size:27px;color:var(--text-strong);margin:0 0 6px;letter-spacing:-.01em">Créer un compte</h1>
+      <p style="font-size:14px;color:var(--text-muted);margin:0 0 22px">Quelques informations et vous êtes prêt.</p>
+      <div style="margin-bottom:18px">
+        <div style="font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--text-body);margin-bottom:8px">Je veux…</div>
+        <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.SegmentedControl" block="true" value="client" options="{{ roleOptions }}" hint-size="100%,42px"></x-import>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+        <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Input" label="Nom complet" icon="badge" placeholder="Ex : Aïcha Mballa" hint-size="100%,76px"></x-import>
+        <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Select" label="Ville" icon="location_on" placeholder="Choisir" options="{{ cities }}" hint-size="100%,76px"></x-import>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:6px;padding:0 12px;height:48px;border:1px solid var(--border-default);border-radius:var(--radius-md);background:var(--surface-card);font-weight:700;color:var(--text-body);font-size:14px">🇨🇲 +237</div>
+        <div style="flex:1"><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Input" label="Téléphone" placeholder="6 00 00 00 00" mono="true" hint-size="100%,76px"></x-import></div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:20px">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:var(--color-primary);color:#fff;flex:none"><span class="material-symbols-rounded" style="font-size:16px">check</span></span>
+        <span style="font-size:13px;color:var(--text-body);line-height:1.45">J'accepte les <span style="color:var(--text-link);font-weight:600">conditions de transport</span> et la politique de confidentialité.</span>
+      </div>
+      <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" block="true" size="lg" icon="person_add" hint-size="100%,54px">Créer mon compte</x-import>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH: OTP -->
+<div style="position:absolute;left:2480px;top:2030px;width:1120px">
+  <div data-drags-parent="1" style="position:absolute;top:-26px;left:4px;font-family:var(--font-display);font-weight:600;font-size:12.5px;color:var(--text-muted)">Vérification OTP</div>
+  <div style="display:flex;height:680px;background:var(--surface-card);border-radius:8px;box-shadow:0 4px 24px rgba(11,70,79,.12);overflow:hidden">
+    <div style="position:relative;width:460px;flex:none;background:var(--gradient-brand);color:#fff;padding:48px 44px;display:flex;flex-direction:column;overflow:hidden">
+      <div style="position:absolute;left:-70px;bottom:-80px;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.07)"></div>
+      <div style="display:flex;align-items:center;gap:11px;position:relative"><img src="assets/logo-procolis.png" style="width:38px;height:38px"/><span style="font-family:var(--font-display);font-weight:800;font-size:21px">PRO COLIS</span></div>
+      <div style="margin-top:auto;position:relative">
+        <div style="display:inline-flex;align-items:center;justify-content:center;width:84px;height:84px;border-radius:24px;background:rgba(255,255,255,.16);margin-bottom:24px"><span class="material-symbols-rounded fill" style="font-size:46px">sms</span></div>
+        <h2 style="font-family:var(--font-display);font-weight:800;font-size:30px;line-height:1.15;letter-spacing:-.02em;margin:0 0 12px">Sécurité d'abord.</h2>
+        <p style="font-size:15px;opacity:.9;line-height:1.55;margin:0;max-width:320px">Un code unique protège votre compte à chaque connexion sur un nouvel appareil.</p>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:56px 80px;text-align:center">
+      <h1 style="font-family:var(--font-display);font-weight:800;font-size:28px;color:var(--text-strong);margin:0 0 8px;letter-spacing:-.01em">Entrez le code</h1>
+      <p style="font-size:15px;color:var(--text-muted);margin:0 0 36px">Code à 4 chiffres envoyé au <span style="font-family:var(--font-mono);color:var(--text-body)">+237 6 78 45 90 12</span></p>
+      <div style="display:flex;gap:16px;justify-content:center;margin-bottom:30px">
+        <div style="width:72px;height:84px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:32px;color:var(--text-strong);border:2px solid var(--color-primary);border-radius:var(--radius-md);background:var(--surface-card)">4</div>
+        <div style="width:72px;height:84px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:32px;color:var(--text-strong);border:2px solid var(--color-primary);border-radius:var(--radius-md);background:var(--surface-card)">7</div>
+        <div style="width:72px;height:84px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:32px;color:var(--text-strong);border:2px solid var(--color-primary);border-radius:var(--radius-md);background:var(--surface-card)">9</div>
+        <div style="width:72px;height:84px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:32px;color:var(--color-primary);border:2px solid var(--color-primary);border-radius:var(--radius-md);background:var(--surface-card);box-shadow:var(--ring-focus)">|</div>
+      </div>
+      <p style="font-size:14px;color:var(--text-muted);margin:0 0 28px">Renvoyer le code dans <span style="font-family:var(--font-mono);color:var(--text-body)">00:42</span></p>
+      <div style="max-width:340px;margin:0 auto;width:100%"><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" block="true" size="lg" hint-size="100%,54px">Vérifier</x-import></div>
+      <div style="margin-top:16px"><span style="color:var(--text-link);font-family:var(--font-display);font-weight:600;font-size:14px">Modifier le numéro</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 03: DASHBOARD CLIENT (web) ============ -->
+<div style="position:absolute;left:80px;top:2870px;width:1340px">
+  <div data-drags-parent="1" style="position:absolute;top:-26px;left:4px;font-family:var(--font-display);font-weight:600;font-size:12.5px;color:var(--text-muted)">Espace client — tableau de bord</div>
+  <div style="display:flex;height:880px;background:var(--surface-page);border-radius:8px;box-shadow:0 4px 24px rgba(11,70,79,.12);overflow:hidden;font-family:var(--font-body)">
+    <!-- sidebar -->
+    <aside style="width:244px;flex:none;background:var(--slate-900);color:#fff;display:flex;flex-direction:column;padding:18px 14px">
+      <div style="display:flex;align-items:center;gap:10px;padding:6px 8px 20px"><img src="assets/logo-procolis.png" style="width:32px;height:32px"/><span style="font-family:var(--font-display);font-weight:800;font-size:17px">PRO<span style="color:var(--amber-400)">COLIS</span></span></div>
+      <div style="display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:var(--radius-sm);background:var(--teal-500);color:#fff;font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:4px"><span class="material-symbols-rounded fill" style="font-size:21px">dashboard</span>Tableau de bord</div>
+      <div style="display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:4px"><span class="material-symbols-rounded" style="font-size:21px">package_2</span>Mes colis</div>
+      <div style="display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:4px"><span class="material-symbols-rounded" style="font-size:21px">sell</span>Libre service</div>
+      <div style="display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:4px"><span class="material-symbols-rounded" style="font-size:21px">qr_code_2</span>Suivi</div>
+      <div style="display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:4px"><span class="material-symbols-rounded" style="font-size:21px">account_balance_wallet</span>Points & paiements</div>
+      <div style="display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px"><span class="material-symbols-rounded" style="font-size:21px">person</span>Profil</div>
+      <div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 8px;border-top:1px solid rgba(255,255,255,.1)">
+        <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Avatar" name="Aïcha Mballa" size="sm" status="online" hint-size="36px,36px"></x-import>
+        <div style="flex:1;min-width:0"><div style="font-family:var(--font-display);font-weight:700;font-size:13.5px">Aïcha Mballa</div><div style="font-size:11.5px;color:rgba(255,255,255,.55)">Client · Douala</div></div>
+        <span class="material-symbols-rounded" style="font-size:20px;color:rgba(255,255,255,.6)">logout</span>
+      </div>
+    </aside>
+    <!-- main -->
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+      <div style="height:64px;flex:none;display:flex;align-items:center;gap:16px;padding:0 24px;background:var(--surface-card);border-bottom:1px solid var(--border-subtle)">
+        <h1 style="font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--text-strong);margin:0">Bonjour, Aïcha</h1>
+        <div style="display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;background:var(--surface-sunken);border-radius:999px;width:300px;color:var(--text-muted)"><span class="material-symbols-rounded" style="font-size:20px">search</span><span style="font-size:14px">Rechercher un colis, un suivi…</span></div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.IconButton" icon="notifications" hint-size="44px,44px"></x-import>
+          <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" icon="add" hint-size="auto,46px">Nouveau colis</x-import>
+        </div>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:24px">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px">
+          <sc-for list="{{ clientKpis }}" as="k" hint-placeholder-count="4">
+            <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.StatBox" icon="{{ k.icon }}" tone="{{ k.tone }}" value="{{ k.value }}" label="{{ k.label }}" delta="{{ k.delta }}" hint-size="100%,104px"></x-import>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start">
+          <!-- left -->
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-xs);overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border-subtle)"><h3 style="margin:0;font-family:var(--font-display);font-weight:700;font-size:15.5px;color:var(--text-strong)">Mes colis récents</h3><span style="color:var(--text-link);font-family:var(--font-display);font-weight:600;font-size:13px">Tout voir</span></div>
+              <div style="display:grid;grid-template-columns:128px 1fr 132px 110px 40px;padding:11px 18px;border-bottom:1px solid var(--border-subtle);font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint)"><span>Suivi</span><span>Trajet</span><span>Statut</span><span>Prix</span><span></span></div>
+              <sc-for list="{{ parcels }}" as="p" hint-placeholder-count="4">
+                <div style="display:grid;grid-template-columns:128px 1fr 132px 110px 40px;align-items:center;padding:13px 18px;border-bottom:1px solid var(--slate-100)">
+                  <span style="font-family:var(--font-mono);font-weight:600;font-size:12.5px;color:var(--text-strong)">{{ p.tracking }}</span>
+                  <span style="display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--text-body);font-weight:500">{{ p.from }}<span class="material-symbols-rounded" style="font-size:16px;color:var(--text-faint)">arrow_right_alt</span>{{ p.to }}</span>
+                  <span><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.StatusBadge" status="{{ p.status }}" size="sm" hint-size="auto,22px"></x-import></span>
+                  <span style="font-family:var(--font-mono);font-weight:700;font-size:13.5px;color:var(--teal-600)">{{ p.price }}</span>
+                  <span class="material-symbols-rounded" style="font-size:20px;color:var(--text-faint)">chevron_right</span>
+                </div>
+              </sc-for>
+            </div>
+            <!-- suivi en cours -->
+            <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-xs);padding:18px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><h3 style="margin:0;font-family:var(--font-display);font-weight:700;font-size:15.5px;color:var(--text-strong)">Suivi en cours</h3><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.StatusBadge" status="transit" size="sm" hint-size="auto,22px"></x-import></div>
+              <div style="display:flex;align-items:center;gap:14px">
+                <div><div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-faint)">Départ</div><div style="font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--text-strong)">Douala</div></div>
+                <div style="flex:1;position:relative;height:3px;border-radius:3px;background:var(--slate-200)"><div style="position:absolute;left:0;top:0;height:3px;width:55%;border-radius:3px;background:var(--green-500)"></div><span class="material-symbols-rounded fill" style="position:absolute;left:53%;top:-11px;font-size:24px;color:var(--green-600)">local_shipping</span></div>
+                <div style="text-align:right"><div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-faint)">Arrivée</div><div style="font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--text-strong)">Yaoundé</div></div>
+              </div>
+              <div style="display:flex;gap:24px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border-subtle)">
+                <div><div style="font-size:12px;color:var(--text-muted)">Suivi</div><div style="font-family:var(--font-mono);font-weight:600;font-size:13.5px;color:var(--text-strong);margin-top:1px">PC-7F3K-2291</div></div>
+                <div><div style="font-size:12px;color:var(--text-muted)">Chauffeur</div><div style="font-family:var(--font-display);font-weight:600;font-size:13.5px;color:var(--text-strong);margin-top:1px">Jean-Paul Kamga</div></div>
+                <div><div style="font-size:12px;color:var(--text-muted)">Temps restant</div><div style="font-family:var(--font-mono);font-weight:600;font-size:13.5px;color:var(--text-strong);margin-top:1px">~4 h</div></div>
+                <div style="margin-left:auto"><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" size="sm" variant="secondary" iconTrailing="chevron_right" hint-size="auto,36px">Détails</x-import></div>
+              </div>
+            </div>
+          </div>
+          <!-- right -->
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div style="background:var(--gradient-brand);border-radius:var(--radius-lg);padding:20px;color:#fff;box-shadow:var(--shadow-brand)">
+              <div style="display:flex;align-items:center;gap:12px"><span style="display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:var(--radius-md);background:rgba(255,255,255,.18)"><span class="material-symbols-rounded fill" style="font-size:23px">account_balance_wallet</span></span><div><div style="font-size:11px;opacity:.85;text-transform:uppercase;letter-spacing:.07em;font-weight:700">Solde de points</div><div style="font-family:var(--font-mono);font-weight:700;font-size:24px">2 450<span style="font-size:13px;opacity:.8"> pts</span></div></div></div>
+              <div style="display:flex;gap:10px;margin-top:16px"><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" variant="amber" size="sm" block="true" icon="add" hint-size="100%,36px">Recharger</x-import><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" variant="secondary" size="sm" block="true" icon="receipt_long" hint-size="100%,36px">Historique</x-import></div>
+            </div>
+            <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-xs);overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border-subtle)"><h3 style="margin:0;font-family:var(--font-display);font-weight:700;font-size:15.5px;color:var(--text-strong)">Offres reçues</h3><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Badge" tone="primary" hint-size="auto,22px">PC-3M9P-5512</x-import></div>
+              <sc-for list="{{ offers }}" as="o" hint-placeholder-count="3">
+                <div style="padding:13px 18px;border-bottom:1px solid var(--slate-100);display:flex;align-items:center;gap:11px">
+                  <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Avatar" name="{{ o.driver }}" size="sm" status="online" hint-size="36px,36px"></x-import>
+                  <div style="flex:1;min-width:0"><div style="font-family:var(--font-display);font-weight:700;font-size:13.5px;color:var(--text-strong);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.driver }}</div><div style="font-size:11.5px;color:var(--text-muted)">{{ o.garage }} · {{ o.rating }} ★</div></div>
+                  <div style="text-align:right"><div style="font-family:var(--font-mono);font-weight:700;font-size:14px;color:var(--teal-600)">{{ o.price }}</div><div style="font-size:10.5px;color:var(--text-faint)">{{ o.when }}</div></div>
+                </div>
+              </sc-for>
+              <div style="padding:12px 18px;display:flex;gap:8px"><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" size="sm" variant="secondary" block="true" hint-size="100%,36px">Négocier</x-import><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" size="sm" block="true" icon="check" hint-size="100%,36px">Accepter</x-import></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 04: DASHBOARD CHAUFFEUR (web) ============ -->
+<div style="position:absolute;left:80px;top:3880px;width:1340px">
+  <div data-drags-parent="1" style="position:absolute;top:-26px;left:4px;font-family:var(--font-display);font-weight:600;font-size:12.5px;color:var(--text-muted)">Espace chauffeur — tableau de bord</div>
+  <div style="display:flex;height:880px;background:var(--surface-page);border-radius:8px;box-shadow:0 4px 24px rgba(11,70,79,.12);overflow:hidden;font-family:var(--font-body)">
+    <!-- sidebar -->
+    <aside style="width:244px;flex:none;background:var(--slate-900);color:#fff;display:flex;flex-direction:column;padding:18px 14px">
+      <div style="display:flex;align-items:center;gap:10px;padding:6px 8px 20px"><img src="assets/logo-procolis.png" style="width:32px;height:32px"/><span style="font-family:var(--font-display);font-weight:800;font-size:17px">PRO<span style="color:var(--amber-400)">COLIS</span></span></div>
+      <div style="display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:var(--radius-sm);background:var(--teal-500);color:#fff;font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:4px"><span class="material-symbols-rounded fill" style="font-size:21px">dashboard</span>Tableau de bord</div>
+      <div style="display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:4px"><span class="material-symbols-rounded" style="font-size:21px">sell</span>Libre service</div>
+      <div style="display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:4px"><span class="material-symbols-rounded" style="font-size:21px">local_shipping</span>Mes missions</div>
+      <div style="display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:4px"><span class="material-symbols-rounded" style="font-size:21px">payments</span>Revenus</div>
+      <div style="display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:4px"><span class="material-symbols-rounded" style="font-size:21px">history</span>Historique</div>
+      <div style="display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px"><span class="material-symbols-rounded" style="font-size:21px">garage</span>Mon garage</div>
+      <div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 8px;border-top:1px solid rgba(255,255,255,.1)">
+        <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Avatar" name="Jean-Paul Kamga" size="sm" status="busy" hint-size="36px,36px"></x-import>
+        <div style="flex:1;min-width:0"><div style="font-family:var(--font-display);font-weight:700;font-size:13.5px">Jean-Paul K.</div><div style="font-size:11.5px;color:rgba(255,255,255,.55)">Chauffeur · Garage Akwa</div></div>
+        <span class="material-symbols-rounded" style="font-size:20px;color:rgba(255,255,255,.6)">logout</span>
+      </div>
+    </aside>
+    <!-- main -->
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+      <div style="height:64px;flex:none;display:flex;align-items:center;gap:16px;padding:0 24px;background:var(--surface-card);border-bottom:1px solid var(--border-subtle)">
+        <h1 style="font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--text-strong);margin:0">Bonjour, Jean-Paul</h1>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:14px">
+          <div style="display:flex;align-items:center;gap:9px;padding:7px 14px;background:var(--green-50);border-radius:999px"><span style="width:9px;height:9px;border-radius:50%;background:var(--green-500)"></span><span style="font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--green-700)">Disponible</span><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Switch" checked="true" hint-size="44px,26px"></x-import></div>
+          <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.IconButton" icon="notifications" hint-size="44px,44px"></x-import>
+        </div>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:24px">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px">
+          <sc-for list="{{ driverKpis }}" as="k" hint-placeholder-count="4">
+            <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.StatBox" icon="{{ k.icon }}" tone="{{ k.tone }}" value="{{ k.value }}" label="{{ k.label }}" delta="{{ k.delta }}" hint-size="100%,104px"></x-import>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start">
+          <!-- left -->
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <!-- mission en cours -->
+            <div style="background:var(--gradient-brand);border-radius:var(--radius-lg);padding:20px;color:#fff;box-shadow:var(--shadow-brand)">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><span style="font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;opacity:.9">Mission en cours</span><span style="display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-weight:600;font-size:13px;background:rgba(255,255,255,.16);padding:4px 10px;border-radius:999px"><span class="material-symbols-rounded" style="font-size:15px">qr_code_2</span>PC-7F3K-2291</span></div>
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+                <div><div style="font-size:11px;opacity:.8;text-transform:uppercase;letter-spacing:.07em;font-weight:700">Départ</div><div style="font-family:var(--font-display);font-weight:700;font-size:19px">Douala</div></div>
+                <div style="flex:1;position:relative;height:2px;background:rgba(255,255,255,.4)"><span class="material-symbols-rounded" style="position:absolute;left:52%;top:-12px;font-size:24px;color:#fff">local_shipping</span></div>
+                <div style="text-align:right"><div style="font-size:11px;opacity:.8;text-transform:uppercase;letter-spacing:.07em;font-weight:700">Arrivée</div><div style="font-family:var(--font-display);font-weight:700;font-size:19px">Yaoundé</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(255,255,255,.14);border-radius:var(--radius-md);margin-bottom:16px">
+                <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Avatar" name="Aïcha Mballa" size="sm" hint-size="36px,36px"></x-import>
+                <div style="flex:1"><div style="font-family:var(--font-display);font-weight:700;font-size:14px">Aïcha Mballa</div><div style="font-size:12px;opacity:.85">Destinataire : Moussa Traoré · Yaoundé</div></div>
+                <span class="material-symbols-rounded" style="font-size:22px">call</span>
+              </div>
+              <div style="display:flex;gap:10px"><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" variant="secondary" block="true" icon="navigation" hint-size="100%,46px">Itinéraire</x-import><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" variant="amber" block="true" icon="check_circle" hint-size="100%,46px">Marquer arrivé</x-import></div>
+            </div>
+            <!-- libre service pool -->
+            <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-xs);overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border-subtle)"><h3 style="margin:0;font-family:var(--font-display);font-weight:700;font-size:15.5px;color:var(--text-strong)">Colis en libre service</h3><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" size="sm" variant="secondary" icon="filter_list" hint-size="auto,36px">Mes trajets</x-import></div>
+              <sc-for list="{{ freeParcels }}" as="p" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--slate-100)">
+                  <span style="display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:var(--radius-md);background:var(--color-primary-soft);color:var(--color-primary);flex:none"><span class="material-symbols-rounded fill" style="font-size:22px">package_2</span></span>
+                  <div style="flex:1;min-width:0">
+                    <div style="display:flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--font-display);font-weight:700;font-size:14.5px;color:var(--text-strong)">{{ p.from }}<span class="material-symbols-rounded" style="font-size:16px;color:var(--text-faint)">arrow_right_alt</span>{{ p.to }}</span></div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:1px"><span style="font-family:var(--font-mono)">{{ p.tracking }}</span> · {{ p.weight }} · {{ p.distance }} · {{ p.offers }} offres</div>
+                  </div>
+                  <span style="font-family:var(--font-mono);font-weight:700;font-size:15px;color:var(--teal-600)">{{ p.price }}</span>
+                  <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" size="sm" icon="gavel" hint-size="auto,36px">Faire une offre</x-import>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <!-- right -->
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-xs);padding:18px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h3 style="margin:0;font-family:var(--font-display);font-weight:700;font-size:15.5px;color:var(--text-strong)">Revenus · 7 jours</h3><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Badge" tone="green" hint-size="auto,22px">+14%</x-import></div>
+              <div style="font-family:var(--font-mono);font-weight:700;font-size:26px;color:var(--text-strong);margin-bottom:14px">214 000 <span style="font-size:14px;color:var(--text-muted)">FCFA</span></div>
+              <div style="display:flex;align-items:flex-end;gap:8px;height:90px">
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:46%"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:62%"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:40%"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:78%"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:55%"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:88%"></div>
+                <div style="flex:1;background:var(--amber-400);border-radius:5px 5px 0 0;height:100%"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10.5px;color:var(--text-faint);font-family:var(--font-mono)"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+            </div>
+            <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-xs);overflow:hidden">
+              <div style="padding:16px 18px;border-bottom:1px solid var(--border-subtle)"><h3 style="margin:0;font-family:var(--font-display);font-weight:700;font-size:15.5px;color:var(--text-strong)">Mes offres</h3></div>
+              <div style="display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--slate-100)"><div style="flex:1"><div style="display:inline-flex;align-items:center;gap:5px;font-family:var(--font-display);font-weight:700;font-size:13.5px;color:var(--text-strong)">Douala <span class="material-symbols-rounded" style="font-size:15px;color:var(--text-faint)">arrow_right_alt</span> Yaoundé</div><div style="font-size:11.5px;color:var(--text-muted);font-family:var(--font-mono)">11 000 FCFA proposés</div></div><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Badge" tone="green" icon="check" hint-size="auto,22px">Acceptée</x-import></div>
+              <div style="display:flex;align-items:center;gap:10px;padding:13px 18px"><div style="flex:1"><div style="display:inline-flex;align-items:center;gap:5px;font-family:var(--font-display);font-weight:700;font-size:13.5px;color:var(--text-strong)">Yaoundé <span class="material-symbols-rounded" style="font-size:15px;color:var(--text-faint)">arrow_right_alt</span> Bafoussam</div><div style="font-size:11.5px;color:var(--text-muted);font-family:var(--font-mono)">9 000 FCFA proposés</div></div><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Badge" tone="amber" hint-size="auto,22px">En attente</x-import></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 05: CONSOLE SUPER ADMIN (web) ============ -->
+<div style="position:absolute;left:80px;top:4890px;width:1340px">
+  <div data-drags-parent="1" style="position:absolute;top:-26px;left:4px;font-family:var(--font-display);font-weight:600;font-size:12.5px;color:var(--text-muted)">Super Admin — console de gouvernance</div>
+  <div style="display:flex;height:900px;background:var(--surface-page);border-radius:8px;box-shadow:0 4px 24px rgba(11,70,79,.12);overflow:hidden;font-family:var(--font-body)">
+    <!-- sidebar -->
+    <aside style="width:244px;flex:none;background:var(--slate-900);color:#fff;display:flex;flex-direction:column;padding:18px 14px">
+      <div style="display:flex;align-items:center;gap:10px;padding:6px 8px 14px"><img src="assets/logo-procolis.png" style="width:32px;height:32px"/><span style="font-family:var(--font-display);font-weight:800;font-size:17px">PRO<span style="color:var(--amber-400)">COLIS</span></span></div>
+      <div style="font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.32);padding:14px 12px 6px">Pilotage</div>
+      <div style="display:flex;align-items:center;gap:12px;height:40px;padding:0 12px;border-radius:var(--radius-sm);background:var(--teal-500);color:#fff;font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:3px"><span class="material-symbols-rounded fill" style="font-size:20px">dashboard</span>Tableau de bord</div>
+      <div style="display:flex;align-items:center;gap:12px;height:40px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:3px"><span class="material-symbols-rounded" style="font-size:20px">package_2</span>Colis</div>
+      <div style="display:flex;align-items:center;gap:12px;height:40px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:3px"><span class="material-symbols-rounded" style="font-size:20px">local_shipping</span>Chauffeurs</div>
+      <div style="display:flex;align-items:center;gap:12px;height:40px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px"><span class="material-symbols-rounded" style="font-size:20px">group</span>Utilisateurs</div>
+      <div style="font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.32);padding:16px 12px 6px">Gestion</div>
+      <div style="display:flex;align-items:center;gap:12px;height:40px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:3px"><span class="material-symbols-rounded" style="font-size:20px">garage</span>Garages</div>
+      <div style="display:flex;align-items:center;gap:12px;height:40px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px;margin-bottom:3px"><span class="material-symbols-rounded" style="font-size:20px">monitoring</span>Statistiques</div>
+      <div style="display:flex;align-items:center;gap:12px;height:40px;padding:0 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,.66);font-family:var(--font-display);font-weight:600;font-size:14px"><span class="material-symbols-rounded" style="font-size:20px">settings</span>Paramètres</div>
+      <div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 8px;border-top:1px solid rgba(255,255,255,.1)">
+        <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Avatar" name="Konan Bamba" size="sm" status="online" hint-size="36px,36px"></x-import>
+        <div style="flex:1;min-width:0"><div style="font-family:var(--font-display);font-weight:700;font-size:13.5px">Konan Bamba</div><div style="font-size:11.5px;color:rgba(255,255,255,.55)">Super Admin</div></div>
+        <span class="material-symbols-rounded" style="font-size:20px;color:rgba(255,255,255,.6)">logout</span>
+      </div>
+    </aside>
+    <!-- main -->
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+      <div style="height:64px;flex:none;display:flex;align-items:center;gap:16px;padding:0 24px;background:var(--surface-card);border-bottom:1px solid var(--border-subtle)">
+        <h1 style="font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--text-strong);margin:0">Tableau de bord</h1>
+        <div style="display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;background:var(--surface-sunken);border-radius:999px;width:320px;color:var(--text-muted)"><span class="material-symbols-rounded" style="font-size:20px">search</span><span style="font-size:14px">Rechercher un colis, un chauffeur, un garage…</span></div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.IconButton" icon="notifications" hint-size="44px,44px"></x-import>
+          <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.IconButton" icon="help" hint-size="44px,44px"></x-import>
+          <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" icon="add" hint-size="auto,46px">Nouveau garage</x-import>
+        </div>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:24px">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px">
+          <sc-for list="{{ adminKpis }}" as="k" hint-placeholder-count="4">
+            <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.StatBox" icon="{{ k.icon }}" tone="{{ k.tone }}" value="{{ k.value }}" label="{{ k.label }}" delta="{{ k.delta }}" hint-size="100%,104px"></x-import>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start">
+          <!-- left -->
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-xs);overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border-subtle)"><h3 style="margin:0;font-family:var(--font-display);font-weight:700;font-size:15.5px;color:var(--text-strong)">Colis récents</h3><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Button" size="sm" variant="secondary" icon="filter_list" hint-size="auto,36px">Filtrer</x-import></div>
+              <div style="display:grid;grid-template-columns:118px 130px 1fr 150px 120px 96px;padding:11px 18px;border-bottom:1px solid var(--border-subtle);font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint)"><span>Suivi</span><span>Client</span><span>Trajet</span><span>Chauffeur</span><span>Statut</span><span>Prix</span></div>
+              <sc-for list="{{ adminParcels }}" as="p" hint-placeholder-count="5">
+                <div style="display:grid;grid-template-columns:118px 130px 1fr 150px 120px 96px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--slate-100)">
+                  <span style="font-family:var(--font-mono);font-weight:600;font-size:12px;color:var(--text-strong)">{{ p.tracking }}</span>
+                  <span style="font-size:13px;color:var(--text-body)">{{ p.client }}</span>
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--text-body);font-weight:500">{{ p.from }}<span class="material-symbols-rounded" style="font-size:15px;color:var(--text-faint)">arrow_right_alt</span>{{ p.to }}</span>
+                  <span style="font-size:12.5px">
+                    <sc-if value="{{ p.assigned }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:6px"><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Avatar" name="{{ p.driverDisplay }}" size="xs" hint-size="28px,28px"></x-import><span style="color:var(--text-body)">{{ p.driverDisplay }}</span></span></sc-if>
+                    <sc-if value="{{ p.unassigned }}"><span style="color:var(--text-faint);font-style:italic">Non assigné</span></sc-if>
+                  </span>
+                  <span><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.StatusBadge" status="{{ p.status }}" size="sm" hint-size="auto,22px"></x-import></span>
+                  <span style="font-family:var(--font-mono);font-weight:700;font-size:12.5px;color:var(--teal-600)">{{ p.price }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <!-- volume chart -->
+            <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-xs);padding:18px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><h3 style="margin:0;font-family:var(--font-display);font-weight:700;font-size:15.5px;color:var(--text-strong)">Volume de colis · 12 mois</h3><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Badge" tone="primary" hint-size="auto,22px">+12%</x-import></div>
+              <div style="display:flex;align-items:flex-end;gap:8px;height:120px">
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:38%;opacity:.6"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:44%;opacity:.62"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:41%;opacity:.65"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:52%;opacity:.68"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:49%;opacity:.71"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:61%;opacity:.74"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:58%;opacity:.77"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:67%;opacity:.8"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:72%;opacity:.85"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:70%;opacity:.9"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:84%;opacity:.95"></div>
+                <div style="flex:1;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border-radius:5px 5px 0 0;height:100%"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:var(--text-faint);font-family:var(--font-mono)"><span>J</span><span>F</span><span>M</span><span>A</span><span>M</span><span>J</span><span>J</span><span>A</span><span>S</span><span>O</span><span>N</span><span>D</span></div>
+            </div>
+          </div>
+          <!-- right -->
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-xs);overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border-subtle)"><h3 style="margin:0;font-family:var(--font-display);font-weight:700;font-size:15.5px;color:var(--text-strong)">Chauffeurs</h3><x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Badge" tone="green" hint-size="auto,22px">2 dispo</x-import></div>
+              <sc-for list="{{ drivers }}" as="d" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--slate-100)">
+                  <x-import component-from-global-scope="ProcolisDesignSystem_1720b4.Avatar" name="{{ d.name }}" size="sm" status="{{ d.status }}" hint-size="36px,36px"></x-import>
+                  <div style="flex:1;min-width:0"><div style="font-family:var(--font-display);font-weight:700;font-size:13.5px;color:var(--text-strong);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.name }}</div><div style="font-size:11.5px;color:var(--text-muted)">{{ d.vehicle }} · {{ d.rating }} ★</div></div>
+                  <div style="font-size:11.5px;color:var(--text-faint);text-align:right">{{ d.load }} colis</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-xs);overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border-subtle)"><h3 style="margin:0;font-family:var(--font-display);font-weight:700;font-size:15.5px;color:var(--text-strong)">Garages</h3><span style="color:var(--text-link);font-family:var(--font-display);font-weight:600;font-size:13px">Tout voir</span></div>
+              <sc-for list="{{ garages }}" as="g" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--slate-100)">
+                  <span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:var(--radius-sm);background:var(--surface-sunken);color:var(--text-muted);flex:none"><span class="material-symbols-rounded fill" style="font-size:20px">garage</span></span>
+                  <div style="flex:1;min-width:0"><div style="font-family:var(--font-display);font-weight:700;font-size:13.5px;color:var(--text-strong)">{{ g.name }}</div><div style="font-size:11.5px;color:var(--text-muted)">{{ g.city }} · {{ g.drivers }} chauffeurs</div></div>
+                  <span style="font-family:var(--font-mono);font-weight:600;font-size:12.5px;color:var(--text-body)">{{ g.parcels }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const parcels = [
+      { tracking: 'PC-7F3K-2291', from: 'Douala', to: 'Yaoundé', status: 'transit', price: '12 500 FCFA', weight: '8 kg', type: 'Standard', eta: '~4 h' },
+      { tracking: 'PC-3M9P-5512', from: 'Yaoundé', to: 'Bafoussam', status: 'free', price: '9 000 FCFA', weight: '5 kg', type: 'Documents', offers: 4 },
+      { tracking: 'PC-1A4D-8830', from: 'Douala', to: 'Kribi', status: 'confirmed', price: '7 500 FCFA', weight: '12 kg', type: 'Électronique', eta: 'Demain' },
+      { tracking: 'PC-9Z2Q-0471', from: 'Bamenda', to: 'Douala', status: 'delivered', price: '15 000 FCFA', weight: '20 kg', type: 'Volumineux' },
+    ];
+    const expressParcel = { tracking: 'PC-5T8R-1190', from: 'Douala', to: 'Bafoussam', status: 'pending', price: '14 500 FCFA', weight: '6 kg', type: 'Documents', express: true };
+    const freeParcels = [
+      { tracking: 'PC-3M9P-5512', from: 'Yaoundé', to: 'Bafoussam', status: 'free', price: '9 000 FCFA', weight: '5 kg', type: 'Documents', distance: '290 km', offers: 4 },
+      { tracking: 'PC-6K1L-7723', from: 'Douala', to: 'Yaoundé', status: 'free', price: '11 000 FCFA', weight: '14 kg', type: 'Électronique', distance: '245 km', offers: 2, express: true },
+      { tracking: 'PC-8H2W-4408', from: 'Douala', to: 'Kribi', status: 'free', price: '6 500 FCFA', weight: '7 kg', type: 'Standard', distance: '155 km', offers: 1 },
+    ];
+    const offers = [
+      { id: 1, driver: 'Jean-Paul Kamga', garage: 'Garage Akwa', rating: '4,9', price: '8 500 FCFA', when: 'il y a 5 min', hasAudio: true },
+      { id: 2, driver: 'Moussa Bello', garage: 'Garage Bonabéri', rating: '4,7', price: '9 000 FCFA', when: 'il y a 12 min', message: 'Je pars à 14h, place dispo.' },
+      { id: 3, driver: 'Eric Ndongo', garage: 'Garage Mvog-Mbi', rating: '4,8', price: '9 500 FCFA', when: 'il y a 20 min', message: 'Véhicule climatisé, départ ce soir.' },
+    ];
+    const timeline = [
+      { label: 'Colis confirmé', time: '08:12', status: 'done', icon: 'check' },
+      { label: 'Ramassé à Douala', time: '09:40', status: 'done', icon: 'package_2', note: 'Par Jean-Paul Kamga · Garage Akwa' },
+      { label: 'En transit', time: '10:05', status: 'current', icon: 'local_shipping', note: 'Sur la N3, passage Edéa' },
+      { label: 'Arrivée à Yaoundé', status: 'todo' },
+      { label: 'Livré au destinataire', status: 'todo' },
+    ];
+    const drivers = [
+      { name: 'Jean-Paul Kamga', vehicle: 'Toyota Hiace', rating: '4,9', status: 'busy', load: 3 },
+      { name: 'Moussa Bello', vehicle: 'Mercedes Sprinter', rating: '4,7', status: 'online', load: 0 },
+      { name: 'Eric Ndongo', vehicle: 'Toyota Hiace', rating: '4,8', status: 'online', load: 1 },
+      { name: 'Aliou Sow', vehicle: 'Nissan Urvan', rating: '4,6', status: 'offline', load: 0 },
+    ];
+    const adminParcels = [
+      { tracking: 'PC-7F3K-2291', client: 'Aïcha Mballa', from: 'Douala', to: 'Yaoundé', driver: 'Jean-Paul Kamga', status: 'transit', price: '12 500 FCFA' },
+      { tracking: 'PC-3M9P-5512', client: 'Aïcha Mballa', from: 'Yaoundé', to: 'Bafoussam', driver: null, status: 'free', price: '9 000 FCFA' },
+      { tracking: 'PC-1A4D-8830', client: 'Paul Etoundi', from: 'Douala', to: 'Kribi', driver: 'Eric Ndongo', status: 'confirmed', price: '7 500 FCFA' },
+      { tracking: 'PC-9Z2Q-0471', client: 'Sandrine Fotso', from: 'Bamenda', to: 'Douala', driver: 'Aliou Sow', status: 'delivered', price: '15 000 FCFA' },
+      { tracking: 'PC-6K1L-7723', client: 'Yannick Owona', from: 'Douala', to: 'Yaoundé', driver: null, status: 'pending', price: '11 000 FCFA' },
+    ];
+    adminParcels.forEach((p) => { p.driverDisplay = p.driver || 'Non assigné'; p.assigned = !!p.driver; p.unassigned = !p.driver; });
+    const clientKpis = [
+      { icon: 'package_2', tone: 'primary', value: '3', label: 'Colis en cours', delta: 2 },
+      { icon: 'task_alt', tone: 'green', value: '28', label: 'Colis livrés', delta: 8 },
+      { icon: 'sell', tone: 'amber', value: '2', label: 'En libre service' },
+      { icon: 'account_balance_wallet', tone: 'neutral', value: '2 450', label: 'Points' },
+    ];
+    const driverKpis = [
+      { icon: 'local_shipping', tone: 'primary', value: '4', label: 'Missions du jour' },
+      { icon: 'payments', tone: 'green', value: '38 500', label: 'FCFA aujourd’hui', delta: 14 },
+      { icon: 'star', tone: 'amber', value: '4,9', label: 'Note moyenne' },
+      { icon: 'task_alt', tone: 'neutral', value: '312', label: 'Colis livrés', delta: 5 },
+    ];
+    const adminKpis = [
+      { icon: 'package_2', tone: 'primary', value: '342', label: 'Colis ce mois', delta: 12 },
+      { icon: 'local_shipping', tone: 'green', value: '1 204', label: 'Chauffeurs actifs', delta: 4 },
+      { icon: 'garage', tone: 'amber', value: '37', label: 'Garages', delta: 2 },
+      { icon: 'account_balance_wallet', tone: 'neutral', value: '4,2 M', label: 'FCFA encaissés', delta: 9 },
+    ];
+    const garages = [
+      { name: 'Garage Akwa', city: 'Douala', drivers: 18, parcels: 42, status: 'online' },
+      { name: 'Garage Mvog-Mbi', city: 'Yaoundé', drivers: 12, parcels: 27, status: 'online' },
+      { name: 'Garage Bonabéri', city: 'Douala', drivers: 9, parcels: 15, status: 'busy' },
+      { name: 'Garage Tamdja', city: 'Bafoussam', drivers: 6, parcels: 8, status: 'offline' },
+    ];
+    const bars = [38, 44, 41, 52, 49, 61, 58, 67, 72, 70, 84, 92];
+    const roleOptions = [{ value: 'client', label: 'Envoyer un colis', icon: 'inventory_2' }, { value: 'driver', label: 'Conduire', icon: 'local_shipping' }];
+    const cities = ['Douala', 'Yaoundé', 'Bafoussam', 'Bamenda', 'Garoua', 'Kribi', 'Bertoua', 'Ngaoundéré'];
+    return { parcels, expressParcel, freeParcels, offers, timeline, drivers, adminParcels, clientKpis, driverKpis, adminKpis, garages, bars, roleOptions, cities };
+  }
+}
+</script>
+</body>
+</html>
