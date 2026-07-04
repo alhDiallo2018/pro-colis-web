@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Avatar, Badge, Button, Card, Dialog, Icon, IconButton, Input, Textarea, Toast } from '@/ds'
+import { Avatar, Badge, Button, Card, Dialog, Icon, IconButton, Input, Select, Textarea, Toast } from '@/ds'
 import { QueryState } from '@/components/QueryState'
-import { useAnnonce, useCreateAnnonceOffer } from './hooks'
+import { NegotiationChat } from '@/components/NegotiationChat'
+import { useAnnonce, useCreateAnnonceOffer, useMyParcels } from './hooks'
 import { ApiError } from '@/lib/api/client'
 import { useAuthStore } from '@/store/auth'
 import { formatDate, formatFcfa, formatWeight } from '@/lib/format'
@@ -26,6 +27,7 @@ export function AnnonceDetailScreen() {
 
   const myOffer = ad?.offers?.find((o) => o.clientId === userId)
   const driverName = ad?.driver?.fullName ?? ad?.driverName ?? 'Chauffeur'
+  const [chatOpen, setChatOpen] = useState(false)
 
   return (
     <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -90,13 +92,20 @@ export function AnnonceDetailScreen() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <Icon name="check_circle" size={22} style={{ color: 'var(--teal-600)' }} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--text-strong)' }}>Offre envoyée — {formatFcfa(myOffer.price)}</div>
+                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--text-strong)' }}>Offre envoyee — {formatFcfa(myOffer.price)}</div>
                     {myOffer.message && <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>{myOffer.message}</div>}
                   </div>
                   <Badge tone={myOffer.status === 'accepted' ? 'green' : myOffer.status === 'rejected' ? 'red' : 'amber'}>
-                    {myOffer.status === 'accepted' ? 'Acceptée' : myOffer.status === 'rejected' ? 'Refusée' : 'En attente'}
+                    {myOffer.status === 'accepted' ? 'Acceptee' : myOffer.status === 'rejected' ? 'Refusee' : 'En attente'}
                   </Badge>
                 </div>
+                {ad.driverId && (
+                  <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+                    <Button size="sm" variant="secondary" icon="forum" onClick={() => setChatOpen(true)}>
+                      Voir la discussion
+                    </Button>
+                  </div>
+                )}
               </Card>
             ) : (
               <Button block size="lg" icon="gavel" onClick={() => setOffering(true)}>
@@ -107,10 +116,46 @@ export function AnnonceDetailScreen() {
             <OfferDialog
               advertisementId={ad.id}
               driverName={driverName}
+              driverId={ad.driverId}
               proposedPrice={ad.proposedPrice}
               open={offering}
               onClose={() => setOffering(false)}
             />
+
+            {chatOpen && ad.driverId && (
+              <Dialog
+                open
+                onClose={() => setChatOpen(false)}
+                icon="forum"
+                iconTone="primary"
+                title={`Negocier avec ${driverName}`}
+                style={{ width: 'min(640px, 96vw)' }}
+                actions={
+                  <Button variant="secondary" block onClick={() => setChatOpen(false)}>
+                    Fermer
+                  </Button>
+                }
+              >
+                <div style={{ height: 'min(70vh, 520px)', display: 'flex', flexDirection: 'column' }}>
+                  <NegotiationChat
+                    peerId={ad.driverId}
+                    peerName={driverName}
+                    parcelId={myOffer?.parcelId ?? undefined}
+                  parcelInfo={{
+                    trackingNumber: myOffer?.parcel?.trackingNumber,
+                    departureCity: ad.departureCity,
+                    arrivalCity: ad.arrivalCity,
+                    description: ad.description || `Annonce — ${formatFcfa(myOffer?.price)} propose`,
+                    weight: myOffer?.parcel?.weight ?? null,
+                    type: myOffer?.parcel?.type,
+                    photoUrls: myOffer?.parcel?.photoUrls,
+                    videoUrls: myOffer?.parcel?.videoUrls,
+                    audioUrls: myOffer?.parcel?.audioUrls,
+                  }}
+                  />
+                </div>
+              </Dialog>
+            )}
           </>
         )}
       </QueryState>
@@ -121,19 +166,25 @@ export function AnnonceDetailScreen() {
 function OfferDialog({
   advertisementId,
   driverName,
+  driverId,
   proposedPrice,
   open,
   onClose,
 }: {
   advertisementId: string
   driverName: string
+  driverId?: string | null
   proposedPrice?: number | null
   open: boolean
   onClose: () => void
 }) {
   const createOffer = useCreateAnnonceOffer(advertisementId)
+  const myParcels = useMyParcels()
+  const parcels = myParcels.data?.parcels ?? []
   const [price, setPrice] = useState('')
   const [message, setMessage] = useState('')
+  const [parcelId, setParcelId] = useState('')
+  const [chatOpen, setChatOpen] = useState(false)
 
   if (!open) return null
 
@@ -143,16 +194,27 @@ function OfferDialog({
 
   const submit = () => {
     createOffer.mutate(
-      { price: priceNum, message: message.trim() || undefined },
+      { price: priceNum, message: message.trim() || undefined, parcelId: parcelId || undefined },
       {
         onSuccess: () => {
           setPrice('')
           setMessage('')
+          setParcelId('')
           onClose()
         },
       },
     )
   }
+
+  const parcelOptions = [
+    { value: '', label: 'Sans colis' },
+    ...parcels.slice(0, 10).map((p) => ({
+      value: p.id,
+      label: `${p.trackingNumber} — ${p.receiverName || p.description?.slice(0, 25) || 'Colis'} (${p.status})`,
+    })),
+  ]
+
+  const selectedParcel = parcels.find((p) => p.id === parcelId)
 
   return (
     <Dialog
@@ -167,16 +229,24 @@ function OfferDialog({
             Annuler
           </Button>
           <Button block icon="send" loading={createOffer.isPending} disabled={!valid} onClick={submit}>
-            Envoyer l’offre
+            Envoyer l'offre
           </Button>
         </>
       }
     >
       <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <p style={{ margin: 0, fontSize: 13.5, color: 'var(--text-muted)' }}>
-          Proposez votre prix à <strong style={{ color: 'var(--text-strong)' }}>{driverName}</strong>
+          Proposez votre prix a <strong style={{ color: 'var(--text-strong)' }}>{driverName}</strong>
           {proposedPrice != null ? ` (il propose ${formatFcfa(proposedPrice)})` : ''}.
         </p>
+        {parcels.length > 0 && (
+            <Select
+            label="Colis concerne"
+            options={parcelOptions}
+            value={parcelId}
+            onChange={(e) => setParcelId(e.target.value)}
+          />
+        )}
         <Input
           label="Votre prix (FCFA)"
           icon="payments"
@@ -189,13 +259,51 @@ function OfferDialog({
         />
         <Textarea
           label="Message (optionnel)"
-          placeholder="Ex : J’ai un colis de 5 kg pour ce trajet."
+          placeholder="Ex : J'ai un colis de 5 kg pour ce trajet."
           maxLength={200}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
+        {driverId && (
+          <Button variant="secondary" size="sm" icon="forum" onClick={() => setChatOpen(true)}>
+            Negocier avec {driverName}
+          </Button>
+        )}
         {error && <Toast tone="error" message={error} />}
       </div>
+
+      {chatOpen && driverId && (
+        <Dialog
+          open
+          onClose={() => setChatOpen(false)}
+          icon="forum"
+          iconTone="primary"
+          title={`Negocier avec ${driverName}`}
+          style={{ width: 'min(640px, 96vw)' }}
+          actions={
+            <Button variant="secondary" block onClick={() => setChatOpen(false)}>
+              Fermer
+            </Button>
+          }
+        >
+          <div style={{ height: 'min(70vh, 520px)', display: 'flex', flexDirection: 'column' }}>
+            <NegotiationChat
+              peerId={driverId}
+              peerName={driverName}
+              parcelId={parcelId || undefined}
+              parcelInfo={
+                selectedParcel
+                  ? {
+                      trackingNumber: selectedParcel.trackingNumber,
+                      description: selectedParcel.description,
+                      receiverName: selectedParcel.receiverName,
+                    }
+                  : { description: proposedPrice != null ? `Prix propose par le chauffeur : ${formatFcfa(proposedPrice)}` : 'Prix a negocier' }
+              }
+            />
+          </div>
+        </Dialog>
+      )}
     </Dialog>
   )
 }

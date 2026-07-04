@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Badge, Button, StatBox } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { BarChart } from '@/components/BarChart'
 import { OfferDialog } from './OfferDialog'
 import { CreateAnnonceDialog } from './CreateAnnonceDialog'
-import { useDriverBidsSent, useDriverFreeParcels, useDriverParcels, useMyAdvertisements } from './hooks'
-import { formatDate, formatFcfa, formatWeight } from '@/lib/format'
+import { RechargeDialog } from './RechargeDialog'
+import { ItineraireDialog } from './ItineraireDialog'
+import { useDriverBidsSent, useDriverFreeParcels, useDriverParcels, useMyAdvertisements, useScoreBalance } from './hooks'
+import { formatDate, formatFcfa, formatPoints, formatWeight } from '@/lib/format'
 import type { Parcel } from '@/lib/api/types'
 
 const REVENUE_BARS = [46, 62, 40, 78, 55, 88, 100]
@@ -18,14 +20,25 @@ export function DriverDashboard() {
   const free = useDriverFreeParcels()
   const sent = useDriverBidsSent()
   const ads = useMyAdvertisements()
+  const balance = useScoreBalance()
   const [offerTarget, setOfferTarget] = useState<Parcel | null>(null)
   const [searchParams] = useSearchParams()
   const [showAnnonce, setShowAnnonce] = useState(searchParams.has('annonce'))
+  const [showRecharge, setShowRecharge] = useState(false)
+  const [showItineraire, setShowItineraire] = useState(false)
 
   const parcels = mine.data?.parcels ?? []
   const freeParcels = free.data?.parcels ?? []
   const active = parcels.find((p) => !['delivered', 'cancelled'].includes(p.status))
   const delivered = parcels.filter((p) => p.status === 'delivered').length
+
+  const bidMap = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const b of sent.data ?? []) {
+      if (b.parcelId) map.set(b.parcelId, b.id)
+    }
+    return map
+  }, [sent.data])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
@@ -35,11 +48,12 @@ export function DriverDashboard() {
         </Button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16 }}>
         <StatBox icon="local_shipping" tone="primary" value={parcels.length} label="Missions" />
         <StatBox icon="sell" tone="green" value={freeParcels.length} label="Annonces" />
         <StatBox icon="gavel" tone="amber" value={sent.data?.length ?? 0} label="Offres envoyées" />
         <StatBox icon="task_alt" tone="neutral" value={delivered} label="Colis livrés" />
+        <StatBox icon="account_balance_wallet" tone="teal" value={balance.data ?? '—'} label="Points" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: 20, alignItems: 'start' }}>
@@ -77,7 +91,7 @@ export function DriverDashboard() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <Button variant="secondary" block icon="navigation">
+                  <Button variant="secondary" block icon="navigation" onClick={() => setShowItineraire(true)}>
                     Itinéraire
                   </Button>
                   <Button variant="amber" block icon="checklist" onClick={() => navigate('/driver/missions')}>
@@ -103,7 +117,9 @@ export function DriverDashboard() {
             {freeParcels.length === 0 ? (
               <div style={{ padding: 18, fontSize: 13.5, color: 'var(--text-muted)' }}>Aucun colis disponible pour le moment.</div>
             ) : (
-              freeParcels.slice(0, 4).map((p) => (
+              freeParcels.slice(0, 4).map((p) => {
+                const hasBid = bidMap.has(p.id)
+                return (
                 <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderBottom: '1px solid var(--slate-100)' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 42, height: 42, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-soft)', color: 'var(--color-primary)', flex: 'none' }}>
                     <span className="material-symbols-rounded fill" style={{ fontSize: 22 }}>
@@ -124,16 +140,41 @@ export function DriverDashboard() {
                     </div>
                   </div>
                   <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 15, color: 'var(--teal-600)' }}>{formatFcfa(p.price)}</span>
-                  <Button size="sm" icon="gavel" onClick={() => setOfferTarget(p)}>
-                    Faire une offre
+                  <Button size="sm" icon={hasBid ? 'forum' : 'gavel'} onClick={() => setOfferTarget(p)}>
+                    {hasBid ? 'Negocier' : 'Faire une offre'}
                   </Button>
                 </div>
-              ))
-            )}
+              )}))}
           </Panel>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Points card */}
+          <div style={{ background: 'var(--gradient-brand)', borderRadius: 'var(--radius-lg)', padding: 20, color: '#fff', boxShadow: 'var(--shadow-brand)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 42, height: 42, borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.18)' }}>
+                <span className="material-symbols-rounded fill" style={{ fontSize: 23 }}>
+                  account_balance_wallet
+                </span>
+              </span>
+              <div>
+                <div style={{ fontSize: 11, opacity: 0.85, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Solde de points</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 24 }}>
+                  {balance.data != null ? formatPoints(balance.data).replace(' pts', '') : '—'}
+                  <span style={{ fontSize: 13, opacity: 0.8 }}> pts</span>
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+              <Button variant="amber" size="sm" block icon="add" onClick={() => setShowRecharge(true)}>
+                Recharger
+              </Button>
+              <Button variant="secondary" size="sm" block icon="receipt_long" onClick={() => navigate('/driver/points')}>
+                Historique
+              </Button>
+            </div>
+          </div>
+
           <Panel title="Revenus · 7 jours" action={<Badge tone="green">+14%</Badge>}>
             <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 26, color: 'var(--text-strong)', marginBottom: 14 }}>
               214 000 <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>FCFA</span>
@@ -187,8 +228,14 @@ export function DriverDashboard() {
         </div>
       </div>
 
-      <OfferDialog parcel={offerTarget} onClose={() => setOfferTarget(null)} />
+      <OfferDialog
+        parcel={offerTarget}
+        onClose={() => setOfferTarget(null)}
+        existingBidId={offerTarget ? bidMap.get(offerTarget.id) ?? null : null}
+      />
       <CreateAnnonceDialog open={showAnnonce} onClose={() => setShowAnnonce(false)} />
+      <RechargeDialog open={showRecharge} onClose={() => setShowRecharge(false)} />
+      <ItineraireDialog parcel={active ?? null} open={showItineraire} onClose={() => setShowItineraire(false)} />
     </div>
   )
 }

@@ -1,13 +1,16 @@
+import { useState } from 'react'
 import { Button } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { useScoreBalance, useScoreHistory } from './hooks'
 import { formatDateTime, formatPoints } from '@/lib/format'
+import { RechargeDialog } from './RechargeDialog'
 
-export function PointsScreen() {
+export function DriverPointsScreen() {
   const balance = useScoreBalance()
   const history = useScoreHistory()
   const txns = history.data ?? []
+  const [showRecharge, setShowRecharge] = useState(false)
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -26,7 +29,7 @@ export function PointsScreen() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 18, maxWidth: 320 }}>
-          <Button variant="amber" block icon="add">Recharger</Button>
+          <Button variant="amber" block icon="add" onClick={() => setShowRecharge(true)}>Recharger</Button>
           <Button variant="secondary" block icon="redeem">Utiliser</Button>
         </div>
       </div>
@@ -38,7 +41,7 @@ export function PointsScreen() {
           error={history.error}
           isEmpty={txns.length === 0}
           emptyTitle="Aucun mouvement"
-          emptyMessage="Vos crédits et débits de points apparaîtront ici."
+          emptyMessage="Vos credits et debits de points apparaîtront ici."
           onRetry={() => history.refetch()}
         >
           {txns.map((t) => {
@@ -60,6 +63,8 @@ export function PointsScreen() {
           })}
         </QueryState>
       </Panel>
+
+      <RechargeDialog open={showRecharge} onClose={() => setShowRecharge(false)} />
     </div>
   )
 }

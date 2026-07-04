@@ -51,14 +51,29 @@ function ChatDialog({ bid, onClose }: { bid: Bid | null; onClose: () => void }) 
       icon="forum"
       iconTone="primary"
       title={`Négocier avec ${driverName}`}
-      style={{ width: 'min(560px, 94vw)' }}
+      style={{ width: 'min(640px, 96vw)' }}
       actions={
         <Button variant="secondary" block onClick={onClose}>
           Fermer
         </Button>
       }
     >
-      <NegotiationChat peerId={bid.driverId} peerName={driverName} parcelId={bid.parcelId} />
+      <div style={{ height: 'min(70vh, 520px)', display: 'flex', flexDirection: 'column' }}>
+        <NegotiationChat
+        peerId={bid.driverId}
+        peerName={driverName}
+        parcelId={bid.parcelId}
+        bidId={bid.id}
+        parcelInfo={
+          bid.parcel
+            ? {
+                trackingNumber: bid.parcel.trackingNumber,
+                receiverName: bid.parcel.receiverName,
+              }
+            : undefined
+          }
+        />
+      </div>
     </Dialog>
   )
 }

@@ -1,10 +1,15 @@
 import { useNavigate } from 'react-router-dom'
 import { Button, ParcelCard, StatusBadge } from '@/ds'
 
-const NAV = ['Comment ça marche', 'Tarifs', 'Devenir chauffeur', 'Aide']
+const NAV_ITEMS = [
+  { label: 'Comment ça marche', action: 'scroll', target: 'how-it-works' },
+  { label: 'Tarifs', action: 'navigate', to: '/register' },
+  { label: 'Devenir chauffeur', action: 'navigate', to: '/register' },
+  { label: 'Aide', action: 'scroll', target: 'footer' },
+] as const
 
 const STATS = [
-  { value: '28 villes', label: 'desservies au Cameroun', accent: false },
+  { value: '14 régions', label: 'desservies au Sénégal', accent: false },
   { value: '1 200+', label: 'chauffeurs vérifiés', accent: false },
   { value: '45 min', label: 'délai moyen avant 1ʳᵉ offre', accent: true },
   { value: '98,4 %', label: 'colis livrés à temps', accent: false },
@@ -40,6 +45,14 @@ const STEPS = [
 export function LandingPage() {
   const navigate = useNavigate()
 
+  const handleNav = (item: (typeof NAV_ITEMS)[number]) => {
+    if (item.action === 'scroll') {
+      document.getElementById(item.target)?.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      navigate(item.to)
+    }
+  }
+
   return (
     <div style={{ background: 'var(--surface-card)', fontFamily: 'var(--font-body)' }}>
       {/* Top nav */}
@@ -55,16 +68,16 @@ export function LandingPage() {
           margin: '0 auto',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11, cursor: 'pointer' }} onClick={() => navigate('/')}>
           <img src="/logo-procolis.png" alt="" style={{ width: 34, height: 34, objectFit: 'contain' }} />
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.01em', color: 'var(--slate-900)' }}>
             PRO<span style={{ color: 'var(--amber-400)' }}>COLIS</span>
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 26, marginLeft: 18 }}>
-          {NAV.map((item) => (
-            <span key={item} style={{ fontWeight: 600, fontSize: 14.5, color: 'var(--text-body)', cursor: 'pointer' }}>
-              {item}
+          {NAV_ITEMS.map((item) => (
+            <span key={item.label} style={{ fontWeight: 600, fontSize: 14.5, color: 'var(--text-body)', cursor: 'pointer' }} onClick={() => handleNav(item)}>
+              {item.label}
             </span>
           ))}
         </div>
@@ -188,7 +201,7 @@ export function LandingPage() {
                 </span>
               </span>
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)' }}>Douala → Yaoundé</div>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)' }}>Dakar → Thiès</div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>En transit · arrive dans ~4 h</div>
               </div>
               <StatusBadge status="transit" size="sm" />
@@ -212,7 +225,7 @@ export function LandingPage() {
       </div>
 
       {/* How it works */}
-      <div style={{ maxWidth: 1320, margin: '0 auto', padding: '64px 40px 56px' }}>
+      <div id="how-it-works" style={{ maxWidth: 1320, margin: '0 auto', padding: '64px 40px 56px' }}>
         <div style={{ textAlign: 'center', maxWidth: 560, margin: '0 auto 44px' }}>
           <div
             style={{
@@ -310,8 +323,8 @@ export function LandingPage() {
             <ParcelCard
               parcel={{
                 tracking: 'PC-5T8R-1190',
-                from: 'Douala',
-                to: 'Bafoussam',
+                from: 'Dakar',
+                to: 'Thiès',
                 status: 'pending',
                 price: '14 500 FCFA',
                 weight: '6 kg',
@@ -324,17 +337,17 @@ export function LandingPage() {
       </div>
 
       {/* Footer */}
-      <div style={{ background: 'var(--deep-800)', color: 'rgba(255,255,255,0.7)' }}>
+      <div id="footer" style={{ background: 'var(--deep-800)', color: 'rgba(255,255,255,0.7)' }}>
         <div style={{ maxWidth: 1320, margin: '0 auto', padding: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 40, flexWrap: 'wrap' }}>
           <div style={{ maxWidth: 300 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, cursor: 'pointer' }} onClick={() => navigate('/')}>
               <img src="/logo-procolis.png" alt="" style={{ width: 30, height: 30, objectFit: 'contain' }} />
               <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 18, color: '#fff' }}>
                 PRO<span style={{ color: 'var(--amber-400)' }}>COLIS</span>
               </span>
             </div>
             <p style={{ fontSize: 13.5, lineHeight: 1.6, margin: 0 }}>
-              La plateforme qui connecte expéditeurs et chauffeurs pour le transport de colis entre les villes d’Afrique centrale.
+              La plateforme qui connecte expéditeurs et chauffeurs pour le transport de colis entre les villes du Sénégal.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 64, flexWrap: 'wrap' }}>

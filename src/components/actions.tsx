@@ -21,7 +21,11 @@ const TYPE_ICON: Record<string, string> = {
   delivery_confirmed: 'task_alt',
   bid: 'gavel',
   bid_received: 'gavel',
+  bid_accepted: 'gavel',
   offer: 'gavel',
+  ad_offer: 'campaign',
+  ad_offer_accepted: 'check_circle',
+  ad_offer_rejected: 'cancel',
 }
 
 function relativeTime(iso?: string): string {

@@ -6,9 +6,28 @@ import * as paymentsApi from '@/lib/api/payments'
 import * as adsApi from '@/lib/api/advertisements'
 import * as vehiclesApi from '@/lib/api/vehicles'
 import * as usersApi from '@/lib/api/users'
+import * as scoreApi from '@/lib/api/score'
 import type { ListParams } from '@/lib/api/types'
 import { useAuthStore } from '@/store/auth'
 import { queryClient } from '@/lib/queryClient'
+
+export function useScoreBalance() {
+  return useQuery({ queryKey: ['score', 'balance'], queryFn: () => scoreApi.getBalance() })
+}
+
+export function useScoreHistory() {
+  return useQuery({ queryKey: ['score', 'history'], queryFn: () => scoreApi.history() })
+}
+
+export function usePurchaseScore() {
+  return useMutation({
+    mutationFn: (payload: scoreApi.PurchasePayload) => scoreApi.purchase(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['score', 'balance'] })
+      queryClient.invalidateQueries({ queryKey: ['score', 'history'] })
+    },
+  })
+}
 
 export function useDriverPayments() {
   return useQuery({ queryKey: ['driver', 'payments'], queryFn: () => paymentsApi.history() })

@@ -3,20 +3,11 @@ import * as parcelsApi from '@/lib/api/parcels'
 import * as bidsApi from '@/lib/api/bids'
 import * as garagesApi from '@/lib/api/garages'
 import * as rolesApi from '@/lib/api/roles'
-import * as scoreApi from '@/lib/api/score'
 import * as usersApi from '@/lib/api/users'
 import * as adsApi from '@/lib/api/advertisements'
 import type { ListParams } from '@/lib/api/types'
 import { useAuthStore } from '@/store/auth'
 import { queryClient } from '@/lib/queryClient'
-
-export function useScoreBalance() {
-  return useQuery({ queryKey: ['score', 'balance'], queryFn: () => scoreApi.getBalance() })
-}
-
-export function useScoreHistory() {
-  return useQuery({ queryKey: ['score', 'history'], queryFn: () => scoreApi.history() })
-}
 
 export function useTrackParcel(trackingNumber: string, enabled: boolean) {
   return useQuery({

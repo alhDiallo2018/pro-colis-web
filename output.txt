@@ -1,0 +1,6 @@
+No file at `/workspace/file.txt`. The workspace contains two folders:
+
+- `Mobile/`
+- `Web/`
+
+Would you like me to create that file, or look for something else?

@@ -7,6 +7,20 @@ export interface AdvertisementOffer {
   clientId: string
   client?: User | null
   parcelId?: string | null
+  parcel?: {
+    id: string
+    trackingNumber?: string
+    description?: string | null
+    weight?: string | null
+    receiverName?: string
+    receiverPhone?: string
+    receiverAddress?: string | null
+    status?: string
+    type?: string
+    photoUrls?: string[]
+    videoUrls?: string[]
+    audioUrls?: string[]
+  } | null
   price: number
   message?: string | null
   status: string
@@ -77,5 +91,25 @@ export async function createOffer(
   payload: { price: number; message?: string; parcelId?: string },
 ): Promise<AdvertisementOffer> {
   const { data } = await api.post(`/advertisements/${advertisementId}/offers`, payload)
+  return data.offer ?? data.data
+}
+
+/** Chauffeur : accepter une offre sur son annonce. */
+export async function acceptOffer(advertisementId: string, offerId: string): Promise<void> {
+  await api.post(`/advertisements/${advertisementId}/offers/${offerId}/accept`)
+}
+
+/** Chauffeur : refuser une offre sur son annonce. */
+export async function rejectOffer(advertisementId: string, offerId: string): Promise<void> {
+  await api.post(`/advertisements/${advertisementId}/offers/${offerId}/reject`)
+}
+
+/** Négocier le prix d'une offre (chauffeur ou client). */
+export async function negotiateOffer(
+  advertisementId: string,
+  offerId: string,
+  payload: { price: number; message?: string },
+): Promise<AdvertisementOffer> {
+  const { data } = await api.post(`/advertisements/${advertisementId}/offers/${offerId}/negotiate`, payload)
   return data.offer ?? data.data
 }

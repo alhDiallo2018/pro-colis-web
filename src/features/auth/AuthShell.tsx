@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 interface AuthShellProps {
   /** Content of the left brand (gradient) panel. */
@@ -12,6 +13,8 @@ interface AuthShellProps {
 
 /** Full-page split-screen auth: brand gradient panel + form column. */
 export function AuthShell({ brand, children, brandWidth = 480, formMaxWidth = 440 }: AuthShellProps) {
+  const navigate = useNavigate()
+
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', background: 'var(--surface-card)', fontFamily: 'var(--font-body)' }}>
       <div
@@ -30,7 +33,7 @@ export function AuthShell({ brand, children, brandWidth = 480, formMaxWidth = 44
       >
         <div style={{ position: 'absolute', right: -120, top: -100, width: 460, height: 460, borderRadius: '50%', background: 'rgba(255,255,255,0.07)' }} />
         <div style={{ position: 'absolute', left: -80, bottom: -120, width: 320, height: 320, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 11, position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11, position: 'relative', cursor: 'pointer' }} onClick={() => navigate('/')}>
           <img src="/logo-procolis.png" alt="" style={{ width: 38, height: 38, objectFit: 'contain' }} />
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 21 }}>PRO COLIS</span>
         </div>

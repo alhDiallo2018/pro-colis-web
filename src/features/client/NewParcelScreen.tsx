@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { Avatar, Button, Card, Icon, IconButton, Input, Select, Switch, Textarea, Toast } from '@/ds'
 import { useCreateParcel, useDrivers, useGarages } from './hooks'
 import { ApiError } from '@/lib/api/client'
-import { uploadParcelAudio, uploadParcelPhoto } from '@/lib/api/uploads'
+import { uploadParcelAudio, uploadParcelPhoto, uploadParcelVideo } from '@/lib/api/uploads'
 import { useAuthStore } from '@/store/auth'
 import { formatFcfa, formatWeight } from '@/lib/format'
 import type { User } from '@/lib/api/types'
@@ -20,6 +20,12 @@ interface PhotoItem {
 interface VoiceNote {
   dataUrl: string
   durationMs: number
+}
+
+interface VideoItem {
+  id: string
+  dataUrl: string
+  name: string
 }
 
 type Mode = 'free' | 'driver'
@@ -73,6 +79,7 @@ export function NewParcelScreen() {
 
   const [photos, setPhotos] = useState<PhotoItem[]>([])
   const [voice, setVoice] = useState<VoiceNote | null>(null)
+  const [videos, setVideos] = useState<VideoItem[]>([])
   const [uploading, setUploading] = useState(false)
   // Once the parcel is created we keep its id so a second submit can never
   // create a duplicate — it just takes the user to the existing parcel.
@@ -155,6 +162,7 @@ export function NewParcelScreen() {
       try {
         const results = await Promise.allSettled([
           ...photos.map((p, i) => uploadParcelPhoto(p.dataUrl, p.name || `photo-${i + 1}.jpg`, parcel.id)),
+          ...videos.map((v, i) => uploadParcelVideo(v.dataUrl, v.name || `video-${i + 1}.mp4`, parcel.id)),
           ...(voice ? [uploadParcelAudio(voice.dataUrl, 'note-vocale.webm', parcel.id)] : []),
         ])
         failed = results.filter((r) => r.status === 'rejected').length
@@ -306,6 +314,7 @@ export function NewParcelScreen() {
 
               <div style={{ height: 1, background: 'var(--border-subtle)', margin: '4px 0' }} />
               <PhotoCapture photos={photos} onChange={setPhotos} />
+              <VideoCapture videos={videos} onChange={setVideos} />
               <VoiceNoteRecorder voice={voice} onChange={setVoice} />
             </StepBody>
           )}
@@ -894,6 +903,58 @@ function VoiceNoteRecorder({ voice, onChange }: { voice: VoiceNote | null; onCha
       )}
 
       {error && <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-sm)', color: 'var(--color-danger)' }}>{error}</p>}
+    </div>
+  )
+}
+
+function VideoCapture({ videos, onChange }: { videos: VideoItem[]; onChange: (next: VideoItem[]) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const onFiles = async (files: FileList | null) => {
+    if (!files?.length) return
+    const items = await Promise.all(
+      Array.from(files).map(async (f) => ({
+        id: crypto.randomUUID(),
+        dataUrl: await readAsDataUrl(f),
+        name: f.name,
+      })),
+    )
+    onChange([...videos, ...items])
+    if (inputRef.current) inputRef.current.value = ''
+  }
+
+  const remove = (id: string) => onChange(videos.filter((v) => v.id !== id))
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <Icon name="videocam" size={18} style={{ color: 'var(--text-muted)' }} />
+        <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--text-muted)' }}>Videos du colis</span>
+      </div>
+      <input ref={inputRef} type="file" accept="video/*" capture="environment" multiple onChange={(e) => onFiles(e.target.files)} style={{ display: 'none' }} />
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+        {videos.map((v) => (
+          <div key={v.id} style={{ position: 'relative', width: 84, height: 84, borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border-subtle)', background: '#000' }}>
+            <video src={v.dataUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <button
+              type="button"
+              aria-label="Supprimer la video"
+              onClick={() => remove(v.id)}
+              style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.55)', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            >
+              <Icon name="close" size={14} />
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          style={{ width: 84, height: 84, borderRadius: 'var(--radius-md)', border: '2px dashed var(--border-strong)', background: 'var(--surface-sunken)', color: 'var(--text-muted)', display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, cursor: 'pointer' }}
+        >
+          <Icon name="videocam" size={22} />
+          <span style={{ fontSize: 11 }}>Ajouter</span>
+        </button>
+      </div>
     </div>
   )
 }

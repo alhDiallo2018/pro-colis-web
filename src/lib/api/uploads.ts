@@ -1,6 +1,6 @@
 import { api } from './client'
 
-type MediaKind = 'photo' | 'audio'
+type MediaKind = 'photo' | 'video' | 'audio'
 
 /**
  * Upload a file as multipart/form-data and attach it to a parcel.
@@ -19,6 +19,9 @@ async function uploadParcelMedia(kind: MediaKind, file: Blob | string, filename:
 
 export const uploadParcelPhoto = (file: Blob | string, filename: string, parcelId: string) =>
   uploadParcelMedia('photo', file, filename, parcelId)
+
+export const uploadParcelVideo = (file: Blob | string, filename: string, parcelId: string) =>
+  uploadParcelMedia('video', file, filename, parcelId)
 
 export const uploadParcelAudio = (file: Blob | string, filename: string, parcelId: string) =>
   uploadParcelMedia('audio', file, filename, parcelId)

@@ -1,115 +1,80 @@
-import { useState } from 'react'
-import { Button, Dialog, Input, Textarea, Toast } from '@/ds'
+import { useEffect, useRef, useState } from 'react'
+import { Button, Dialog } from '@/ds'
 import { useCreateBid } from './hooks'
-import { ApiError } from '@/lib/api/client'
-import type { Parcel } from '@/lib/api/types'
-import { formatFcfa } from '@/lib/format'
-import { ParcelMedia } from '@/components/ParcelMedia'
 import { NegotiationChat } from '@/components/NegotiationChat'
+import type { Parcel } from '@/lib/api/types'
 
 interface OfferDialogProps {
   parcel: Parcel | null
   onClose: () => void
   onSuccess?: () => void
+  existingBidId?: string | null
 }
 
-/** Modal for a driver to bid on a free-service parcel. */
-export function OfferDialog({ parcel, onClose, onSuccess }: OfferDialogProps) {
+export function OfferDialog({ parcel, onClose, onSuccess, existingBidId }: OfferDialogProps) {
   const createBid = useCreateBid()
-  const [price, setPrice] = useState('')
-  const [message, setMessage] = useState('')
-  const [chatOpen, setChatOpen] = useState(false)
+  const [bidId, setBidId] = useState<string | null>(existingBidId ?? null)
+  const bidCreatedRef = useRef(false)
+
+  useEffect(() => {
+    setBidId(existingBidId ?? null)
+    bidCreatedRef.current = false
+  }, [existingBidId, parcel?.id])
 
   if (!parcel) return null
 
-  const priceNum = Number(price)
-  const valid = price !== '' && priceNum > 0
-
-  const submit = () => {
+  const handleFirstOffer = async (price: number, message?: string) => {
+    if (bidId || bidCreatedRef.current) return
+    bidCreatedRef.current = true
     createBid.mutate(
-      { parcelId: parcel.id, price: priceNum, message: message.trim() || undefined },
+      { parcelId: parcel.id, price, message },
       {
-        onSuccess: () => {
-          setPrice('')
-          setMessage('')
+        onSuccess: (bid: { id: string }) => {
+          setBidId(bid.id)
           onSuccess?.()
-          onClose()
         },
       },
     )
   }
 
-  const error = createBid.error instanceof ApiError ? createBid.error.message : null
-
   return (
     <Dialog
       open
       onClose={onClose}
-      icon="gavel"
+      icon="forum"
       iconTone="primary"
-      title="Faire une offre"
+      title={`Negocier — ${parcel.senderName || 'le client'}`}
+      style={{ width: 'min(640px, 96vw)' }}
       actions={
-        <>
-          <Button variant="secondary" block onClick={onClose}>
-            Annuler
-          </Button>
-          <Button block icon="send" loading={createBid.isPending} disabled={!valid} onClick={submit}>
-            Envoyer l’offre
-          </Button>
-        </>
+        <Button variant="secondary" block onClick={onClose}>
+          Fermer
+        </Button>
       }
     >
-      <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ fontSize: 13.5, color: 'var(--text-muted)', textAlign: 'center' }}>
-          {(parcel.departureCity ?? parcel.departureGarageName) || '—'} → {(parcel.arrivalCity ?? parcel.arrivalGarageName) || '—'}
-          {parcel.price != null && ` · prix demandé ${formatFcfa(parcel.price)}`}
-        </div>
-        {parcel.description && (
-          <div style={{ fontSize: 13.5, color: 'var(--text-body)' }}>{parcel.description}</div>
-        )}
-        <ParcelMedia parcel={parcel} size={84} />
-        {parcel.senderId && (
-          <Button variant="secondary" size="sm" icon="forum" onClick={() => setChatOpen(true)}>
-            Négocier avec le client
-          </Button>
-        )}
-        <Input
-          label="Votre prix (FCFA)"
-          icon="payments"
-          type="number"
-          inputMode="numeric"
-          mono
-          placeholder="Ex : 9 000"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
+      <div style={{ height: 'min(70vh, 520px)', display: 'flex', flexDirection: 'column' }}>
+        <NegotiationChat
+        peerId={parcel.senderId ?? ''}
+        peerName={parcel.senderName || 'Client'}
+        parcelId={parcel.id}
+        bidId={bidId ?? undefined}
+        parcelInfo={{
+          trackingNumber: parcel.trackingNumber,
+          departureCity: parcel.departureCity,
+          arrivalCity: parcel.arrivalCity,
+          description: parcel.description,
+          receiverName: parcel.receiverName,
+          receiverPhone: parcel.receiverPhone,
+          receiverAddress: parcel.receiverAddress,
+          weight: parcel.weight != null ? String(parcel.weight) : null,
+          type: parcel.type,
+          status: parcel.status,
+          photoUrls: parcel.photoUrls,
+          videoUrls: parcel.videoUrls,
+          audioUrls: parcel.audioUrls,
+        }}
+          onCreateBid={!existingBidId ? handleFirstOffer : undefined}
         />
-        <Textarea
-          label="Message (optionnel)"
-          placeholder="Ex : Je pars à 14h, place disponible."
-          maxLength={200}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-        {error && <Toast tone="error" message={error} />}
       </div>
-
-      {chatOpen && parcel.senderId && (
-        <Dialog
-          open
-          onClose={() => setChatOpen(false)}
-          icon="forum"
-          iconTone="primary"
-          title={`Négocier avec ${parcel.senderName || 'le client'}`}
-          style={{ width: 'min(560px, 94vw)' }}
-          actions={
-            <Button variant="secondary" block onClick={() => setChatOpen(false)}>
-              Fermer
-            </Button>
-          }
-        >
-          <NegotiationChat peerId={parcel.senderId} peerName={parcel.senderName || 'Client'} parcelId={parcel.id} />
-        </Dialog>
-      )}
     </Dialog>
   )
 }

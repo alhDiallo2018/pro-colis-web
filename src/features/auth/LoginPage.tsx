@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Input, Toast } from '@/ds'
+import { Button, IconButton, Input, Toast } from '@/ds'
 import { AuthShell } from './AuthShell'
 import { useLogin } from './useAuth'
 import { homeForRole } from '@/routes/paths'
@@ -54,6 +54,10 @@ export function LoginPage() {
         </>
       }
     >
+      <div style={{ marginBottom: 24 }}>
+        <IconButton icon="arrow_back" aria-label="Retour" onClick={() => navigate('/')} />
+      </div>
+
       <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30, color: 'var(--text-strong)', margin: '0 0 8px', letterSpacing: '-0.01em' }}>
         Bon retour 👋
       </h1>

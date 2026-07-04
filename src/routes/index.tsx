@@ -14,7 +14,6 @@ import { OffresRecuesScreen } from '@/features/client/OffresRecuesScreen'
 import { ClientAnnoncesScreen } from '@/features/client/ClientAnnoncesScreen'
 import { AnnonceDetailScreen } from '@/features/client/AnnonceDetailScreen'
 import { SuiviScreen } from '@/features/client/SuiviScreen'
-import { PointsScreen } from '@/features/client/PointsScreen'
 import { ProfilScreen } from '@/features/client/ProfilScreen'
 import { DriverDashboard } from '@/features/driver/DriverDashboard'
 import { LibreServiceScreen } from '@/features/driver/LibreServiceScreen'
@@ -24,6 +23,9 @@ import { HistoriqueScreen } from '@/features/driver/HistoriqueScreen'
 import { MonGarageScreen } from '@/features/driver/MonGarageScreen'
 import { DriverProfilScreen } from '@/features/driver/DriverProfilScreen'
 import { DriverParametresScreen } from '@/features/driver/DriverParametresScreen'
+import { DriverPointsScreen } from '@/features/driver/PointsScreen'
+import { MesAnnoncesScreen } from '@/features/driver/MesAnnoncesScreen'
+import { MessagesScreen } from '@/features/shared/MessagesScreen'
 import { AvailabilityToggle } from '@/features/driver/AvailabilityToggle'
 import { SuperAdminDashboard } from '@/features/superAdmin/SuperAdminDashboard'
 import { ColisPage } from '@/features/superAdmin/ColisPage'
@@ -45,7 +47,7 @@ const CLIENT_NAV: NavSection[] = [
       { label: 'Mes Annonces', icon: 'package_2', to: '/client/colis' },
       { label: 'Annonces chauffeurs', icon: 'campaign', to: '/client/annonces' },
       { label: 'Suivi', icon: 'qr_code_2', to: '/client/suivi' },
-      { label: 'Points & paiements', icon: 'account_balance_wallet', to: '/client/points' },
+      { label: 'Messages', icon: 'forum', to: '/client/messages' },
       { label: 'Profil', icon: 'person', to: '/client/profil' },
     ],
   },
@@ -56,8 +58,11 @@ const DRIVER_NAV: NavSection[] = [
     items: [
       { label: 'Tableau de bord', icon: 'dashboard', to: '/driver', end: true },
       { label: 'Annonces', icon: 'sell', to: '/driver/libre' },
+      { label: 'Mes annonces', icon: 'campaign', to: '/driver/annonces' },
       { label: 'Mes missions', icon: 'local_shipping', to: '/driver/missions' },
       { label: 'Revenus', icon: 'payments', to: '/driver/revenus' },
+      { label: 'Points & paiements', icon: 'account_balance_wallet', to: '/driver/points' },
+      { label: 'Messages', icon: 'forum', to: '/driver/messages' },
       { label: 'Historique', icon: 'history', to: '/driver/historique' },
       { label: 'Mon garage', icon: 'garage', to: '/driver/garage' },
       { label: 'Profil', icon: 'person', to: '/driver/profil' },
@@ -133,7 +138,7 @@ export const router = createBrowserRouter([
       { path: 'annonces', element: <ClientAnnoncesScreen /> },
       { path: 'annonces/:advertisementId', element: <AnnonceDetailScreen /> },
       { path: 'suivi', element: <SuiviScreen /> },
-      { path: 'points', element: <PointsScreen /> },
+      { path: 'messages', element: <MessagesScreen /> },
       { path: 'profil', element: <ProfilScreen /> },
     ],
   },
@@ -159,8 +164,11 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <DriverDashboard /> },
       { path: 'libre', element: <LibreServiceScreen /> },
+      { path: 'annonces', element: <MesAnnoncesScreen /> },
       { path: 'missions', element: <MissionsScreen /> },
       { path: 'revenus', element: <RevenusScreen /> },
+      { path: 'points', element: <DriverPointsScreen /> },
+      { path: 'messages', element: <MessagesScreen /> },
       { path: 'historique', element: <HistoriqueScreen /> },
       { path: 'garage', element: <MonGarageScreen /> },
       { path: 'profil', element: <DriverProfilScreen /> },

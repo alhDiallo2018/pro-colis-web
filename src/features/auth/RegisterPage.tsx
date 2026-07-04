@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Checkbox, Input, SegmentedControl, Toast } from '@/ds'
+import { Button, Checkbox, IconButton, Input, SegmentedControl, Toast } from '@/ds'
 import { AuthShell } from './AuthShell'
 import { useRegister } from './useAuth'
 import { homeForRole } from '@/routes/paths'
@@ -63,6 +63,10 @@ export function RegisterPage() {
         </>
       }
     >
+      <div style={{ marginBottom: 24 }}>
+        <IconButton icon="arrow_back" aria-label="Retour" onClick={() => navigate('/')} />
+      </div>
+
       <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 27, color: 'var(--text-strong)', margin: '0 0 6px', letterSpacing: '-0.01em' }}>
         Créer un compte
       </h1>
