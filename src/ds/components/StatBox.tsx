@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 
-export type StatBoxTone = 'neutral' | 'primary' | 'green' | 'amber' | 'red'
+export type StatBoxTone = 'neutral' | 'primary' | 'green' | 'amber' | 'red' | 'teal'
 
 export interface StatBoxProps {
   value?: ReactNode
@@ -19,6 +19,7 @@ export function StatBox({ value, label, icon, tone = 'neutral', delta, style }: 
     green: { bg: 'var(--green-50)', fg: 'var(--green-700)' },
     amber: { bg: 'var(--amber-50)', fg: 'var(--amber-600)' },
     red: { bg: 'var(--red-50)', fg: 'var(--red-500)' },
+    teal: { bg: 'var(--teal-50)', fg: 'var(--teal-600)' },
   }
   const t = tones[tone] || tones.neutral
   return (

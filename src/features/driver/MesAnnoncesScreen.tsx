@@ -181,7 +181,6 @@ function AdHeader({ ad }: { ad: Advertisement }) {
 
 function OfferRow({
   offer,
-  adId,
   onAccept,
   onReject,
   accepting,

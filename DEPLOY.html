@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ProColis · Guide de déploiement</title>
+<style>
+  :root {
+    --teal-50:#E4F4F2; --teal-100:#C3E6E2; --teal-500:#018982; --teal-600:#066E68; --teal-700:#054E4A;
+    --green-500:#3FB950; --deep-500:#0B3B39;
+    --ink:#0f1e1d; --body:#33413f; --muted:#6b7a78;
+    --line:#e4eae9; --surface:#ffffff; --sunken:#f5f8f7; --code-bg:#0d2b29; --code-fg:#d6efec;
+    --amber-50:#FDF3E3; --amber-600:#B7791F; --red-50:#FDECEC; --red-500:#E5484D;
+    --radius:14px; --shadow:0 1px 3px rgba(11,59,57,.06),0 8px 24px rgba(11,59,57,.06);
+    --font:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    --mono:'SF Mono',ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body {
+    margin:0; font-family:var(--font); color:var(--body); background:var(--sunken);
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  .layout { display:grid; grid-template-columns:260px minmax(0,1fr); min-height:100vh; }
+
+  /* Sidebar */
+  aside {
+    position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+    background:linear-gradient(160deg,var(--deep-500) 0%,var(--teal-700) 60%,var(--teal-600) 100%);
+    color:#cfe9e6; padding:28px 20px;
+  }
+  .brand { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .brand .logo {
+    width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-weight:800;color:#fff;
+    background:linear-gradient(135deg,var(--green-500),var(--teal-500));font-family:var(--mono);
+  }
+  .brand strong { color:#fff; font-size:1.05rem; letter-spacing:.2px; }
+  aside .sub { font-size:.72rem; text-transform:uppercase; letter-spacing:.14em; color:#8fc7c1; margin:22px 0 8px; }
+  aside nav a {
+    display:block; color:#bfe0dc; text-decoration:none; font-size:.9rem; padding:7px 12px; border-radius:8px;
+    transition:background .15s,color .15s;
+  }
+  aside nav a:hover { background:rgba(255,255,255,.08); color:#fff; }
+  aside nav a .n { display:inline-block; width:22px; color:#7fbdb6; font-family:var(--mono); font-size:.8rem; }
+  aside .foot { margin-top:26px; font-size:.75rem; color:#7fbdb6; border-top:1px solid rgba(255,255,255,.12); padding-top:16px; }
+
+  /* Content */
+  main { padding:56px 6vw 90px; max-width:960px; }
+  .hero { margin-bottom:44px; }
+  .hero .kicker { color:var(--teal-600); font-weight:700; font-size:.8rem; letter-spacing:.16em; text-transform:uppercase; }
+  h1 { font-size:2.4rem; line-height:1.15; margin:.3em 0 .25em; color:var(--ink); letter-spacing:-.02em; }
+  .hero p.lead { font-size:1.12rem; color:var(--muted); margin:0; max-width:60ch; }
+
+  section { scroll-margin-top:24px; margin:0 0 46px; }
+  h2 {
+    font-size:1.5rem; color:var(--ink); margin:0 0 18px; padding-bottom:10px;
+    border-bottom:2px solid var(--line); display:flex; align-items:center; gap:12px; letter-spacing:-.01em;
+  }
+  h2 .badge {
+    width:30px;height:30px;flex:none;border-radius:8px;display:grid;place-items:center;
+    background:var(--teal-50); color:var(--teal-600); font-weight:800; font-family:var(--mono); font-size:.95rem;
+  }
+  h3 { font-size:1.05rem; color:var(--ink); margin:26px 0 10px; }
+  p { margin:.5em 0; }
+  a { color:var(--teal-600); }
+
+  /* Cards / callouts */
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:22px 24px; box-shadow:var(--shadow); }
+  .note, .warn, .tip {
+    border-radius:12px; padding:14px 18px; margin:18px 0; font-size:.94rem; border:1px solid transparent;
+    display:flex; gap:12px; align-items:flex-start;
+  }
+  .note { background:var(--teal-50); border-color:var(--teal-100); color:var(--teal-700); }
+  .warn { background:var(--amber-50); border-color:#f2dcae; color:var(--amber-600); }
+  .tip  { background:#eefaf0; border-color:#cdeecf; color:#1f7a34; }
+  .note .ic,.warn .ic,.tip .ic { font-size:1.15rem; line-height:1.4; flex:none; }
+
+  /* Code */
+  pre {
+    background:var(--code-bg); color:#d7f0ec; border-radius:12px; padding:18px 20px; overflow-x:auto;
+    font-family:var(--mono); font-size:.85rem; line-height:1.65; margin:14px 0; border:1px solid #123c39;
+  }
+  pre .c { color:#6fae9f; } /* comments */
+  pre .k { color:#7ee3d3; } /* key command */
+  code:not(pre code) {
+    background:var(--teal-50); color:var(--teal-700); padding:.12em .45em; border-radius:6px;
+    font-family:var(--mono); font-size:.85em;
+  }
+
+  /* Steps */
+  ol.steps { list-style:none; counter-reset:s; padding:0; margin:16px 0; }
+  ol.steps > li { counter-increment:s; position:relative; padding:0 0 4px 44px; margin-bottom:16px; }
+  ol.steps > li::before {
+    content:counter(s); position:absolute; left:0; top:0; width:30px; height:30px; border-radius:50%;
+    background:var(--teal-500); color:#fff; display:grid; place-items:center; font-weight:700; font-size:.9rem;
+  }
+  ol.steps > li strong { color:var(--ink); }
+
+  /* Tables */
+  .table-wrap { overflow-x:auto; margin:16px 0; border:1px solid var(--line); border-radius:12px; }
+  table { border-collapse:collapse; width:100%; font-size:.9rem; background:var(--surface); }
+  th,td { text-align:left; padding:11px 16px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:var(--sunken); color:var(--ink); font-weight:700; }
+  tr:last-child td { border-bottom:none; }
+  td code { white-space:nowrap; }
+
+  /* Topology diagram */
+  .diagram { background:var(--code-bg); color:#cdeee9; border-radius:12px; padding:22px; font-family:var(--mono);
+    font-size:.82rem; line-height:1.7; overflow-x:auto; white-space:pre; border:1px solid #123c39; }
+  .diagram b { color:#7ee3d3; }
+
+  .pill { display:inline-block; background:var(--teal-50); color:var(--teal-700); border:1px solid var(--teal-100);
+    border-radius:999px; padding:3px 12px; font-size:.78rem; font-weight:600; margin:2px 4px 2px 0; font-family:var(--mono); }
+
+  @media (max-width:820px){
+    .layout { grid-template-columns:1fr; }
+    aside { position:static; height:auto; }
+    aside nav { display:grid; grid-template-columns:1fr 1fr; gap:2px; }
+    main { padding:40px 22px 70px; }
+    h1 { font-size:1.9rem; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside>
+    <div class="brand"><span class="logo">P</span><strong>ProColis</strong></div>
+    <div style="font-size:.8rem;color:#8fc7c1;">Guide de déploiement</div>
+
+    <div class="sub">Sommaire</div>
+    <nav>
+      <a href="#overview"><span class="n">—</span>Vue d'ensemble</a>
+      <a href="#dns"><span class="n">1</span>DNS</a>
+      <a href="#vps"><span class="n">2</span>Préparer le VPS</a>
+      <a href="#clone"><span class="n">3</span>Cloner les repos</a>
+      <a href="#secrets"><span class="n">4</span>Secrets</a>
+      <a href="#run"><span class="n">5</span>Build &amp; démarrage</a>
+      <a href="#update"><span class="n">6</span>Mises à jour</a>
+      <a href="#backup"><span class="n">7</span>Sauvegardes</a>
+      <a href="#cmd"><span class="n">8</span>Commandes utiles</a>
+      <a href="#trouble"><span class="n">9</span>Dépannage</a>
+    </nav>
+
+    <div class="foot">
+      Domaine unique · Docker · Caddy<br>HTTPS automatique (Let's Encrypt)
+    </div>
+  </aside>
+
+  <main>
+    <div class="hero">
+      <div class="kicker">Production · VPS</div>
+      <h1>Déploiement ProColis</h1>
+      <p class="lead">Web, API et fichiers uploadés servis derrière une seule adresse, avec HTTPS automatique via Caddy. Trois conteneurs Docker, aucune configuration TLS manuelle.</p>
+      <div style="margin-top:16px;">
+        <span class="pill">procolis-caddy</span>
+        <span class="pill">procolis-api</span>
+        <span class="pill">procolis-postgres</span>
+      </div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section id="overview">
+      <h2><span class="badge">◎</span>Vue d'ensemble</h2>
+      <p>Déploiement <strong>domaine unique</strong> (path-based) : une seule adresse sert la SPA React, l'API Express et les médias. Caddy gère le reverse-proxy et le certificat TLS.</p>
+      <div class="diagram">Internet ──443/80──▶ <b>Caddy</b> ──┬── /            SPA React (statique)
+                              ├── /api/*       ─▶ <b>API</b> (Express)
+                              └── /uploads/*   ─▶ <b>API</b> (médias)
+                       API ─▶ <b>Postgres</b>   (réseau interne, aucun port exposé)</div>
+      <div class="note"><span class="ic">🔒</span><div>Seul Caddy est exposé publiquement (ports 80/443). L'API et Postgres ne sont joignables que sur le réseau interne Docker.</div></div>
+    </section>
+
+    <!-- DNS -->
+    <section id="dns">
+      <h2><span class="badge">1</span>DNS</h2>
+      <p>Créer un enregistrement <strong>A</strong> pointant vers l'IP publique du VPS :</p>
+      <div class="table-wrap"><table>
+        <tr><th>Type</th><th>Nom</th><th>Valeur</th></tr>
+        <tr><td><code>A</code></td><td><code>procolis.exemple.com</code></td><td><code>&lt;IP du VPS&gt;</code></td></tr>
+      </table></div>
+      <div class="warn"><span class="ic">⚠️</span><div>Le certificat TLS ne sera émis que si le DNS est propagé <em>et</em> que les ports 80/443 sont ouverts.</div></div>
+    </section>
+
+    <!-- VPS -->
+    <section id="vps">
+      <h2><span class="badge">2</span>Préparer le VPS (Ubuntu/Debian vierge)</h2>
+      <p>Connecté en SSH sur le VPS, installer Docker et le plugin Compose depuis le dépôt officiel :</p>
+      <pre><span class="c"># --- Docker + plugin compose (dépôt officiel) ---</span>
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl git
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+  https://download.docker.com/linux/ubuntu $(. /etc/os-release &amp;&amp; echo $VERSION_CODENAME) stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+<span class="c"># Lancer docker sans sudo (se reconnecter après)</span>
+sudo usermod -aG docker $USER
+
+<span class="c"># --- Pare-feu : n'ouvrir que SSH + HTTP + HTTPS ---</span>
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw --force enable</pre>
+      <p>Vérifier : <code>docker --version &amp;&amp; docker compose version</code></p>
+    </section>
+
+    <!-- CLONE -->
+    <section id="clone">
+      <h2><span class="badge">3</span>Cloner les deux repos côte à côte</h2>
+      <p>Le <code>docker-compose.yml</code> (dans ProColis-Web) construit l'API depuis le repo voisin <code>../ProColis-Api</code>. Les deux <strong>doivent</strong> être au même niveau :</p>
+      <pre>mkdir -p ~/procolis &amp;&amp; cd ~/procolis
+git clone &lt;url-ProColis-Web&gt;   ProColis-Web
+git clone &lt;url-ProColis-Api&gt;   ProColis-Api
+cd ProColis-Web</pre>
+      <p>Arborescence attendue :</p>
+      <pre>~/procolis/
+├── ProColis-Web/   <span class="c">← lancer docker compose ICI</span>
+└── ProColis-Api/</pre>
+    </section>
+
+    <!-- SECRETS -->
+    <section id="secrets">
+      <h2><span class="badge">4</span>Configurer les secrets</h2>
+      <ol class="steps">
+        <li><strong>Copier le modèle :</strong>
+          <pre>cd ~/procolis/ProColis-Web
+cp .env.production.example .env</pre>
+        </li>
+        <li><strong>Générer les secrets :</strong>
+          <pre>echo "POSTGRES_PASSWORD=$(openssl rand -base64 24)"
+echo "JWT_ACCESS_SECRET=$(openssl rand -hex 32)"
+echo "JWT_REFRESH_SECRET=$(openssl rand -hex 32)"</pre>
+        </li>
+        <li><strong>Renseigner <code>.env</code></strong> avec <code>nano .env</code> :
+          <pre>DOMAIN=procolis.exemple.com
+TLS_EMAIL=fc@futurschoisis.net
+POSTGRES_PASSWORD=...
+JWT_ACCESS_SECRET=...
+JWT_REFRESH_SECRET=...</pre>
+        </li>
+      </ol>
+      <div class="note"><span class="ic">💡</span><div><code>PUBLIC_BASE_URL</code>, <code>CORS_ORIGIN</code> et l'URL d'API du front (<code>VITE_API_BASE_URL</code>) sont <strong>dérivés automatiquement</strong> de <code>DOMAIN</code> par le compose — rien d'autre à renseigner.</div></div>
+    </section>
+
+    <!-- RUN -->
+    <section id="run">
+      <h2><span class="badge">5</span>Build &amp; démarrage</h2>
+      <pre>cd ~/procolis/ProColis-Web
+docker compose build          <span class="c"># build SPA + image API (quelques minutes)</span>
+docker compose up -d          <span class="c"># démarre caddy + api + postgres</span>
+
+<span class="c"># Les migrations Prisma s'exécutent automatiquement au démarrage de l'API.</span>
+
+docker compose ps             <span class="c"># tout doit être running / healthy</span>
+docker compose logs -f caddy  <span class="c"># vérifier l'émission du certificat TLS</span></pre>
+      <p>Caddy obtient le certificat au premier accès HTTPS. Tester :</p>
+      <pre>curl -I https://procolis.exemple.com/api/v1/health   <span class="c"># 200 attendu</span></pre>
+      <p>Puis ouvrir <code>https://procolis.exemple.com</code> dans un navigateur.</p>
+
+      <h3>(Optionnel) Peupler la base avec les comptes de test</h3>
+      <div class="warn"><span class="ic">⚠️</span><div>Le seed crée les utilisateurs de démo (PIN <code>123456</code>). À <strong>ne pas</strong> exécuter sur une vraie production.</div></div>
+      <pre>docker compose exec api node prisma/seed.js</pre>
+    </section>
+
+    <!-- UPDATE -->
+    <section id="update">
+      <h2><span class="badge">6</span>Mises à jour</h2>
+      <pre>cd ~/procolis/ProColis-Web &amp;&amp; git pull
+cd ~/procolis/ProColis-Api &amp;&amp; git pull
+cd ~/procolis/ProColis-Web
+
+docker compose build
+docker compose up -d           <span class="c"># recrée uniquement ce qui a changé</span>
+docker image prune -f          <span class="c"># nettoie les anciennes images</span></pre>
+      <div class="note"><span class="ic">🏗️</span><div><code>VITE_API_BASE_URL</code> est figé <strong>au build</strong> du front. Un changement de <code>DOMAIN</code> impose <code>docker compose build caddy</code> (pas seulement un restart).</div></div>
+    </section>
+
+    <!-- BACKUP -->
+    <section id="backup">
+      <h2><span class="badge">7</span>Sauvegardes</h2>
+      <p>Deux volumes portent des données précieuses : <code>postgres-data</code> et <code>api-uploads</code> (les certificats de <code>caddy-data</code> se régénèrent seuls).</p>
+      <pre><span class="c"># Dump base de données</span>
+docker compose exec -T postgres pg_dump -U procolis procolis | gzip &gt; backup-$(date +%F).sql.gz
+
+<span class="c"># Restauration</span>
+gunzip -c backup-2026-07-05.sql.gz | docker compose exec -T postgres psql -U procolis procolis
+
+<span class="c"># Sauvegarde des fichiers uploadés</span>
+docker run --rm -v procolis-web_api-uploads:/data -v "$PWD":/backup alpine \
+  tar czf /backup/uploads-$(date +%F).tar.gz -C /data .</pre>
+      <div class="note"><span class="ic">📦</span><div>Le nom du volume est préfixé par le dossier du projet (<code>procolis-web_</code>). Vérifier avec <code>docker volume ls</code>.</div></div>
+    </section>
+
+    <!-- COMMANDS -->
+    <section id="cmd">
+      <h2><span class="badge">8</span>Commandes utiles</h2>
+      <pre>docker compose logs -f api        <span class="c"># logs API</span>
+docker compose logs -f caddy      <span class="c"># logs proxy / TLS</span>
+docker compose restart api        <span class="c"># redémarrer l'API</span>
+docker compose down               <span class="c"># arrêter (conserve les volumes/données)</span>
+docker compose exec postgres psql -U procolis procolis   <span class="c"># shell SQL</span></pre>
+    </section>
+
+    <!-- TROUBLESHOOT -->
+    <section id="trouble">
+      <h2><span class="badge">9</span>Dépannage</h2>
+      <div class="table-wrap"><table>
+        <tr><th>Symptôme</th><th>Cause probable</th><th>Action</th></tr>
+        <tr>
+          <td>Certificat TLS non émis</td>
+          <td>DNS non propagé ou port 80/443 fermé</td>
+          <td><code>dig procolis.exemple.com</code>, vérifier <code>ufw</code>, relire <code>docker compose logs caddy</code></td>
+        </tr>
+        <tr>
+          <td>Front charge mais appels API en erreur réseau</td>
+          <td><code>DOMAIN</code> changé sans rebuild du front</td>
+          <td><code>docker compose build caddy &amp;&amp; docker compose up -d caddy</code></td>
+        </tr>
+        <tr>
+          <td>Images/audios uploadés cassés</td>
+          <td><code>PUBLIC_BASE_URL</code> incorrect</td>
+          <td>doit valoir <code>https://&lt;DOMAIN&gt;</code> ; vérifier <code>docker compose exec api env | grep PUBLIC</code></td>
+        </tr>
+        <tr>
+          <td>API redémarre en boucle</td>
+          <td>Migration ou <code>DATABASE_URL</code> KO</td>
+          <td><code>docker compose logs api</code> ; vérifier que <code>postgres</code> est <code>healthy</code></td>
+        </tr>
+        <tr>
+          <td>502 Bad Gateway</td>
+          <td>API pas encore prête</td>
+          <td>attendre le healthcheck postgres ; <code>docker compose ps</code></td>
+        </tr>
+      </table></div>
+    </section>
+
+    <div style="margin-top:60px;padding-top:22px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;">
+      ProColis · Guide de déploiement — Docker + Caddy · domaine unique, HTTPS automatique.
+    </div>
+  </main>
+</div>
+</body>
+</html>

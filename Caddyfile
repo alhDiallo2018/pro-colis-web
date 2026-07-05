@@ -1,0 +1,24 @@
+# Caddy — reverse proxy + HTTPS automatique (Let's Encrypt)
+# DOMAIN et TLS_EMAIL sont injectés depuis l'environnement du conteneur (docker-compose).
+
+{
+	email {$TLS_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# API REST + fichiers uploadés → conteneur API (jamais exposé publiquement).
+	# On garde le chemin intact : l'API expose /api/v1/* et sert /uploads/*.
+	@backend path /api/* /uploads/*
+	handle @backend {
+		reverse_proxy api:8080
+	}
+
+	# SPA React : sert les fichiers statiques, fallback index.html pour le routing client.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

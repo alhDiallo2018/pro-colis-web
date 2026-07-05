@@ -80,7 +80,7 @@ export function useAnnonce(advertisementId: string | undefined) {
 
 export function useCreateAnnonceOffer(advertisementId: string) {
   return useMutation({
-    mutationFn: (payload: { price: number; message?: string }) => adsApi.createOffer(advertisementId, payload),
+    mutationFn: (payload: { price: number; message?: string; parcelId?: string }) => adsApi.createOffer(advertisementId, payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['annonces', 'detail', advertisementId] }),
   })
 }

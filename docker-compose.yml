@@ -1,0 +1,89 @@
+# Déploiement production ProColis — domaine unique, HTTPS automatique via Caddy.
+#
+# Topologie :
+#   Internet ──443/80──▶ caddy ──┬── / (SPA React, fichiers statiques)
+#                                 ├── /api/*     ─▶ api:8080
+#                                 └── /uploads/* ─▶ api:8080
+#   api ─▶ postgres (réseau interne uniquement, aucun port exposé)
+#
+# Prérequis sur le VPS : les deux repos clonés côte à côte
+#   ./ProColis-Web   (ce repo — lancer compose ici)
+#   ./ProColis-Api   (repo API, sibling)
+#
+# Copier .env.production.example vers .env et renseigner les valeurs avant `docker compose up`.
+
+services:
+  caddy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: https://${DOMAIN}/api/v1
+    image: procolis-web:latest
+    container_name: procolis-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      TLS_EMAIL: ${TLS_EMAIL}
+    volumes:
+      - caddy-data:/data      # certificats Let's Encrypt (à persister !)
+      - caddy-config:/config
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: ../ProColis-Api
+    image: procolis-api:latest
+    container_name: procolis-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      DATABASE_URL: postgresql://procolis:${POSTGRES_PASSWORD}@postgres:5432/procolis?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 30d
+      OTP_EXPIRES_MINUTES: 10
+      UPLOAD_STORAGE: local
+      UPLOAD_LOCAL_DIR: uploads
+      # URL publique : sert à construire les liens des fichiers uploadés (/uploads/...).
+      PUBLIC_BASE_URL: https://${DOMAIN}
+      # Même origine que le web → CORS de fait inactif, mais on le verrouille quand même.
+      CORS_ORIGIN: https://${DOMAIN}
+      LOG_LEVEL: info
+      RATE_LIMIT_WINDOW_MS: 900000
+      RATE_LIMIT_MAX: 300
+      AUTH_RATE_LIMIT_MAX: 30
+    volumes:
+      - api-uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Aucun `ports:` → l'API n'est joignable que par Caddy sur le réseau interne.
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: procolis-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: procolis
+      POSTGRES_USER: procolis
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U procolis -d procolis"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  caddy-data:
+  caddy-config:
+  api-uploads:
+  postgres-data:

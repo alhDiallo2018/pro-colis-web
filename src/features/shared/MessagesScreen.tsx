@@ -84,7 +84,7 @@ export function MessagesScreen() {
           parcelId: m.parcelId,
           parcel,
           trackingNumber: m.parcel?.trackingNumber,
-          parcelDescription: m.parcel?.description,
+          parcelDescription: m.parcel?.description ?? undefined,
           lastMessage: previewText(m),
           lastAt: m.createdAt,
           unread,

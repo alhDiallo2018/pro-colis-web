@@ -1,0 +1,23 @@
+# syntax=docker/dockerfile:1
+
+# --- Étape 1 : build de la SPA Vite/React ---
+FROM node:20-alpine AS build
+WORKDIR /app
+
+# Installe les dépendances (dev incluses : tsc + vite en ont besoin)
+COPY package*.json ./
+RUN npm ci
+
+# Code source
+COPY . .
+
+# L'URL de l'API est injectée AU BUILD (Vite inline les VITE_* dans le bundle).
+# Fournie par docker-compose : https://${DOMAIN}/api/v1
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+RUN npm run build
+
+# --- Étape 2 : Caddy sert la SPA + reverse-proxy vers l'API ---
+FROM caddy:2-alpine
+COPY Caddyfile /etc/caddy/Caddyfile
+COPY --from=build /app/dist /srv
