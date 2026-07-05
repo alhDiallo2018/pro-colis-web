@@ -200,7 +200,8 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plug
 sudo usermod -aG docker $USER
 
 <span class="c"># --- Pare-feu : n'ouvrir que SSH + HTTP + HTTPS ---</span>
-sudo ufw allow OpenSSH
+<span class="c"># Autoriser le 22/tcp AVANT le enable, sinon la session SSH est coupée.</span>
+sudo ufw allow 22/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw --force enable</pre>
