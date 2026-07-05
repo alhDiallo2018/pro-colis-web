@@ -231,9 +231,10 @@ cd ProColis-Web</pre>
 cp .env.production.example .env</pre>
         </li>
         <li><strong>Générer les secrets :</strong>
-          <pre>echo "POSTGRES_PASSWORD=$(openssl rand -base64 24)"
+          <pre>echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)"   <span class="c"># hex = URL-safe</span>
 echo "JWT_ACCESS_SECRET=$(openssl rand -hex 32)"
 echo "JWT_REFRESH_SECRET=$(openssl rand -hex 32)"</pre>
+          <div class="warn"><span class="ic">⚠️</span><div>Générer le mot de passe Postgres en <strong>hexadécimal</strong> (<code>-hex</code>), pas en <code>-base64</code> : les caractères <code>/</code> <code>+</code> <code>=</code> du base64 cassent le parsing de la <code>DATABASE_URL</code> côté API.</div></div>
         </li>
         <li><strong>Renseigner <code>.env</code></strong> avec <code>nano .env</code> :
           <pre>DOMAIN=procolis.exemple.com
