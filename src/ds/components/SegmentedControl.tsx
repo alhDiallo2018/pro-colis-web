@@ -30,6 +30,8 @@ export function SegmentedControl({ options = [], value, onChange, size = 'md', b
       style={{
         display: block ? 'flex' : 'inline-flex',
         width: block ? '100%' : 'auto',
+        maxWidth: '100%',
+        overflowX: 'auto',
         padding: 4,
         gap: 4,
         background: 'var(--surface-sunken)',

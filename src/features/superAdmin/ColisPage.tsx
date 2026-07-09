@@ -26,6 +26,8 @@ export function ColisPage() {
       <SegmentedControl size="sm" options={FILTERS} value={status} onChange={setStatus} />
 
       <Panel title={`Colis${query.data?.pagination ? ` · ${query.data.pagination.total}` : ''}`} flush>
+        <div className="pc-table-scroll">
+        <div style={{ minWidth: 760 }}>
         <div
           style={{
             display: 'grid',
@@ -83,6 +85,8 @@ export function ColisPage() {
             </div>
           ))}
         </QueryState>
+        </div>
+        </div>
       </Panel>
     </div>
   )

@@ -48,7 +48,7 @@ export function DriverDashboard() {
         </Button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
         <StatBox icon="local_shipping" tone="primary" value={parcels.length} label="Missions" />
         <StatBox icon="sell" tone="green" value={freeParcels.length} label="Annonces" />
         <StatBox icon="gavel" tone="amber" value={sent.data?.length ?? 0} label="Offres envoyées" />
@@ -56,7 +56,7 @@ export function DriverDashboard() {
         <StatBox icon="account_balance_wallet" tone="teal" value={balance.data ?? '—'} label="Points" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: 20, alignItems: 'start' }}>
+      <div className="pc-split">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Mission en cours */}
           <div style={{ background: 'var(--gradient-brand)', borderRadius: 'var(--radius-lg)', padding: 20, color: '#fff', boxShadow: 'var(--shadow-brand)' }}>

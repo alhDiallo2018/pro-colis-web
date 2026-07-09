@@ -43,8 +43,8 @@ function AssignRow({ parcel, drivers }: { parcel: Parcel; drivers: User[] }) {
 
   return (
     <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--slate-100)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+      <div style={{ flex: '1 1 220px', minWidth: 0 }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14.5, color: 'var(--text-strong)' }}>
           {parcel.departureCity ?? parcel.departureGarageName ?? '—'}
           <span className="material-symbols-rounded" style={{ fontSize: 16, color: 'var(--text-faint)' }}>arrow_right_alt</span>
@@ -61,7 +61,7 @@ function AssignRow({ parcel, drivers }: { parcel: Parcel; drivers: User[] }) {
         options={options}
         value={driverId}
         onChange={(e) => setDriverId(e.target.value)}
-        style={{ width: 220 }}
+        style={{ flex: '1 1 180px', minWidth: 160 }}
       />
       <Button
         size="sm"

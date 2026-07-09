@@ -17,13 +17,13 @@ export function ClientDashboard() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
         <StatBox icon="package_2" tone="primary" value={enCours} label="Colis en cours" />
         <StatBox icon="task_alt" tone="green" value={livres} label="Colis livrés" />
         <StatBox icon="sell" tone="amber" value={libre} label="Annonces" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: 20, alignItems: 'start' }}>
+      <div className="pc-split">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <Panel
             title="Mes colis récents"

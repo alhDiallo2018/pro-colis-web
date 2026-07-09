@@ -86,7 +86,7 @@ export function DriverProfilScreen() {
         <h3 style={{ margin: '0 0 16px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>Informations personnelles</h3>
         <form onSubmit={saveProfile} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Input label="Nom complet" icon="badge" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="pc-field-pair" style={{ gap: 16 }}>
             <Input label="Email" icon="mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             <Input label="Ville" icon="location_on" value={city} onChange={(e) => setCity(e.target.value)} />
           </div>
@@ -107,11 +107,11 @@ export function DriverProfilScreen() {
           Renseignez les informations de votre véhicule de livraison.
         </p>
         <form onSubmit={saveVehicle} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="pc-field-pair" style={{ gap: 16 }}>
             <Input label="Plaque d’immatriculation" icon="pin" mono placeholder="DK-2024-AB" value={plateNumber} onChange={(e) => setPlate(e.target.value)} />
             <Input label="Modèle" icon="directions_car" placeholder="Toyota Hiace" value={model} onChange={(e) => setModel(e.target.value)} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="pc-field-pair" style={{ gap: 16 }}>
             <Select label="Type" icon="category" placeholder="Type de véhicule" options={VEHICLE_TYPES} value={type} onChange={(e) => setType(e.target.value)} />
             <Input label="Capacité (places / kg)" icon="weight" type="number" inputMode="numeric" mono value={capacity} onChange={(e) => setCapacity(e.target.value)} />
           </div>

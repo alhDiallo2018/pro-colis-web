@@ -1,0 +1,73 @@
+/* ============================================================
+   PROCOLIS — RESPONSIVE LAYOUT UTILITIES
+   The app is styled with inline style objects, which cannot
+   carry media queries. These classes provide the handful of
+   reflow behaviours that inline styles can't express.
+
+   Breakpoints (viewport width):
+     lg  1024px  — sidebar rail / two-pane splits stack
+     md   900px  — mobile shell (sidebar → drawer, see layout)
+     sm   720px  — side-by-side chart/panel pairs stack
+     xs   560px  — paired form fields stack
+   ============================================================ */
+
+/* Main content + fixed side rail. Stacks to one column on tablet/mobile.
+   Threshold is above the 900px shell breakpoint so the rail never squeezes
+   the main column while the sidebar is still docked. */
+.pc-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: var(--space-5);
+  align-items: start;
+}
+@media (max-width: 1024px) {
+  .pc-split { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Two equal side-by-side blocks (charts, twin panels). Stacks on small screens. */
+.pc-duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+@media (max-width: 720px) {
+  .pc-duo { grid-template-columns: 1fr; }
+}
+
+/* Paired form fields (two inputs on a row). Collapse to one column on phones.
+   Keep any bespoke gap inline — it overrides the class default. */
+.pc-field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+@media (max-width: 560px) {
+  .pc-field-pair { grid-template-columns: 1fr; }
+}
+
+/* Horizontal-scroll shell for wide fixed-column data tables. Defeats the
+   parent Panel's overflow:hidden so columns scroll instead of being clipped. */
+.pc-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Marketing landing: stats band 4-up → 2-up on small screens. */
+.pc-landing-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+@media (max-width: 720px) {
+  .pc-landing-stats { grid-template-columns: 1fr 1fr; }
+}
+
+/* Marketing landing: secondary nav links, hidden on narrow screens. */
+@media (max-width: 820px) {
+  .pc-landing-nav-links { display: none !important; }
+}
+
+/* Hide non-essential chrome on very small screens (e.g. secondary CTA). */
+@media (max-width: 480px) {
+  .pc-hide-xs { display: none !important; }
+}

@@ -24,14 +24,14 @@ export function StatistiquesPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
         <StatBox icon="package_2" tone="primary" value={parcels.data?.pagination?.total ?? parcels.data?.parcels.length ?? '—'} label="Colis au total" delta={12} />
         <StatBox icon="local_shipping" tone="green" value={drivers.data?.length ?? '—'} label="Chauffeurs" delta={4} />
         <StatBox icon="garage" tone="amber" value={garages.data?.length ?? '—'} label="Garages" delta={2} />
         <StatBox icon="task_alt" tone="neutral" value={(parcels.data?.parcels ?? []).filter((p) => p.status === 'delivered').length} label="Colis livrés" delta={9} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div className="pc-duo">
         <Panel title="Volume de colis · 12 mois" action={<Badge tone="primary">+12%</Badge>}>
           <BarChart bars={VOLUME} labels={MONTHS} height={140} />
         </Panel>

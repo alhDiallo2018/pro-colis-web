@@ -16,7 +16,7 @@ export function RevenusScreen() {
 
   return (
     <div style={{ maxWidth: 920, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
         <StatBox icon="payments" tone="green" value={formatFcfa(total)} label="Revenus encaissés" />
         <StatBox icon="receipt_long" tone="primary" value={count} label="Paiements" />
         <StatBox icon="trending_up" tone="amber" value="+14%" label="vs semaine dernière" />

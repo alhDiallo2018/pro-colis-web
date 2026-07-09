@@ -81,7 +81,7 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
       }
     >
       <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div className="pc-field-pair" style={{ gap: 12 }}>
           <Select
             label="Départ"
             icon="garage"
@@ -106,7 +106,7 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
           value={departureAt}
           onChange={(e) => setDepartureAt(e.target.value)}
         />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div className="pc-field-pair" style={{ gap: 12 }}>
           <Input label="Poids dispo. (kg)" icon="weight" type="number" inputMode="decimal" mono value={weight} onChange={(e) => setWeight(e.target.value)} />
           <Input label="Prix proposé (FCFA)" icon="payments" type="number" inputMode="numeric" mono value={price} onChange={(e) => setPrice(e.target.value)} />
         </div>

@@ -27,6 +27,8 @@ export function UtilisateursPage() {
 
   return (
     <Panel title={`Utilisateurs${query.data?.pagination ? ` · ${query.data.pagination.total}` : ''}`} flush>
+      <div className="pc-table-scroll">
+      <div style={{ minWidth: 620 }}>
       <div
         style={{
           display: 'grid',
@@ -91,6 +93,8 @@ export function UtilisateursPage() {
           )
         })}
       </QueryState>
+      </div>
+      </div>
     </Panel>
   )
 }

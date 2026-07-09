@@ -19,14 +19,14 @@ export function GarageDashboard() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
         <StatBox icon="package_2" tone="primary" value={parcelsQ.data?.pagination?.total ?? parcels.length} label="Colis du garage" />
         <StatBox icon="assignment_late" tone="amber" value={unassigned} label="À assigner" />
         <StatBox icon="local_shipping" tone="green" value={inTransit} label="En transit" />
         <StatBox icon="directions_car" tone="neutral" value={`${available}/${drivers.length}`} label="Chauffeurs dispo" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: 20, alignItems: 'start' }}>
+      <div className="pc-split">
         <Panel
           title="Colis récents"
           flush

@@ -75,7 +75,7 @@ export function DriverParametresScreen() {
             value={currentPin}
             onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
           />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="pc-field-pair" style={{ gap: 16 }}>
             <Input
               label="Nouveau code PIN"
               icon="lock_reset"

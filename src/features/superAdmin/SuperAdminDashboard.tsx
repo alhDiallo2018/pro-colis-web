@@ -22,14 +22,14 @@ export function SuperAdminDashboard() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
         <StatBox icon="package_2" tone="primary" value={parcels.data?.pagination?.total ?? allParcels.length} label="Colis" delta={12} />
         <StatBox icon="local_shipping" tone="green" value={driverList.length} label="Chauffeurs" delta={4} />
         <StatBox icon="garage" tone="amber" value={garageList.length} label="Garages" delta={2} />
         <StatBox icon="account_balance_wallet" tone="neutral" value="—" label="FCFA encaissés" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: 20, alignItems: 'start' }}>
+      <div className="pc-split">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <Panel title="Colis récents" flush>
             <ParcelsTable parcels={allParcels.slice(0, 6)} loading={!parcels.data} emptyHint="Aucun colis enregistré." />

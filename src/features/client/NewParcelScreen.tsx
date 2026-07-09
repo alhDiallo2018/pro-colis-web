@@ -296,7 +296,7 @@ export function NewParcelScreen() {
                 value={watch('type') ?? ''}
                 onChange={(e) => setValue('type', e.target.value)}
               />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="pc-field-pair" style={{ gap: 12 }}>
                 <Input label={required('Poids (kg)')} type="number" inputMode="decimal" mono error={errors.weight?.message} {...register('weight')} />
                 <Input
                   label={mode === 'driver' ? 'Prix convenu (FCFA)' : 'Prix proposé (FCFA)'}

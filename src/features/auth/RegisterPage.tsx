@@ -78,12 +78,12 @@ export function RegisterPage() {
           <SegmentedControl block options={ROLE_OPTIONS} value={role} onChange={(v) => setRole(v as Role)} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="pc-field-pair" style={{ gap: 16 }}>
           <Input label="Nom complet" icon="badge" placeholder="Ex : Aïcha Mballa" value={fullName} onChange={(e) => setFullName(e.target.value)} />
           <Input label="Ville" icon="location_on" placeholder="Douala" value={city} onChange={(e) => setCity(e.target.value)} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="pc-field-pair" style={{ gap: 16 }}>
           <Input
             label="Téléphone"
             icon="call"

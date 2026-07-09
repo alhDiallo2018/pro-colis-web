@@ -264,7 +264,7 @@ function OfferRow({
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', fontSize: 'var(--fs-sm)' }}>
+          <div className="pc-field-pair" style={{ gap: '8px 16px', fontSize: 'var(--fs-sm)' }}>
             {offer.parcel.weight != null && (
               <div><span style={{ color: 'var(--text-muted)' }}>Poids</span><br /><strong>{offer.parcel.weight} kg</strong></div>
             )}

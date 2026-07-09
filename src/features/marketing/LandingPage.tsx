@@ -60,21 +60,21 @@ export function LandingPage() {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 28,
+          gap: 12,
           height: 72,
-          padding: '0 40px',
+          padding: '0 clamp(12px, 4vw, 40px)',
           borderBottom: '1px solid var(--border-subtle)',
           maxWidth: 1320,
           margin: '0 auto',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 11, cursor: 'pointer' }} onClick={() => navigate('/')}>
-          <img src="/logo-procolis.png" alt="" style={{ width: 34, height: 34, objectFit: 'contain' }} />
-          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.01em', color: 'var(--slate-900)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, flex: 'none', cursor: 'pointer' }} onClick={() => navigate('/')}>
+          <img src="/logo-procolis.png" alt="" style={{ width: 'clamp(28px, 7vw, 34px)', height: 'clamp(28px, 7vw, 34px)', objectFit: 'contain' }} />
+          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(16px, 4.5vw, 20px)', letterSpacing: '-0.01em', color: 'var(--slate-900)' }}>
             PRO<span style={{ color: 'var(--amber-400)' }}>COLIS</span>
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 26, marginLeft: 18 }}>
+        <div className="pc-landing-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 26, marginLeft: 18 }}>
           {NAV_ITEMS.map((item) => (
             <span key={item.label} style={{ fontWeight: 600, fontSize: 14.5, color: 'var(--text-body)', cursor: 'pointer' }} onClick={() => handleNav(item)}>
               {item.label}
@@ -82,9 +82,11 @@ export function LandingPage() {
           ))}
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Button variant="ghost" onClick={() => navigate('/login')}>
-            Se connecter
-          </Button>
+          <span className="pc-hide-xs">
+            <Button variant="ghost" onClick={() => navigate('/login')}>
+              Se connecter
+            </Button>
+          </span>
           <Button icon="arrow_forward" onClick={() => navigate('/register')}>
             Créer un compte
           </Button>
@@ -103,11 +105,11 @@ export function LandingPage() {
             position: 'relative',
             maxWidth: 1320,
             margin: '0 auto',
-            padding: '64px 40px 72px',
+            padding: 'clamp(40px, 6vw, 64px) clamp(16px, 4vw, 40px) clamp(48px, 7vw, 72px)',
             flexWrap: 'wrap',
           }}
         >
-          <div style={{ flex: 1, minWidth: 320, maxWidth: 560 }}>
+          <div style={{ flex: 1, minWidth: 260, maxWidth: 560 }}>
             <div
               style={{
                 display: 'inline-flex',
@@ -126,7 +128,7 @@ export function LandingPage() {
             >
               <span style={{ fontWeight: 800, letterSpacing: '-1px', color: 'var(--amber-300)' }}>»</span> Livraison interurbaine
             </div>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 52, lineHeight: 1.05, letterSpacing: '-0.025em', margin: '0 0 18px' }}>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(34px, 6vw, 52px)', lineHeight: 1.05, letterSpacing: '-0.025em', margin: '0 0 18px' }}>
               Vos colis,
               <br />
               de ville en ville.
@@ -148,7 +150,7 @@ export function LandingPage() {
           {/* Tracking card */}
           <div
             style={{
-              width: 380,
+              width: 'min(380px, 100%)',
               flex: 'none',
               background: 'var(--surface-card)',
               borderRadius: 'var(--radius-lg)',
@@ -212,9 +214,9 @@ export function LandingPage() {
 
       {/* Stats band */}
       <div style={{ background: 'var(--slate-900)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', maxWidth: 1320, margin: '0 auto' }}>
+        <div className="pc-landing-stats" style={{ maxWidth: 1320, margin: '0 auto' }}>
           {STATS.map((s, i) => (
-            <div key={s.label} style={{ padding: '30px 40px', borderRight: i < 3 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
+            <div key={s.label} style={{ padding: 'clamp(20px, 4vw, 30px) clamp(18px, 4vw, 40px)', borderRight: i < 3 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
               <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 32, color: s.accent ? 'var(--amber-400)' : '#fff' }}>
                 {s.value}
               </div>
@@ -225,7 +227,7 @@ export function LandingPage() {
       </div>
 
       {/* How it works */}
-      <div id="how-it-works" style={{ maxWidth: 1320, margin: '0 auto', padding: '64px 40px 56px' }}>
+      <div id="how-it-works" style={{ maxWidth: 1320, margin: '0 auto', padding: 'clamp(44px, 6vw, 64px) clamp(16px, 4vw, 40px) clamp(40px, 5vw, 56px)' }}>
         <div style={{ textAlign: 'center', maxWidth: 560, margin: '0 auto 44px' }}>
           <div
             style={{
@@ -240,14 +242,14 @@ export function LandingPage() {
           >
             Comment ça marche
           </div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 34, letterSpacing: '-0.02em', color: 'var(--text-strong)', margin: '0 0 12px' }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(26px, 5vw, 34px)', letterSpacing: '-0.02em', color: 'var(--text-strong)', margin: '0 0 12px' }}>
             Trois étapes, d’un quai à l’autre
           </h2>
           <p style={{ fontSize: 16, color: 'var(--text-muted)', margin: 0, lineHeight: 1.55 }}>
             Pas d’intermédiaire opaque : vous gardez la main sur le prix et le chauffeur.
           </p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
           {STEPS.map((s) => (
             <div key={s.n} style={{ background: 'var(--surface-page)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)', padding: 28 }}>
               <span
@@ -280,19 +282,19 @@ export function LandingPage() {
       </div>
 
       {/* Express callout */}
-      <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 40px 64px' }}>
+      <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 clamp(16px, 4vw, 40px) clamp(44px, 6vw, 64px)' }}>
         <div
           style={{
             background: 'var(--slate-900)',
             borderRadius: 'var(--radius-xl)',
-            padding: '44px 48px',
+            padding: 'clamp(28px, 5vw, 44px) clamp(22px, 4vw, 48px)',
             display: 'flex',
             alignItems: 'center',
             gap: 40,
             flexWrap: 'wrap',
           }}
         >
-          <div style={{ flex: 1, minWidth: 300 }}>
+          <div style={{ flex: 1, minWidth: 260 }}>
             <div
               style={{
                 display: 'inline-flex',
@@ -309,7 +311,7 @@ export function LandingPage() {
             >
               <span style={{ fontSize: 22, letterSpacing: '-2px' }}>»»</span> Option express
             </div>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30, letterSpacing: '-0.02em', color: '#fff', margin: '0 0 12px', lineHeight: 1.15 }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(24px, 5vw, 30px)', letterSpacing: '-0.02em', color: '#fff', margin: '0 0 12px', lineHeight: 1.15 }}>
               Un colis urgent ? Priorité haute, départ immédiat.
             </h2>
             <p style={{ fontSize: 15.5, color: 'rgba(255,255,255,0.7)', margin: '0 0 24px', maxWidth: 520, lineHeight: 1.55 }}>
@@ -319,7 +321,7 @@ export function LandingPage() {
               Envoyer en express
             </Button>
           </div>
-          <div style={{ flex: 'none', width: 300 }}>
+          <div style={{ flex: 'none', width: 'min(300px, 100%)' }}>
             <ParcelCard
               parcel={{
                 tracking: 'PC-5T8R-1190',
@@ -338,7 +340,7 @@ export function LandingPage() {
 
       {/* Footer */}
       <div id="footer" style={{ background: 'var(--deep-800)', color: 'rgba(255,255,255,0.7)' }}>
-        <div style={{ maxWidth: 1320, margin: '0 auto', padding: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 40, flexWrap: 'wrap' }}>
+        <div style={{ maxWidth: 1320, margin: '0 auto', padding: 'clamp(28px, 5vw, 40px)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 40, flexWrap: 'wrap' }}>
           <div style={{ maxWidth: 300 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, cursor: 'pointer' }} onClick={() => navigate('/')}>
               <img src="/logo-procolis.png" alt="" style={{ width: 30, height: 30, objectFit: 'contain' }} />

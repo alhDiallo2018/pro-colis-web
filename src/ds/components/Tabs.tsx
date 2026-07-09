@@ -17,7 +17,7 @@ export interface TabsProps {
 export function Tabs({ items = [], value, onChange, style }: TabsProps) {
   const norm: TabItem[] = items.map((o) => (typeof o === 'string' ? { value: o, label: o } : o))
   return (
-    <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border-subtle)', ...style }}>
+    <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border-subtle)', overflowX: 'auto', maxWidth: '100%', ...style }}>
       {norm.map((it) => {
         const active = it.value === value
         return (

@@ -6,6 +6,7 @@ import { NegotiationChat } from '@/components/NegotiationChat'
 import * as messagesApi from '@/lib/api/messages'
 import type { ConversationMessage } from '@/lib/api/messages'
 import { useAuthStore } from '@/store/auth'
+import { useIsMobile } from '@/lib/useMediaQuery'
 
 function extractParcel(p: NonNullable<ConversationMessage['parcel']>): NonNullable<ConversationMessage['parcel']> {
   return {
@@ -95,11 +96,19 @@ export function MessagesScreen() {
   }, [conv.data, userId])
 
   const selected = activeThread
+  const isMobile = useIsMobile()
+  const showList = !isMobile || !selected
+  const showChat = !isMobile || Boolean(selected)
+
+  const outerStyle: React.CSSProperties = isMobile
+    ? { height: 'calc(100dvh - 150px)', minHeight: 420, display: 'flex', flexDirection: 'column' }
+    : { display: 'grid', gridTemplateColumns: '320px minmax(0,1fr)', gap: 0, height: 'calc(100vh - 160px)', minHeight: 480 }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '320px minmax(0,1fr)', gap: 0, height: 'calc(100vh - 160px)', minHeight: 480 }}>
+    <div style={outerStyle}>
       {/* Conversations list */}
-      <Panel flush style={{ borderRight: 'none', borderTopRightRadius: 0, borderBottomRightRadius: 0 }}>
+      {showList && (
+      <Panel flush style={isMobile ? { flex: 1, minHeight: 0 } : { borderRight: 'none', borderTopRightRadius: 0, borderBottomRightRadius: 0 }}>
         <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-subtle)' }}>
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, color: 'var(--text-strong)' }}>Messages</div>
         </div>
@@ -152,12 +161,23 @@ export function MessagesScreen() {
           )}
         </div>
       </Panel>
+      )}
 
       {/* Chat area */}
-      <Panel style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
+      {showChat && (
+      <Panel style={isMobile ? { flex: 1, minHeight: 0 } : { borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
         {selected ? (
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 0 14px', borderBottom: '1px solid var(--border-subtle)', marginBottom: 12 }}>
+              {isMobile && (
+                <button
+                  onClick={() => setActiveThread(null)}
+                  aria-label="Retour"
+                  style={{ flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, border: 'none', background: 'transparent', color: 'var(--text-body)', cursor: 'pointer' }}
+                >
+                  <Icon name="arrow_back" size={22} />
+                </button>
+              )}
               <Avatar name={selected.peerName} size="sm" />
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-body)', color: 'var(--text-strong)' }}>
@@ -204,6 +224,7 @@ export function MessagesScreen() {
           </div>
         )}
       </Panel>
+      )}
     </div>
   )
 }

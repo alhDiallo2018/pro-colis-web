@@ -54,11 +54,11 @@ export function ProfilScreen() {
         </h3>
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Input label="Nom complet" icon="badge" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="pc-field-pair" style={{ gap: 16 }}>
             <Input label="Email" icon="mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             <Input label="Téléphone" icon="call" mono value={user.phone} disabled help="Le téléphone n'est pas modifiable" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="pc-field-pair" style={{ gap: 16 }}>
             <Input label="Ville" icon="location_on" value={city} onChange={(e) => setCity(e.target.value)} />
             <Input label="Adresse" icon="home" value={address} onChange={(e) => setAddress(e.target.value)} />
           </div>

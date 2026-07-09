@@ -357,7 +357,7 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
                 {parcelInfo.description}
               </div>
             )}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px', fontSize: 'var(--fs-sm)' }}>
+            <div className="pc-field-pair" style={{ gap: '6px 16px', fontSize: 'var(--fs-sm)' }}>
               {parcelInfo.weight != null && <div><span style={{ color: 'var(--text-muted)' }}>Poids</span><br /><strong>{parcelInfo.weight} kg</strong></div>}
               {parcelInfo.type && <div><span style={{ color: 'var(--text-muted)' }}>Type</span><br /><strong>{parcelInfo.type}</strong></div>}
               {parcelInfo.status && <div><span style={{ color: 'var(--text-muted)' }}>Statut</span><br /><strong>{parcelInfo.status}</strong></div>}

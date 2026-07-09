@@ -3,19 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Avatar, Icon } from '@/ds'
 import { useAuthStore } from '@/store/auth'
 import { useLogout } from '@/features/auth/useAuth'
-
-/** Tracks a CSS media query (e.g. the mobile breakpoint) reactively. */
-function useMediaQuery(query: string) {
-  const [matches, setMatches] = useState(() => typeof window !== 'undefined' && window.matchMedia(query).matches)
-  useEffect(() => {
-    const mq = window.matchMedia(query)
-    const onChange = () => setMatches(mq.matches)
-    onChange()
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
-  }, [query])
-  return matches
-}
+import { useMediaQuery } from '@/lib/useMediaQuery'
 
 export interface NavItem {
   label: string

@@ -16,7 +16,8 @@ const cell: React.CSSProperties = { display: 'flex', alignItems: 'center', minWi
 /** Compact recent-parcels table (tracking · route · status · price). */
 export function ParcelsTable({ parcels, loading, onRowClick, emptyHint }: ParcelsTableProps) {
   return (
-    <div>
+    <div className="pc-table-scroll">
+      <div style={{ minWidth: 560 }}>
       <div
         style={{
           display: 'grid',
@@ -85,6 +86,7 @@ export function ParcelsTable({ parcels, loading, onRowClick, emptyHint }: Parcel
             </span>
           </div>
         ))}
+      </div>
     </div>
   )
 }
