@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { Button, Dialog, Input, Select, Toast } from '@/ds'
-import { usePurchaseScore } from './hooks'
+import { usePurchaseScore, useDriverWallet } from './hooks'
+import { createPaydunyaPayment } from '@/lib/api/paydunya'
+import { purchaseWithWallet } from '@/lib/api/score'
 import { ApiError } from '@/lib/api/client'
+import { formatFcfa } from '@/lib/format'
 
 interface RechargeDialogProps {
   open: boolean
@@ -18,42 +21,86 @@ const PACKS = [
 ]
 
 const PAYMENT_METHODS = [
-  { value: 'wave', label: 'Wave' },
-  { value: 'orange_money', label: 'Orange Money' },
-  { value: 'freemMoney', label: 'FreeMoney' },
-  { value: 'card', label: 'Carte bancaire' },
+  { value: 'wallet', label: 'Portefeuille (solde disponible)' },
+  { value: 'paydunya', label: 'PayDunya (Wave, OM, Carte…)' },
+  { value: 'wave', label: 'Wave (direct)' },
+  { value: 'orange_money', label: 'Orange Money (direct)' },
+  { value: 'freemMoney', label: 'FreeMoney (direct)' },
+  { value: 'card', label: 'Carte bancaire (direct)' },
   { value: 'cash', label: 'Espèces' },
 ]
 
 export function RechargeDialog({ open, onClose, onSuccess }: RechargeDialogProps) {
   const purchase = usePurchaseScore()
+  const wallet = useDriverWallet()
   const [pack, setPack] = useState(PACKS[0].points.toString())
   const [customPoints, setCustomPoints] = useState('')
-  const [method, setMethod] = useState('wave')
+  const [method, setMethod] = useState('wallet')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [useCustom, setUseCustom] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   if (!open) return null
 
   const points = useCustom ? Number(customPoints) : Number(pack)
-  const valid = points >= 100 && (method !== 'cash' || points > 0)
+  const isWallet = method === 'wallet'
+  const isPaydunya = method === 'paydunya'
+  const walletBalance = Number(wallet.data?.balance ?? 0)
+  const valid = points >= 100
 
-  const submit = () => {
-    purchase.mutate(
-      { points, method, phoneNumber: method !== 'cash' ? phoneNumber.trim() || undefined : undefined },
-      {
-        onSuccess: () => {
-          setCustomPoints('')
-          setPhoneNumber('')
-          onSuccess?.()
-          onClose()
+  const submit = async () => {
+    setErrorMsg(null)
+
+    if (isWallet) {
+      if (points > walletBalance) {
+        setErrorMsg(`Solde insuffisant. Votre portefeuille: ${formatFcfa(walletBalance)}`)
+        return
+      }
+      setLoading(true)
+      try {
+        await purchaseWithWallet(points)
+        onSuccess?.()
+        onClose()
+      } catch (e) {
+        setErrorMsg((e as Error)?.message ?? 'Achat impossible')
+      } finally {
+        setLoading(false)
+      }
+    } else if (isPaydunya) {
+      setLoading(true)
+      try {
+        const result = await createPaydunyaPayment('score', { points })
+        window.location.href = result.paymentUrl
+      } catch (e) {
+        setErrorMsg((e as Error)?.message ?? 'Erreur PayDunya')
+        setLoading(false)
+      }
+    } else {
+      purchase.mutate(
+        { points, method, phoneNumber: method !== 'cash' ? phoneNumber.trim() || undefined : undefined },
+        {
+          onSuccess: () => {
+            setCustomPoints('')
+            setPhoneNumber('')
+            onSuccess?.()
+            onClose()
+          },
         },
-      },
-    )
+      )
+    }
   }
 
-  const error = purchase.error instanceof ApiError ? purchase.error.message : purchase.error ? 'Achat impossible' : null
-  const showPhone = method !== 'cash'
+  const error =
+    errorMsg ||
+    (purchase.error instanceof ApiError ? purchase.error.message : purchase.error ? 'Achat impossible' : null)
+  const showPhone = method !== 'cash' && method !== 'paydunya' && method !== 'wallet'
+
+  const buttonLabel = isWallet
+    ? `Acheter ${points} pts (portefeuille)`
+    : isPaydunya
+      ? `Payer ${points} pts avec PayDunya`
+      : `Acheter ${points} pts`
 
   return (
     <Dialog
@@ -67,13 +114,36 @@ export function RechargeDialog({ open, onClose, onSuccess }: RechargeDialogProps
           <Button variant="secondary" block onClick={onClose}>
             Annuler
           </Button>
-          <Button variant="amber" block icon="add" loading={purchase.isPending} disabled={!valid} onClick={submit}>
-            Acheter {points} pts
+          <Button
+            variant="amber"
+            block
+            icon="add"
+            loading={purchase.isPending || loading}
+            disabled={!valid}
+            onClick={submit}
+            style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+          >
+            {buttonLabel}
           </Button>
         </>
       }
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {isWallet && (
+          <div
+            style={{
+              background: 'var(--teal-50)',
+              borderRadius: 'var(--radius-md)',
+              padding: '10px 14px',
+              fontSize: 13,
+              color: 'var(--teal-800)',
+              fontWeight: 500,
+            }}
+          >
+            Solde portefeuille : {formatFcfa(walletBalance)}
+          </div>
+        )}
+
         {!useCustom ? (
           <Select
             label="Forfait"
@@ -107,7 +177,10 @@ export function RechargeDialog({ open, onClose, onSuccess }: RechargeDialogProps
           label="Moyen de paiement"
           options={PAYMENT_METHODS}
           value={method}
-          onChange={(e) => setMethod(e.target.value)}
+          onChange={(e) => {
+            setMethod(e.target.value)
+            setErrorMsg(null)
+          }}
         />
 
         {showPhone && (
@@ -121,9 +194,29 @@ export function RechargeDialog({ open, onClose, onSuccess }: RechargeDialogProps
           />
         )}
 
-        <div style={{ background: 'var(--slate-50)', borderRadius: 'var(--radius-md)', padding: '12px 16px', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-          Les points vous permettent d&apos;accéder aux annonces de colis et de recevoir des missions.
-          1 point = 1 FCFA.
+        <div
+          style={{
+            background: 'var(--slate-50)',
+            borderRadius: 'var(--radius-md)',
+            padding: '12px 16px',
+            fontSize: 13,
+            color: 'var(--text-muted)',
+            lineHeight: 1.5,
+          }}
+        >
+          Les points vous permettent d&apos;accéder aux annonces de colis et de recevoir des missions. 1 point = 1
+          FCFA.
+          {isWallet && (
+            <span style={{ display: 'block', marginTop: 8, color: 'var(--teal-700)', fontWeight: 500 }}>
+              Le montant sera débité de votre portefeuille immédiatement.
+            </span>
+          )}
+          {isPaydunya && (
+            <span style={{ display: 'block', marginTop: 8, color: 'var(--teal-700)', fontWeight: 500 }}>
+              PayDunya accepte Wave, Orange Money, FreeMoney et carte bancaire. Vous serez redirigé vers la page de
+              paiement sécurisée.
+            </span>
+          )}
         </div>
 
         {error && <Toast tone="error" message={error} />}

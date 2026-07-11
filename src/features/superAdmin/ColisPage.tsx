@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { Avatar, SegmentedControl, StatusBadge } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
+import { ParcelDetailDialog } from '@/components/ParcelDetailDialog'
 import { useAdminParcels } from './hooks'
 import { formatFcfa, toStatusKey } from '@/lib/format'
+import type { Parcel } from '@/lib/api/types'
 
 const FILTERS = [
   { value: '', label: 'Tous' },
@@ -18,6 +20,7 @@ const cell: React.CSSProperties = { display: 'flex', alignItems: 'center', minWi
 
 export function ColisPage() {
   const [status, setStatus] = useState('')
+  const [detailTarget, setDetailTarget] = useState<Parcel | null>(null)
   const query = useAdminParcels(status ? { status } : {})
   const parcels = query.data?.parcels ?? []
 
@@ -60,7 +63,11 @@ export function ColisPage() {
           onRetry={() => query.refetch()}
         >
           {parcels.map((p) => (
-            <div key={p.id} style={{ display: 'grid', gridTemplateColumns: GRID, alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid var(--slate-100)' }}>
+            <div
+              key={p.id}
+              style={{ display: 'grid', gridTemplateColumns: GRID, alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}
+              onClick={() => setDetailTarget(p)}
+            >
               <span style={{ ...cell, fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 12, color: 'var(--text-strong)' }}>{p.trackingNumber}</span>
               <span style={{ ...cell, fontSize: 13, color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{p.senderName}</span>
               <span style={{ ...cell, gap: 5, fontSize: 13, color: 'var(--text-body)', fontWeight: 500 }}>
@@ -71,7 +78,7 @@ export function ColisPage() {
               <span style={cell}>
                 {p.driverName ? (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                    <Avatar name={p.driverName} size="xs" />
+                    <Avatar name={p.driverName} src={p.driver?.profilePhoto ?? undefined} size="xs" />
                     <span style={{ fontSize: 12.5, color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.driverName}</span>
                   </span>
                 ) : (
@@ -88,6 +95,7 @@ export function ColisPage() {
         </div>
         </div>
       </Panel>
+      <ParcelDetailDialog parcel={detailTarget} onClose={() => setDetailTarget(null)} />
     </div>
   )
 }

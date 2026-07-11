@@ -29,6 +29,19 @@ export function usePurchaseScore() {
   })
 }
 
+export function useDriverWallet() {
+  return useQuery({ queryKey: ['driver', 'wallet'], queryFn: () => scoreApi.getWallet() })
+}
+
+export function useWithdrawWallet() {
+  return useMutation({
+    mutationFn: (payload: scoreApi.WithdrawPayload) => scoreApi.withdrawWallet(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['driver', 'wallet'] })
+    },
+  })
+}
+
 export function useDriverPayments() {
   return useQuery({ queryKey: ['driver', 'payments'], queryFn: () => paymentsApi.history() })
 }

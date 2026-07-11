@@ -202,7 +202,7 @@ function OfferRow({
   return (
     <>
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderTop: '1px solid var(--slate-50)' }}>
-      <Avatar name={offer.client?.fullName ?? 'Client'} size="sm" />
+      <Avatar name={offer.client?.fullName ?? 'Client'} src={offer.client?.profilePhoto ?? undefined} size="sm" />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-sm)', color: 'var(--text-strong)' }}>
           {offer.client?.fullName ?? 'Client'}

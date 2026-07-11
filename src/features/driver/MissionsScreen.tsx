@@ -3,6 +3,7 @@ import { Button, Dialog, Input, StatusBadge, Textarea, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { ParcelMedia } from '@/components/ParcelMedia'
+import { ParcelDetailDialog } from '@/components/ParcelDetailDialog'
 import { useAdvanceParcel, useDeliverParcel, useDriverParcels } from './hooks'
 import { ApiError } from '@/lib/api/client'
 import { formatFcfa, toStatusKey } from '@/lib/format'
@@ -23,6 +24,7 @@ export function MissionsScreen() {
   const query = useDriverParcels()
   const advance = useAdvanceParcel()
   const [deliverTarget, setDeliverTarget] = useState<Parcel | null>(null)
+  const [detailTarget, setDetailTarget] = useState<Parcel | null>(null)
   const parcels = (query.data?.parcels ?? []).filter((p) => p.status !== 'cancelled')
 
   return (
@@ -41,7 +43,7 @@ export function MissionsScreen() {
             const next = NEXT_STEP[p.status]
             const hasMedia = Boolean(p.photoUrls?.length || p.videoUrls?.length || p.audioUrls?.length)
             return (
-              <div key={p.id} style={{ padding: '14px 18px', borderBottom: '1px solid var(--slate-100)' }}>
+              <div key={p.id} style={{ padding: '14px 18px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }} onClick={() => setDetailTarget(p)}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, color: 'var(--text-strong)' }}>
@@ -62,7 +64,7 @@ export function MissionsScreen() {
                     size="sm"
                     icon={next.icon}
                     loading={advance.isPending && advance.variables?.parcelId === p.id}
-                    onClick={() => (next.step === 'deliver' ? setDeliverTarget(p) : advance.mutate({ parcelId: p.id, step: next.step }))}
+                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); next.step === 'deliver' ? setDeliverTarget(p) : advance.mutate({ parcelId: p.id, step: next.step }); }}
                   >
                     {next.label}
                   </Button>
@@ -84,6 +86,7 @@ export function MissionsScreen() {
       </Panel>
 
       <DeliveryDialog parcel={deliverTarget} onClose={() => setDeliverTarget(null)} />
+      <ParcelDetailDialog parcel={detailTarget} onClose={() => setDetailTarget(null)} />
     </div>
   )
 }

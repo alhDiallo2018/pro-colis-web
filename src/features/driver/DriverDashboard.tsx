@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Badge, Button, StatBox } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { BarChart } from '@/components/BarChart'
+import { ParcelDetailDialog } from '@/components/ParcelDetailDialog'
 import { OfferDialog } from './OfferDialog'
 import { CreateAnnonceDialog } from './CreateAnnonceDialog'
 import { RechargeDialog } from './RechargeDialog'
@@ -22,6 +23,7 @@ export function DriverDashboard() {
   const ads = useMyAdvertisements()
   const balance = useScoreBalance()
   const [offerTarget, setOfferTarget] = useState<Parcel | null>(null)
+  const [detailTarget, setDetailTarget] = useState<Parcel | null>(null)
   const [searchParams] = useSearchParams()
   const [showAnnonce, setShowAnnonce] = useState(searchParams.has('annonce'))
   const [showRecharge, setShowRecharge] = useState(false)
@@ -59,7 +61,10 @@ export function DriverDashboard() {
       <div className="pc-split">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Mission en cours */}
-          <div style={{ background: 'var(--gradient-brand)', borderRadius: 'var(--radius-lg)', padding: 20, color: '#fff', boxShadow: 'var(--shadow-brand)' }}>
+          <div
+            style={{ background: 'var(--gradient-brand)', borderRadius: 'var(--radius-lg)', padding: 20, color: '#fff', boxShadow: 'var(--shadow-brand)', cursor: active ? 'pointer' : 'default' }}
+            onClick={() => active && setDetailTarget(active)}
+          >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: 0.9 }}>
                 Mission en cours
@@ -120,7 +125,11 @@ export function DriverDashboard() {
               freeParcels.slice(0, 4).map((p) => {
                 const hasBid = bidMap.has(p.id)
                 return (
-                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderBottom: '1px solid var(--slate-100)' }}>
+                <div
+                  key={p.id}
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}
+                  onClick={() => setDetailTarget(p)}
+                >
                   <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 42, height: 42, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-soft)', color: 'var(--color-primary)', flex: 'none' }}>
                     <span className="material-symbols-rounded fill" style={{ fontSize: 22 }}>
                       package_2
@@ -140,7 +149,7 @@ export function DriverDashboard() {
                     </div>
                   </div>
                   <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 15, color: 'var(--teal-600)' }}>{formatFcfa(p.price)}</span>
-                  <Button size="sm" icon={hasBid ? 'forum' : 'gavel'} onClick={() => setOfferTarget(p)}>
+                  <Button size="sm" icon={hasBid ? 'forum' : 'gavel'} onClick={(e: React.MouseEvent) => { e.stopPropagation(); setOfferTarget(p); }}>
                     {hasBid ? 'Negocier' : 'Faire une offre'}
                   </Button>
                 </div>
@@ -207,7 +216,11 @@ export function DriverDashboard() {
             }
           >
             {(ads.data ?? []).slice(0, 4).map((a) => (
-              <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 18px', borderBottom: '1px solid var(--slate-100)' }}>
+              <div
+                key={a.id}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 18px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}
+                onClick={() => navigate('/driver/annonces')}
+              >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)' }}>
                     {a.departureCity ?? '—'}
@@ -233,6 +246,7 @@ export function DriverDashboard() {
         onClose={() => setOfferTarget(null)}
         existingBidId={offerTarget ? bidMap.get(offerTarget.id) ?? null : null}
       />
+      <ParcelDetailDialog parcel={detailTarget} onClose={() => setDetailTarget(null)} />
       <CreateAnnonceDialog open={showAnnonce} onClose={() => setShowAnnonce(false)} />
       <RechargeDialog open={showRecharge} onClose={() => setShowRecharge(false)} />
       <ItineraireDialog parcel={active ?? null} open={showItineraire} onClose={() => setShowItineraire(false)} />

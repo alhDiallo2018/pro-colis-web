@@ -62,7 +62,7 @@ export function UtilisateursPage() {
           return (
             <div key={u.id} style={{ display: 'grid', gridTemplateColumns: GRID, alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid var(--slate-100)' }}>
               <span style={{ ...cell, gap: 11 }}>
-                <Avatar name={u.fullName} size="sm" />
+                <Avatar name={u.fullName} src={u.profilePhoto ?? undefined} size="sm" />
                 <span style={{ minWidth: 0 }}>
                   <span style={{ display: 'block', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {u.fullName}

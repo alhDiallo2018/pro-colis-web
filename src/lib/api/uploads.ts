@@ -35,3 +35,17 @@ export async function uploadChatAudio(file: Blob | string, filename = 'message.w
   const { data } = await api.post('/upload', form)
   return data.url as string
 }
+
+/**
+ * Upload a user profile photo. Accepts a Blob or a data-URL string.
+ * Compress before calling for best results (max ~1600 px, JPEG @ 0.8).
+ * Returns the uploaded file URL.
+ */
+export async function uploadProfilePhoto(file: Blob | string, filename = 'profile.jpg'): Promise<string> {
+  const blob = typeof file === 'string' ? await (await fetch(file)).blob() : file
+  const form = new FormData()
+  form.append('file', blob, filename)
+  form.append('mediaType', 'photo')
+  const { data } = await api.post('/upload', form)
+  return data.url as string
+}

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Avatar, Badge, Button, Card, Input, Select, Toast } from '@/ds'
+import { Badge, Button, Card, Input, Select, Toast } from '@/ds'
 import { useAuthStore } from '@/store/auth'
 import { useDriverVehicle, useUpdateDriverProfile, useUpsertVehicle } from './hooks'
+import { ProfilePhotoCapture } from '@/components/ProfilePhotoCapture'
+import { uploadProfilePhoto } from '@/lib/api/uploads'
 import { ApiError } from '@/lib/api/client'
 
 const VEHICLE_TYPES = [
@@ -23,7 +25,9 @@ export function DriverProfilScreen() {
   const [fullName, setFullName] = useState(user?.fullName ?? '')
   const [email, setEmail] = useState(user?.email ?? '')
   const [city, setCity] = useState(user?.city ?? '')
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
   const [profileSaved, setProfileSaved] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   // Vehicle form
   const [plateNumber, setPlate] = useState('')
@@ -43,12 +47,39 @@ export function DriverProfilScreen() {
 
   if (!user) return null
 
-  const saveProfile = (e: React.FormEvent) => {
+  const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     setProfileSaved(false)
+
+    let profilePhotoUrl = user.profilePhoto ?? undefined
+
+    if (photoDataUrl !== null) {
+      if (photoDataUrl === '') {
+        profilePhotoUrl = undefined
+      } else {
+        setUploadingPhoto(true)
+        try {
+          profilePhotoUrl = await uploadProfilePhoto(photoDataUrl, `profile-${user.id}.jpg`)
+        } catch {
+          profilePhotoUrl = user.profilePhoto ?? undefined
+        }
+        setUploadingPhoto(false)
+      }
+    }
+
     updateProfile.mutate(
-      { fullName: fullName.trim(), email: email.trim() || null, city: city.trim() || null },
-      { onSuccess: () => setProfileSaved(true) },
+      {
+        fullName: fullName.trim(),
+        email: email.trim() || null,
+        city: city.trim() || null,
+        profilePhoto: profilePhotoUrl ?? null,
+      },
+      {
+        onSuccess: () => {
+          setProfileSaved(true)
+          setPhotoDataUrl(null)
+        },
+      },
     )
   }
 
@@ -64,17 +95,26 @@ export function DriverProfilScreen() {
   const profileError = updateProfile.error instanceof ApiError ? updateProfile.error.message : null
   const vehicleError = upsertVehicle.error instanceof ApiError ? upsertVehicle.error.message : null
   const vehicleValid = plateNumber.trim().length >= 2 && model.trim().length >= 1 && type.trim().length >= 1
+  const isPending = updateProfile.isPending || uploadingPhoto
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <Card padding="lg">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Avatar name={user.fullName} size="xl" status="online" />
-          <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--fs-h2)', color: 'var(--text-strong)' }}>{user.fullName}</div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          <ProfilePhotoCapture
+            currentPhotoUrl={user.profilePhoto}
+            userName={user.fullName}
+            onChange={(dataUrl) => setPhotoDataUrl(dataUrl ?? '')}
+          />
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--fs-h2)', color: 'var(--text-strong)' }}>
+              {user.fullName}
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
               <Badge tone="primary">Chauffeur</Badge>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>{user.phone}</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
+                {user.phone}
+              </span>
               {user.garageName && <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>· {user.garageName}</span>}
             </div>
           </div>
@@ -93,7 +133,7 @@ export function DriverProfilScreen() {
           {profileError && <Toast tone="error" message={profileError} />}
           {profileSaved && !profileError && <Toast tone="success" message="Profil mis à jour." />}
           <div>
-            <Button type="submit" icon="save" loading={updateProfile.isPending} disabled={!fullName.trim()}>
+            <Button type="submit" icon="save" loading={isPending} disabled={!fullName.trim()}>
               Enregistrer le profil
             </Button>
           </div>
@@ -108,7 +148,7 @@ export function DriverProfilScreen() {
         </p>
         <form onSubmit={saveVehicle} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="pc-field-pair" style={{ gap: 16 }}>
-            <Input label="Plaque d’immatriculation" icon="pin" mono placeholder="DK-2024-AB" value={plateNumber} onChange={(e) => setPlate(e.target.value)} />
+            <Input label="Plaque d'immatriculation" icon="pin" mono placeholder="DK-2024-AB" value={plateNumber} onChange={(e) => setPlate(e.target.value)} />
             <Input label="Modèle" icon="directions_car" placeholder="Toyota Hiace" value={model} onChange={(e) => setModel(e.target.value)} />
           </div>
           <div className="pc-field-pair" style={{ gap: 16 }}>
@@ -116,7 +156,7 @@ export function DriverProfilScreen() {
             <Input label="Capacité (places / kg)" icon="weight" type="number" inputMode="numeric" mono value={capacity} onChange={(e) => setCapacity(e.target.value)} />
           </div>
           {!user.garageId && (
-            <Toast tone="info" message="Vous n’êtes rattaché à aucun garage — votre véhicule sera enregistré sans garage." />
+            <Toast tone="info" message="Vous n'êtes rattaché à aucun garage — votre véhicule sera enregistré sans garage." />
           )}
           {vehicleError && <Toast tone="error" message={vehicleError} />}
           {vehicleSaved && !vehicleError && <Toast tone="success" message="Véhicule enregistré." />}

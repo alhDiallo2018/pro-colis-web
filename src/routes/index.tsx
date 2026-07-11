@@ -33,7 +33,14 @@ import { ChauffeursPage } from '@/features/superAdmin/ChauffeursPage'
 import { UtilisateursPage } from '@/features/superAdmin/UtilisateursPage'
 import { GaragesPage } from '@/features/superAdmin/GaragesPage'
 import { StatistiquesPage } from '@/features/superAdmin/StatistiquesPage'
-import { ParametresPage } from '@/features/superAdmin/ParametresPage'
+import { ConfigConsommationPage } from '@/features/superAdmin/ConfigConsommationPage'
+import { FinanceDashboardPage } from '@/features/superAdmin/FinanceDashboardPage'
+import { WalletsPage } from '@/features/superAdmin/WalletsPage'
+import { PaymentsPage } from '@/features/superAdmin/PaymentsPage'
+import { ReputationDashboardPage } from '@/features/superAdmin/ReputationDashboardPage'
+import { ScoresPage } from '@/features/superAdmin/ScoresPage'
+import { ClassementPage } from '@/features/superAdmin/ClassementPage'
+import { DriverDetailPage } from '@/features/superAdmin/DriverDetailPage'
 import { GarageDashboard } from '@/features/garageAdmin/GarageDashboard'
 import { GarageColisPage } from '@/features/garageAdmin/GarageColisPage'
 import { GarageChauffeursPage } from '@/features/garageAdmin/GarageChauffeursPage'
@@ -94,11 +101,27 @@ const SUPER_NAV: NavSection[] = [
     ],
   },
   {
+    heading: 'Finance',
+    items: [
+      { label: 'Dashboard Finance', icon: 'monitoring', to: '/admin/finance' },
+      { label: 'Wallets', icon: 'account_balance_wallet', to: '/admin/finance/wallets' },
+      { label: 'Configuration', icon: 'settings', to: '/admin/finance/configuration' },
+      { label: 'Paiements', icon: 'payments', to: '/admin/finance/payments' },
+    ],
+  },
+  {
+    heading: 'Réputation',
+    items: [
+      { label: 'Dashboard Réputation', icon: 'trending_up', to: '/admin/reputation' },
+      { label: 'Scores', icon: 'stars', to: '/admin/reputation/scores' },
+      { label: 'Classement', icon: 'leaderboard', to: '/admin/reputation/classement' },
+    ],
+  },
+  {
     heading: 'Gestion',
     items: [
       { label: 'Garages', icon: 'garage', to: '/admin/garages' },
       { label: 'Statistiques', icon: 'monitoring', to: '/admin/stats' },
-      { label: 'Paramètres', icon: 'settings', to: '/admin/parametres' },
     ],
   },
 ]
@@ -225,7 +248,16 @@ export const router = createBrowserRouter([
       { path: 'users', element: <UtilisateursPage /> },
       { path: 'garages', element: <GaragesPage /> },
       { path: 'stats', element: <StatistiquesPage /> },
-      { path: 'parametres', element: <ParametresPage /> },
+      { path: 'parametres', element: <Navigate to="/admin/finance/configuration" replace /> },
+      { path: 'finance', element: <FinanceDashboardPage /> },
+      { path: 'finance/wallets', element: <WalletsPage /> },
+      { path: 'finance/commissions', element: <Navigate to="/admin/finance/configuration" replace /> },
+      { path: 'finance/configuration', element: <ConfigConsommationPage /> },
+      { path: 'finance/payments', element: <PaymentsPage /> },
+      { path: 'reputation', element: <ReputationDashboardPage /> },
+      { path: 'reputation/scores', element: <ScoresPage /> },
+      { path: 'reputation/classement', element: <ClassementPage /> },
+      { path: 'chauffeurs/:userId', element: <DriverDetailPage /> },
     ],
   },
 

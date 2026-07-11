@@ -55,6 +55,11 @@ export async function cancel(parcelId: string, reason?: string): Promise<Parcel>
   return data.parcel
 }
 
+export async function confirmCash(parcelId: string): Promise<Parcel> {
+  const { data } = await api.post(`/super-admin/parcels/${parcelId}/confirm-cash`)
+  return data.parcel ?? data.data
+}
+
 /** Colis libres pour offres (annonces). */
 export async function listFree(params: ListParams = {}): Promise<ParcelList> {
   const { data } = await api.get('/public/parcels/free', { params })

@@ -3,7 +3,9 @@ import { SegmentedControl } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { ParcelsTable } from '@/components/ParcelsTable'
+import { ParcelDetailDialog } from '@/components/ParcelDetailDialog'
 import { useGarageParcels } from './hooks'
+import type { Parcel } from '@/lib/api/types'
 
 const FILTERS = [
   { value: '', label: 'Tous' },
@@ -15,6 +17,7 @@ const FILTERS = [
 
 export function GarageColisPage() {
   const [status, setStatus] = useState('')
+  const [detailTarget, setDetailTarget] = useState<Parcel | null>(null)
   const query = useGarageParcels(status ? { status } : {})
   const parcels = query.data?.parcels ?? []
 
@@ -31,9 +34,10 @@ export function GarageColisPage() {
           emptyMessage="Aucun colis ne correspond à ce filtre."
           onRetry={() => query.refetch()}
         >
-          <ParcelsTable parcels={parcels} />
+          <ParcelsTable parcels={parcels} onRowClick={setDetailTarget} />
         </QueryState>
       </Panel>
+      <ParcelDetailDialog parcel={detailTarget} onClose={() => setDetailTarget(null)} />
     </div>
   )
 }

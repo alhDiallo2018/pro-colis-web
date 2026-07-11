@@ -1,8 +1,10 @@
-import { useNavigate, useParams } from 'react-router-dom'
-import { Avatar, Badge, Card, Icon, IconButton, Stepper, StatusBadge, Tag } from '@/ds'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Avatar, Badge, Button, Card, Icon, IconButton, Stepper, StatusBadge, Tag, Textarea, Toast } from '@/ds'
 import { QueryState } from '@/components/QueryState'
 import { ParcelMedia } from '@/components/ParcelMedia'
-import { useDeliveryCode, useParcel } from './hooks'
+import { useCreateRating, useDeliveryCode, useParcel } from './hooks'
+import { createPaydunyaPayment } from '@/lib/api/paydunya'
 import { buildSteps } from './parcelSteps'
 import { formatFcfa, formatWeight, toStatusKey } from '@/lib/format'
 
@@ -20,11 +22,20 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 
 export function ParcelDetailScreen() {
   const { parcelId } = useParams<{ parcelId: string }>()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const query = useParcel(parcelId)
   const parcel = query.data
   const showCode = !!parcel && IN_TRANSIT_STATUSES.includes(parcel.status)
   const deliveryCode = useDeliveryCode(parcelId, showCode)
+
+  // Refetch after returning from PayDunya payment
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment')
+    if (paymentStatus === 'success' || paymentStatus === 'cancelled') {
+      query.refetch()
+    }
+  }, [searchParams])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -56,6 +67,10 @@ export function ParcelDetailScreen() {
               <Row label="Poids" value={parcel.weight != null ? formatWeight(parcel.weight) : '—'} />
               <Row label="Prix" value={formatFcfa(parcel.price)} />
             </Card>
+
+            {parcel.price && parcel.price > 0 && parcel.paymentStatus !== 'completed' && (
+              <PaydunyaPayCard parcelId={parcel.id} amount={parcel.price} trackingNumber={parcel.trackingNumber} />
+            )}
 
             {showCode && (
               <Card style={{ background: 'var(--teal-50)', border: '1px solid var(--teal-100)' }}>
@@ -97,29 +112,35 @@ export function ParcelDetailScreen() {
             )}
 
             {(parcel.driverName || parcel.driver) && (
-              <Card>
-                <h2 style={{ margin: '0 0 12px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
-                  Chauffeur
-                </h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Avatar name={parcel.driverName ?? parcel.driver?.fullName ?? ''} src={parcel.driver?.profilePhoto ?? undefined} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--text-strong)' }}>
-                      {parcel.driverName ?? parcel.driver?.fullName}
-                    </div>
-                    {(parcel.driverPhone ?? parcel.driver?.phone) && (
-                      <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                        {parcel.driverPhone ?? parcel.driver?.phone}
+              <>
+                <Card>
+                  <h2 style={{ margin: '0 0 12px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
+                    Chauffeur
+                  </h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Avatar name={parcel.driverName ?? parcel.driver?.fullName ?? ''} src={parcel.driver?.profilePhoto ?? undefined} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--text-strong)' }}>
+                        {parcel.driverName ?? parcel.driver?.fullName}
                       </div>
+                      {(parcel.driverPhone ?? parcel.driver?.phone) && (
+                        <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                          {parcel.driverPhone ?? parcel.driver?.phone}
+                        </div>
+                      )}
+                    </div>
+                    {parcel.status === 'pending' ? (
+                      <Badge tone="amber" icon="schedule">En attente de confirmation</Badge>
+                    ) : (
+                      <Badge tone="green" icon="check_circle">Prise en charge confirmée</Badge>
                     )}
                   </div>
-                  {parcel.status === 'pending' ? (
-                    <Badge tone="amber" icon="schedule">En attente de confirmation</Badge>
-                  ) : (
-                    <Badge tone="green" icon="check_circle">Prise en charge confirmée</Badge>
-                  )}
-                </div>
-              </Card>
+                </Card>
+
+                {parcel.status === 'delivered' && (
+                  <StarRatingPanel parcelId={parcel.id} driverId={parcel.driverId ?? parcel.driver?.id} />
+                )}
+              </>
             )}
 
             {((parcel.photoUrls?.length ?? 0) > 0 ||
@@ -143,5 +164,122 @@ export function ParcelDetailScreen() {
         )}
       </QueryState>
     </div>
+  )
+}
+
+function PaydunyaPayCard({ parcelId, amount, trackingNumber }: { parcelId: string; amount: number; trackingNumber: string }) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const pay = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await createPaydunyaPayment('parcel', { parcelId, amount })
+      window.location.href = result.paymentUrl
+    } catch (e) {
+      setError((e as Error)?.message ?? 'Erreur lors de la création du paiement')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Card>
+      <h2 style={{ margin: '0 0 8px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
+        Paiement
+      </h2>
+      <p style={{ margin: '0 0 14px', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', wordBreak: 'break-word' }}>
+        Paiement de {formatFcfa(amount)} pour le colis {trackingNumber}
+      </p>
+
+      {error && <Toast tone="error" message={error} />}
+
+      <Button icon="payments" loading={loading} onClick={pay} style={{ maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        Payer {formatFcfa(amount)} avec PayDunya
+      </Button>
+    </Card>
+  )
+}
+
+function StarRatingPanel({ parcelId, driverId }: { parcelId: string; driverId?: string | null }) {
+  const [rating, setRating] = useState(0)
+  const [hover, setHover] = useState(0)
+  const [comment, setComment] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  const mutation = useCreateRating()
+
+  if (submitted) {
+    return (
+      <Card>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Icon name="check_circle" size={24} style={{ color: 'var(--teal-600)' }} />
+          <span style={{ fontWeight: 600, color: 'var(--text-strong)' }}>Merci pour votre évaluation !</span>
+        </div>
+      </Card>
+    )
+  }
+
+  const stars = [1, 2, 3, 4, 5]
+  const active = hover || rating
+
+  return (
+    <Card>
+      <h2 style={{ margin: '0 0 8px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
+        Évaluer le chauffeur
+      </h2>
+      <p style={{ margin: '0 0 14px', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
+        Votre colis a été livré. Donnez une note au chauffeur.
+      </p>
+
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+        {stars.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setRating(s)}
+            onMouseEnter={() => setHover(s)}
+            onMouseLeave={() => setHover(0)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 4,
+              fontSize: 32,
+              lineHeight: 1,
+              color: s <= active ? 'var(--amber-500)' : 'var(--border-strong)',
+              transition: 'color 0.15s',
+            }}
+          >
+            ★
+          </button>
+        ))}
+      </div>
+
+      <Textarea
+        label="Commentaire (optionnel)"
+        value={comment}
+        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
+        placeholder="Partagez votre expérience…"
+        style={{ marginBottom: 14 }}
+      />
+
+      {mutation.isError && (
+        <Toast tone="error" message={(mutation.error as Error)?.message ?? 'Erreur lors de l\'envoi'} />
+      )}
+
+      <Button
+        icon="star"
+        loading={mutation.isPending}
+        disabled={rating === 0}
+        onClick={() => {
+          mutation.mutate(
+            { driverId: driverId ?? '', parcelId, rating, comment: comment || null },
+            { onSuccess: () => setSubmitted(true) }
+          )
+        }}
+      >
+        Envoyer la note
+      </Button>
+    </Card>
   )
 }

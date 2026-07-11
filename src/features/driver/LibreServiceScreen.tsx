@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Badge, Button } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
+import { ParcelDetailDialog } from '@/components/ParcelDetailDialog'
 import { OfferDialog } from './OfferDialog'
 import { useDriverFreeParcels, useDriverBidsSent } from './hooks'
 import { formatFcfa, formatWeight } from '@/lib/format'
@@ -12,6 +13,7 @@ export function LibreServiceScreen() {
   const bidsQuery = useDriverBidsSent()
   const parcels = query.data?.parcels ?? []
   const [offerTarget, setOfferTarget] = useState<Parcel | null>(null)
+  const [detailTarget, setDetailTarget] = useState<Parcel | null>(null)
 
   const bidMap = useMemo(() => {
     const map = new Map<string, string>()
@@ -41,6 +43,7 @@ export function LibreServiceScreen() {
                 role="button"
                 tabIndex={0}
                 style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}
+                onClick={() => setDetailTarget(p)}
               >
                 <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-soft)', color: 'var(--color-primary)', flex: 'none' }}>
                   <span className="material-symbols-rounded fill" style={{ fontSize: 23 }}>
@@ -74,7 +77,7 @@ export function LibreServiceScreen() {
                   </div>
                 </div>
                 <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 15, color: 'var(--teal-600)' }}>{formatFcfa(p.price)}</span>
-                <Button size="sm" icon={hasBid ? 'forum' : 'gavel'} onClick={() => setOfferTarget(p)}>
+                <Button size="sm" icon={hasBid ? 'forum' : 'gavel'} onClick={(e: React.MouseEvent) => { e.stopPropagation(); setOfferTarget(p); }}>
                   {hasBid ? 'Negocier' : 'Faire une offre'}
                 </Button>
               </div>
@@ -88,6 +91,7 @@ export function LibreServiceScreen() {
         onClose={() => setOfferTarget(null)}
         existingBidId={offerTarget ? bidMap.get(offerTarget.id) ?? null : null}
       />
+      <ParcelDetailDialog parcel={detailTarget} onClose={() => setDetailTarget(null)} />
     </div>
   )
 }

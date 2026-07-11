@@ -29,7 +29,7 @@ export function GarageChauffeursPage() {
           const st = STATUS_LABEL[d.driverStatus ?? 'offline'] ?? STATUS_LABEL.offline
           return (
             <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderBottom: '1px solid var(--slate-100)' }}>
-              <Avatar name={d.fullName} status={AVATAR_STATUS[d.driverStatus ?? 'offline'] ?? 'offline'} />
+              <Avatar name={d.fullName} src={d.profilePhoto ?? undefined} status={AVATAR_STATUS[d.driverStatus ?? 'offline'] ?? 'offline'} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14.5, color: 'var(--text-strong)' }}>{d.fullName}</div>
                 <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{d.phone}</div>

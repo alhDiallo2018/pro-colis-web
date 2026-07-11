@@ -7,6 +7,7 @@ export interface ProfilePayload {
   address?: string | null
   city?: string | null
   region?: string | null
+  profilePhoto?: string | null
 }
 
 const PROFILE_PATH: Record<Role, string> = {

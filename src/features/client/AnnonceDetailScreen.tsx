@@ -36,7 +36,15 @@ export function AnnonceDetailScreen() {
         <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>Détail de l’annonce</h1>
       </div>
 
-      <QueryState isLoading={query.isLoading} isError={query.isError} error={query.error} onRetry={() => query.refetch()}>
+      <QueryState
+        isLoading={query.isLoading}
+        isError={query.isError}
+        error={query.error}
+        isEmpty={!ad && !query.isLoading && !query.isError}
+        emptyTitle="Annonce introuvable"
+        emptyMessage="Cette annonce n'existe pas ou n'est plus disponible."
+        onRetry={() => query.refetch()}
+      >
         {ad && (
           <>
             <Card>

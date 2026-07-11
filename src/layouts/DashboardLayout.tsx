@@ -160,7 +160,7 @@ export function DashboardLayout({ nav, roleLabel, actions, searchPlaceholder, gr
             borderTop: '1px solid rgba(255,255,255,0.1)',
           }}
         >
-          <Avatar name={user?.fullName ?? ''} size="sm" status="online" />
+          <Avatar name={user?.fullName ?? ''} src={user?.profilePhoto ?? undefined} size="sm" status="online" />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{

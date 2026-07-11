@@ -5,6 +5,7 @@ import * as garagesApi from '@/lib/api/garages'
 import * as rolesApi from '@/lib/api/roles'
 import * as usersApi from '@/lib/api/users'
 import * as adsApi from '@/lib/api/advertisements'
+import * as ratingsApi from '@/lib/api/ratings'
 import type { ListParams } from '@/lib/api/types'
 import { useAuthStore } from '@/store/auth'
 import { queryClient } from '@/lib/queryClient'
@@ -122,5 +123,25 @@ export function useNegotiateBid() {
     mutationFn: ({ bidId, price, message }: { bidId: string; price: number; message?: string }) =>
       bidsApi.negotiate(bidId, { price, message }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client', 'bids'] }),
+  })
+}
+
+export function useCreateRating() {
+  return useMutation({
+    mutationFn: (payload: ratingsApi.CreateRatingPayload) => ratingsApi.createRating(payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['client', 'parcels'] })
+      if (variables.driverId) {
+        queryClient.invalidateQueries({ queryKey: ['ratings', 'driver', variables.driverId] })
+      }
+    },
+  })
+}
+
+export function useDriverRatings(driverId: string | undefined) {
+  return useQuery({
+    queryKey: ['ratings', 'driver', driverId],
+    queryFn: () => ratingsApi.getDriverRatings(driverId!),
+    enabled: !!driverId,
   })
 }

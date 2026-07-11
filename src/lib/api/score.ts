@@ -46,3 +46,32 @@ export async function purchase(payload: PurchasePayload): Promise<PurchaseResult
   })
   return data
 }
+
+export async function purchaseWithWallet(points: number): Promise<PurchaseResult> {
+  const { data } = await api.post('/score/purchase/wallet', { points })
+  return data
+}
+
+export interface WithdrawPayload {
+  amount: number
+  method?: string
+  phone?: string
+}
+
+export async function withdrawWallet(payload: WithdrawPayload): Promise<{ transaction: unknown }> {
+  const { data } = await api.post('/driver/wallet/withdraw', payload)
+  return data
+}
+
+export interface DriverWallet {
+  userId: string
+  balance: number
+  totalDeposited: number
+  totalSpent: number
+  status: string
+}
+
+export async function getWallet(): Promise<DriverWallet> {
+  const { data } = await api.get('/driver/wallet')
+  return data.wallet ?? data.data
+}
