@@ -127,7 +127,7 @@ export function ScoresPage() {
                     <div style={{ fontWeight: 700, color: 'var(--text-strong)' }}>{user.driverName ?? '—'}</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 2 }}>Garage</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 2 }}>Zone</div>
                     <div style={{ fontWeight: 500, color: 'var(--text-body)' }}>{user.garageName ?? '—'}</div>
                   </div>
                   <div>
@@ -280,7 +280,7 @@ export function ScoresPage() {
             value={garage}
             onChange={(e) => setGarage(e.target.value)}
             options={[]}
-            placeholder="Garage"
+            placeholder="Zone"
             style={{ minWidth: 140 }}
           />
           <Select
@@ -321,7 +321,7 @@ export function ScoresPage() {
               }}
             >
               <span>Chauffeur</span>
-              <span>Garage</span>
+              <span>Zone</span>
               <span>Région</span>
               <span style={{ justifyContent: 'flex-end', display: 'flex' }}>Score</span>
               <span>Niveau</span>

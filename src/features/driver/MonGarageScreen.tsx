@@ -24,8 +24,8 @@ export function MonGarageScreen() {
       <EmptyState
         icon="garage"
         tone="primary"
-        title="Aucun garage rattaché"
-        message="Vous n'êtes rattaché à aucun garage. Contactez un administrateur pour en rejoindre un."
+        title="Aucune zone rattachée"
+        message="Vous n'êtes rattaché à aucune zone. Contactez un administrateur pour en rejoindre une."
       />
     )
   }
@@ -42,7 +42,7 @@ export function MonGarageScreen() {
           </span>
           <div>
             <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--fs-h2)', color: 'var(--text-strong)' }}>
-              {garage?.name ?? user?.garageName ?? 'Mon garage'}
+              {garage?.name ?? user?.garageName ?? 'Ma zone'}
             </div>
             <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', marginTop: 2 }}>
               {[garage?.city, garage?.region].filter(Boolean).join(', ') || '—'}
@@ -52,14 +52,14 @@ export function MonGarageScreen() {
         </div>
       </Card>
 
-      <Panel title={`Chauffeurs du garage · ${team.length}`} flush>
+      <Panel title={`Chauffeurs de la zone · ${team.length}`} flush>
         <QueryState
           isLoading={colleagues.isLoading}
           isError={colleagues.isError}
           error={colleagues.error}
           isEmpty={team.length === 0}
           emptyTitle="Aucun collègue"
-          emptyMessage="Vous êtes le seul chauffeur rattaché à ce garage pour le moment."
+          emptyMessage="Vous êtes le seul chauffeur rattaché à cette zone pour le moment."
           onRetry={() => colleagues.refetch()}
         >
           {team.map((d) => (

@@ -85,7 +85,7 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
           <Select
             label="Départ"
             icon="garage"
-            placeholder={garagesQ.isLoading ? 'Chargement…' : 'Garage'}
+            placeholder={garagesQ.isLoading ? 'Chargement…' : 'Zone'}
             options={options}
             value={departureGarageId}
             onChange={(e) => setDeparture(e.target.value)}
@@ -93,7 +93,7 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
           <Select
             label="Arrivée"
             icon="pin_drop"
-            placeholder={garagesQ.isLoading ? 'Chargement…' : 'Garage'}
+            placeholder={garagesQ.isLoading ? 'Chargement…' : 'Zone'}
             options={options}
             value={arrivalGarageId}
             onChange={(e) => setArrival(e.target.value)}

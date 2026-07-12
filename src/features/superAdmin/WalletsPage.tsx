@@ -270,10 +270,10 @@ function WalletList() {
         />
         <Select
           icon="garage"
-          placeholder="Garage"
+          placeholder="Zone"
           value={garage}
           onChange={(e: ChangeEvent<HTMLSelectElement>) => setGarage(e.target.value)}
-          options={[{ value: '', label: 'Tous les garages' }]}
+          options={[{ value: '', label: 'Toutes les zones' }]}
           style={{ minWidth: 170 }}
         />
         <Select
@@ -331,7 +331,7 @@ function WalletList() {
             >
               <span>Chauffeur</span>
               <span>Téléphone</span>
-              <span>Garage</span>
+              <span>Zone</span>
               <span>Région</span>
               <span>Solde</span>
               <span>Total rechargé</span>

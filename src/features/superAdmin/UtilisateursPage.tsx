@@ -7,7 +7,7 @@ import type { Role, UserStatus } from '@/lib/api/types'
 const ROLE_LABEL: Record<Role, string> = {
   client: 'Client',
   driver: 'Chauffeur',
-  admin: 'Admin garage',
+  admin: 'Admin zone',
   super_admin: 'Super admin',
 }
 

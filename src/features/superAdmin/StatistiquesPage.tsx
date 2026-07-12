@@ -27,7 +27,7 @@ export function StatistiquesPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
         <StatBox icon="package_2" tone="primary" value={parcels.data?.pagination?.total ?? parcels.data?.parcels.length ?? '—'} label="Colis au total" delta={12} />
         <StatBox icon="local_shipping" tone="green" value={drivers.data?.length ?? '—'} label="Chauffeurs" delta={4} />
-        <StatBox icon="garage" tone="amber" value={garages.data?.length ?? '—'} label="Garages" delta={2} />
+        <StatBox icon="garage" tone="amber" value={garages.data?.length ?? '—'} label="Zones" delta={2} />
         <StatBox icon="task_alt" tone="neutral" value={(parcels.data?.parcels ?? []).filter((p) => p.status === 'delivered').length} label="Colis livrés" delta={9} />
       </div>
 

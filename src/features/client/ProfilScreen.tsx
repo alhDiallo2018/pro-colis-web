@@ -9,7 +9,7 @@ import { ApiError } from '@/lib/api/client'
 const ROLE_LABEL: Record<string, string> = {
   client: 'Client',
   driver: 'Chauffeur',
-  admin: 'Admin garage',
+  admin: 'Admin zone',
   super_admin: 'Super admin',
 }
 

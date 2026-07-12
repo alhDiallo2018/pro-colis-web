@@ -8,14 +8,14 @@ export function GaragesPage() {
   const garages = query.data ?? []
 
   return (
-    <Panel title={`Garages · ${garages.length}`} flush>
+    <Panel title={`Zones · ${garages.length}`} flush>
       <QueryState
         isLoading={query.isLoading}
         isError={query.isError}
         error={query.error}
         isEmpty={garages.length === 0}
-        emptyTitle="Aucun garage"
-        emptyMessage="Aucun garage enregistré pour le moment."
+        emptyTitle="Aucune zone"
+        emptyMessage="Aucune zone enregistrée pour le moment."
         onRetry={() => query.refetch()}
       >
         {garages.map((g) => (

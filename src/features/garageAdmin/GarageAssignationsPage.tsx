@@ -22,7 +22,7 @@ export function GarageAssignationsPage() {
           error={parcelsQ.error}
           isEmpty={pending.length === 0}
           emptyTitle="Rien à assigner"
-          emptyMessage="Tous les colis de votre garage ont un chauffeur."
+          emptyMessage="Tous les colis de votre zone ont un chauffeur."
           onRetry={() => parcelsQ.refetch()}
         >
           {pending.map((p) => (

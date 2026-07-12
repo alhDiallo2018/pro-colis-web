@@ -110,7 +110,7 @@ export function ClassementPage() {
                     <span>#</span>
                     <span>Photo</span>
                     <span>Nom</span>
-                    <span>Garage</span>
+                    <span>Zone</span>
                     <span>Région</span>
                     <span style={{ justifyContent: 'flex-end', display: 'flex' }}>Score</span>
                     <span>Niveau</span>

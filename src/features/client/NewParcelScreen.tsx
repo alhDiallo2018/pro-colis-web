@@ -34,8 +34,8 @@ const schema = z.object({
   receiverName: z.string().min(2, 'Nom requis'),
   receiverPhone: z.string().min(8, 'Téléphone requis'),
   receiverAddress: z.string().optional(),
-  departureGarageId: z.string().min(1, 'Garage de départ requis'),
-  arrivalGarageId: z.string().min(1, 'Garage d’arrivée requis'),
+  departureGarageId: z.string().min(1, `Zone de départ requise`),
+  arrivalGarageId: z.string().min(1, `Zone d'arrivée requise`),
   driverId: z.string().optional(),
   description: z.string().min(1, 'Description requise'),
   type: z.string().optional(),
@@ -220,18 +220,18 @@ export function NewParcelScreen() {
           {step === 1 && (
             <StepBody n={2} title="Trajet & mode de livraison" hint="D'où part le colis, où il arrive, et comment il est pris en charge.">
               <Select
-                label={required('Garage de départ')}
+                label={required('Zone de départ')}
                 icon="garage"
-                placeholder={garages.isLoading ? 'Chargement…' : 'Choisir un garage'}
+                placeholder={garages.isLoading ? 'Chargement…' : 'Choisir une zone'}
                 options={garageOptions}
                 error={errors.departureGarageId?.message}
                 value={watch('departureGarageId') ?? ''}
                 onChange={(e) => setValue('departureGarageId', e.target.value, { shouldValidate: true })}
               />
               <Select
-                label={required('Garage d’arrivée')}
+                label={required(`Zone d'arrivée`)}
                 icon="pin_drop"
-                placeholder={garages.isLoading ? 'Chargement…' : 'Choisir un garage'}
+                placeholder={garages.isLoading ? 'Chargement…' : 'Choisir une zone'}
                 options={garageOptions}
                 error={errors.arrivalGarageId?.message}
                 value={watch('arrivalGarageId') ?? ''}

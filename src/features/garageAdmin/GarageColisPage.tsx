@@ -24,7 +24,7 @@ export function GarageColisPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <SegmentedControl size="sm" options={FILTERS} value={status} onChange={setStatus} />
-      <Panel title={`Colis du garage${query.data?.pagination ? ` · ${query.data.pagination.total}` : ''}`} flush>
+      <Panel title={`Colis de la zone${query.data?.pagination ? ` · ${query.data.pagination.total}` : ''}`} flush>
         <QueryState
           isLoading={query.isLoading}
           isError={query.isError}

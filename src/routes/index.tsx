@@ -71,7 +71,7 @@ const DRIVER_NAV: NavSection[] = [
       { label: 'Points & paiements', icon: 'account_balance_wallet', to: '/driver/points' },
       { label: 'Messages', icon: 'forum', to: '/driver/messages' },
       { label: 'Historique', icon: 'history', to: '/driver/historique' },
-      { label: 'Mon garage', icon: 'garage', to: '/driver/garage' },
+      { label: 'Ma zone', icon: 'garage', to: '/driver/garage' },
       { label: 'Profil', icon: 'person', to: '/driver/profil' },
       { label: 'Paramètres', icon: 'settings', to: '/driver/parametres' },
     ],
@@ -120,7 +120,7 @@ const SUPER_NAV: NavSection[] = [
   {
     heading: 'Gestion',
     items: [
-      { label: 'Garages', icon: 'garage', to: '/admin/garages' },
+      { label: 'Zones', icon: 'garage', to: '/admin/garages' },
       { label: 'Statistiques', icon: 'monitoring', to: '/admin/stats' },
     ],
   },
@@ -206,7 +206,7 @@ export const router = createBrowserRouter([
       <RequireRole roles={['admin']}>
         <DashboardLayout
           nav={GARAGE_NAV}
-          roleLabel="Admin garage"
+           roleLabel="Admin zone"
           searchPlaceholder="Rechercher un colis, un chauffeur…"
           actions={<NotifButton />}
         />
@@ -229,12 +229,12 @@ export const router = createBrowserRouter([
         <DashboardLayout
           nav={SUPER_NAV}
           roleLabel="Super Admin"
-          searchPlaceholder="Rechercher un colis, un chauffeur, un garage…"
+           searchPlaceholder="Rechercher un colis, un chauffeur, une zone…"
           actions={
             <>
               <NotifButton />
               <NavButton to="/admin/garages" icon="add">
-                Nouveau garage
+                 Nouvelle zone
               </NavButton>
             </>
           }

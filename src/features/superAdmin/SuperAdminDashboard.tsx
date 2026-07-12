@@ -25,7 +25,7 @@ export function SuperAdminDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
         <StatBox icon="package_2" tone="primary" value={parcels.data?.pagination?.total ?? allParcels.length} label="Colis" delta={12} />
         <StatBox icon="local_shipping" tone="green" value={driverList.length} label="Chauffeurs" delta={4} />
-        <StatBox icon="garage" tone="amber" value={garageList.length} label="Garages" delta={2} />
+        <StatBox icon="garage" tone="amber" value={garageList.length} label="Zones" delta={2} />
         <StatBox icon="account_balance_wallet" tone="neutral" value="—" label="FCFA encaissés" />
       </div>
 
@@ -63,9 +63,9 @@ export function SuperAdminDashboard() {
             )}
           </Panel>
 
-          <Panel title="Garages" flush action={<span style={{ color: 'var(--text-link)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Tout voir</span>}>
+          <Panel title="Zones" flush action={<span style={{ color: 'var(--text-link)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Tout voir</span>}>
             {garageList.length === 0 ? (
-              <div style={{ padding: 18, fontSize: 13.5, color: 'var(--text-muted)' }}>Aucun garage.</div>
+              <div style={{ padding: 18, fontSize: 13.5, color: 'var(--text-muted)' }}>Aucune zone.</div>
             ) : (
               garageList.slice(0, 5).map((g) => (
                 <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid var(--slate-100)' }}>

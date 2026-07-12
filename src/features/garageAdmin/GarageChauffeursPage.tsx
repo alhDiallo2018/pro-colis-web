@@ -22,7 +22,7 @@ export function GarageChauffeursPage() {
         error={query.error}
         isEmpty={drivers.length === 0}
         emptyTitle="Aucun chauffeur"
-        emptyMessage="Aucun chauffeur n'est rattaché à votre garage."
+        emptyMessage="Aucun chauffeur n'est rattaché à votre zone."
         onRetry={() => query.refetch()}
       >
         {drivers.map((d) => {

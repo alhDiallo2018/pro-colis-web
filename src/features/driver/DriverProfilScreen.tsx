@@ -156,7 +156,7 @@ export function DriverProfilScreen() {
             <Input label="Capacité (places / kg)" icon="weight" type="number" inputMode="numeric" mono value={capacity} onChange={(e) => setCapacity(e.target.value)} />
           </div>
           {!user.garageId && (
-            <Toast tone="info" message="Vous n'êtes rattaché à aucun garage — votre véhicule sera enregistré sans garage." />
+            <Toast tone="info" message="Vous n'êtes rattaché à aucune zone — votre véhicule sera enregistré sans zone." />
           )}
           {vehicleError && <Toast tone="error" message={vehicleError} />}
           {vehicleSaved && !vehicleError && <Toast tone="success" message="Véhicule enregistré." />}

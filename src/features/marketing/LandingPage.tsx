@@ -354,7 +354,7 @@ export function LandingPage() {
           </div>
           <div style={{ display: 'flex', gap: 64, flexWrap: 'wrap' }}>
             <FooterCol title="Produit" links={['Envoyer un colis', 'Suivre un colis', 'Tarifs']} />
-            <FooterCol title="Chauffeurs" links={['Devenir chauffeur', 'Garages partenaires', 'Annonces']} />
+            <FooterCol title="Chauffeurs" links={['Devenir chauffeur', 'Zones partenaires', 'Annonces']} />
             <FooterCol title="Société" links={['À propos', 'Aide & support', 'Conditions']} />
           </div>
         </div>
