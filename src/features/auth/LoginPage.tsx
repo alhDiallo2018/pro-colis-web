@@ -82,7 +82,16 @@ export function LoginPage() {
           mono
           placeholder="6 chiffres"
           value={pin}
-          onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+          onChange={(e) => {
+            const val = e.target.value.replace(/\D/g, '').slice(0, 6)
+            setPin(val)
+            if (val.length === 6 && identifier.trim()) {
+              login.mutate(
+                { identifier: identifier.trim(), pin: val },
+                { onSuccess: (session) => navigate(homeForRole(session.user.role), { replace: true }) },
+              )
+            }
+          }}
           autoComplete="current-password"
         />
 

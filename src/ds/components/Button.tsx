@@ -19,7 +19,7 @@ export interface ButtonProps
   style?: CSSProperties
 }
 
-/** Procolis primary button. French imperative labels ("Créer le colis"). */
+/** SendProcolis primary button. French imperative labels ("Créer le colis"). */
 export function Button({
   children,
   variant = 'primary',

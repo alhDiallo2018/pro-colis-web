@@ -10,6 +10,8 @@ import { uploadParcelAudio, uploadParcelPhoto, uploadParcelVideo } from '@/lib/a
 import { useAuthStore } from '@/store/auth'
 import { formatFcfa, formatWeight } from '@/lib/format'
 import type { User } from '@/lib/api/types'
+import { GarageSearchSelect } from '@/components/GarageSearchSelect'
+import { LocationInput, type PlaceResult } from '@/components/LocationInput'
 
 interface PhotoItem {
   id: string
@@ -99,7 +101,6 @@ export function NewParcelScreen() {
   })
 
   const garageList = garages.data ?? []
-  const garageOptions = garageList.map((g) => ({ value: g.id, label: `${g.name} — ${g.city ?? ''}`.trim() }))
   const garageLabel = (id?: string) => {
     const g = garageList.find((x) => x.id === id)
     return g ? (g.city ?? g.name) : '—'
@@ -212,30 +213,36 @@ export function NewParcelScreen() {
             <StepBody n={1} title="Qui reçoit le colis ?" hint="Les coordonnées du destinataire à l'arrivée.">
               <Input label={required('Nom du destinataire')} icon="person" placeholder="Ex : Awa Ndiaye" error={errors.receiverName?.message} {...register('receiverName')} />
               <Input label={required('Téléphone')} icon="call" placeholder="+221 77 000 00 00" error={errors.receiverPhone?.message} {...register('receiverPhone')} />
-              <Input label="Adresse de livraison" icon="home" placeholder="Quartier, repère… (optionnel)" {...register('receiverAddress')} />
+              <LocationInput
+                label="Adresse de livraison"
+                icon="home"
+                placeholder="Quartier, repère… (optionnel)"
+                value={watch('receiverAddress') ?? ''}
+                onChange={(val) => setValue('receiverAddress', val)}
+              />
             </StepBody>
           )}
 
           {/* STEP 1 — Livraison (trajet + mode) */}
           {step === 1 && (
             <StepBody n={2} title="Trajet & mode de livraison" hint="D'où part le colis, où il arrive, et comment il est pris en charge.">
-              <Select
+              <GarageSearchSelect
                 label={required('Zone de départ')}
                 icon="garage"
-                placeholder={garages.isLoading ? 'Chargement…' : 'Choisir une zone'}
-                options={garageOptions}
-                error={errors.departureGarageId?.message}
+                placeholder={garages.isLoading ? 'Chargement…' : 'Rechercher une zone...'}
+                garages={garageList}
                 value={watch('departureGarageId') ?? ''}
-                onChange={(e) => setValue('departureGarageId', e.target.value, { shouldValidate: true })}
+                onChange={(id) => setValue('departureGarageId', id, { shouldValidate: true })}
+                error={errors.departureGarageId?.message}
               />
-              <Select
+              <GarageSearchSelect
                 label={required(`Zone d'arrivée`)}
                 icon="pin_drop"
-                placeholder={garages.isLoading ? 'Chargement…' : 'Choisir une zone'}
-                options={garageOptions}
-                error={errors.arrivalGarageId?.message}
+                placeholder={garages.isLoading ? 'Chargement…' : 'Rechercher une zone...'}
+                garages={garageList}
                 value={watch('arrivalGarageId') ?? ''}
-                onChange={(e) => setValue('arrivalGarageId', e.target.value, { shouldValidate: true })}
+                onChange={(id) => setValue('arrivalGarageId', id, { shouldValidate: true })}
+                error={errors.arrivalGarageId?.message}
               />
 
               {watch('departureGarageId') && watch('arrivalGarageId') && (
@@ -783,7 +790,7 @@ function PhotoCapture({ photos, onChange }: { photos: PhotoItem[]; onChange: (ne
         <Icon name="photo_camera" size={18} style={{ color: 'var(--text-muted)' }} />
         <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--text-muted)' }}>Photos du colis</span>
       </div>
-      <input ref={inputRef} type="file" accept="image/*" capture="environment" multiple onChange={(e) => onFiles(e.target.files)} style={{ display: 'none' }} />
+      <input ref={inputRef} type="file" accept="image/*" multiple onChange={(e) => onFiles(e.target.files)} style={{ display: 'none' }} />
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
         {photos.map((p) => (
           <div key={p.id} style={{ position: 'relative', width: 84, height: 84, borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
@@ -931,7 +938,7 @@ function VideoCapture({ videos, onChange }: { videos: VideoItem[]; onChange: (ne
         <Icon name="videocam" size={18} style={{ color: 'var(--text-muted)' }} />
         <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--text-muted)' }}>Videos du colis</span>
       </div>
-      <input ref={inputRef} type="file" accept="video/*" capture="environment" multiple onChange={(e) => onFiles(e.target.files)} style={{ display: 'none' }} />
+      <input ref={inputRef} type="file" accept="video/*" multiple onChange={(e) => onFiles(e.target.files)} style={{ display: 'none' }} />
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
         {videos.map((v) => (
           <div key={v.id} style={{ position: 'relative', width: 84, height: 84, borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border-subtle)', background: '#000' }}>

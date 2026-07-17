@@ -20,7 +20,7 @@ export interface SelectProps
   style?: CSSProperties
 }
 
-/** Native select styled to match Procolis inputs. */
+/** Native select styled to match SendProcolis inputs. */
 export function Select({
   label,
   value,

@@ -27,7 +27,7 @@ export const useAuthStore = create<AuthState>()(
       clearSession: () => set({ user: null, accessToken: null, refreshToken: null }),
     }),
     {
-      name: 'procolis-auth',
+      name: 'sendprocolis-auth',
       partialize: (s) => ({ user: s.user, accessToken: s.accessToken, refreshToken: s.refreshToken }),
       onRehydrateStorage: () => (state) => {
         if (state) state.hydrated = true

@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Avatar, Badge, Button, Card, Input, Toast } from '@/ds'
+import { Badge, Button, Card, Input, Toast } from '@/ds'
 import { useAuthStore } from '@/store/auth'
 import { useUpdateProfile } from './hooks'
 import { ProfilePhotoCapture } from '@/components/ProfilePhotoCapture'
 import { uploadProfilePhoto } from '@/lib/api/uploads'
 import { ApiError } from '@/lib/api/client'
+import { LocationInput } from '@/components/LocationInput'
 
 const ROLE_LABEL: Record<string, string> = {
   client: 'Client',
@@ -101,8 +102,8 @@ export function ProfilScreen() {
             <Input label="Téléphone" icon="call" mono value={user.phone} disabled help="Le téléphone n'est pas modifiable" />
           </div>
           <div className="pc-field-pair" style={{ gap: 16 }}>
-            <Input label="Ville" icon="location_on" value={city} onChange={(e) => setCity(e.target.value)} />
-            <Input label="Adresse" icon="home" value={address} onChange={(e) => setAddress(e.target.value)} />
+            <LocationInput label="Ville" icon="location_on" placeholder="Votre ville..." value={city} onChange={setCity} />
+            <LocationInput label="Adresse" icon="home" placeholder="Votre adresse..." value={address} onChange={setAddress} />
           </div>
 
           {error && <Toast tone="error" message={error} />}

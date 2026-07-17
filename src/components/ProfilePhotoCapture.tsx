@@ -80,7 +80,6 @@ export function ProfilePhotoCapture({ currentPhotoUrl, userName, onChange }: Pro
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         style={{ display: 'none' }}
         onChange={(e) => {
           onFiles(e.target.files)

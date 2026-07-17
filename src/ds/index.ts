@@ -1,4 +1,4 @@
-// PROCOLIS Design System — single import surface for the web app.
+// SENDPROCOLIS Design System — single import surface for the web app.
 // Import design-system components from here, never from component internals.
 import './tokens/styles.css'
 

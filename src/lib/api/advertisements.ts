@@ -56,6 +56,7 @@ export interface CreateAdvertisementPayload {
   availableWeight?: number | null
   proposedPrice?: number | null
   description?: string | null
+  audioUrl?: string | null
 }
 
 /** Chauffeur : créer une annonce de trajet. */

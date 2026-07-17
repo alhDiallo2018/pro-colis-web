@@ -199,6 +199,14 @@ Payload creation colis :
 | POST | `/notifications/read-all` | authentifie | Tout marquer lu. |
 | DELETE | `/notifications/:notificationId` | authentifie | Supprimer notification. |
 | DELETE | `/notifications/all` | authentifie | Supprimer toutes. |
+| GET | `/notifications/preferences` | authentifie | Preferences de canal par evenement. |
+| PUT | `/notifications/preferences` | authentifie | Modifier preferences. |
+| POST | `/notifications/email/send` | authentifie | Envoyer email via Brevo. |
+| POST | `/notifications/email/send-bulk` | authentifie | Envoyer email groupé via Brevo. |
+| POST | `/notifications/sms/send` | authentifie | Envoyer SMS via Brevo. |
+| GET | `/admin/notifications/brevo-config` | super_admin | Configuration Brevo. |
+| PUT | `/admin/notifications/brevo-config` | super_admin | Modifier config Brevo. |
+| POST | `/admin/notifications/brevo-test` | super_admin | Tester connexion Brevo. |
 
 ## Paiements et score
 
@@ -215,6 +223,34 @@ Payload creation colis :
 | POST | `/score/credit` | authentifie/system | Crediter points. |
 | POST | `/score/refund` | authentifie/system | Rembourser points. |
 | GET | `/score/stats` | authentifie | Stats score. |
+
+## PayDunya
+
+| Methode | Route | Roles | Description |
+| --- | --- | --- | --- |
+| POST | `/payments/paydunya/create` | authentifie | Creer un paiement PayDunya. Body: `{ type: 'parcel' \| 'score' \| 'wallet', parcelId?, amount? }`. Renvoie `{ token, paymentUrl }`. |
+| GET | `/payments/paydunya/confirm/:token` | authentifie | Verifier statut paiement PayDunya. Renvoie `{ token, status, amount, receiptUrl? }`. |
+
+**Flux PayDunya avec commission automatique :**
+1. Client appelle `POST /payments/paydunya/create` avec `type=parcel` et `parcelId`.
+2. Backend initie la session PayDunya et renvoie `paymentUrl`.
+3. Client est redirige vers la page de paiement PayDunya.
+4. Apres paiement, le client appelle `GET /payments/paydunya/confirm/:token`.
+5. **Backend auto :** Si status=completed, le backend calcule la commission sur le montant, preleve la commission, credite le wallet du chauffeur avec `montant - commission`, et cree la transaction correspondante.
+
+## Commissions (Wallet / Score)
+
+| Methode | Route | Roles | Description |
+| --- | --- | --- | --- |
+| POST | `/super-admin/commissions/simulate` | super_admin | Simuler la commission pour un montant. Body: `{ amount }`. Renvoie `{ simulations: [{ profile, percentage, commission, netAmount }] }`. |
+| GET | `/super-admin/commissions/config` | super_admin | Configurations des commissions par profil. |
+| PUT | `/super-admin/commissions/config` | super_admin | Modifier configuration commission. |
+| GET | `/driver/wallet` | driver | Solde et transactions du portefeuille chauffeur. |
+| POST | `/driver/wallet/recharge` | driver | Recharger le portefeuille. |
+| POST | `/driver/wallet/consume` | driver | Prelever la commission sur le wallet. Body: `{ parcelId, deliveryAmount }`. |
+| POST | `/driver/wallet/withdraw` | driver | Retirer des fonds du wallet. |
+| POST | `/driver/parcels/:parcelId/pay-commission` | driver | **Payer la commission en cash.** Body: `{ source: 'wallet' \| 'score', amount? }`. Si source=wallet, preleve du portefeuille FCFA. Si source=score, preleve des points score. Renvoie `{ result: { success, commission, newWalletBalance?, newScoreBalance? } }`. |
+| GET | `/driver/parcels/:parcelId/commission` | driver | Estimer la commission pour un colis. Renvoie `{ commission: { amount, commission, netAmount, percentage, minAmount, maxAmount, profile } }`. |
 
 ## Super admin et administration
 

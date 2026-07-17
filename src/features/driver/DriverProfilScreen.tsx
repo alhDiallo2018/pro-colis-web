@@ -5,6 +5,7 @@ import { useDriverVehicle, useUpdateDriverProfile, useUpsertVehicle } from './ho
 import { ProfilePhotoCapture } from '@/components/ProfilePhotoCapture'
 import { uploadProfilePhoto } from '@/lib/api/uploads'
 import { ApiError } from '@/lib/api/client'
+import { LocationInput } from '@/components/LocationInput'
 
 const VEHICLE_TYPES = [
   { value: 'Minibus', label: 'Minibus' },
@@ -128,7 +129,7 @@ export function DriverProfilScreen() {
           <Input label="Nom complet" icon="badge" value={fullName} onChange={(e) => setFullName(e.target.value)} />
           <div className="pc-field-pair" style={{ gap: 16 }}>
             <Input label="Email" icon="mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <Input label="Ville" icon="location_on" value={city} onChange={(e) => setCity(e.target.value)} />
+            <LocationInput label="Ville" icon="location_on" placeholder="Votre ville..." value={city} onChange={setCity} />
           </div>
           {profileError && <Toast tone="error" message={profileError} />}
           {profileSaved && !profileError && <Toast tone="success" message="Profil mis à jour." />}

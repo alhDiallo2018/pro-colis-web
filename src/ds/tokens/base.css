@@ -1,5 +1,5 @@
 /* ============================================================
-   PROCOLIS — base resets & primitives (kept minimal)
+   SENDPROCOLIS — base resets & primitives (kept minimal)
    ============================================================ */
 *, *::before, *::after { box-sizing: border-box; }
 

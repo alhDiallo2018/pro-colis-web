@@ -5,6 +5,7 @@ export interface CreateBidPayload {
   parcelId: string
   price: number
   message?: string
+  audioUrl?: string
 }
 
 /** Chauffeur : faire une offre sur une annonce. */

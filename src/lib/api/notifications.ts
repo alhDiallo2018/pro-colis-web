@@ -1,4 +1,5 @@
 import { api } from './client'
+import type { NotificationPreference } from '@/lib/notifications'
 
 export interface AppNotification {
   id: string
@@ -30,4 +31,13 @@ export async function markRead(id: string): Promise<void> {
 
 export async function markAllRead(): Promise<void> {
   await api.post('/notifications/read-all')
+}
+
+export async function getPreferences(): Promise<NotificationPreference[]> {
+  const { data } = await api.get('/notifications/preferences')
+  return (data.preferences ?? []) as NotificationPreference[]
+}
+
+export async function updatePreferences(preferences: NotificationPreference[]): Promise<void> {
+  await api.put('/notifications/preferences', { preferences })
 }

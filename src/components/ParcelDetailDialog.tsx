@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Avatar, Badge, Button, Dialog, Icon, StatusBadge, Stepper, Tag, Toast } from '@/ds'
+import { Avatar, Badge, Button, Dialog, Icon, Select, StatusBadge, Stepper, Tag, Toast } from '@/ds'
 import { ParcelMedia } from './ParcelMedia'
 import { QueryState } from './QueryState'
 import * as parcelsApi from '@/lib/api/parcels'
+import { estimate } from '@/lib/api/commission'
+import { payCashCommission } from '@/lib/api/commission'
 import { buildSteps } from '@/features/client/parcelSteps'
 import { formatFcfa, formatWeight, formatDate, toStatusKey } from '@/lib/format'
 import type { Parcel } from '@/lib/api/types'
@@ -25,6 +27,14 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 export function ParcelDetailDialog({ parcel, onClose }: ParcelDetailDialogProps) {
   const [cashLoading, setCashLoading] = useState(false)
   const [cashError, setCashError] = useState<string | null>(null)
+  const [commissionSource, setCommissionSource] = useState<'wallet' | 'score'>('wallet')
+  const [commissionInfo, setCommissionInfo] = useState<{ commission: number; netAmount: number; percentage: number } | null>(null)
+
+  useEffect(() => {
+    if (parcel && parcel.price && parcel.price > 0) {
+      estimate(parcel.price).then((e) => setCommissionInfo({ commission: e.commission, netAmount: e.netAmount, percentage: e.percentage })).catch(() => {})
+    }
+  }, [parcel])
 
   if (!parcel) return null
 
@@ -37,6 +47,9 @@ export function ParcelDetailDialog({ parcel, onClose }: ParcelDetailDialogProps)
     setCashError(null)
     try {
       await parcelsApi.confirmCash(parcel.id)
+      if (commissionInfo && commissionInfo.commission > 0) {
+        await payCashCommission(parcel.id, commissionSource, parcel.price ?? undefined)
+      }
       onClose()
     } catch (e) {
       setCashError((e as Error)?.message ?? 'Erreur')
@@ -54,6 +67,36 @@ export function ParcelDetailDialog({ parcel, onClose }: ParcelDetailDialogProps)
       style={{ width: 'min(560px, 96vw)', maxHeight: '90vh', overflow: 'auto' }}
       actions={
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+          {showCashButton && commissionInfo && (
+            <div
+              style={{
+                background: 'var(--amber-50)',
+                borderRadius: 'var(--radius-md)',
+                padding: '10px 14px',
+                border: '1px solid var(--amber-100)',
+                fontSize: 12.5,
+                textAlign: 'left',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                <span style={{ color: 'var(--text-muted)' }}>Commission ({commissionInfo.percentage}%)</span>
+                <span style={{ fontWeight: 700, color: 'var(--red-600)' }}>{formatFcfa(commissionInfo.commission)}</span>
+              </div>
+              <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Net chauffeur</span>
+                <span style={{ fontWeight: 700, color: 'var(--green-700)' }}>{formatFcfa(commissionInfo.netAmount)}</span>
+              </div>
+              <Select
+                label="Source commission"
+                value={commissionSource}
+                onChange={(e) => setCommissionSource(e.target.value as 'wallet' | 'score')}
+                options={[
+                  { value: 'wallet', label: 'Prélever du portefeuille' },
+                  { value: 'score', label: 'Prélever des points score' },
+                ]}
+              />
+            </div>
+          )}
           {showCashButton && (
             <Button variant="amber" block icon="payments" loading={cashLoading} onClick={handleCashConfirm}>
               Confirmer paiement en espèces ({formatFcfa(parcel.price ?? 0)})

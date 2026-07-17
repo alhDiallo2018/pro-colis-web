@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Button, Dialog } from '@/ds'
 import { useCreateBid } from './hooks'
 import { NegotiationChat } from '@/components/NegotiationChat'
+import { VoiceRecorder } from '@/components/VoiceRecorder'
 import type { Parcel } from '@/lib/api/types'
 
 interface OfferDialogProps {
@@ -14,6 +15,7 @@ interface OfferDialogProps {
 export function OfferDialog({ parcel, onClose, onSuccess, existingBidId }: OfferDialogProps) {
   const createBid = useCreateBid()
   const [bidId, setBidId] = useState<string | null>(existingBidId ?? null)
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const bidCreatedRef = useRef(false)
 
   useEffect(() => {
@@ -27,7 +29,7 @@ export function OfferDialog({ parcel, onClose, onSuccess, existingBidId }: Offer
     if (bidId || bidCreatedRef.current) return
     bidCreatedRef.current = true
     createBid.mutate(
-      { parcelId: parcel.id, price, message },
+      { parcelId: parcel.id, price, message, audioUrl: audioUrl ?? undefined },
       {
         onSuccess: (bid: { id: string }) => {
           setBidId(bid.id)

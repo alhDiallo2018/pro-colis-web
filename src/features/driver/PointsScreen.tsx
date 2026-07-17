@@ -7,6 +7,7 @@ import { createPaydunyaPayment } from '@/lib/api/paydunya'
 import { formatDateTime, formatFcfa, formatPoints } from '@/lib/format'
 import { RechargeDialog } from './RechargeDialog'
 import { ApiError } from '@/lib/api/client'
+import { useAuthStore } from '@/store/auth'
 
 const WALLET_PACKS = [
   { label: '1 000 FCFA', amount: 1000 },
@@ -19,6 +20,7 @@ export function DriverPointsScreen() {
   const balance = useScoreBalance()
   const history = useScoreHistory()
   const wallet = useDriverWallet()
+  const userPhone = useAuthStore((s) => s.user?.phone ?? '')
   const txns = history.data ?? []
   const [showRecharge, setShowRecharge] = useState(false)
   const [showWalletRecharge, setShowWalletRecharge] = useState(false)
@@ -29,7 +31,7 @@ export function DriverPointsScreen() {
   const [showWithdraw, setShowWithdraw] = useState(false)
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [withdrawMethod, setWithdrawMethod] = useState('wave')
-  const [withdrawPhone, setWithdrawPhone] = useState('')
+  const [withdrawPhone, setWithdrawPhone] = useState(userPhone)
   const withdraw = useWithdrawWallet()
 
   const rechargeWallet = async () => {
@@ -415,7 +417,7 @@ export function DriverPointsScreen() {
               disabled={!Number(withdrawAmount) || Number(withdrawAmount) < 100 || Number(withdrawAmount) > Number(wallet.data?.balance ?? 0)}
               onClick={() => {
                 withdraw.mutate(
-                  { amount: Number(withdrawAmount), method: withdrawMethod, phone: withdrawPhone || undefined },
+                  { amount: Number(withdrawAmount), method: withdrawMethod, phone: withdrawPhone.trim() || userPhone || undefined },
                   {
                     onSuccess: () => {
                       setShowWithdraw(false)
@@ -457,7 +459,7 @@ export function DriverPointsScreen() {
             label="Numéro de téléphone / compte"
             icon="call"
             mono
-            placeholder="+221 77 000 00 00"
+            placeholder={userPhone || '+221 77 000 00 00'}
             value={withdrawPhone}
             onChange={(e) => setWithdrawPhone(e.target.value)}
           />

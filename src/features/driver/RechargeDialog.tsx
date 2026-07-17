@@ -4,6 +4,7 @@ import { usePurchaseScore, useDriverWallet } from './hooks'
 import { createPaydunyaPayment } from '@/lib/api/paydunya'
 import { purchaseWithWallet } from '@/lib/api/score'
 import { ApiError } from '@/lib/api/client'
+import { useAuthStore } from '@/store/auth'
 import { formatFcfa } from '@/lib/format'
 
 interface RechargeDialogProps {
@@ -33,10 +34,11 @@ const PAYMENT_METHODS = [
 export function RechargeDialog({ open, onClose, onSuccess }: RechargeDialogProps) {
   const purchase = usePurchaseScore()
   const wallet = useDriverWallet()
+  const userPhone = useAuthStore((s) => s.user?.phone ?? '')
   const [pack, setPack] = useState(PACKS[0].points.toString())
   const [customPoints, setCustomPoints] = useState('')
   const [method, setMethod] = useState('wallet')
-  const [phoneNumber, setPhoneNumber] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState(userPhone)
   const [useCustom, setUseCustom] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -78,7 +80,7 @@ export function RechargeDialog({ open, onClose, onSuccess }: RechargeDialogProps
       }
     } else {
       purchase.mutate(
-        { points, method, phoneNumber: method !== 'cash' ? phoneNumber.trim() || undefined : undefined },
+        { points, method, phoneNumber: method !== 'cash' ? (phoneNumber.trim() || userPhone) || undefined : undefined },
         {
           onSuccess: () => {
             setCustomPoints('')
@@ -188,7 +190,7 @@ export function RechargeDialog({ open, onClose, onSuccess }: RechargeDialogProps
             label="Numéro de téléphone"
             icon="call"
             mono
-            placeholder="+221 77 000 00 00"
+            placeholder={userPhone || '+221 77 000 00 00'}
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
           />

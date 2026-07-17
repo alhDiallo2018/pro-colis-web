@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ProColis · Guide de déploiement</title>
+<title>SendProColis · Guide de déploiement</title>
 <style>
   :root {
     --teal-50:#E4F4F2; --teal-100:#C3E6E2; --teal-500:#018982; --teal-600:#066E68; --teal-700:#054E4A;
@@ -124,7 +124,7 @@
 <body>
 <div class="layout">
   <aside>
-    <div class="brand"><span class="logo">P</span><strong>ProColis</strong></div>
+    <div class="brand"><span class="logo">P</span><strong>SendProColis</strong></div>
     <div style="font-size:.8rem;color:#8fc7c1;">Guide de déploiement</div>
 
     <div class="sub">Sommaire</div>
@@ -149,12 +149,12 @@
   <main>
     <div class="hero">
       <div class="kicker">Production · VPS</div>
-      <h1>Déploiement ProColis</h1>
+      <h1>Déploiement SendProColis</h1>
       <p class="lead">Web, API et fichiers uploadés servis derrière une seule adresse, avec HTTPS automatique via Caddy. Trois conteneurs Docker, aucune configuration TLS manuelle.</p>
       <div style="margin-top:16px;">
-        <span class="pill">procolis-caddy</span>
-        <span class="pill">procolis-api</span>
-        <span class="pill">procolis-postgres</span>
+        <span class="pill">sendprocolis-caddy</span>
+        <span class="pill">sendprocolis-api</span>
+        <span class="pill">sendprocolis-postgres</span>
       </div>
     </div>
 
@@ -175,7 +175,7 @@
       <p>Créer un enregistrement <strong>A</strong> pointant vers l'IP publique du VPS :</p>
       <div class="table-wrap"><table>
         <tr><th>Type</th><th>Nom</th><th>Valeur</th></tr>
-        <tr><td><code>A</code></td><td><code>procolis.exemple.com</code></td><td><code>&lt;IP du VPS&gt;</code></td></tr>
+        <tr><td><code>A</code></td><td><code>sendprocolis.exemple.com</code></td><td><code>&lt;IP du VPS&gt;</code></td></tr>
       </table></div>
       <div class="warn"><span class="ic">⚠️</span><div>Le certificat TLS ne sera émis que si le DNS est propagé <em>et</em> que les ports 80/443 sont ouverts.</div></div>
     </section>
@@ -211,15 +211,15 @@ sudo ufw --force enable</pre>
     <!-- CLONE -->
     <section id="clone">
       <h2><span class="badge">3</span>Cloner les deux repos côte à côte</h2>
-      <p>Le <code>docker-compose.yml</code> (dans ProColis-Web) construit l'API depuis le repo voisin <code>../ProColis-Api</code>. Les deux <strong>doivent</strong> être au même niveau :</p>
-      <pre>mkdir -p ~/procolis &amp;&amp; cd ~/procolis
-git clone &lt;url-ProColis-Web&gt;   ProColis-Web
-git clone &lt;url-ProColis-Api&gt;   ProColis-Api
-cd ProColis-Web</pre>
+      <p>Le <code>docker-compose.yml</code> (dans SendProColis-Web) construit l'API depuis le repo voisin <code>../SendProColis-Api</code>. Les deux <strong>doivent</strong> être au même niveau :</p>
+      <pre>mkdir -p ~/sendprocolis &amp;&amp; cd ~/sendprocolis
+git clone &lt;url-SendProColis-Web&gt;   SendProColis-Web
+git clone &lt;url-SendProColis-Api&gt;   SendProColis-Api
+cd SendProColis-Web</pre>
       <p>Arborescence attendue :</p>
-      <pre>~/procolis/
-├── ProColis-Web/   <span class="c">← lancer docker compose ICI</span>
-└── ProColis-Api/</pre>
+      <pre>~/sendprocolis/
+├── SendProColis-Web/   <span class="c">← lancer docker compose ICI</span>
+└── SendProColis-Api/</pre>
     </section>
 
     <!-- SECRETS -->
@@ -227,7 +227,7 @@ cd ProColis-Web</pre>
       <h2><span class="badge">4</span>Configurer les secrets</h2>
       <ol class="steps">
         <li><strong>Copier le modèle :</strong>
-          <pre>cd ~/procolis/ProColis-Web
+          <pre>cd ~/sendprocolis/SendProColis-Web
 cp .env.production.example .env</pre>
         </li>
         <li><strong>Générer les secrets :</strong>
@@ -237,7 +237,7 @@ echo "JWT_REFRESH_SECRET=$(openssl rand -hex 32)"</pre>
           <div class="warn"><span class="ic">⚠️</span><div>Générer le mot de passe Postgres en <strong>hexadécimal</strong> (<code>-hex</code>), pas en <code>-base64</code> : les caractères <code>/</code> <code>+</code> <code>=</code> du base64 cassent le parsing de la <code>DATABASE_URL</code> côté API.</div></div>
         </li>
         <li><strong>Renseigner <code>.env</code></strong> avec <code>nano .env</code> :
-          <pre>DOMAIN=procolis.exemple.com
+          <pre>DOMAIN=sendprocolis.exemple.com
 TLS_EMAIL=fc@futurschoisis.net
 POSTGRES_PASSWORD=...
 JWT_ACCESS_SECRET=...
@@ -250,7 +250,7 @@ JWT_REFRESH_SECRET=...</pre>
     <!-- RUN -->
     <section id="run">
       <h2><span class="badge">5</span>Build &amp; démarrage</h2>
-      <pre>cd ~/procolis/ProColis-Web
+      <pre>cd ~/sendprocolis/SendProColis-Web
 docker compose build          <span class="c"># build SPA + image API (quelques minutes)</span>
 docker compose up -d          <span class="c"># démarre caddy + api + postgres</span>
 
@@ -259,8 +259,8 @@ docker compose up -d          <span class="c"># démarre caddy + api + postgres<
 docker compose ps             <span class="c"># tout doit être running / healthy</span>
 docker compose logs -f caddy  <span class="c"># vérifier l'émission du certificat TLS</span></pre>
       <p>Caddy obtient le certificat au premier accès HTTPS. Tester :</p>
-      <pre>curl -I https://procolis.exemple.com/api/v1/health   <span class="c"># 200 attendu</span></pre>
-      <p>Puis ouvrir <code>https://procolis.exemple.com</code> dans un navigateur.</p>
+      <pre>curl -I https://sendprocolis.exemple.com/api/v1/health   <span class="c"># 200 attendu</span></pre>
+      <p>Puis ouvrir <code>https://sendprocolis.exemple.com</code> dans un navigateur.</p>
 
       <h3>(Optionnel) Peupler la base avec les comptes de test</h3>
       <div class="warn"><span class="ic">⚠️</span><div>Le seed crée les utilisateurs de démo (PIN <code>123456</code>). À <strong>ne pas</strong> exécuter sur une vraie production.</div></div>
@@ -270,9 +270,9 @@ docker compose logs -f caddy  <span class="c"># vérifier l'émission du certifi
     <!-- UPDATE -->
     <section id="update">
       <h2><span class="badge">6</span>Mises à jour</h2>
-      <pre>cd ~/procolis/ProColis-Web &amp;&amp; git pull
-cd ~/procolis/ProColis-Api &amp;&amp; git pull
-cd ~/procolis/ProColis-Web
+      <pre>cd ~/sendprocolis/SendProColis-Web &amp;&amp; git pull
+cd ~/sendprocolis/SendProColis-Api &amp;&amp; git pull
+cd ~/sendprocolis/SendProColis-Web
 
 docker compose build
 docker compose up -d           <span class="c"># recrée uniquement ce qui a changé</span>
@@ -285,15 +285,15 @@ docker image prune -f          <span class="c"># nettoie les anciennes images</s
       <h2><span class="badge">7</span>Sauvegardes</h2>
       <p>Deux volumes portent des données précieuses : <code>postgres-data</code> et <code>api-uploads</code> (les certificats de <code>caddy-data</code> se régénèrent seuls).</p>
       <pre><span class="c"># Dump base de données</span>
-docker compose exec -T postgres pg_dump -U procolis procolis | gzip &gt; backup-$(date +%F).sql.gz
+docker compose exec -T postgres pg_dump -U sendprocolis sendprocolis | gzip &gt; backup-$(date +%F).sql.gz
 
 <span class="c"># Restauration</span>
-gunzip -c backup-2026-07-05.sql.gz | docker compose exec -T postgres psql -U procolis procolis
+gunzip -c backup-2026-07-05.sql.gz | docker compose exec -T postgres psql -U sendprocolis sendprocolis
 
 <span class="c"># Sauvegarde des fichiers uploadés</span>
-docker run --rm -v procolis-web_api-uploads:/data -v "$PWD":/backup alpine \
+docker run --rm -v sendprocolis-web_api-uploads:/data -v "$PWD":/backup alpine \
   tar czf /backup/uploads-$(date +%F).tar.gz -C /data .</pre>
-      <div class="note"><span class="ic">📦</span><div>Le nom du volume est préfixé par le dossier du projet (<code>procolis-web_</code>). Vérifier avec <code>docker volume ls</code>.</div></div>
+      <div class="note"><span class="ic">📦</span><div>Le nom du volume est préfixé par le dossier du projet (<code>sendprocolis-web_</code>). Vérifier avec <code>docker volume ls</code>.</div></div>
     </section>
 
     <!-- COMMANDS -->
@@ -303,7 +303,7 @@ docker run --rm -v procolis-web_api-uploads:/data -v "$PWD":/backup alpine \
 docker compose logs -f caddy      <span class="c"># logs proxy / TLS</span>
 docker compose restart api        <span class="c"># redémarrer l'API</span>
 docker compose down               <span class="c"># arrêter (conserve les volumes/données)</span>
-docker compose exec postgres psql -U procolis procolis   <span class="c"># shell SQL</span></pre>
+docker compose exec postgres psql -U sendprocolis sendprocolis   <span class="c"># shell SQL</span></pre>
     </section>
 
     <!-- TROUBLESHOOT -->
@@ -314,7 +314,7 @@ docker compose exec postgres psql -U procolis procolis   <span class="c"># shell
         <tr>
           <td>Certificat TLS non émis</td>
           <td>DNS non propagé ou port 80/443 fermé</td>
-          <td><code>dig procolis.exemple.com</code>, vérifier <code>ufw</code>, relire <code>docker compose logs caddy</code></td>
+          <td><code>dig sendprocolis.exemple.com</code>, vérifier <code>ufw</code>, relire <code>docker compose logs caddy</code></td>
         </tr>
         <tr>
           <td>Front charge mais appels API en erreur réseau</td>
@@ -340,7 +340,7 @@ docker compose exec postgres psql -U procolis procolis   <span class="c"># shell
     </section>
 
     <div style="margin-top:60px;padding-top:22px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;">
-      ProColis · Guide de déploiement — Docker + Caddy · domaine unique, HTTPS automatique.
+      SendProColis · Guide de déploiement — Docker + Caddy · domaine unique, HTTPS automatique.
     </div>
   </main>
 </div>

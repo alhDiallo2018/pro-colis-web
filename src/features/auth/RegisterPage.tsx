@@ -6,6 +6,8 @@ import { useRegister } from './useAuth'
 import { homeForRole } from '@/routes/paths'
 import { ApiError } from '@/lib/api/client'
 import type { Role } from '@/lib/api/types'
+import { LocationInput } from '@/components/LocationInput'
+import { CountryCodePicker } from '@/components/CountryCodePicker'
 
 const ROLE_OPTIONS = [
   { value: 'client', label: 'Envoyer un colis', icon: 'inventory_2' },
@@ -25,6 +27,7 @@ export function RegisterPage() {
   const [fullName, setFullName] = useState('')
   const [city, setCity] = useState('')
   const [phone, setPhone] = useState('')
+  const [countryCode, setCountryCode] = useState('+221')
   const [pin, setPin] = useState('')
   const [accepted, setAccepted] = useState(false)
 
@@ -34,7 +37,7 @@ export function RegisterPage() {
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     registerMut.mutate(
-      { role, fullName: fullName.trim(), city: city.trim() || null, phone: phone.trim(), pin },
+      { role, fullName: fullName.trim(), city: city.trim() || null, phone: `${countryCode}${phone.trim()}`, pin },
       { onSuccess: (session) => navigate(homeForRole(session.user.role), { replace: true }) },
     )
   }
@@ -48,7 +51,7 @@ export function RegisterPage() {
       brand={
         <>
           <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 27, lineHeight: 1.18, letterSpacing: '-0.02em', margin: '0 0 18px' }}>
-            Rejoignez le réseau Procolis.
+            Rejoignez le réseau SendProcolis.
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {PERKS.map((p) => (
@@ -80,18 +83,33 @@ export function RegisterPage() {
 
         <div className="pc-field-pair" style={{ gap: 16 }}>
           <Input label="Nom complet" icon="badge" placeholder="Ex : Aïcha Mballa" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          <Input label="Ville" icon="location_on" placeholder="Douala" value={city} onChange={(e) => setCity(e.target.value)} />
+          <LocationInput
+            label="Ville"
+            icon="location_on"
+            placeholder="Votre ville..."
+            value={city}
+            onChange={setCity}
+          />
         </div>
 
         <div className="pc-field-pair" style={{ gap: 16 }}>
-          <Input
-            label="Téléphone"
-            icon="call"
-            mono
-            placeholder="+237 6 00 00 00 00"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+            <label style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, color: 'var(--text-body)' }}>
+              Téléphone
+            </label>
+            <div style={{ display: 'flex', gap: 0, alignItems: 'stretch' }}>
+              <CountryCodePicker value={countryCode} onChange={(code) => setCountryCode(code)} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Input
+                  mono
+                  placeholder="77 123 45 67"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, marginLeft: -1 }}
+                />
+              </div>
+            </div>
+          </div>
           <Input
             label="Code PIN"
             icon="lock"

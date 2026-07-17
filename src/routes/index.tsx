@@ -3,6 +3,17 @@ import { RequireAuth, RequireRole } from './guards'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RegisterPage } from '@/features/auth/RegisterPage'
 import { LandingPage } from '@/features/marketing/LandingPage'
+import { AProposPage } from '@/features/marketing/AProposPage'
+import { ContactPage } from '@/features/marketing/ContactPage'
+import { MentionsLegalesPage } from '@/features/marketing/MentionsLegalesPage'
+import { ConfidentialitePage } from '@/features/marketing/ConfidentialitePage'
+import { CGUPage } from '@/features/marketing/CGUPage'
+import { ConditionsTransportPage } from '@/features/marketing/ConditionsTransportPage'
+import { PaiementPage } from '@/features/marketing/PaiementPage'
+import { RemboursementPage } from '@/features/marketing/RemboursementPage'
+import { ReclamationsPage } from '@/features/marketing/ReclamationsPage'
+import { ColisInterditsPage } from '@/features/marketing/ColisInterditsPage'
+import { HelpScreen } from '@/features/shared/HelpScreen'
 import { DashboardLayout, type NavSection } from '@/layouts/DashboardLayout'
 import { NavButton, NotifButton } from '@/components/actions'
 
@@ -15,6 +26,8 @@ import { ClientAnnoncesScreen } from '@/features/client/ClientAnnoncesScreen'
 import { AnnonceDetailScreen } from '@/features/client/AnnonceDetailScreen'
 import { SuiviScreen } from '@/features/client/SuiviScreen'
 import { ProfilScreen } from '@/features/client/ProfilScreen'
+import { TripDetailScreen } from '@/features/client/TripDetailScreen'
+import { ConfirmDeliveryScreen } from '@/features/shared/ConfirmDeliveryScreen'
 import { DriverDashboard } from '@/features/driver/DriverDashboard'
 import { LibreServiceScreen } from '@/features/driver/LibreServiceScreen'
 import { MissionsScreen } from '@/features/driver/MissionsScreen'
@@ -25,6 +38,8 @@ import { DriverProfilScreen } from '@/features/driver/DriverProfilScreen'
 import { DriverParametresScreen } from '@/features/driver/DriverParametresScreen'
 import { DriverPointsScreen } from '@/features/driver/PointsScreen'
 import { MesAnnoncesScreen } from '@/features/driver/MesAnnoncesScreen'
+import { VehicleDocumentsScreen } from '@/features/driver/VehicleDocumentsScreen'
+import { ItineraireScreen } from '@/features/driver/ItineraireScreen'
 import { MessagesScreen } from '@/features/shared/MessagesScreen'
 import { AvailabilityToggle } from '@/features/driver/AvailabilityToggle'
 import { SuperAdminDashboard } from '@/features/superAdmin/SuperAdminDashboard'
@@ -41,11 +56,17 @@ import { ReputationDashboardPage } from '@/features/superAdmin/ReputationDashboa
 import { ScoresPage } from '@/features/superAdmin/ScoresPage'
 import { ClassementPage } from '@/features/superAdmin/ClassementPage'
 import { DriverDetailPage } from '@/features/superAdmin/DriverDetailPage'
+import { BrevoConfigScreen } from '@/features/superAdmin/BrevoConfigScreen'
+import { WalletDetailPage } from '@/features/superAdmin/WalletDetailPage'
+import { ScoreDetailPage } from '@/features/superAdmin/ScoreDetailPage'
+import { GarageDriversPage } from '@/features/superAdmin/GarageDriversPage'
+import { NotificationsScreen } from '@/features/shared/NotificationsScreen'
 import { GarageDashboard } from '@/features/garageAdmin/GarageDashboard'
 import { GarageColisPage } from '@/features/garageAdmin/GarageColisPage'
 import { GarageChauffeursPage } from '@/features/garageAdmin/GarageChauffeursPage'
 import { GarageAssignationsPage } from '@/features/garageAdmin/GarageAssignationsPage'
 import { GarageRapportsPage } from '@/features/garageAdmin/GarageRapportsPage'
+import { GarageParcelDetailPage } from '@/features/garageAdmin/GarageParcelDetailPage'
 
 const CLIENT_NAV: NavSection[] = [
   {
@@ -69,6 +90,8 @@ const DRIVER_NAV: NavSection[] = [
       { label: 'Mes missions', icon: 'local_shipping', to: '/driver/missions' },
       { label: 'Revenus', icon: 'payments', to: '/driver/revenus' },
       { label: 'Points & paiements', icon: 'account_balance_wallet', to: '/driver/points' },
+      { label: 'Documents', icon: 'description', to: '/driver/documents' },
+      { label: 'Itinéraire', icon: 'map', to: '/driver/itinerary' },
       { label: 'Messages', icon: 'forum', to: '/driver/messages' },
       { label: 'Historique', icon: 'history', to: '/driver/historique' },
       { label: 'Ma zone', icon: 'garage', to: '/driver/garage' },
@@ -122,6 +145,7 @@ const SUPER_NAV: NavSection[] = [
     items: [
       { label: 'Zones', icon: 'garage', to: '/admin/garages' },
       { label: 'Statistiques', icon: 'monitoring', to: '/admin/stats' },
+      { label: 'Notifications Brevo', icon: 'mail', to: '/admin/notifications-brevo' },
     ],
   },
 ]
@@ -130,6 +154,18 @@ export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
+  { path: '/help', element: <HelpScreen /> },
+  { path: '/track', element: <SuiviScreen /> },
+  { path: '/a-propos', element: <AProposPage /> },
+  { path: '/contact', element: <ContactPage /> },
+  { path: '/mentions-legales', element: <MentionsLegalesPage /> },
+  { path: '/confidentialite', element: <ConfidentialitePage /> },
+  { path: '/cgu', element: <CGUPage /> },
+  { path: '/conditions-transport', element: <ConditionsTransportPage /> },
+  { path: '/paiement', element: <PaiementPage /> },
+  { path: '/remboursement', element: <RemboursementPage /> },
+  { path: '/reclamations', element: <ReclamationsPage /> },
+  { path: '/colis-interdits', element: <ColisInterditsPage /> },
 
   // Client
   {
@@ -160,13 +196,14 @@ export const router = createBrowserRouter([
       { path: 'offres', element: <OffresRecuesScreen /> },
       { path: 'annonces', element: <ClientAnnoncesScreen /> },
       { path: 'annonces/:advertisementId', element: <AnnonceDetailScreen /> },
+      { path: 'trip/:advertisementId', element: <TripDetailScreen /> },
+      { path: 'colis/:parcelId/confirm', element: <ConfirmDeliveryScreen /> },
       { path: 'suivi', element: <SuiviScreen /> },
       { path: 'messages', element: <MessagesScreen /> },
       { path: 'profil', element: <ProfilScreen /> },
+      { path: 'notifications', element: <NotificationsScreen /> },
     ],
   },
-
-  // Chauffeur
   {
     path: '/driver',
     element: (
@@ -196,6 +233,10 @@ export const router = createBrowserRouter([
       { path: 'garage', element: <MonGarageScreen /> },
       { path: 'profil', element: <DriverProfilScreen /> },
       { path: 'parametres', element: <DriverParametresScreen /> },
+      { path: 'notifications', element: <NotificationsScreen /> },
+      { path: 'documents', element: <VehicleDocumentsScreen /> },
+      { path: 'itinerary', element: <ItineraireScreen /> },
+      { path: 'parcels/:parcelId/confirm', element: <ConfirmDeliveryScreen /> },
     ],
   },
 
@@ -215,9 +256,11 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <GarageDashboard /> },
       { path: 'colis', element: <GarageColisPage /> },
+      { path: 'colis/:parcelId', element: <GarageParcelDetailPage /> },
       { path: 'chauffeurs', element: <GarageChauffeursPage /> },
       { path: 'assignations', element: <GarageAssignationsPage /> },
       { path: 'rapports', element: <GarageRapportsPage /> },
+      { path: 'notifications', element: <NotificationsScreen /> },
     ],
   },
 
@@ -251,13 +294,18 @@ export const router = createBrowserRouter([
       { path: 'parametres', element: <Navigate to="/admin/finance/configuration" replace /> },
       { path: 'finance', element: <FinanceDashboardPage /> },
       { path: 'finance/wallets', element: <WalletsPage /> },
+      { path: 'finance/wallets/:userId', element: <WalletDetailPage /> },
       { path: 'finance/commissions', element: <Navigate to="/admin/finance/configuration" replace /> },
       { path: 'finance/configuration', element: <ConfigConsommationPage /> },
       { path: 'finance/payments', element: <PaymentsPage /> },
       { path: 'reputation', element: <ReputationDashboardPage /> },
       { path: 'reputation/scores', element: <ScoresPage /> },
+      { path: 'reputation/scores/:userId', element: <ScoreDetailPage /> },
       { path: 'reputation/classement', element: <ClassementPage /> },
+      { path: 'notifications-brevo', element: <BrevoConfigScreen /> },
       { path: 'chauffeurs/:userId', element: <DriverDetailPage /> },
+      { path: 'garages/:garageId/drivers', element: <GarageDriversPage /> },
+      { path: 'notifications', element: <NotificationsScreen /> },
     ],
   },
 

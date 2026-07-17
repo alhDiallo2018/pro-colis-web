@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Button, Dialog, Input, Select, Textarea, Toast } from '@/ds'
+import { Button, Dialog, Input, Textarea, Toast } from '@/ds'
 import { useCreateAdvertisement } from './hooks'
 import * as garagesApi from '@/lib/api/garages'
 import { ApiError } from '@/lib/api/client'
+import { GarageSearchSelect } from '@/components/GarageSearchSelect'
+import { VoiceRecorder } from '@/components/VoiceRecorder'
 
 interface Props {
   open: boolean
@@ -15,7 +17,6 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
   const createAd = useCreateAdvertisement()
   const garagesQ = useQuery({ queryKey: ['garages', 'public'], queryFn: () => garagesApi.listPublic(), staleTime: 5 * 60_000 })
   const garages = garagesQ.data ?? []
-  const options = garages.map((g) => ({ value: g.id, label: `${g.name} — ${g.city ?? ''}`.trim() }))
 
   const [departureGarageId, setDeparture] = useState('')
   const [arrivalGarageId, setArrival] = useState('')
@@ -23,6 +24,7 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
   const [weight, setWeight] = useState('')
   const [price, setPrice] = useState('')
   const [description, setDescription] = useState('')
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
 
   if (!open) return null
 
@@ -36,6 +38,7 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
     setWeight('')
     setPrice('')
     setDescription('')
+    setAudioUrl(null)
   }
 
   const submit = () => {
@@ -49,6 +52,7 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
         availableWeight: weight ? Number(weight) : null,
         proposedPrice: price ? Number(price) : null,
         description: description.trim() || null,
+        audioUrl: audioUrl ?? undefined,
       },
       {
         onSuccess: () => {
@@ -82,21 +86,21 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
     >
       <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div className="pc-field-pair" style={{ gap: 12 }}>
-          <Select
+          <GarageSearchSelect
             label="Départ"
             icon="garage"
-            placeholder={garagesQ.isLoading ? 'Chargement…' : 'Zone'}
-            options={options}
+            placeholder={garagesQ.isLoading ? 'Chargement…' : 'Rechercher une zone...'}
+            garages={garages}
             value={departureGarageId}
-            onChange={(e) => setDeparture(e.target.value)}
+            onChange={setDeparture}
           />
-          <Select
+          <GarageSearchSelect
             label="Arrivée"
             icon="pin_drop"
-            placeholder={garagesQ.isLoading ? 'Chargement…' : 'Zone'}
-            options={options}
+            placeholder={garagesQ.isLoading ? 'Chargement…' : 'Rechercher une zone...'}
+            garages={garages}
             value={arrivalGarageId}
-            onChange={(e) => setArrival(e.target.value)}
+            onChange={setArrival}
           />
         </div>
         <Input
@@ -111,6 +115,10 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
           <Input label="Prix proposé (FCFA)" icon="payments" type="number" inputMode="numeric" mono value={price} onChange={(e) => setPrice(e.target.value)} />
         </div>
         <Textarea label="Description (optionnel)" placeholder="Ex : véhicule climatisé, départ confirmé." maxLength={200} value={description} onChange={(e) => setDescription(e.target.value)} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, color: 'var(--text-body)' }}>Note vocale (optionnel)</div>
+          <VoiceRecorder onUploaded={setAudioUrl} existingUrl={audioUrl} />
+        </div>
         {departureGarageId && departureGarageId === arrivalGarageId && (
           <Toast tone="warning" message="Le départ et l’arrivée doivent être différents." />
         )}

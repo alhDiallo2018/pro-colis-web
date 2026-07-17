@@ -4,6 +4,7 @@ import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { ParcelMedia } from '@/components/ParcelMedia'
 import { ParcelDetailDialog } from '@/components/ParcelDetailDialog'
+import { PayCommissionDialog } from './PayCommissionDialog'
 import { useAdvanceParcel, useDeliverParcel, useDriverParcels } from './hooks'
 import { ApiError } from '@/lib/api/client'
 import { formatFcfa, toStatusKey } from '@/lib/format'
@@ -25,6 +26,7 @@ export function MissionsScreen() {
   const advance = useAdvanceParcel()
   const [deliverTarget, setDeliverTarget] = useState<Parcel | null>(null)
   const [detailTarget, setDetailTarget] = useState<Parcel | null>(null)
+  const [commissionTarget, setCommissionTarget] = useState<Parcel | null>(null)
   const parcels = (query.data?.parcels ?? []).filter((p) => p.status !== 'cancelled')
 
   return (
@@ -85,14 +87,24 @@ export function MissionsScreen() {
         </QueryState>
       </Panel>
 
-      <DeliveryDialog parcel={deliverTarget} onClose={() => setDeliverTarget(null)} />
+      <DeliveryDialog
+        parcel={deliverTarget}
+        onClose={() => setDeliverTarget(null)}
+        onDelivered={(p) => {
+          setDeliverTarget(null)
+          if (p.paymentMethod === 'cash' && p.price && p.price > 0) {
+            setCommissionTarget(p)
+          }
+        }}
+      />
       <ParcelDetailDialog parcel={detailTarget} onClose={() => setDetailTarget(null)} />
+      <PayCommissionDialog parcel={commissionTarget} onClose={() => setCommissionTarget(null)} />
     </div>
   )
 }
 
 /** Driver confirms delivery by entering the recipient's OTP code (proof of receipt). */
-function DeliveryDialog({ parcel, onClose }: { parcel: Parcel | null; onClose: () => void }) {
+function DeliveryDialog({ parcel, onClose, onDelivered }: { parcel: Parcel | null; onClose: () => void; onDelivered?: (p: Parcel) => void }) {
   const deliver = useDeliverParcel()
   const [otp, setOtp] = useState('')
   const [note, setNote] = useState('')
@@ -106,10 +118,11 @@ function DeliveryDialog({ parcel, onClose }: { parcel: Parcel | null; onClose: (
     deliver.mutate(
       { parcelId: parcel.id, otp: otp.trim(), recipientNote: note.trim() || undefined },
       {
-        onSuccess: () => {
+        onSuccess: (result) => {
           setOtp('')
           setNote('')
           onClose()
+          onDelivered?.(result)
         },
       },
     )

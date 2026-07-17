@@ -1,5 +1,5 @@
 /* ============================================================
-   PROCOLIS — RESPONSIVE LAYOUT UTILITIES
+   SENDPROCOLIS — RESPONSIVE LAYOUT UTILITIES
    The app is styled with inline style objects, which cannot
    carry media queries. These classes provide the handful of
    reflow behaviours that inline styles can't express.
@@ -70,4 +70,53 @@
 /* Hide non-essential chrome on very small screens (e.g. secondary CTA). */
 @media (max-width: 480px) {
   .pc-hide-xs { display: none !important; }
+}
+
+/* Show element ONLY on very small screens. */
+@media (min-width: 481px) {
+  .pc-show-xs { display: none !important; }
+}
+
+/* Landing: hero section — two columns stack on tablet. */
+.pc-landing-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 400px);
+}
+@media (max-width: 860px) {
+  .pc-landing-hero-grid { grid-template-columns: 1fr; }
+}
+
+/* Landing: drivers section — two columns stack. */
+.pc-landing-drivers-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 860px) {
+  .pc-landing-drivers-grid { grid-template-columns: 1fr; }
+}
+
+/* Landing: footer — 4 columns → 2 → 1. */
+.pc-landing-footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+}
+@media (max-width: 960px) {
+  .pc-landing-footer-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 540px) {
+  .pc-landing-footer-grid { grid-template-columns: 1fr; }
+}
+
+/* Trip detail: details/tarification grid. */
+.pc-trip-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 640px) {
+  .pc-trip-detail-grid { grid-template-columns: 1fr; }
+}
+
+/* Hide on screens smaller than 720px. */
+@media (max-width: 720px) {
+  .pc-hide-sm { display: none !important; }
 }

@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/auth'
 import { useChangePin, useUpdateDriverStatus } from './hooks'
 import { ApiError } from '@/lib/api/client'
 import type { DriverStatus } from '@/lib/api/types'
+import { NotificationPreferencesSheet } from '@/components/NotificationPreferences'
 
 const STATUS_OPTIONS = [
   { value: 'available', label: 'Disponible', icon: 'check_circle' },
@@ -107,6 +108,9 @@ export function DriverParametresScreen() {
           </div>
         </form>
       </Card>
+
+      <NotificationPreferencesSheet userEmail={user.email} userPhone={user.phone} />
+
     </div>
   )
 }

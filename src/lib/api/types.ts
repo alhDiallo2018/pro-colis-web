@@ -4,6 +4,7 @@
 export type Role = 'client' | 'driver' | 'admin' | 'super_admin'
 export type UserStatus = 'active' | 'suspended' | 'deleted'
 export type DriverStatus = 'available' | 'busy' | 'offline'
+export type PaymentMethod = 'wave' | 'freeMoney' | 'orangeMoney' | 'card' | 'cash'
 
 /** Raw parcel status as stored by the API (Prisma enum). */
 export type ApiParcelStatus =
@@ -105,6 +106,9 @@ export interface Parcel {
   receiverAddress?: string | null
   description?: string | null
   weight?: number | null
+  length?: number | null
+  width?: number | null
+  height?: number | null
   type?: string | null
   status: ApiParcelStatus
   departureGarageId?: string | null
@@ -120,11 +124,16 @@ export interface Parcel {
   price?: number | null
   proposedPrice?: number | null
   negotiatedPrice?: number | null
+  deliveryFees?: number | null
   totalAmount?: number | null
+  insuranceAmount?: number | null
+  urgentFee?: number | null
   isInsured?: boolean
   isUrgent?: boolean
   isFreeForBidding?: boolean
   selectedBidId?: string | null
+  paymentMethod?: PaymentMethod | string | null
+  paymentPhoneNumber?: string | null
   paymentStatus?: string | null
   signatureUrl?: string | null
   notes?: string | null
@@ -132,6 +141,9 @@ export interface Parcel {
   deliveryDate?: string | null
   estimatedDeliveryDate?: string | null
   cancellationReason?: string | null
+  cancelledBy?: string | null
+  cancelledAt?: string | null
+  createdBy?: string | null
   createdAt?: string
   updatedAt?: string
   bids?: Bid[]

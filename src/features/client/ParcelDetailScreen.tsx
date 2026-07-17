@@ -5,6 +5,7 @@ import { QueryState } from '@/components/QueryState'
 import { ParcelMedia } from '@/components/ParcelMedia'
 import { useCreateRating, useDeliveryCode, useParcel } from './hooks'
 import { createPaydunyaPayment } from '@/lib/api/paydunya'
+import { estimate } from '@/lib/api/commission'
 import { buildSteps } from './parcelSteps'
 import { formatFcfa, formatWeight, toStatusKey } from '@/lib/format'
 
@@ -170,6 +171,13 @@ export function ParcelDetailScreen() {
 function PaydunyaPayCard({ parcelId, amount, trackingNumber }: { parcelId: string; amount: number; trackingNumber: string }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [commissionInfo, setCommissionInfo] = useState<{ commission: number; netAmount: number; percentage: number } | null>(null)
+
+  useEffect(() => {
+    if (amount > 0) {
+      estimate(amount).then((e) => setCommissionInfo({ commission: e.commission, netAmount: e.netAmount, percentage: e.percentage })).catch(() => {})
+    }
+  }, [amount])
 
   const pay = async () => {
     setLoading(true)
@@ -191,6 +199,28 @@ function PaydunyaPayCard({ parcelId, amount, trackingNumber }: { parcelId: strin
       <p style={{ margin: '0 0 14px', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', wordBreak: 'break-word' }}>
         Paiement de {formatFcfa(amount)} pour le colis {trackingNumber}
       </p>
+
+      {commissionInfo && (
+        <div
+          style={{
+            background: 'var(--amber-50)',
+            borderRadius: 'var(--radius-md)',
+            padding: '12px 14px',
+            border: '1px solid var(--amber-100)',
+            marginBottom: 14,
+            fontSize: 13,
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+            <span style={{ color: 'var(--text-muted)' }}>Commission plateforme ({commissionInfo.percentage}%)</span>
+            <span style={{ fontWeight: 700, color: 'var(--red-600)' }}>- {formatFcfa(commissionInfo.commission)}</span>
+          </div>
+          <div style={{ borderTop: '1px solid var(--amber-200)', paddingTop: 4, marginTop: 2, display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: 'var(--text-muted)' }}>Montant reversé au chauffeur</span>
+            <span style={{ fontWeight: 700, color: 'var(--green-700)' }}>{formatFcfa(commissionInfo.netAmount)}</span>
+          </div>
+        </div>
+      )}
 
       {error && <Toast tone="error" message={error} />}
 

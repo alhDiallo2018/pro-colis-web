@@ -1,4 +1,4 @@
-# Déploiement production ProColis — domaine unique, HTTPS automatique via Caddy.
+# Déploiement production SendProColis — domaine unique, HTTPS automatique via Caddy.
 #
 # Topologie :
 #   Internet ──443/80──▶ caddy ──┬── / (SPA React, fichiers statiques)
@@ -7,8 +7,8 @@
 #   api ─▶ postgres (réseau interne uniquement, aucun port exposé)
 #
 # Prérequis sur le VPS : les deux repos clonés côte à côte
-#   ./ProColis-Web   (ce repo — lancer compose ici)
-#   ./ProColis-Api   (repo API, sibling)
+#   ./SendProColis-Web   (ce repo — lancer compose ici)
+#   ./SendProColis-Api   (repo API, sibling)
 #
 # Copier .env.production.example vers .env et renseigner les valeurs avant `docker compose up`.
 
@@ -19,8 +19,8 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_BASE_URL: https://${DOMAIN}/api/v1
-    image: procolis-web:latest
-    container_name: procolis-caddy
+    image: sendprocolis-web:latest
+    container_name: sendprocolis-caddy
     restart: unless-stopped
     ports:
       - "80:80"
@@ -36,14 +36,14 @@ services:
 
   api:
     build:
-      context: ../ProColis-Api
-    image: procolis-api:latest
-    container_name: procolis-api
+      context: ../SendProColis-Api
+    image: sendprocolis-api:latest
+    container_name: sendprocolis-api
     restart: unless-stopped
     environment:
       NODE_ENV: production
       PORT: 8080
-      DATABASE_URL: postgresql://procolis:${POSTGRES_PASSWORD}@postgres:5432/procolis?schema=public
+      DATABASE_URL: postgresql://sendprocolis:${POSTGRES_PASSWORD}@postgres:5432/sendprocolis?schema=public
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       JWT_ACCESS_EXPIRES_IN: 15m
@@ -59,6 +59,11 @@ services:
       RATE_LIMIT_WINDOW_MS: 900000
       RATE_LIMIT_MAX: 300
       AUTH_RATE_LIMIT_MAX: 30
+      # Brevo (SendinBlue) — notifications email & SMS
+      BREVO_API_KEY: ${BREVO_API_KEY}
+      BREVO_SENDER_EMAIL: ${BREVO_SENDER_EMAIL}
+      BREVO_SENDER_NAME: ${BREVO_SENDER_NAME}
+      BREVO_SMS_SENDER: ${BREVO_SMS_SENDER}
     volumes:
       - api-uploads:/app/uploads
     depends_on:
@@ -68,16 +73,16 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: procolis-postgres
+    container_name: sendprocolis-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: procolis
-      POSTGRES_USER: procolis
+      POSTGRES_DB: sendprocolis
+      POSTGRES_USER: sendprocolis
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U procolis -d procolis"]
+      test: ["CMD-SHELL", "pg_isready -U sendprocolis -d sendprocolis"]
       interval: 10s
       timeout: 5s
       retries: 5

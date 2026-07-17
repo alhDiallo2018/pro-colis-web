@@ -88,6 +88,89 @@ Message support :
 - `DELETE /notifications/:notificationId`
 - `DELETE /notifications/all`
 
+## Notifications Email & SMS (Brevo)
+
+Le backend utilise Brevo (ex-SendinBlue) pour l'envoi d'emails transactionnels et de SMS.
+
+### Endpoints email
+
+| Methode | Route | Roles | Description |
+| --- | --- | --- | --- |
+| POST | `/notifications/email/send` | authentifie | Envoyer un email unitaire via Brevo. |
+| POST | `/notifications/email/send-bulk` | authentifie | Envoyer un email groupé via Brevo. |
+
+Payload email unitaire :
+
+```json
+{
+  "to": "client@example.com",
+  "toName": "Awa Diop",
+  "subject": "Colis PC-20260628-A8F2K9 en transit",
+  "htmlContent": "<h1>Colis en transit</h1>...",
+  "textContent": "Version texte optionnelle",
+  "params": { "trackingNumber": "PC-20260628-A8F2K9" }
+}
+```
+
+### Endpoints SMS
+
+| Methode | Route | Roles | Description |
+| --- | --- | --- | --- |
+| POST | `/notifications/sms/send` | authentifie | Envoyer un SMS via Brevo. |
+
+Payload SMS :
+
+```json
+{
+  "to": "+221770000000",
+  "content": "PRO COLIS : Colis PC-20260628-A8F2K9 en transit.",
+  "senderName": "PRO COLIS"
+}
+```
+
+### Endpoints admin
+
+| Methode | Route | Roles | Description |
+| --- | --- | --- | --- |
+| GET | `/admin/notifications/brevo-config` | super_admin | Récupérer la configuration Brevo. |
+| PUT | `/admin/notifications/brevo-config` | super_admin | Modifier la configuration Brevo. |
+| POST | `/admin/notifications/brevo-test` | super_admin | Tester la connexion Brevo (email test). |
+
+Payload test Brevo :
+
+```json
+{
+  "email": "admin@procolis.sn"
+}
+```
+
+### Preferences utilisateur
+
+| Methode | Route | Roles | Description |
+| --- | --- | --- | --- |
+| GET | `/notifications/preferences` | authentifie | Récupérer les préférences de notification. |
+| PUT | `/notifications/preferences` | authentifie | Modifier les préférences (canaux par type d'événement). |
+
+Payload préférences :
+
+```json
+{
+  "preferences": [
+    { "eventType": "parcel_created", "channels": ["in_app", "email"] },
+    { "eventType": "bid_received", "channels": ["in_app", "sms"] }
+  ]
+}
+```
+
+### Configuration serveur Brevo (variables d'environnement)
+
+```
+BREVO_API_KEY=xkeysib-...
+BREVO_SENDER_EMAIL=no-reply@procolis.sn
+BREVO_SENDER_NAME=PRO COLIS
+BREVO_SMS_SENDER=PROCOLIS
+```
+
 ## Autorisations
 
 Un utilisateur ne peut manipuler que ses propres notifications.
