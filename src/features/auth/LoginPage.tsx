@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, IconButton, Input, Toast } from '@/ds'
 import { AuthShell } from './AuthShell'
@@ -11,6 +11,7 @@ export function LoginPage() {
   const login = useLogin()
   const [identifier, setIdentifier] = useState('')
   const [pin, setPin] = useState('')
+  const prevPinRef = useRef('')
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,12 +86,13 @@ export function LoginPage() {
           onChange={(e) => {
             const val = e.target.value.replace(/\D/g, '').slice(0, 6)
             setPin(val)
-            if (val.length === 6 && identifier.trim()) {
+            if (prevPinRef.current.length === 5 && val.length === 6 && identifier.trim()) {
               login.mutate(
                 { identifier: identifier.trim(), pin: val },
                 { onSuccess: (session) => navigate(homeForRole(session.user.role), { replace: true }) },
               )
             }
+            prevPinRef.current = val
           }}
           autoComplete="current-password"
         />
