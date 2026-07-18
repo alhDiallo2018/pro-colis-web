@@ -93,7 +93,9 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
       {/* Sidebar */}
       <aside style={asideStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 8px 18px' }}>
-          <img src="/logo-procolis.png" alt="" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+          <span style={{ width: 40, height: 40, borderRadius: 10, background: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+            <img src="/logo-procolis.png" alt="" style={{ width: 31, height: 31, objectFit: 'contain' }} />
+          </span>
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 17 }}>
             {LOGO}
             <span style={{ color: 'var(--amber-400)' }}>COLIS</span>
