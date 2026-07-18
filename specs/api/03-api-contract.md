@@ -245,12 +245,61 @@ Payload creation colis :
 | POST | `/super-admin/commissions/simulate` | super_admin | Simuler la commission pour un montant. Body: `{ amount }`. Renvoie `{ simulations: [{ profile, percentage, commission, netAmount }] }`. |
 | GET | `/super-admin/commissions/config` | super_admin | Configurations des commissions par profil. |
 | PUT | `/super-admin/commissions/config` | super_admin | Modifier configuration commission. |
-| GET | `/driver/wallet` | driver | Solde et transactions du portefeuille chauffeur. |
-| POST | `/driver/wallet/recharge` | driver | Recharger le portefeuille. |
+| GET | `/commissions/estimate` | public/authentifie | Estimer la commission pour un montant (endpoint public). Body: `{ amount }`. Renvoie `{ commission, netAmount, percentage, minAmount, maxAmount }`. |
+| GET | `/driver/wallet` | driver | Solde et transactions du portefeuille. Renvoie `{ wallet: { id, userId, balance, pendingBalance, totalEarned, totalWithdrawn, totalCommissionsPaid, status }, transactions[] }`. |
+| POST | `/driver/wallet/recharge` | driver | Recharger wallet via methode. Body: `{ amount, method: 'paydunya' \| 'cash' }`. Renvoie `{ paymentUrl }` si paydunya, sinon `{ transaction }`. |
 | POST | `/driver/wallet/consume` | driver | Prelever la commission sur le wallet. Body: `{ parcelId, deliveryAmount }`. |
-| POST | `/driver/wallet/withdraw` | driver | Retirer des fonds du wallet. |
-| POST | `/driver/parcels/:parcelId/pay-commission` | driver | **Payer la commission en cash.** Body: `{ source: 'wallet' \| 'score', amount? }`. Si source=wallet, preleve du portefeuille FCFA. Si source=score, preleve des points score. Renvoie `{ result: { success, commission, newWalletBalance?, newScoreBalance? } }`. |
+| POST | `/driver/wallet/withdraw` | driver | Demande de retrait. Body: `{ amount, method, phone, idempotencyKey }`. Renvoie `{ withdrawal: { id, amount, method, status, createdAt } }`. Un seul retrait actif (PENDING/PROCESSING) autorise par chauffeur. Montant reserve dans pendingBalance. |
+| GET | `/driver/wallet/withdrawals` | driver | Historique des demandes de retrait. |
+| DELETE | `/driver/wallet/withdrawals/:id` | driver | Annuler retrait si statut PENDING. Le montant reserve est remis dans available. |
+| POST | `/driver/parcels/:parcelId/pay-commission` | driver | **Payer la commission en cash.** Body: `{ source: 'wallet' \| 'score' \| 'auto', amount? }`. Si `auto`, le backend essaye wallet d'abord, puis score, puis combine. Si ressources insuffisantes, applique la politique configuree (block/warn/debt). Renvoie `{ result: { success, commission, walletDebited, pointsDebited, newWalletBalance?, newScoreBalance?, debt? } }`. |
 | GET | `/driver/parcels/:parcelId/commission` | driver | Estimer la commission pour un colis. Renvoie `{ commission: { amount, commission, netAmount, percentage, minAmount, maxAmount, profile } }`. |
+| GET | `/config/public` | public | Configuration publique. Renvoie `{ commission: { percentage, minAmount, maxAmount }, withdrawal: { minAmount, maxAmount }, insufficientPolicy }`. |
+
+## Wallet Admin
+
+| Methode | Route | Roles | Description |
+| --- | --- | --- | --- |
+| GET | `/super-admin/wallets` | super_admin | Lister wallets. Filtres: search, region, zone, status, minBalance, maxBalance. |
+| GET | `/super-admin/wallets/:userId` | super_admin | Detail wallet chauffeur. |
+| GET | `/super-admin/wallets/:userId/transactions` | super_admin | Transactions wallet. Filtres: type, from, to, page, limit. |
+| POST | `/super-admin/wallets/:userId/recharge` | super_admin | Credit manuel wallet. Body: `{ amount, origin, description }`. Audit obligatoire. |
+| POST | `/super-admin/wallets/:userId/debit` | super_admin | Debit manuel wallet. Body: `{ amount, origin, description }`. Audit obligatoire. |
+| GET | `/super-admin/finance/dashboard` | super_admin | Dashboard financier: totalWallets, totalBalance, totalDeposited, commissionsMonth, depositsMonth, walletsLow, walletsInactive. |
+
+## Retraits (Withdrawals) Admin
+
+| Methode | Route | Roles | Description |
+| --- | --- | --- | --- |
+| GET | `/super-admin/withdrawals` | super_admin | Lister retraits. Filtres: status, method, search, page, limit. |
+| GET | `/super-admin/withdrawals/:id` | super_admin | Detail retrait. |
+| POST | `/super-admin/withdrawals/:id/approve` | super_admin | Approuver retrait. Declenche le deboursement (PayDunya Disburse si auto, ou marque PROCESSING). Audit obligatoire. |
+| POST | `/super-admin/withdrawals/:id/reject` | super_admin | Rejeter retrait. Body: `{ reason }`. Remet le montant dans available. Audit obligatoire. |
+| POST | `/super-admin/withdrawals/:id/complete` | super_admin | Marquer SUCCESS apres deboursement manuel. Audit obligatoire. |
+
+## Webhook PayDunya IPN
+
+| Methode | Route | Roles | Description |
+| --- | --- | --- | --- |
+| POST | `/payments/paydunya/ipn` | public (verifie par signature) | IPN PayDunya. **Idempotent** via transaction_id UNIQUE. Flux: completed → commission → credit wallet chauffeur. failed → pas de credit. |
+
+## Configuration système etendue
+
+| Methode | Route | Roles | Description |
+| --- | --- | --- | --- |
+| GET | `/super-admin/config` | super_admin | Configuration complete (existante + nouvelles cles financieres). |
+| PUT | `/super-admin/config` | super_admin | Modifier config. Audit obligatoire. |
+
+## Points / Score Admin (etendu)
+
+| Methode | Route | Roles | Description |
+| --- | --- | --- | --- |
+| POST | `/super-admin/scores/:userId/add` | super_admin | Ajouter points. **Body etendu** : `{ amount, description, type, source, motif }`. Types: DRIVER_RECHARGE, COMMERCIAL_BONUS, ADMIN_BONUS, PERFORMANCE_REWARD, COMPENSATION, ADJUSTMENT, REFUND. Source identifie l'origine (ex: 'commercial'). Audit obligatoire. |
+| POST | `/super-admin/scores/:userId/remove` | super_admin | Retirer points avec motif. Audit obligatoire. |
+| GET | `/super-admin/scores` | super_admin | Liste scores. |
+| GET | `/super-admin/scores/:userId` | super_admin | Detail score. |
+| GET | `/super-admin/scores/:userId/history` | super_admin | Historique points (inclut source, granted_by, motif). |
+| GET | `/super-admin/scores/ranking` | super_admin | Classement chauffeurs. |
 
 ## Super admin et administration
 

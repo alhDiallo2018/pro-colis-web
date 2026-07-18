@@ -1,7 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Button, Input } from '@/ds'
-import type { CSSProperties } from 'react'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const NAV_ITEMS = [
   { label: 'Comment ça marche', target: 'how-it-works' },
@@ -10,7 +9,7 @@ const NAV_ITEMS = [
 ] as const
 
 const STATS = [
-  { value: '14 régions', label: 'desservies au Sénégal', icon: 'public' },
+  { value: '14 régions', label: 'au Sénégal et à l’international', icon: 'public' },
   { value: '1 200+', label: 'chauffeurs vérifiés', icon: 'verified_user' },
   { value: '45 min', label: 'délai avant 1ʳᵉ offre', icon: 'timer', accent: true },
   { value: '98,4 %', label: 'colis livrés à temps', icon: 'check_circle' },
@@ -134,15 +133,16 @@ export function LandingPage() {
                 letterSpacing: '0.09em', textTransform: 'uppercase', marginBottom: 28,
               }}>
                 <span className="material-symbols-rounded" style={{ fontSize: 16, color: 'var(--amber-400)' }}>bolt</span>
-                Livraison interurbaine
+                Livraison interurbaine & internationale
               </span>
               <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(36px, 5.5vw, 56px)', lineHeight: 1.08, letterSpacing: '-0.03em', margin: '0 0 20px' }}>
-                Envoyez vos colis<br />de ville en ville<br />
-                <span style={{ color: 'var(--amber-400)' }}>en toute confiance</span>
+                Envoyez vos colis<br />de ville en ville,<br />
+                <span style={{ color: 'var(--amber-400)' }}>partout en Afrique et au-delà</span>
               </h1>
               <p style={{ fontSize: 'clamp(15px, 1.6vw, 18px)', lineHeight: 1.6, opacity: 0.9, margin: '0 0 32px', maxWidth: 500 }}>
-                La plateforme qui connecte expéditeurs et chauffeurs pour des livraisons rapides,
-                sécurisées et au meilleur prix. Publiez, comparez, envoyez — en quelques clics.
+                La plateforme qui connecte expéditeurs et chauffeurs vérifiés pour des livraisons rapides,
+                sécurisées et au meilleur prix — au Sénégal, en Afrique et à l'international.
+                Publiez, comparez, envoyez — en toute confiance.
               </p>
               <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                 <Button variant="amber" size="lg" icon="add_box" onClick={() => navigate('/register')}
@@ -429,7 +429,7 @@ export function LandingPage() {
             Prêt à envoyer votre premier colis ?
           </h2>
           <p style={{ fontSize: 16, opacity: 0.85, margin: '0 auto 28px', maxWidth: 480, position: 'relative', lineHeight: 1.5 }}>
-            Rejoignez des milliers d'utilisateurs qui font confiance à SendProColis pour leurs livraisons interurbaines au Sénégal.
+            Rejoignez des milliers d'utilisateurs qui font confiance à SendProColis pour leurs livraisons au Sénégal, en Afrique et à l'international.
           </p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', position: 'relative' }}>
             <Button variant="amber" size="lg" icon="add_box" onClick={() => navigate('/register')}
@@ -459,14 +459,84 @@ export function LandingPage() {
                 </span>
               </div>
               <p style={{ fontSize: 13.5, lineHeight: 1.65, margin: '0 0 20px', maxWidth: 300 }}>
-                La plateforme qui connecte expéditeurs et chauffeurs pour le transport de colis entre les villes du Sénégal.
+                La plateforme qui connecte expéditeurs et chauffeurs pour le transport de colis au Sénégal, partout en Afrique et à l'international.
               </p>
               <div style={{ display: 'flex', gap: 12 }}>
-                {['call', 'mail', 'location_on'].map((icon) => (
-                  <div key={icon} style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                    <span className="material-symbols-rounded" style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)' }}>{icon}</span>
-                  </div>
-                ))}
+
+                {/* Téléphone */}
+                <a
+                  href="tel:+221765162796"
+                  aria-label="Appeler SendProColis"
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    background: 'rgba(255,255,255,0.08)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <span
+                    className="material-symbols-rounded"
+                    style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)' }}
+                  >
+                    call
+                  </span>
+                </a>
+
+                {/* E-mail */}
+                <a
+                  href="mailto:support-commercial@sendprocolis.com"
+                  aria-label="Envoyer un e-mail"
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    background: 'rgba(255,255,255,0.08)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <span
+                    className="material-symbols-rounded"
+                    style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)' }}
+                  >
+                    mail
+                  </span>
+                </a>
+
+                {/* Localisation */}
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=Dakar%2C%20S%C3%A9n%C3%A9gal"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Voir notre localisation"
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    background: 'rgba(255,255,255,0.08)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <span
+                    className="material-symbols-rounded"
+                    style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)' }}
+                  >
+                    location_on
+                  </span>
+                </a>
+
               </div>
             </div>
             <FooterCol title="À propos" links={[
@@ -490,7 +560,7 @@ export function LandingPage() {
           </div>
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 24, marginTop: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, fontSize: 12.5 }}>
             <span>© {new Date().getFullYear()} SendProColis. Tous droits réservés.</span>
-            <span>Dakar, Sénégal · contact@sendprocolis.com</span>
+            <span>Dakar, Sénégal · support-commercial@sendprocolis.com</span>
           </div>
         </div>
       </footer>

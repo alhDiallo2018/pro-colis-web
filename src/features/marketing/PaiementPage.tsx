@@ -1,18 +1,14 @@
-import { Button } from '@/ds'
-import { useNavigate } from 'react-router-dom'
+import { MarketingHeader } from './MarketingHeader'
 
 export function PaiementPage() {
-  const navigate = useNavigate()
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-body)', color: 'var(--text-body)', lineHeight: 1.7 }}>
-      <Button variant="ghost" icon="arrow_back" onClick={() => navigate(-1)} style={{ marginBottom: 32 }}>
-        Retour
-      </Button>
+      <MarketingHeader />
       <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, color: 'var(--text-strong)', marginBottom: 24 }}>POLITIQUE DE PAIEMENT — SENDPROCOLIS</h1>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>1. Méthodes de paiement acceptées</h2>
       <p>
-        SendProColis propose plusieurs méthodes de paiement adaptées au marché sénégalais :
+        SendProColis propose plusieurs méthodes de paiement adaptées au marché sénégalais et aux envois internationaux :
       </p>
       <ul style={{ paddingLeft: 24 }}>
         <li><strong>Wave</strong> — paiement mobile instantané par code Wave ;</li>
@@ -85,7 +81,7 @@ export function PaiementPage() {
       <p>
         En cas de litige concernant un paiement (débit non autorisé, montant incorrect, double débit), nous
         vous invitons à contacter immédiatement notre service client à{' '}
-        <a href="mailto:contact@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>contact@sendprocolis.com</a>.
+        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>support-commercial@sendprocolis.com</a>.
       </p>
       <p>
         Nous nous engageons à :

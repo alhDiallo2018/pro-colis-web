@@ -827,12 +827,14 @@ function formatDuration(ms: number) {
 
 function VoiceNoteRecorder({ voice, onChange }: { voice: VoiceNote | null; onChange: (next: VoiceNote | null) => void }) {
   const [recording, setRecording] = useState(false)
+  const [paused, setPaused] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
   const recorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const startedAtRef = useRef(0)
+  const pausedAtRef = useRef(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const stopTimer = () => {
@@ -861,6 +863,7 @@ function VoiceNoteRecorder({ voice, onChange }: { voice: VoiceNote | null; onCha
       startedAtRef.current = performance.now()
       recorder.start()
       setRecording(true)
+      setPaused(false)
       setElapsed(0)
       timerRef.current = setInterval(() => setElapsed(performance.now() - startedAtRef.current), 200)
     } catch {
@@ -871,7 +874,23 @@ function VoiceNoteRecorder({ voice, onChange }: { voice: VoiceNote | null; onCha
   const stop = () => {
     stopTimer()
     setRecording(false)
+    setPaused(false)
     recorderRef.current?.stop()
+  }
+
+  const pause = () => {
+    stopTimer()
+    pausedAtRef.current = performance.now()
+    recorderRef.current?.pause()
+    setPaused(true)
+  }
+
+  const resume = () => {
+    startedAtRef.current += performance.now() - pausedAtRef.current
+    recorderRef.current?.resume()
+    setPaused(false)
+    setElapsed(performance.now() - startedAtRef.current)
+    timerRef.current = setInterval(() => setElapsed(performance.now() - startedAtRef.current), 200)
   }
 
   const reset = () => {
@@ -894,11 +913,20 @@ function VoiceNoteRecorder({ voice, onChange }: { voice: VoiceNote | null; onCha
           </Button>
         </div>
       ) : recording ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--color-danger)', fontWeight: 600 }}>
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'currentColor' }} />
-            {formatDuration(elapsed)}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: paused ? 'var(--amber-500)' : 'var(--color-danger)', fontWeight: 600 }}>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'currentColor', animation: paused ? 'pulse 2s ease-in-out infinite' : 'pulse 1s ease-in-out infinite' }} />
+            {paused ? 'En pause' : 'Enregistrement'} {formatDuration(elapsed)}
           </span>
+          {paused ? (
+            <Button type="button" variant="primary" size="sm" icon="play_arrow" onClick={resume}>
+              Reprendre
+            </Button>
+          ) : (
+            <Button type="button" variant="secondary" size="sm" icon="pause" onClick={pause}>
+              Pause
+            </Button>
+          )}
           <Button type="button" variant="danger" size="sm" icon="stop" onClick={stop}>
             Arrêter
           </Button>

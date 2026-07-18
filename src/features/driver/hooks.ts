@@ -7,6 +7,7 @@ import * as adsApi from '@/lib/api/advertisements'
 import * as vehiclesApi from '@/lib/api/vehicles'
 import * as usersApi from '@/lib/api/users'
 import * as scoreApi from '@/lib/api/score'
+import * as withdrawalsApi from '@/lib/api/withdrawals'
 import type { ListParams } from '@/lib/api/types'
 import { useAuthStore } from '@/store/auth'
 import { queryClient } from '@/lib/queryClient'
@@ -38,6 +39,21 @@ export function useWithdrawWallet() {
     mutationFn: (payload: scoreApi.WithdrawPayload) => scoreApi.withdrawWallet(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['driver', 'wallet'] })
+      queryClient.invalidateQueries({ queryKey: ['driver', 'withdrawals'] })
+    },
+  })
+}
+
+export function useMyWithdrawals() {
+  return useQuery({ queryKey: ['driver', 'withdrawals'], queryFn: () => withdrawalsApi.myWithdrawals() })
+}
+
+export function useCancelWithdrawal() {
+  return useMutation({
+    mutationFn: (id: string) => withdrawalsApi.cancelWithdrawal(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['driver', 'wallet'] })
+      queryClient.invalidateQueries({ queryKey: ['driver', 'withdrawals'] })
     },
   })
 }

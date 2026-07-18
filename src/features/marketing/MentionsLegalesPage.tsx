@@ -1,13 +1,9 @@
-import { Button } from '@/ds'
-import { useNavigate } from 'react-router-dom'
+import { MarketingHeader } from './MarketingHeader'
 
 export function MentionsLegalesPage() {
-  const navigate = useNavigate()
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-body)', color: 'var(--text-body)', lineHeight: 1.7 }}>
-      <Button variant="ghost" icon="arrow_back" onClick={() => navigate(-1)} style={{ marginBottom: 32 }}>
-        Retour
-      </Button>
+      <MarketingHeader />
       <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, color: 'var(--text-strong)', marginBottom: 24 }}>MENTIONS LÉGALES — SENDPROCOLIS</h1>
 
       <p><strong>Dernière mise à jour : 17 juillet 2026</strong></p>
@@ -21,7 +17,7 @@ export function MentionsLegalesPage() {
       </p>
       <p>
         <strong>Siège social :</strong> Dakar, Sénégal<br />
-        <strong>Email :</strong> <a href="mailto:contact@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>contact@sendprocolis.com</a>
+        <strong>Email :</strong> <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>support-commercial@sendprocolis.com</a>
       </p>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>2. Directeur de publication</h2>
@@ -39,7 +35,7 @@ export function MentionsLegalesPage() {
         La plateforme SendProColis a pour objet :
       </p>
       <ul style={{ paddingLeft: 24 }}>
-        <li>la création d'expéditions de colis entre villes du Sénégal ;</li>
+        <li>la création d'expéditions de colis au Sénégal, en Afrique et à l'international ;</li>
         <li>la mise en relation entre expéditeurs et chauffeurs transporteurs vérifiés ;</li>
         <li>le suivi en temps réel des colis ;</li>
         <li>la gestion des paiements liés aux expéditions ;</li>
@@ -87,7 +83,7 @@ export function MentionsLegalesPage() {
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>8. Paiements</h2>
       <p>
         Les paiements sur la plateforme sont traités via des prestataires partenaires agréés. SendProColis
-        propose différents moyens de paiement adaptés au marché sénégalais (mobile money, carte bancaire,
+        propose différents moyens de paiement adaptés aux marchés sénégalais, africains et internationaux (mobile money, carte bancaire,
         espèces).
       </p>
 
@@ -104,7 +100,7 @@ export function MentionsLegalesPage() {
       <p>
         Le responsable du traitement des données est SendProColis SARL. Pour toute question relative à vos
         données, contactez-nous à{' '}
-        <a href="mailto:contact@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>contact@sendprocolis.com</a>.
+        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>support-commercial@sendprocolis.com</a>.
       </p>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>10. Comptes utilisateurs</h2>
@@ -151,7 +147,7 @@ export function MentionsLegalesPage() {
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>15. Réclamations</h2>
       <p>
         Toute réclamation peut être adressée par email à{' '}
-        <a href="mailto:contact@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>contact@sendprocolis.com</a>.
+        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>support-commercial@sendprocolis.com</a>.
         Nous nous engageons à accuser réception dans les meilleurs délais et à traiter votre demande avec
         diligence.
       </p>

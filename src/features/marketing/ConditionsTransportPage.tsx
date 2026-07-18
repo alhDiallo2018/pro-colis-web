@@ -1,13 +1,9 @@
-import { Button } from '@/ds'
-import { useNavigate } from 'react-router-dom'
+import { MarketingHeader } from './MarketingHeader'
 
 export function ConditionsTransportPage() {
-  const navigate = useNavigate()
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-body)', color: 'var(--text-body)', lineHeight: 1.7 }}>
-      <Button variant="ghost" icon="arrow_back" onClick={() => navigate(-1)} style={{ marginBottom: 32 }}>
-        Retour
-      </Button>
+      <MarketingHeader />
       <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, color: 'var(--text-strong)', marginBottom: 24 }}>CONDITIONS DE TRANSPORT DE COLIS (CDP) — SENDPROCOLIS</h1>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>14.1 Acceptation des conditions</h2>
@@ -41,7 +37,7 @@ export function ConditionsTransportPage() {
         <li>denrées périssables sans conditionnement de conservation approprié ;</li>
         <li>contrefaçons et marchandises portant atteinte aux droits de propriété intellectuelle ;</li>
         <li>objets volés ou d'origine illicite ;</li>
-        <li>tout objet dont le transport est interdit par la loi sénégalaise.</li>
+        <li>tout objet dont le transport est interdit par la loi sénégalaise ou par celle du pays de destination.</li>
       </ul>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>14.4 Contrôle des colis</h2>
@@ -86,7 +82,7 @@ export function ConditionsTransportPage() {
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>14.9 Réclamations relatives au transport</h2>
       <p>
         Toute réclamation concernant un colis doit être adressée à{' '}
-        <a href="mailto:contact@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>contact@sendprocolis.com</a>{' '}
+        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>support-commercial@sendprocolis.com</a>{' '}
         dans les 48 heures suivant la livraison (ou la date prévue de livraison en cas de retard).
       </p>
       <p>

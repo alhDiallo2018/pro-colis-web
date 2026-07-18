@@ -158,6 +158,8 @@ Regles :
 
 ## Score et wallet
 
+### Systeme de Points
+
 Le score represente un systeme de points.
 
 Regles :
@@ -166,6 +168,103 @@ Regles :
 - le solde peut etre denormalise dans `scores.points`.
 - les credits/debits doivent utiliser une transaction DB.
 - un debit ne peut pas rendre le solde negatif sauf configuration explicite.
+- chaque transaction de points doit tracer `source` (origine), `motif` (raison), `granted_by` (qui a attribue), `balance_before`, `balance_after`.
+- types autorises : `DRIVER_RECHARGE`, `COMMERCIAL_BONUS`, `ADMIN_BONUS`, `PERFORMANCE_REWARD`, `COMMISSION_DEDUCTION`, `REFUND`, `ADJUSTMENT`, `COMPENSATION`.
+- conversion pour paiement de commission : **1 point = 1 FCFA**.
+
+### Systeme de Wallet
+
+Le wallet represente de l'argent reel (FCFA) appartenant au chauffeur.
+
+Regles :
+
+- `available_balance` est le solde disponible pour retrait et commissions.
+- `pending_balance` est le montant reserve par un retrait en cours (PENDING ou PROCESSING).
+- tout debit/credit doit passer par `wallet_transactions` (append-only, idempotent via `idempotency_key` UNIQUE).
+- un credit ne doit jamais etre duplique — utiliser `SELECT ... FOR UPDATE` dans la transaction DB.
+- un paiement PayDunya confirme (token unique) doit etre idempotent : si deja traite, retourner le resultat sans modifier.
+
+### Commission
+
+Formule :
+
+```
+commission = deliveryAmount × percentage / 100
+commission = MAX(minAmount, MIN(maxAmount, commission))
+```
+
+Regles :
+
+- configurable par profil (`local`, `regional`, `express`, `international`) via `commission_configs`.
+- profil par defaut : `local` (5%, min 100 FCFA, max 500 FCFA).
+- si aucun profil ne correspond, utiliser le profil `local`.
+- la commission pour les livraisons payees via PayDunya est prelevee automatiquement sur le montant avant credit du wallet chauffeur.
+- la commission pour les livraisons payees en especes est prelevee sur les ressources du chauffeur (wallet puis points).
+- `POST /commissions/estimate` est public et ne necessite pas d'authentification.
+
+### Paiement Cash — Ordre de prelevement
+
+1. Calculer la commission.
+2. Si `wallet.available_balance >= commission` : debiter le wallet.
+3. Sinon, si `scores.points >= commission` : debiter les points.
+4. Sinon, combiner wallet restant + points.
+5. Si wallet + points < commission : appliquer la politique configuree.
+
+### Politique en cas d'insuffisance
+
+Configuree dans `system_configs` (`commission.insufficientPolicy`) :
+
+- `block` : refuser la validation de la livraison. Message : "Solde insuffisant. Rechargez votre portefeuille ou vos points."
+- `warn` (defaut) : autoriser la livraison avec un avertissement. Le chauffeur pourra payer la commission plus tard.
+- `debt` : creer une `commission_debt` et autoriser la livraison. La dette devra etre reglee avant le prochain retrait.
+
+### Retrait (Withdrawal)
+
+Regles :
+
+- montant minimum configurable (defaut 500 FCFA, cle `withdrawal.minAmount`).
+- montant maximum configurable (defaut 0 = illimite, cle `withdrawal.maxAmount`).
+- un seul retrait actif (statut PENDING ou PROCESSING) par chauffeur a la fois.
+- la demande cree une reservation : `available -= amount`, `pending += amount`.
+- statuts : `PENDING` → `PROCESSING` → `SUCCESS` ou `FAILED`.
+- si `FAILED` ou `CANCELLED` : `pending -= amount`, `available += amount` (aucun fonds perdu).
+- si `SUCCESS` : `pending -= amount`, `total_withdrawn += amount` (fonds definitivement sortis).
+- idempotency : `idempotency_key` UNIQUE empeche les doublons.
+- annulation possible seulement si statut `PENDING`.
+
+### Deboursement
+
+- mode `manual` (defaut) : un admin doit approuver (`/approve`) puis completer (`/complete`) le retrait.
+- mode `auto` : l'approbation declenche automatiquement l'appel a l'API PayDunya Disburse.
+- IPN/webhook PayDunya Disburse met a jour le statut du retrait (SUCCESS/FAILED).
+- en cas d'echec du deboursement, le montant est automatiquement remis dans `available`.
+
+### Idempotence des operations financieres
+
+Chaque operation doit etre idempotente :
+
+| Operation | Cle d'idempotence |
+|-----------|-------------------|
+| PayDunya IPN | `payments.transaction_id` (UNIQUE) |
+| Credit wallet livraison | `wallet_transactions.idempotency_key` = `delivery_{parcelId}` |
+| Commission prelevee | `wallet_transactions.idempotency_key` = `commission_{parcelId}` |
+| Retrait | `withdrawals.idempotency_key` (UNIQUE, fourni par le client) |
+| Bonus points | `score_transactions.idempotency_key` = `bonus_{userId}_{timestamp}` |
+
+### Audit
+
+Actions auditees obligatoirement :
+
+- `wallet.credit` (admin)
+- `wallet.debit` (admin)
+- `score.add` (admin)
+- `score.remove` (admin)
+- `withdrawal.approve`
+- `withdrawal.reject`
+- `withdrawal.complete`
+- `commission.config.update`
+- `config.update` (tout changement de config systeme)
+- `payment.confirm` (IPN)
 
 ## Notifications
 

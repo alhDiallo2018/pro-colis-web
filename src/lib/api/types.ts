@@ -32,6 +32,8 @@ export interface User {
   gender?: string | null
   garageId?: string | null
   garageName?: string | null
+  primaryZoneId?: string | null
+  primaryZoneName?: string | null
   driverStatus?: DriverStatus | null
   rating?: number | null
   totalDeliveries?: number
@@ -49,6 +51,7 @@ export interface User {
 export interface Garage {
   id: string
   name: string
+  country?: string | null
   city?: string | null
   region?: string | null
   address?: string | null
@@ -58,6 +61,44 @@ export interface Garage {
   isActive?: boolean
   createdAt?: string
   updatedAt?: string
+}
+
+export interface Zone {
+  id: string
+  name: string
+  displayName?: string | null
+  placeId?: string | null
+  country?: string | null
+  city?: string | null
+  latitude: number
+  longitude: number
+  radius: number
+  boundary?: number[][] | null
+  type: 'CIRCLE' | 'POLYGON'
+  isActive: boolean
+  parentId?: string | null
+  metadata?: Record<string, unknown> | null
+  _count?: { driverZones?: number; parcels?: number }
+  driverZones?: ZoneDriver[]
+  parent?: { id: string; name: string } | null
+  children?: { id: string; name: string; type: string }[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ZoneDriver {
+  driverId: string
+  isPrimary: boolean
+  createdAt: string
+  driver: {
+    id: string
+    fullName: string
+    phone: string
+    driverStatus?: string | null
+    rating?: number | null
+    totalDeliveries?: number
+    completedDeliveries?: number
+  }
 }
 
 export type BidStatus = 'pending' | 'accepted' | 'rejected' | string
@@ -117,6 +158,7 @@ export interface Parcel {
   arrivalGarageId?: string | null
   arrivalGarageName?: string | null
   arrivalCity?: string | null
+  zoneId?: string | null
   driverId?: string | null
   driverName?: string | null
   driverPhone?: string | null

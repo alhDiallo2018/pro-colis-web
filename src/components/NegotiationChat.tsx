@@ -114,11 +114,13 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
 
   // --- voice message recording ---
   const [recording, setRecording] = useState(false)
+  const [paused, setPaused] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [busyAudio, setBusyAudio] = useState(false)
   const recorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const startedRef = useRef(0)
+  const pausedAtRef = useRef(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const stopTimer = () => {
@@ -148,6 +150,7 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
       startedRef.current = performance.now()
       recorder.start()
       setRecording(true)
+      setPaused(false)
       setElapsed(0)
       timerRef.current = setInterval(() => setElapsed(performance.now() - startedRef.current), 200)
     } catch {
@@ -157,11 +160,26 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
   const stopRecording = () => {
     stopTimer()
     setRecording(false)
+    setPaused(false)
     recorderRef.current?.stop()
+  }
+  const pauseRecording = () => {
+    stopTimer()
+    pausedAtRef.current = performance.now()
+    recorderRef.current?.pause()
+    setPaused(true)
+  }
+  const resumeRecording = () => {
+    startedRef.current += performance.now() - pausedAtRef.current
+    recorderRef.current?.resume()
+    setPaused(false)
+    setElapsed(performance.now() - startedRef.current)
+    timerRef.current = setInterval(() => setElapsed(performance.now() - startedRef.current), 200)
   }
   const cancelRecording = () => {
     stopTimer()
     setRecording(false)
+    setPaused(false)
     const r = recorderRef.current
     if (r) {
       r.onstop = null
@@ -299,11 +317,21 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
             </button>
             <div style={{
               flex: 1, display: 'flex', alignItems: 'center', gap: 8, height: 44, padding: '0 14px',
-              borderRadius: 999, background: 'var(--color-danger-soft)', color: 'var(--color-danger)', fontWeight: 600,
+              borderRadius: 999, background: paused ? 'var(--amber-50)' : 'var(--color-danger-soft)',
+              color: paused ? 'var(--amber-500)' : 'var(--color-danger)', fontWeight: 600,
             }}>
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'currentColor' }} />
-              Enregistrement... {fmtDuration(elapsed)}
+              {paused ? 'En pause' : 'Enregistrement...'} {fmtDuration(elapsed)}
             </div>
+            {paused ? (
+              <button type="button" aria-label="Reprendre l'enregistrement" onClick={resumeRecording} style={iconBtn('var(--teal-500)', '#fff')}>
+                <Icon name="play_arrow" size={20} />
+              </button>
+            ) : (
+              <button type="button" aria-label="Mettre en pause" onClick={pauseRecording} style={iconBtn('var(--amber-500)', '#fff')}>
+                <Icon name="pause" size={20} />
+              </button>
+            )}
             <button type="button" aria-label="Envoyer le vocal" onClick={stopRecording} style={iconBtn('var(--teal-500)', '#fff')}>
               <Icon name="send" size={20} />
             </button>

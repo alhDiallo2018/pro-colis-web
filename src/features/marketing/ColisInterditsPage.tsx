@@ -1,19 +1,16 @@
-import { Button } from '@/ds'
-import { useNavigate } from 'react-router-dom'
+import { MarketingHeader } from './MarketingHeader'
 
 export function ColisInterditsPage() {
-  const navigate = useNavigate()
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-body)', color: 'var(--text-body)', lineHeight: 1.7 }}>
-      <Button variant="ghost" icon="arrow_back" onClick={() => navigate(-1)} style={{ marginBottom: 32 }}>
-        Retour
-      </Button>
+      <MarketingHeader />
       <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, color: 'var(--text-strong)', marginBottom: 24 }}>COLIS INTERDITS — SENDPROCOLIS</h1>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>1. Colis strictement interdits</h2>
       <p>
         Les articles suivants sont <strong>strictement interdits</strong> au transport sur la plateforme
-        SendProColis, conformément à la réglementation sénégalaise :
+        SendProColis, conformément à la réglementation sénégalaise et aux réglementations internationales
+        applicables (pays de départ, de transit et de destination) :
       </p>
       <ul style={{ paddingLeft: 24 }}>
         <li>
@@ -26,7 +23,7 @@ export function ColisInterditsPage() {
         </li>
         <li>
           <strong>Drogues et stupéfiants :</strong> toute substance classée comme drogue ou stupéfiant
-          par la loi sénégalaise, y compris les produits à usage dit récréatif ;
+          par la loi sénégalaise ou par celle du pays de destination, y compris les produits à usage dit récréatif ;
         </li>
         <li>
           <strong>Animaux vivants :</strong> animaux domestiques ou sauvages sans autorisation spéciale
@@ -54,7 +51,7 @@ export function ColisInterditsPage() {
         </li>
         <li>
           <strong>Objets obscènes ou interdits :</strong> matériel à caractère obscène ou interdit par
-          les lois sénégalaises.
+          les lois sénégalaises ou celles des pays de destination.
         </li>
       </ul>
 

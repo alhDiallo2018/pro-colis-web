@@ -3,6 +3,9 @@ import * as roles from '@/lib/api/roles'
 import type { ListParams } from '@/lib/api/types'
 import * as adminFinance from '@/lib/api/admin-finance'
 import * as adminReputation from '@/lib/api/admin-reputation'
+import * as garagesApi from '@/lib/api/garages'
+import * as zonesApi from '@/lib/api/zones'
+import * as withdrawalsApi from '@/lib/api/withdrawals'
 import { queryClient } from '@/lib/queryClient'
 
 export function useAdminParcels(params: ListParams = {}) {
@@ -11,6 +14,115 @@ export function useAdminParcels(params: ListParams = {}) {
 
 export function useAdminGarages() {
   return useQuery({ queryKey: ['admin', 'garages'], queryFn: () => roles.adminGarages() })
+}
+
+function invalidateGarages() {
+  queryClient.invalidateQueries({ queryKey: ['admin', 'garages'] })
+  queryClient.invalidateQueries({ queryKey: ['garages', 'public'] })
+}
+
+export function useCreateGarage() {
+  return useMutation({
+    mutationFn: (payload: garagesApi.GaragePayload) => garagesApi.createGarage(payload),
+    onSuccess: invalidateGarages,
+  })
+}
+
+export function useUpdateGarage() {
+  return useMutation({
+    mutationFn: ({ garageId, payload }: { garageId: string; payload: Partial<garagesApi.GaragePayload> }) =>
+      garagesApi.updateGarage(garageId, payload),
+    onSuccess: invalidateGarages,
+  })
+}
+
+export function useDeleteGarage() {
+  return useMutation({
+    mutationFn: (garageId: string) => garagesApi.deleteGarage(garageId),
+    onSuccess: invalidateGarages,
+  })
+}
+
+// --- Zones ---
+
+function invalidateZones() {
+  queryClient.invalidateQueries({ queryKey: ['admin', 'zones'] })
+  queryClient.invalidateQueries({ queryKey: ['zones', 'public'] })
+}
+
+export function useAdminZones(params?: {
+  page?: number; limit?: number; country?: string; city?: string;
+  type?: string; isActive?: boolean; search?: string;
+}) {
+  return useQuery({
+    queryKey: ['admin', 'zones', params],
+    queryFn: () => zonesApi.listZones(params),
+  })
+}
+
+export function useZone(zoneId: string | undefined) {
+  return useQuery({
+    queryKey: ['admin', 'zone', zoneId],
+    queryFn: () => zonesApi.getZone(zoneId!),
+    enabled: !!zoneId,
+  })
+}
+
+export function useCreateZone() {
+  return useMutation({
+    mutationFn: (payload: zonesApi.ZonePayload) => zonesApi.createZone(payload),
+    onSuccess: invalidateZones,
+  })
+}
+
+export function useUpdateZone() {
+  return useMutation({
+    mutationFn: ({ zoneId, payload }: { zoneId: string; payload: Partial<zonesApi.ZonePayload> }) =>
+      zonesApi.updateZone(zoneId, payload),
+    onSuccess: invalidateZones,
+  })
+}
+
+export function useDeleteZone() {
+  return useMutation({
+    mutationFn: (zoneId: string) => zonesApi.deleteZone(zoneId),
+    onSuccess: invalidateZones,
+  })
+}
+
+export function useZoneDrivers(zoneId: string | undefined) {
+  return useQuery({
+    queryKey: ['admin', 'zone', zoneId, 'drivers'],
+    queryFn: () => zonesApi.getZoneDrivers(zoneId!),
+    enabled: !!zoneId,
+  })
+}
+
+export function useAssignDriverToZone() {
+  return useMutation({
+    mutationFn: ({ zoneId, driverId, isPrimary }: { zoneId: string; driverId: string; isPrimary?: boolean }) =>
+      zonesApi.assignDriver(zoneId, driverId, isPrimary),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'zone'] })
+    },
+  })
+}
+
+export function useRemoveDriverFromZone() {
+  return useMutation({
+    mutationFn: ({ zoneId, driverId }: { zoneId: string; driverId: string }) =>
+      zonesApi.removeDriver(zoneId, driverId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'zone'] })
+    },
+  })
+}
+
+export function useMigrateGaragesToZones() {
+  return useMutation({
+    mutationFn: () => zonesApi.migrateGaragesToZones(),
+    onSuccess: invalidateZones,
+  })
 }
 
 export function useAdminDrivers() {
@@ -114,6 +226,17 @@ export function useAdminPayments(params: ListParams = {}) {
   return useQuery({ queryKey: ['admin', 'payments', params], queryFn: () => adminFinance.listPayments(params) })
 }
 
+/** Live payment feed: latest payments first, polled every 15s (notifications page). */
+export function usePaymentFeed(status = '', limit = 30) {
+  const params: ListParams = { page: 1, limit, sortBy: 'createdAt', sortOrder: 'desc' }
+  if (status) params.status = status
+  return useQuery({
+    queryKey: ['admin', 'payments', 'feed', status, limit],
+    queryFn: () => adminFinance.listPayments(params),
+    refetchInterval: 15_000,
+  })
+}
+
 // --- Reputation ---
 
 export function useReputationDashboard() {
@@ -142,7 +265,7 @@ export function useScoreHistory(userId: string | undefined, params: ListParams =
 
 export function useAddPoints(userId: string) {
   return useMutation({
-    mutationFn: (payload: { amount: number; description: string }) => adminReputation.addPoints(userId, payload),
+    mutationFn: (payload: adminReputation.AddPointsPayload) => adminReputation.addPoints(userId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'score', userId] })
       queryClient.invalidateQueries({ queryKey: ['admin', 'scores'] })
@@ -171,5 +294,35 @@ export function useDriverDetail(userId: string | undefined) {
     queryKey: ['admin', 'driver', userId],
     queryFn: () => adminReputation.driverDetail(userId!),
     enabled: !!userId,
+  })
+}
+
+// --- Withdrawals ---
+
+export function useWithdrawals(params: ListParams = {}) {
+  return useQuery({
+    queryKey: ['admin', 'withdrawals', params],
+    queryFn: () => withdrawalsApi.listWithdrawals(params),
+  })
+}
+
+export function useApproveWithdrawal() {
+  return useMutation({
+    mutationFn: (id: string) => withdrawalsApi.approveWithdrawal(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'withdrawals'] }),
+  })
+}
+
+export function useRejectWithdrawal() {
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => withdrawalsApi.rejectWithdrawal(id, reason),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'withdrawals'] }),
+  })
+}
+
+export function useCompleteWithdrawal() {
+  return useMutation({
+    mutationFn: (id: string) => withdrawalsApi.completeWithdrawal(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'withdrawals'] }),
   })
 }

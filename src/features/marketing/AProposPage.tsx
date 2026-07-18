@@ -1,31 +1,28 @@
-import { Button } from '@/ds'
-import { useNavigate } from 'react-router-dom'
+import { MarketingHeader } from './MarketingHeader'
 
 export function AProposPage() {
-  const navigate = useNavigate()
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-body)', color: 'var(--text-body)', lineHeight: 1.7 }}>
-      <Button variant="ghost" icon="arrow_back" onClick={() => navigate(-1)} style={{ marginBottom: 32 }}>
-        Retour
-      </Button>
+      <MarketingHeader />
       <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, color: 'var(--text-strong)', marginBottom: 24 }}>À PROPOS DE SENDPROCOLIS</h1>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>Qui sommes-nous</h2>
       <p>
-        SendProColis est une plateforme de transport interurbain de colis au Sénégal. Nous connectons les
-        expéditeurs qui souhaitent envoyer des colis avec des chauffeurs transporteurs vérifiés qui se
-        déplacent déjà entre les villes du pays.
+        SendProColis est une plateforme de transport de colis née au Sénégal et tournée vers l'Afrique et
+        l'international. Nous connectons les expéditeurs qui souhaitent envoyer des colis avec des chauffeurs
+        transporteurs vérifiés qui se déplacent déjà entre les villes du pays et au-delà des frontières.
       </p>
       <p>
-        Fondée à Dakar, notre plateforme s'appuie sur les réalités du marché sénégalais pour offrir une
-        solution de transport rapide, fiable et économique. Nous opérons dans les 14 régions du Sénégal,
-        permettant aux particuliers comme aux entreprises d'envoyer leurs colis en toute sérénité.
+        Fondée à Dakar, notre plateforme s'appuie sur les réalités du marché sénégalais et africain pour offrir
+        une solution de transport rapide, fiable et économique. Nous opérons dans les 14 régions du Sénégal et
+        développons des corridors de livraison vers l'Afrique de l'Ouest et le reste du monde, permettant aux
+        particuliers comme aux entreprises d'envoyer leurs colis en toute sérénité.
       </p>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>Notre mission</h2>
       <p>
         Notre mission est de connecter les expéditeurs et les chauffeurs pour simplifier le transport de
-        colis entre les villes du Sénégal. Nous croyons qu'un service de livraison fiable ne devrait pas
+        colis au Sénégal, en Afrique et à l'international. Nous croyons qu'un service de livraison fiable ne devrait pas
         être un luxe — c'est un besoin quotidien pour les familles, les commerçants et les entreprises.
       </p>
       <p>
@@ -71,7 +68,7 @@ export function AProposPage() {
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>Contact</h2>
       <p>
         <strong>Email :</strong>{' '}
-        <a href="mailto:contact@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>contact@sendprocolis.com</a>
+        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>support-commercial@sendprocolis.com</a>
       </p>
       <p>
         <strong>Adresse :</strong> Dakar, Sénégal

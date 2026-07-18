@@ -56,7 +56,7 @@ function emailShell(title: string, bodyContent: string): string {
       Ce message a été envoyé automatiquement par ${APP_NAME}.<br/>
       Pour gérer vos préférences de notification, connectez-vous à votre compte sur <a href="${PLATFORM_URL}" style="color:#0d9488;">${PLATFORM_URL}</a>.
     </p>
-    <p style="margin:0;font-size:11px;color:#cbd5e1;">© ${new Date().getFullYear()} ${APP_NAME} — Livraison interurbaine au Sénégal</p>
+    <p style="margin:0;font-size:11px;color:#cbd5e1;">© ${new Date().getFullYear()} ${APP_NAME} — Livraison de colis au Sénégal, en Afrique et à l'international</p>
   </td></tr>
 </table>
 </td></tr>
@@ -202,8 +202,8 @@ export function welcomeEmail(ctx: NotificationContext): string {
       Bienvenue sur ${APP_NAME},${name ? ` <strong>${name}</strong> !` : ' !'}
     </p>
     <p style="margin:0 0 16px;font-size:14px;color:#64748b;line-height:1.6;">
-      ${APP_NAME} est votre plateforme de livraison de colis interurbains au Sénégal.
-      Commandez, expédiez ou transportez des colis en toute sécurité entre les principales villes du pays.
+      ${APP_NAME} est votre plateforme de livraison de colis au Sénégal, en Afrique et à l'international.
+      Commandez, expédiez ou transportez des colis en toute sécurité entre les principales villes du pays et au-delà des frontières.
     </p>
     <a href="${PLATFORM_URL}/login" style="display:inline-block;padding:12px 28px;background:#0d9488;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Accéder à mon compte</a>
   `
@@ -271,7 +271,7 @@ export function driverAssignedSms(ctx: NotificationContext): string {
 }
 
 export function welcomeSms(ctx: NotificationContext): string {
-  return `Bienvenue sur ${APP_NAME} ! Livraison interurbaine au Sénégal. Téléchargez l'app ou connectez-vous sur ${PLATFORM_URL}`
+  return `Bienvenue sur ${APP_NAME} ! Livraison de colis au Sénégal et à l'international. Téléchargez l'app ou connectez-vous sur ${PLATFORM_URL}`
 }
 
 export function verificationSms(ctx: NotificationContext): string {

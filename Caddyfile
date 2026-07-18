@@ -5,6 +5,12 @@
 	email {$TLS_EMAIL}
 }
 
+# www → apex : nécessite que le DNS de www.{$DOMAIN} pointe vers CE serveur.
+# (Actuellement www pointe vers un hébergement mutualisé OVH — à corriger chez le registrar.)
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} 308
+}
+
 {$DOMAIN} {
 	encode zstd gzip
 
@@ -12,6 +18,20 @@
 	# On garde le chemin intact : l'API expose /api/v1/* et sert /uploads/*.
 	@backend path /api/* /uploads/*
 	handle @backend {
+		reverse_proxy api:8080
+	}
+
+	# PayDunya IPN (Instant Payment Notification) — endpoint configuré dans le
+	# dashboard PayDunya : https://{$DOMAIN}/payment-status.php
+	# PayDunya notifie en POST (serveur → serveur) : on transmet à l'API.
+	# Le GET (retour du client dans le navigateur) tombe dans la SPA ci-dessous,
+	# qui affiche l'état du paiement (/payment-status.php → PaymentStatusPage).
+	@paydunyaIpn {
+		path /payment-status.php
+		method POST
+	}
+	handle @paydunyaIpn {
+		rewrite * /api/v1/payments/paydunya/ipn
 		reverse_proxy api:8080
 	}
 

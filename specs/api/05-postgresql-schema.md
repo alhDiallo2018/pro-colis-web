@@ -469,6 +469,162 @@ CREATE TABLE backups (
 );
 ```
 
+## wallets
+
+```sql
+CREATE TABLE wallets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+  available_balance NUMERIC(12,2) NOT NULL DEFAULT 0,
+  pending_balance NUMERIC(12,2) NOT NULL DEFAULT 0,
+  total_earned NUMERIC(12,2) NOT NULL DEFAULT 0,
+  total_withdrawn NUMERIC(12,2) NOT NULL DEFAULT 0,
+  total_commissions_paid NUMERIC(12,2) NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
+  last_deposit_at TIMESTAMPTZ,
+  last_activity_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT chk_available_not_negative CHECK (available_balance >= 0),
+  CONSTRAINT chk_pending_not_negative CHECK (pending_balance >= 0)
+);
+```
+
+## wallet_transactions
+
+```sql
+CREATE TABLE wallet_transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  wallet_id UUID NOT NULL REFERENCES wallets(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN (
+    'CREDIT',
+    'DEBIT',
+    'COMMISSION',
+    'WITHDRAWAL',
+    'WITHDRAWAL_REFUND',
+    'REFUND',
+    'ADJUSTMENT',
+    'BONUS'
+  )),
+  amount NUMERIC(12,2) NOT NULL,
+  balance_before NUMERIC(12,2) NOT NULL,
+  balance_after NUMERIC(12,2) NOT NULL,
+  source TEXT NOT NULL,
+  source_id UUID,
+  parcel_id UUID REFERENCES parcels(id) ON DELETE SET NULL,
+  payment_id UUID REFERENCES payments(id) ON DELETE SET NULL,
+  withdrawal_id UUID REFERENCES withdrawals(id) ON DELETE SET NULL,
+  commission_config_id UUID,
+  description TEXT NOT NULL DEFAULT '',
+  performed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  idempotency_key TEXT UNIQUE,
+  metadata JSONB NOT NULL DEFAULT '{}',
+  status TEXT NOT NULL DEFAULT 'completed',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_wallet_transactions_wallet_created ON wallet_transactions(wallet_id, created_at DESC);
+CREATE INDEX idx_wallet_transactions_payment_id ON wallet_transactions(payment_id);
+CREATE INDEX idx_wallet_transactions_parcel_id ON wallet_transactions(parcel_id);
+CREATE INDEX idx_wallet_transactions_source_id ON wallet_transactions(source_id);
+CREATE INDEX idx_wallet_transactions_idempotency ON wallet_transactions(idempotency_key);
+```
+
+## withdrawals
+
+```sql
+CREATE TABLE withdrawals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  wallet_id UUID NOT NULL REFERENCES wallets(id) ON DELETE CASCADE,
+  amount NUMERIC(12,2) NOT NULL CHECK (amount > 0),
+  method TEXT NOT NULL CHECK (method IN ('wave', 'orange_money', 'freeMoney', 'freemMoney', 'bank', 'paydunya')),
+  phone_number TEXT,
+  idempotency_key TEXT UNIQUE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'PROCESSING', 'SUCCESS', 'FAILED', 'CANCELLED')),
+  provider_ref TEXT,
+  failure_reason TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}',
+  reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  reviewed_at TIMESTAMPTZ,
+  completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX idx_withdrawals_one_active_per_wallet
+  ON withdrawals(wallet_id) WHERE status IN ('PENDING', 'PROCESSING');
+CREATE INDEX idx_withdrawals_status ON withdrawals(status);
+CREATE INDEX idx_withdrawals_wallet_created ON withdrawals(wallet_id, created_at DESC);
+```
+
+## commission_configs
+
+```sql
+CREATE TABLE commission_configs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile TEXT NOT NULL UNIQUE CHECK (profile IN ('local', 'regional', 'express', 'international')),
+  percentage NUMERIC(5,2) NOT NULL CHECK (percentage >= 0 AND percentage <= 100),
+  min_amount NUMERIC(12,2) NOT NULL CHECK (min_amount >= 0),
+  max_amount NUMERIC(12,2) NOT NULL CHECK (max_amount >= 0),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  effective_from TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+## commission_debts
+
+```sql
+CREATE TABLE commission_debts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  wallet_id UUID NOT NULL REFERENCES wallets(id) ON DELETE CASCADE,
+  parcel_id UUID NOT NULL REFERENCES parcels(id) ON DELETE CASCADE,
+  commission_amount NUMERIC(12,2) NOT NULL CHECK (commission_amount > 0),
+  amount_paid NUMERIC(12,2) NOT NULL DEFAULT 0,
+  amount_from_wallet NUMERIC(12,2) NOT NULL DEFAULT 0,
+  amount_from_points NUMERIC(12,2) NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'UNPAID' CHECK (status IN ('UNPAID', 'PARTIAL', 'PAID', 'CANCELLED')),
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+## score_transactions (extended)
+
+```sql
+-- Ajouter les colonnes suivantes a la table existante
+ALTER TABLE score_transactions
+  ADD COLUMN source TEXT,
+  ADD COLUMN granted_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  ADD COLUMN motif TEXT,
+  ADD COLUMN balance_before INTEGER,
+  ADD COLUMN balance_after INTEGER,
+  ADD COLUMN idempotency_key TEXT UNIQUE;
+
+-- Index
+CREATE INDEX idx_score_transactions_source ON score_transactions(source);
+CREATE INDEX idx_score_transactions_granted_by ON score_transactions(granted_by);
+```
+
+## system_config keys étendues
+
+```text
+-- Nouvelles clés system_config pour le systeme financier
+
+commission.insufficientPolicy  →  "block" | "warn" | "debt"
+withdrawal.minAmount           →  nombre (FCFA), defaut 500
+withdrawal.maxAmount           →  nombre (FCFA), defaut 0 (illimite)
+disbursement.mode              →  "auto" | "manual", defaut "manual"
+paydunya.disburse.masterKey    →  texte
+paydunya.disburse.privateKey   →  texte
+paydunya.disburse.publicKey    →  texte
+paydunya.disburse.token        →  texte
+paydunya.disburse.mode         →  "test" | "live"
+```
+
 ## Index recommandes
 
 ```sql

@@ -22,17 +22,17 @@ export interface DashboardLayoutProps {
   nav: NavSection[]
   /** Sub-label under the user name in the sidebar footer (e.g. "Client · Douala"). */
   roleLabel: string
-  /** Topbar right-side actions (search is rendered separately). */
+  /** Topbar right-side actions. */
   actions?: ReactNode
-  /** Placeholder text for the topbar search pill (omit to hide it). */
-  searchPlaceholder?: string
+  /** Topbar banner slot (broadcast, announcement…). */
+  banner?: ReactNode
   /** When on the index route, greet the user instead of showing the page title. */
   greetOnIndex?: boolean
 }
 
 const LOGO = 'PRO'
 
-export function DashboardLayout({ nav, roleLabel, actions, searchPlaceholder, greetOnIndex }: DashboardLayoutProps) {
+export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex }: DashboardLayoutProps) {
   const user = useAuthStore((s) => s.user)
   const logout = useLogout()
   const location = useLocation()
@@ -228,29 +228,10 @@ export function DashboardLayout({ nav, roleLabel, actions, searchPlaceholder, gr
           <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: isMobile ? 17 : 20, color: 'var(--text-strong)', margin: 0 }}>
             {title}
           </h1>
-          {searchPlaceholder && !isMobile && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                height: 40,
-                padding: '0 14px',
-                background: 'var(--surface-sunken)',
-                borderRadius: 'var(--radius-pill)',
-                width: 320,
-                maxWidth: '32vw',
-                color: 'var(--text-muted)',
-              }}
-            >
-              <span className="material-symbols-rounded" style={{ fontSize: 20 }}>
-                search
-              </span>
-              <span style={{ fontSize: 14 }}>{searchPlaceholder}</span>
-            </div>
-          )}
           {actions && <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>{actions}</div>}
         </header>
+
+        {banner}
 
         <main style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
           <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%' }}>

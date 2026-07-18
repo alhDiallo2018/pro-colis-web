@@ -19,6 +19,12 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_BASE_URL: https://${DOMAIN}/api/v1
+        # Optionnel — envoi direct des formulaires publics via Brevo si l'API
+        # est indisponible. Utiliser une clé DÉDIÉE (pas BREVO_API_KEY serveur),
+        # car toute variable VITE_* est visible dans le bundle JS public.
+        VITE_BREVO_API_KEY: ${WEB_BREVO_API_KEY:-}
+        VITE_BREVO_SENDER_EMAIL: ${BREVO_SENDER_EMAIL:-no-reply@sendprocolis.com}
+        VITE_BREVO_SENDER_NAME: ${BREVO_SENDER_NAME:-SENDPROCOLIS}
     image: sendprocolis-web:latest
     container_name: sendprocolis-caddy
     restart: unless-stopped

@@ -11,6 +11,7 @@ export interface VoiceRecorderProps {
 
 export function VoiceRecorder({ onUploaded, existingUrl }: VoiceRecorderProps) {
   const [recording, setRecording] = useState(false)
+  const [paused, setPaused] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [url, setUrl] = useState<string | null>(existingUrl ?? null)
@@ -37,6 +38,7 @@ export function VoiceRecorder({ onUploaded, existingUrl }: VoiceRecorderProps) {
       mediaRecorderRef.current = recorder
       recorder.start()
       setRecording(true)
+      setPaused(false)
     } catch {
       setError("Accès au microphone refusé ou non disponible.")
     }
@@ -46,8 +48,19 @@ export function VoiceRecorder({ onUploaded, existingUrl }: VoiceRecorderProps) {
     if (mediaRecorderRef.current && recording) {
       mediaRecorderRef.current.stop()
       setRecording(false)
+      setPaused(false)
     }
   }, [recording])
+
+  const pauseRecording = useCallback(() => {
+    mediaRecorderRef.current?.pause()
+    setPaused(true)
+  }, [])
+
+  const resumeRecording = useCallback(() => {
+    mediaRecorderRef.current?.resume()
+    setPaused(false)
+  }, [])
 
   const uploadAudio = async (blob: Blob) => {
     setUploading(true)
@@ -116,11 +129,29 @@ export function VoiceRecorder({ onUploaded, existingUrl }: VoiceRecorderProps) {
         </div>
       ) : recording ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--red-500)', animation: 'pulse 1s ease-in-out infinite' }} />
-          <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--red-500)' }}>Enregistrement...</span>
-          <Button variant="secondary" size="sm" icon="stop" onClick={stopRecording} type="button" style={{ fontSize: 12 }}>
-            Stop
-          </Button>
+          {paused ? (
+            <>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--amber-500)', animation: 'pulse 2s ease-in-out infinite' }} />
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--amber-500)' }}>En pause</span>
+              <Button variant="secondary" size="sm" icon="play_arrow" onClick={resumeRecording} type="button" style={{ fontSize: 12 }}>
+                Reprendre
+              </Button>
+              <Button variant="secondary" size="sm" icon="stop" onClick={stopRecording} type="button" style={{ fontSize: 12 }}>
+                Stop
+              </Button>
+            </>
+          ) : (
+            <>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--red-500)', animation: 'pulse 1s ease-in-out infinite' }} />
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--red-500)' }}>Enregistrement...</span>
+              <Button variant="secondary" size="sm" icon="pause" onClick={pauseRecording} type="button" style={{ fontSize: 12 }}>
+                Pause
+              </Button>
+              <Button variant="secondary" size="sm" icon="stop" onClick={stopRecording} type="button" style={{ fontSize: 12 }}>
+                Stop
+              </Button>
+            </>
+          )}
         </div>
       ) : (
         <Button

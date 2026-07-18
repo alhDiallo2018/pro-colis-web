@@ -66,6 +66,10 @@ export async function withdrawWallet(payload: WithdrawPayload): Promise<{ transa
 export interface DriverWallet {
   userId: string
   balance: number
+  pendingBalance?: number
+  totalEarned?: number
+  totalWithdrawn?: number
+  totalCommissionsPaid?: number
   totalDeposited: number
   totalSpent: number
   status: string
@@ -73,5 +77,6 @@ export interface DriverWallet {
 
 export async function getWallet(): Promise<DriverWallet> {
   const { data } = await api.get('/driver/wallet')
-  return data.wallet ?? data.data
+  const w = data.wallet ?? data.data ?? data
+  return { ...w, balance: w.balance ?? w.availableBalance ?? 0 }
 }

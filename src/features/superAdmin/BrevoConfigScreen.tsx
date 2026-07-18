@@ -131,7 +131,7 @@ export function BrevoConfigScreen() {
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
           <Input
             label="Adresse email de test"
-            placeholder="admin@sendprocolis.com"
+            placeholder="support-technic@sendprocolis.com"
             type="email"
             value={testEmail}
             onChange={(e) => setTestEmail(e.target.value)}

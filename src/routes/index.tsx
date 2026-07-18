@@ -14,6 +14,7 @@ import { RemboursementPage } from '@/features/marketing/RemboursementPage'
 import { ReclamationsPage } from '@/features/marketing/ReclamationsPage'
 import { ColisInterditsPage } from '@/features/marketing/ColisInterditsPage'
 import { HelpScreen } from '@/features/shared/HelpScreen'
+import { PaymentStatusPage } from '@/features/shared/PaymentStatusPage'
 import { DashboardLayout, type NavSection } from '@/layouts/DashboardLayout'
 import { NavButton, NotifButton } from '@/components/actions'
 
@@ -47,18 +48,23 @@ import { ColisPage } from '@/features/superAdmin/ColisPage'
 import { ChauffeursPage } from '@/features/superAdmin/ChauffeursPage'
 import { UtilisateursPage } from '@/features/superAdmin/UtilisateursPage'
 import { GaragesPage } from '@/features/superAdmin/GaragesPage'
+import { ZonesPage } from '@/features/superAdmin/ZonesPage'
 import { StatistiquesPage } from '@/features/superAdmin/StatistiquesPage'
 import { ConfigConsommationPage } from '@/features/superAdmin/ConfigConsommationPage'
 import { FinanceDashboardPage } from '@/features/superAdmin/FinanceDashboardPage'
 import { WalletsPage } from '@/features/superAdmin/WalletsPage'
 import { PaymentsPage } from '@/features/superAdmin/PaymentsPage'
+import { PaymentNotificationsPage } from '@/features/superAdmin/PaymentNotificationsPage'
 import { ReputationDashboardPage } from '@/features/superAdmin/ReputationDashboardPage'
 import { ScoresPage } from '@/features/superAdmin/ScoresPage'
 import { ClassementPage } from '@/features/superAdmin/ClassementPage'
 import { DriverDetailPage } from '@/features/superAdmin/DriverDetailPage'
 import { BrevoConfigScreen } from '@/features/superAdmin/BrevoConfigScreen'
+import BroadcastsPage from '@/features/superAdmin/BroadcastsPage'
+import { BroadcastBanner } from '@/components/BroadcastBanner'
 import { WalletDetailPage } from '@/features/superAdmin/WalletDetailPage'
 import { ScoreDetailPage } from '@/features/superAdmin/ScoreDetailPage'
+import { WithdrawalsPage } from '@/features/superAdmin/WithdrawalsPage'
 import { GarageDriversPage } from '@/features/superAdmin/GarageDriversPage'
 import { NotificationsScreen } from '@/features/shared/NotificationsScreen'
 import { GarageDashboard } from '@/features/garageAdmin/GarageDashboard'
@@ -128,8 +134,10 @@ const SUPER_NAV: NavSection[] = [
     items: [
       { label: 'Dashboard Finance', icon: 'monitoring', to: '/admin/finance' },
       { label: 'Wallets', icon: 'account_balance_wallet', to: '/admin/finance/wallets' },
+      { label: 'Retraits', icon: 'money', to: '/admin/finance/withdrawals' },
       { label: 'Configuration', icon: 'settings', to: '/admin/finance/configuration' },
       { label: 'Paiements', icon: 'payments', to: '/admin/finance/payments' },
+      { label: 'Notifications paiement', icon: 'notifications_active', to: '/admin/finance/payments-notifications' },
     ],
   },
   {
@@ -143,9 +151,11 @@ const SUPER_NAV: NavSection[] = [
   {
     heading: 'Gestion',
     items: [
-      { label: 'Zones', icon: 'garage', to: '/admin/garages' },
+      { label: 'Zones (garages)', icon: 'garage', to: '/admin/garages' },
+      { label: 'Zones géographiques', icon: 'map', to: '/admin/zones' },
       { label: 'Statistiques', icon: 'monitoring', to: '/admin/stats' },
       { label: 'Notifications Brevo', icon: 'mail', to: '/admin/notifications-brevo' },
+      { label: 'Bandeaux', icon: 'campaign', to: '/admin/broadcasts' },
     ],
   },
 ]
@@ -156,6 +166,8 @@ export const router = createBrowserRouter([
   { path: '/register', element: <RegisterPage /> },
   { path: '/help', element: <HelpScreen /> },
   { path: '/track', element: <SuiviScreen /> },
+  { path: '/payment-status', element: <PaymentStatusPage /> },
+  { path: '/payment-status.php', element: <PaymentStatusPage /> },
   { path: '/a-propos', element: <AProposPage /> },
   { path: '/contact', element: <ContactPage /> },
   { path: '/mentions-legales', element: <MentionsLegalesPage /> },
@@ -176,7 +188,7 @@ export const router = createBrowserRouter([
           nav={CLIENT_NAV}
           roleLabel="Client"
           greetOnIndex
-          searchPlaceholder="Rechercher un colis, un suivi…"
+          banner={<BroadcastBanner />}
           actions={
             <>
               <NotifButton />
@@ -212,6 +224,7 @@ export const router = createBrowserRouter([
           nav={DRIVER_NAV}
           roleLabel="Chauffeur"
           greetOnIndex
+          banner={<BroadcastBanner />}
           actions={
             <>
               <AvailabilityToggle />
@@ -247,8 +260,8 @@ export const router = createBrowserRouter([
       <RequireRole roles={['admin']}>
         <DashboardLayout
           nav={GARAGE_NAV}
-           roleLabel="Admin zone"
-          searchPlaceholder="Rechercher un colis, un chauffeur…"
+          roleLabel="Admin zone"
+          banner={<BroadcastBanner />}
           actions={<NotifButton />}
         />
       </RequireRole>
@@ -272,11 +285,11 @@ export const router = createBrowserRouter([
         <DashboardLayout
           nav={SUPER_NAV}
           roleLabel="Super Admin"
-           searchPlaceholder="Rechercher un colis, un chauffeur, une zone…"
+          banner={<BroadcastBanner />}
           actions={
             <>
               <NotifButton />
-              <NavButton to="/admin/garages" icon="add">
+              <NavButton to="/admin/garages?new=1" icon="add">
                  Nouvelle zone
               </NavButton>
             </>
@@ -290,6 +303,7 @@ export const router = createBrowserRouter([
       { path: 'chauffeurs', element: <ChauffeursPage /> },
       { path: 'users', element: <UtilisateursPage /> },
       { path: 'garages', element: <GaragesPage /> },
+      { path: 'zones', element: <ZonesPage /> },
       { path: 'stats', element: <StatistiquesPage /> },
       { path: 'parametres', element: <Navigate to="/admin/finance/configuration" replace /> },
       { path: 'finance', element: <FinanceDashboardPage /> },
@@ -298,11 +312,14 @@ export const router = createBrowserRouter([
       { path: 'finance/commissions', element: <Navigate to="/admin/finance/configuration" replace /> },
       { path: 'finance/configuration', element: <ConfigConsommationPage /> },
       { path: 'finance/payments', element: <PaymentsPage /> },
+      { path: 'finance/payments-notifications', element: <PaymentNotificationsPage /> },
+      { path: 'finance/withdrawals', element: <WithdrawalsPage /> },
       { path: 'reputation', element: <ReputationDashboardPage /> },
       { path: 'reputation/scores', element: <ScoresPage /> },
       { path: 'reputation/scores/:userId', element: <ScoreDetailPage /> },
       { path: 'reputation/classement', element: <ClassementPage /> },
       { path: 'notifications-brevo', element: <BrevoConfigScreen /> },
+      { path: 'broadcasts', element: <BroadcastsPage /> },
       { path: 'chauffeurs/:userId', element: <DriverDetailPage /> },
       { path: 'garages/:garageId/drivers', element: <GarageDriversPage /> },
       { path: 'notifications', element: <NotificationsScreen /> },

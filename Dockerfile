@@ -15,6 +15,13 @@ COPY . .
 # Fournie par docker-compose : https://${DOMAIN}/api/v1
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+# Envoi direct des formulaires Contact/Réclamations via Brevo (fallback sans backend).
+ARG VITE_BREVO_API_KEY
+ARG VITE_BREVO_SENDER_EMAIL
+ARG VITE_BREVO_SENDER_NAME
+ENV VITE_BREVO_API_KEY=$VITE_BREVO_API_KEY
+ENV VITE_BREVO_SENDER_EMAIL=$VITE_BREVO_SENDER_EMAIL
+ENV VITE_BREVO_SENDER_NAME=$VITE_BREVO_SENDER_NAME
 RUN npm run build
 
 # --- Étape 2 : Caddy sert la SPA + reverse-proxy vers l'API ---

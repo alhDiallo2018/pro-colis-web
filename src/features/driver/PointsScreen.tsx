@@ -2,12 +2,13 @@ import { useState } from 'react'
 import { Button, Dialog, Input, Select, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
-import { useScoreBalance, useScoreHistory, useDriverWallet, useWithdrawWallet } from './hooks'
+import { useScoreBalance, useScoreHistory, useDriverWallet, useWithdrawWallet, useMyWithdrawals, useCancelWithdrawal } from './hooks'
 import { createPaydunyaPayment } from '@/lib/api/paydunya'
 import { formatDateTime, formatFcfa, formatPoints } from '@/lib/format'
 import { RechargeDialog } from './RechargeDialog'
 import { ApiError } from '@/lib/api/client'
 import { useAuthStore } from '@/store/auth'
+import type { Withdrawal, WithdrawalStatus } from '@/lib/api/withdrawals'
 
 const WALLET_PACKS = [
   { label: '1 000 FCFA', amount: 1000 },
@@ -20,8 +21,10 @@ export function DriverPointsScreen() {
   const balance = useScoreBalance()
   const history = useScoreHistory()
   const wallet = useDriverWallet()
+  const myWithdrawals = useMyWithdrawals()
   const userPhone = useAuthStore((s) => s.user?.phone ?? '')
   const txns = history.data ?? []
+  const withdrawalList = myWithdrawals.data ?? []
   const [showRecharge, setShowRecharge] = useState(false)
   const [showWalletRecharge, setShowWalletRecharge] = useState(false)
   const [walletAmount, setWalletAmount] = useState(1000)
@@ -33,6 +36,15 @@ export function DriverPointsScreen() {
   const [withdrawMethod, setWithdrawMethod] = useState('wave')
   const [withdrawPhone, setWithdrawPhone] = useState(userPhone)
   const withdraw = useWithdrawWallet()
+  const cancelWithdrawal = useCancelWithdrawal()
+
+  const hasActiveWithdrawal = withdrawalList.some(
+    (w: Withdrawal) => w.status === 'PENDING' || w.status === 'PROCESSING',
+  )
+  const availableBalance = Number(wallet.data?.balance ?? 0)
+  const pendingBalance = Number(wallet.data?.pendingBalance ?? 0)
+  const totalWithdrawn = Number(wallet.data?.totalWithdrawn ?? 0)
+  const totalCommissionsPaid = Number(wallet.data?.totalCommissionsPaid ?? 0)
 
   const rechargeWallet = async () => {
     const amount = useCustomWallet ? Number(walletCustom) : walletAmount
@@ -123,7 +135,7 @@ export function DriverPointsScreen() {
                   color: 'var(--text-muted)',
                 }}
               >
-                Portefeuille
+                Portefeuille (FCFA)
               </div>
               <div
                 style={{
@@ -134,11 +146,17 @@ export function DriverPointsScreen() {
                   marginTop: 4,
                 }}
               >
-                {formatFcfa(Number(wallet.data.balance))}
+                {formatFcfa(availableBalance)}
               </div>
+              {pendingBalance > 0 && (
+                <div style={{ fontSize: 12, color: 'var(--amber-600)', marginTop: 2, fontWeight: 600 }}>
+                  Dont {formatFcfa(pendingBalance)} en attente de retrait
+                </div>
+              )}
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                Rechargé: {formatFcfa(Number(wallet.data.totalDeposited))} · Dépensé:{' '}
-                {formatFcfa(Number(wallet.data.totalSpent))}
+                Rechargé: {formatFcfa(Number(wallet.data.totalDeposited))}
+                {totalCommissionsPaid > 0 ? <> · Commissions: {formatFcfa(totalCommissionsPaid)}</> : null}
+                {totalWithdrawn > 0 ? <> · Retiré: {formatFcfa(totalWithdrawn)}</> : null}
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -156,7 +174,8 @@ export function DriverPointsScreen() {
                 size="sm"
                 icon="payments"
                 onClick={() => setShowWithdraw(true)}
-                disabled={Number(wallet.data?.balance ?? 0) < 100}
+                disabled={availableBalance < 500 || hasActiveWithdrawal}
+                title={hasActiveWithdrawal ? 'Un retrait est déjà en cours' : availableBalance < 500 ? 'Minimum 500 FCFA' : undefined}
               >
                 Retirer
               </Button>
@@ -414,10 +433,14 @@ export function DriverPointsScreen() {
               block
               icon="payments"
               loading={withdraw.isPending}
-              disabled={!Number(withdrawAmount) || Number(withdrawAmount) < 100 || Number(withdrawAmount) > Number(wallet.data?.balance ?? 0)}
+              disabled={!Number(withdrawAmount) || Number(withdrawAmount) < 500 || Number(withdrawAmount) > availableBalance || hasActiveWithdrawal}
               onClick={() => {
                 withdraw.mutate(
-                  { amount: Number(withdrawAmount), method: withdrawMethod, phone: withdrawPhone.trim() || userPhone || undefined },
+                  {
+                    amount: Number(withdrawAmount),
+                    method: withdrawMethod,
+                    phone: withdrawPhone.trim() || userPhone || undefined,
+                  },
                   {
                     onSuccess: () => {
                       setShowWithdraw(false)
@@ -475,6 +498,13 @@ export function DriverPointsScreen() {
             />
           )}
 
+          {hasActiveWithdrawal && (
+            <Toast
+              tone="warning"
+              message="Vous avez déjà un retrait en cours. Veuillez attendre son traitement."
+            />
+          )}
+
           <div
             style={{
               background: 'var(--slate-50)',
@@ -485,10 +515,80 @@ export function DriverPointsScreen() {
               lineHeight: 1.5,
             }}
           >
-            Solde disponible : {formatFcfa(Number(wallet.data?.balance ?? 0))}. Le retrait sera traité sous 24-48h.
+            Solde disponible : {formatFcfa(availableBalance)}
+            {pendingBalance > 0 ? <> (dont {formatFcfa(pendingBalance)} en attente)</> : null}
+            . Minimum : 500 FCFA. Traité sous 24-48h.
           </div>
         </div>
       </Dialog>
+
+      {/* Withdrawal history */}
+      {withdrawalList.length > 0 && (
+        <Panel title="Historique des retraits" flush>
+          {withdrawalList.map((w: Withdrawal) => {
+            const statusColors: Record<WithdrawalStatus, string> = {
+              PENDING: 'var(--amber-600)',
+              PROCESSING: 'var(--blue-600)',
+              SUCCESS: 'var(--green-600)',
+              FAILED: 'var(--red-600)',
+              CANCELLED: 'var(--gray-500)',
+            }
+            const statusLabels: Record<WithdrawalStatus, string> = {
+              PENDING: 'En attente',
+              PROCESSING: 'En cours',
+              SUCCESS: 'Réussi',
+              FAILED: 'Échoué',
+              CANCELLED: 'Annulé',
+            }
+            const methodLabels: Record<string, string> = {
+              wave: 'Wave', orange_money: 'Orange Money', freeMoney: 'FreeMoney', freemMoney: 'FreeMoney',
+              bank: 'Virement', paydunya: 'PayDunya',
+            }
+            return (
+              <div
+                key={w.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  padding: '13px 18px',
+                  borderBottom: '1px solid var(--slate-100)',
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--text-strong)' }}>
+                    Retrait {formatFcfa(w.amount)} vers {methodLabels[w.method] ?? w.method}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {new Date(w.createdAt).toLocaleString('fr-FR')}
+                    {w.phoneNumber ? <> · {w.phoneNumber}</> : null}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: statusColors[w.status] }}>
+                    {statusLabels[w.status]}
+                  </span>
+                  {w.status === 'PENDING' && (
+                    <button
+                      type="button"
+                      onClick={() => cancelWithdrawal.mutate(w.id)}
+                      disabled={cancelWithdrawal.isPending}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        color: 'var(--red-500)', fontSize: 11, fontWeight: 600,
+                        padding: '2px 6px',
+                      }}
+                    >
+                      Annuler
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </Panel>
+      )}
     </div>
   )
 }

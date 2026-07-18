@@ -28,6 +28,11 @@ export interface ScoreTransaction {
   description: string
   parcelId?: string | null
   status: string
+  source?: string | null
+  grantedBy?: { id: string; fullName: string } | null
+  motif?: string | null
+  balanceBefore?: number
+  balanceAfter?: number
   metadata?: unknown
   createdAt?: string
 }
@@ -78,8 +83,11 @@ export interface DriverDetail {
   } | null
   wallet?: {
     balance: number
+    pendingBalance?: number
     totalDeposited: number
     totalSpent: number
+    totalWithdrawn?: number
+    totalCommissionsPaid?: number
     status: string
   } | null
 }
@@ -91,6 +99,24 @@ export interface ScoreList {
 
 export interface RankingList {
   rankings: DriverRanking[]
+}
+
+export type ScoreTransactionType =
+  | 'DRIVER_RECHARGE'
+  | 'COMMERCIAL_BONUS'
+  | 'ADMIN_BONUS'
+  | 'PERFORMANCE_REWARD'
+  | 'COMPENSATION'
+  | 'ADJUSTMENT'
+  | 'REFUND'
+  | 'COMMISSION_DEDUCTION'
+
+export interface AddPointsPayload {
+  amount: number
+  description: string
+  type?: ScoreTransactionType
+  source?: string
+  motif?: string
 }
 
 /** Dashboard réputation */
@@ -118,13 +144,13 @@ export async function scoreHistory(userId: string, params: ListParams = {}): Pro
 }
 
 /** Ajouter des points */
-export async function addPoints(userId: string, payload: { amount: number; description: string; type?: string }): Promise<ScoreDetail> {
+export async function addPoints(userId: string, payload: AddPointsPayload): Promise<ScoreDetail> {
   const { data } = await api.post(`/super-admin/scores/${userId}/add`, payload)
   return data.score ?? data.data
 }
 
 /** Retirer des points */
-export async function removePoints(userId: string, payload: { amount: number; description: string; type?: string }): Promise<ScoreDetail> {
+export async function removePoints(userId: string, payload: { amount: number; description: string; type?: string; motif?: string }): Promise<ScoreDetail> {
   const { data } = await api.post(`/super-admin/scores/${userId}/remove`, payload)
   return data.score ?? data.data
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Card } from '@/ds'
+import { MarketingHeader } from '@/features/marketing/MarketingHeader'
 
 interface FaqItem {
   question: string
@@ -104,6 +105,7 @@ export function HelpScreen() {
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px 64px' }}>
+      <MarketingHeader />
       <div style={{ marginBottom: 24 }}>
         <div
           style={{
@@ -219,7 +221,7 @@ export function HelpScreen() {
             </div>
           </div>
           <div>
-            <a href="mailto:support@sendprocolis.com" style={{ textDecoration: 'none', color: 'var(--color-primary)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14 }}>
+            <a href="mailto:support-technic@sendprocolis.com" style={{ textDecoration: 'none', color: 'var(--color-primary)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14 }}>
               Contacter
             </a>
           </div>

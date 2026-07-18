@@ -1,13 +1,9 @@
-import { Button } from '@/ds'
-import { useNavigate } from 'react-router-dom'
+import { MarketingHeader } from './MarketingHeader'
 
 export function CGUPage() {
-  const navigate = useNavigate()
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-body)', color: 'var(--text-body)', lineHeight: 1.7 }}>
-      <Button variant="ghost" icon="arrow_back" onClick={() => navigate(-1)} style={{ marginBottom: 32 }}>
-        Retour
-      </Button>
+      <MarketingHeader />
       <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, color: 'var(--text-strong)', marginBottom: 24 }}>CONDITIONS GÉNÉRALES D'UTILISATION — SENDPROCOLIS</h1>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>1. Objet et acceptation</h2>
@@ -22,7 +18,7 @@ export function CGUPage() {
         SendProColis propose les services suivants :
       </p>
       <ul style={{ paddingLeft: 24 }}>
-        <li>envoi et suivi de colis entre les villes du Sénégal ;</li>
+        <li>envoi et suivi de colis au Sénégal, en Afrique et à l'international ;</li>
         <li>mise en relation entre expéditeurs et chauffeurs transporteurs vérifiés ;</li>
         <li>gestion des offres, des enchères et du libre service ;</li>
         <li>traitement sécurisé des paiements ;</li>
@@ -48,7 +44,7 @@ export function CGUPage() {
         Les utilisateurs s'engagent à :
       </p>
       <ul style={{ paddingLeft: 24 }}>
-        <li>respecter l'ensemble des lois et règlements en vigueur au Sénégal ;</li>
+        <li>respecter l'ensemble des lois et règlements en vigueur au Sénégal ainsi que dans les pays de destination ;</li>
         <li>fournir des informations exactes concernant les colis expédiés ;</li>
         <li>ne pas transporter de marchandises interdites ou illicites ;</li>
         <li>ne pas détourner la plateforme à des fins frauduleuses ou illégales ;</li>

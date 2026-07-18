@@ -370,8 +370,32 @@ const CONFIG_SCHEMA: ConfigSection[] = [
   {
     title: 'Score & Réputation',
     keys: [
-      { key: 'score.deliveryCompleted', label: 'Points par livraison réussie', type: 'number', defaultValue: 50 },
-      { key: 'score.signupBonus', label: 'Points bonus inscription', type: 'number', defaultValue: 100 },
+      { key: 'score.deliveryCompleted', label: 'Points par livraison réussie', type: 'number', defaultValue: 120 },
+      { key: 'score.signupBonus', label: 'Points bonus inscription', type: 'number', defaultValue: 0 },
+      { key: 'score.cfaPerPoint', label: 'Équivalent CFA par point (FCFA)', type: 'number', defaultValue: 1 },
+      { key: 'score.commitmentFee', label: 'Points de frais d\'engagement (offre acceptée)', type: 'number', defaultValue: 1 },
+      { key: 'score.standardThreshold', label: 'Seuil niveau Standard (points)', type: 'number', defaultValue: 100 },
+      { key: 'score.premiumThreshold', label: 'Seuil niveau Premium (points)', type: 'number', defaultValue: 500 },
+      { key: 'score.eliteThreshold', label: 'Seuil niveau Elite (points)', type: 'number', defaultValue: 1000 },
+    ],
+  },
+  {
+    title: 'Finances — Retraits',
+    keys: [
+      { key: 'withdrawal.minAmount', label: 'Montant minimum de retrait (FCFA)', type: 'number', defaultValue: 500 },
+      { key: 'withdrawal.maxAmount', label: 'Montant maximum de retrait (0=illimité)', type: 'number', defaultValue: 0 },
+    ],
+  },
+  {
+    title: 'Finances — Commission',
+    keys: [
+      { key: 'commission.insufficient_rule', label: 'Règle si solde insuffisant (block | warn | debt)', type: 'text', defaultValue: 'block' },
+    ],
+  },
+  {
+    title: 'Finances — Déboursement',
+    keys: [
+      { key: 'disbursement.mode', label: 'Mode (manual ou auto)', type: 'text', defaultValue: 'manual' },
     ],
   },
   {
@@ -394,6 +418,11 @@ const CONFIG_SCHEMA: ConfigSection[] = [
       { key: 'paydunya.publicKey', label: 'Clé publique (Public Key)', type: 'text', defaultValue: '' },
       { key: 'paydunya.token', label: 'Token', type: 'text', defaultValue: '' },
       { key: 'paydunya.mode', label: 'Mode (test ou live)', type: 'text', defaultValue: 'test' },
+      { key: 'paydunya.disburse.masterKey', label: 'Disburse — Master Key', type: 'text', defaultValue: '' },
+      { key: 'paydunya.disburse.privateKey', label: 'Disburse — Private Key', type: 'text', defaultValue: '' },
+      { key: 'paydunya.disburse.publicKey', label: 'Disburse — Public Key', type: 'text', defaultValue: '' },
+      { key: 'paydunya.disburse.token', label: 'Disburse — Token', type: 'text', defaultValue: '' },
+      { key: 'paydunya.disburse.mode', label: 'Disburse — Mode (test/live)', type: 'text', defaultValue: 'test' },
     ],
   },
 ]

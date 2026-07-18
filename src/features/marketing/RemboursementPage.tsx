@@ -1,13 +1,9 @@
-import { Button } from '@/ds'
-import { useNavigate } from 'react-router-dom'
+import { MarketingHeader } from './MarketingHeader'
 
 export function RemboursementPage() {
-  const navigate = useNavigate()
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-body)', color: 'var(--text-body)', lineHeight: 1.7 }}>
-      <Button variant="ghost" icon="arrow_back" onClick={() => navigate(-1)} style={{ marginBottom: 32 }}>
-        Retour
-      </Button>
+      <MarketingHeader />
       <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, color: 'var(--text-strong)', marginBottom: 24 }}>ANNULATION ET REMBOURSEMENT — SENDPROCOLIS</h1>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>1. Annulation avant prise en charge</h2>
@@ -49,7 +45,7 @@ export function RemboursementPage() {
       <ul style={{ paddingLeft: 24 }}>
         <li>signaler le problème dans les <strong>48 heures</strong> suivant la livraison (ou la date prévue) ;</li>
         <li>envoyer un email à{' '}
-          <a href="mailto:contact@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>contact@sendprocolis.com</a>{' '}
+          <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>support-commercial@sendprocolis.com</a>{' '}
           avec votre numéro de suivi, une description du problème et des photos le cas échéant ;
         </li>
         <li>notre équipe évaluera votre dossier et vous proposera une solution dans un délai de 7 jours ouvrés.</li>
@@ -83,7 +79,7 @@ export function RemboursementPage() {
       </p>
       <p>
         <strong>Email :</strong>{' '}
-        <a href="mailto:contact@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>contact@sendprocolis.com</a>
+        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>support-commercial@sendprocolis.com</a>
       </p>
       <p>
         Nous nous engageons à traiter votre demande avec diligence et à vous tenir informé de l'évolution de
