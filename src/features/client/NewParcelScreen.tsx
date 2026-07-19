@@ -35,6 +35,7 @@ type Mode = 'free' | 'driver'
 const schema = z.object({
   receiverName: z.string().min(2, 'Nom requis'),
   receiverPhone: z.string().min(8, 'Téléphone requis'),
+  receiverEmail: z.string().email('Email invalide').optional().or(z.literal('')),
   receiverAddress: z.string().optional(),
   departureGarageId: z.string().min(1, `Zone de départ requise`),
   arrivalGarageId: z.string().min(1, `Zone d'arrivée requise`),
@@ -113,7 +114,7 @@ export function NewParcelScreen() {
   }
 
   const validateStep = async (s: number) => {
-    if (s === 0) return trigger(['receiverName', 'receiverPhone'])
+    if (s === 0) return trigger(['receiverName', 'receiverPhone', 'receiverEmail'])
     if (s === 1) {
       const ok = await trigger(['departureGarageId', 'arrivalGarageId'])
       if (mode === 'driver' && !watch('driverId')) {
@@ -150,6 +151,7 @@ export function NewParcelScreen() {
       senderName: user?.fullName ?? '',
       senderPhone: user?.phone ?? '',
       senderEmail: user?.email ?? null,
+      receiverEmail: values.receiverEmail || null,
       driverId,
       isFreeForBidding: mode === 'free',
       weight: values.weight ?? null,
@@ -213,6 +215,7 @@ export function NewParcelScreen() {
             <StepBody n={1} title="Qui reçoit le colis ?" hint="Les coordonnées du destinataire à l'arrivée.">
               <Input label={required('Nom du destinataire')} icon="person" placeholder="Ex : Awa Ndiaye" error={errors.receiverName?.message} {...register('receiverName')} />
               <Input label={required('Téléphone')} icon="call" placeholder="+221 77 000 00 00" error={errors.receiverPhone?.message} {...register('receiverPhone')} />
+              <Input label="Email du destinataire" icon="mail" type="email" placeholder="exemple@email.com" error={errors.receiverEmail?.message} {...register('receiverEmail')} />
               <LocationInput
                 label="Adresse de livraison"
                 icon="home"

@@ -4,6 +4,10 @@ import type { ListParams, Pagination, Parcel, ParcelEvent } from './types'
 export interface ParcelList {
   parcels: Parcel[]
   pagination?: Pagination
+  sent?: Parcel[]
+  received?: Parcel[]
+  sentTotal?: number
+  receivedTotal?: number
 }
 
 export interface CreateParcelPayload {
@@ -28,9 +32,20 @@ export interface CreateParcelPayload {
   notes?: string | null
 }
 
-/** Liste des colis du client courant. */
 export async function listMine(params: ListParams = {}): Promise<ParcelList> {
   const { data } = await api.get('/client/parcels/my-parcels', { params })
+  const sent = data.sent ?? []
+  const received = data.received ?? data.parcels ?? []
+  return { parcels: [...sent, ...received], pagination: data.pagination, sent, received, sentTotal: data.sentTotal, receivedTotal: data.receivedTotal }
+}
+
+export async function listSent(params: ListParams = {}): Promise<ParcelList> {
+  const { data } = await api.get('/client/parcels/my-parcels', { params: { ...params, filter: 'sent' } })
+  return { parcels: data.parcels ?? [], pagination: data.pagination }
+}
+
+export async function listReceived(params: ListParams = {}): Promise<ParcelList> {
+  const { data } = await api.get('/client/parcels/my-parcels', { params: { ...params, filter: 'received' } })
   return { parcels: data.parcels ?? [], pagination: data.pagination }
 }
 
@@ -39,7 +54,6 @@ export async function getClientParcel(parcelId: string): Promise<Parcel> {
   return data.parcel
 }
 
-/** The recipient's delivery code (proof of receipt), visible to the sender. */
 export async function deliveryCode(parcelId: string): Promise<string> {
   const { data } = await api.get(`/client/parcels/${parcelId}/delivery-code`)
   return data.code as string
@@ -60,16 +74,14 @@ export async function confirmCash(parcelId: string): Promise<Parcel> {
   return data.parcel ?? data.data
 }
 
-/** Colis libres pour offres (annonces). */
 export async function listFree(params: ListParams = {}): Promise<ParcelList> {
   const { data } = await api.get('/public/parcels/free', { params })
-  return { parcels: data.parcels ?? [], pagination: data.pagination }
+  return { parcels: data.parcels ?? data.data ?? [], pagination: data.pagination }
 }
 
-/** Suivi public par numéro de suivi. */
 export async function track(trackingNumber: string): Promise<Parcel> {
   const { data } = await api.get(`/public/parcels/track/${trackingNumber}`)
-  return data.parcel
+  return data.parcel ?? data.data
 }
 
 export async function timeline(parcelId: string): Promise<ParcelEvent[]> {

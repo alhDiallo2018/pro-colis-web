@@ -1,8 +1,8 @@
-# PRO COLIS API - Vue d'ensemble
+# SEND PRO COLIS API - Vue d'ensemble
 
 ## Objectif
 
-Ce dossier définit les specifications fonctionnelles et techniques du backend Node.js/Express a implementer pour l'application mobile PRO COLIS.
+Ce dossier définit les specifications fonctionnelles et techniques du backend Node.js/Express a implementer pour l'application mobile SEND PRO COLIS.
 
 L'application Flutter existante couvre plusieurs profils et workflows :
 

@@ -40,7 +40,7 @@ function buildMapHtml(fromLabel: string, fromCoord: [number, number] | undefined
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9/dist/leaflet.js"><\/script>
+<script src="https://unpkg.com/leaflet@1.9/dist/leaflet.js"></script>
 <style>*{margin:0;padding:0}html,body,#map{width:100%;height:100%;font-family:sans-serif}</style>
 </head>
 <body>
@@ -58,7 +58,7 @@ L.marker([${tLat},${tLng}], { icon: arrIcon }).addTo(map).bindPopup('${toLabel}'
 L.polyline([[${fLat},${fLng}],[${tLat},${tLng}]], { color: '#0D9488', weight: 3, opacity: 0.7, dashArray: '10 6' }).addTo(map);
 
 map.fitBounds([[${fLat},${fLng}],[${tLat},${tLng}]], { padding: [40, 40] });
-<\/script>
+</script>
 </body>
 </html>`
 }

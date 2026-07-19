@@ -1,4 +1,4 @@
-# PRO COLIS — Web
+# SEND PRO COLIS — Web
 
 Application web React des 4 rôles ProColis (Client, Chauffeur, Admin Garage, Super Admin),
 consommant l'API Express du projet frère `../ProColis-Api`.

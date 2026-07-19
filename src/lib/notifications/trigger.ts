@@ -1,9 +1,9 @@
 import { sendEmail, sendSms } from '@/lib/api/brevo'
 import {
-  EMAIL_TEMPLATES,
-  SMS_TEMPLATES,
-  type NotificationEventType,
-  type NotificationContext,
+    EMAIL_TEMPLATES,
+    SMS_TEMPLATES,
+    type NotificationContext,
+    type NotificationEventType,
 } from './templates'
 
 export type NotificationChannel = 'in_app' | 'email' | 'sms'
@@ -109,23 +109,23 @@ export async function dispatchNotification(
 function getSubjectFor(eventType: NotificationEventType, ctx: NotificationContext): string {
   const t = ctx.parcel?.trackingNumber ?? ctx.trackingNumber ?? ''
   switch (eventType) {
-    case 'parcel_created': return `PRO COLIS — Colis ${t} enregistré`
-    case 'parcel_confirmed': return `PRO COLIS — Colis ${t} confirmé`
-    case 'parcel_picked_up': return `PRO COLIS — Colis ${t} ramassé`
-    case 'parcel_in_transit': return `PRO COLIS — Colis ${t} en transit`
-    case 'parcel_arrived': return `PRO COLIS — Colis ${t} arrivé`
-    case 'parcel_out_for_delivery': return `PRO COLIS — Colis ${t} en livraison`
-    case 'parcel_delivered': return `PRO COLIS — Colis ${t} livré !`
-    case 'parcel_cancelled': return `PRO COLIS — Colis ${t} annulé`
-    case 'bid_received': return `PRO COLIS — Offre reçue pour ${t}`
-    case 'bid_accepted': return `PRO COLIS — Offre acceptée pour ${t}`
-    case 'bid_rejected': return `PRO COLIS — Offre refusée pour ${t}`
-    case 'driver_assigned': return `PRO COLIS — Chauffeur assigné à ${t}`
-    case 'payment_confirmed': return `PRO COLIS — Paiement confirmé`
-    case 'welcome': return 'Bienvenue sur PRO COLIS !'
-    case 'password_reset': return 'PRO COLIS — Réinitialisation du mot de passe'
-    case 'verification': return 'PRO COLIS — Code de vérification'
-    case 'account_suspended': return 'PRO COLIS — Compte suspendu'
-    default: return `PRO COLIS — Notification`
+    case 'parcel_created': return `SEND PRO COLIS — Colis ${t} enregistré`
+    case 'parcel_confirmed': return `SEND PRO COLIS — Colis ${t} confirmé`
+    case 'parcel_picked_up': return `SEND PRO COLIS — Colis ${t} ramassé`
+    case 'parcel_in_transit': return `SEND PRO COLIS — Colis ${t} en transit`
+    case 'parcel_arrived': return `SEND PRO COLIS — Colis ${t} arrivé`
+    case 'parcel_out_for_delivery': return `SEND PRO COLIS — Colis ${t} en livraison`
+    case 'parcel_delivered': return `SEND PRO COLIS — Colis ${t} livré !`
+    case 'parcel_cancelled': return `SEND PRO COLIS — Colis ${t} annulé`
+    case 'bid_received': return `SEND PRO COLIS — Offre reçue pour ${t}`
+    case 'bid_accepted': return `SEND PRO COLIS — Offre acceptée pour ${t}`
+    case 'bid_rejected': return `SEND PRO COLIS — Offre refusée pour ${t}`
+    case 'driver_assigned': return `SEND PRO COLIS — Chauffeur assigné à ${t}`
+    case 'payment_confirmed': return `SEND PRO COLIS — Paiement confirmé`
+    case 'welcome': return 'Bienvenue sur SEND PRO COLIS !'
+    case 'password_reset': return 'SEND PRO COLIS — Réinitialisation du mot de passe'
+    case 'verification': return 'SEND PRO COLIS — Code de vérification'
+    case 'account_suspended': return 'SEND PRO COLIS — Compte suspendu'
+    default: return `SEND PRO COLIS — Notification`
   }
 }

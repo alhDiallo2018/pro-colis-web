@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Input, ParcelCard, SegmentedControl, Select } from '@/ds'
 import { QueryState } from '@/components/QueryState'
-import { useMyParcels } from './hooks'
+import { useSentParcels, useReceivedParcels } from './hooks'
 import { formatDate, formatFcfa, formatWeight, toStatusKey } from '@/lib/format'
+import { queryClient } from '@/lib/queryClient'
 
-// Grouped lifecycle filters — each tab matches several raw API statuses.
 const STATUS_GROUPS = [
   { value: '', label: 'Tous', match: [] as string[] },
   { value: 'pending', label: 'En attente', match: ['pending', 'free', 'confirmed'] },
@@ -30,15 +30,29 @@ const SORTS = [
   { value: 'price_asc', label: 'Prix croissant' },
 ]
 
+const SENDER_TABS = [
+  { value: 'sent', label: '📦 Envoyés' },
+  { value: 'received', label: '📥 Reçus' },
+]
+
 export function MesColisScreen() {
   const navigate = useNavigate()
-  const query = useMyParcels({ limit: 100 })
-  const all = useMemo(() => query.data?.parcels ?? [], [query.data?.parcels])
-
+  const [tab, setTab] = useState('sent')
   const [status, setStatus] = useState('')
   const [search, setSearch] = useState('')
   const [type, setType] = useState('')
   const [sort, setSort] = useState('recent')
+
+  // Force refresh when switching tabs to avoid stale cache
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['client', 'parcels', tab] })
+  }, [tab])
+
+  const sentQuery = useSentParcels({ limit: 100 })
+  const receivedQuery = useReceivedParcels({ limit: 100 })
+
+  const tabQuery = tab === 'sent' ? sentQuery : receivedQuery
+  const all = useMemo(() => tabQuery.data?.parcels ?? [], [tabQuery.data?.parcels, tab])
 
   const parcels = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -48,7 +62,7 @@ export function MesColisScreen() {
       if (group && group.match.length && !group.match.includes(p.status)) return false
       if (type && p.type !== type) return false
       if (!q) return true
-      return [p.trackingNumber, p.arrivalCity, p.arrivalGarageName, p.departureCity, p.departureGarageName, p.receiverName]
+      return [p.trackingNumber, p.arrivalCity, p.arrivalGarageName, p.departureCity, p.departureGarageName, p.receiverName, p.senderName]
         .some((v) => v && String(v).toLowerCase().includes(q))
     })
     return [...filtered].sort((a, b) => {
@@ -64,6 +78,15 @@ export function MesColisScreen() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      {/* Sent/Received tabs */}
+      <SegmentedControl
+        block
+        size="sm"
+        options={SENDER_TABS}
+        value={tab}
+        onChange={setTab}
+      />
+
       <SegmentedControl
         block
         size="sm"
@@ -86,7 +109,7 @@ export function MesColisScreen() {
           }}
         >
           <div style={{ flex: '1 1 220px', minWidth: 180 }}>
-            <Input icon="search" placeholder="Rechercher (suivi, ville, destinataire…)" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input icon="search" placeholder="Rechercher (suivi, ville, nom…)" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <div style={{ flex: '0 1 200px' }}>
             <Select icon="category" options={TYPE_FILTERS} value={type} onChange={(e) => setType(e.target.value)} />
@@ -98,15 +121,17 @@ export function MesColisScreen() {
       )}
 
       <QueryState
-        isLoading={query.isLoading}
-        isError={query.isError}
-        error={query.error}
+        isLoading={tabQuery.isLoading}
+        isError={tabQuery.isError}
+        error={tabQuery.error}
         isEmpty={parcels.length === 0}
-        emptyTitle={filteredEmpty ? 'Aucun résultat' : 'Aucun colis'}
+        emptyTitle={filteredEmpty ? 'Aucun résultat' : tab === 'sent' ? 'Aucun colis envoyé' : 'Aucun colis reçu'}
         emptyMessage={
           filteredEmpty
             ? 'Aucun colis ne correspond à votre recherche.'
-            : "Vous n'avez pas encore de colis. Créez votre premier envoi."
+            : tab === 'sent'
+              ? "Vous n'avez pas encore envoyé de colis. Créez votre premier envoi."
+              : "Vous n'avez pas encore de colis qui vous sont destinés."
         }
         emptyAction={
           filteredEmpty ? (
@@ -121,13 +146,13 @@ export function MesColisScreen() {
             >
               Réinitialiser les filtres
             </Button>
-          ) : (
+          ) : tab === 'sent' ? (
             <Button icon="add" onClick={() => navigate('/client/nouveau')}>
               Créer un colis
             </Button>
-          )
+          ) : undefined
         }
-        onRetry={() => query.refetch()}
+        onRetry={() => tabQuery.refetch()}
       >
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 'var(--gap-card)' }}>
           {parcels.map((p) => (

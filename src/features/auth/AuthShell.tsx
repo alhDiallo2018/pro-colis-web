@@ -37,7 +37,7 @@ export function AuthShell({ brand, children, brandWidth = 480, formMaxWidth = 44
           <span style={{ width: 46, height: 46, borderRadius: 12, background: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
             <img src="/logo-procolis.png" alt="" style={{ width: 36, height: 36, objectFit: 'contain' }} />
           </span>
-          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 21 }}>PRO COLIS</span>
+          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 21 }}>SEND PRO COLIS</span>
         </div>
         <div style={{ marginTop: 'auto', position: 'relative', maxWidth: 380 }}>{brand}</div>
       </div>

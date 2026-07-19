@@ -1,12 +1,12 @@
 # Procolis Design System
 
-> The brand & UI system for **PRO COLIS** — a Flutter platform for interurban parcel ("colis") delivery across West/Central-African cities. This system encodes Procolis's brand, foundations, components and product screens so any agent can design on-brand interfaces and assets.
+> The brand & UI system for **SEND PRO COLIS** — a Flutter platform for interurban parcel ("colis") delivery across West/Central-African cities. This system encodes Procolis's brand, foundations, components and product screens so any agent can design on-brand interfaces and assets.
 
 ---
 
 ## 1. Product context
 
-**Procolis** ("Pro Colis") is a multi-sided logistics marketplace that moves parcels **between cities** (interurbain). Four roles share one app:
+**Procolis** ("SEND PRO COLIS") is a multi-sided logistics marketplace that moves parcels **between cities** (interurbain). Four roles share one app:
 
 | Role | What they do | Key screens |
 |---|---|---|

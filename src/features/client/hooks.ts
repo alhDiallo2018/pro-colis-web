@@ -38,6 +38,20 @@ export function useMyParcels(params: ListParams = {}) {
   })
 }
 
+export function useSentParcels(params: ListParams = {}) {
+  return useQuery({
+    queryKey: ['client', 'parcels', 'sent', params],
+    queryFn: () => parcelsApi.listSent(params),
+  })
+}
+
+export function useReceivedParcels(params: ListParams = {}) {
+  return useQuery({
+    queryKey: ['client', 'parcels', 'received', params],
+    queryFn: () => parcelsApi.listReceived(params),
+  })
+}
+
 export function useParcel(parcelId: string | undefined) {
   return useQuery({
     queryKey: ['client', 'parcel', parcelId],

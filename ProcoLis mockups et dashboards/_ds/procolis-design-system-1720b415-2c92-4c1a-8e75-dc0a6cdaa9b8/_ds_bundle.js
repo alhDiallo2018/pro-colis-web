@@ -3170,7 +3170,7 @@ try { (() => {
         color: 'var(--text-faint)',
         fontFamily: 'var(--font-mono)'
       }
-    }, 'PRO COLIS · v1.0.0')));
+    }, 'SEND PRO COLIS · v1.0.0')));
   }
   function Divider() {
     return e('div', {
@@ -3300,7 +3300,7 @@ try { (() => {
         letterSpacing: '-.02em',
         marginTop: 10
       }
-    }, 'PRO COLIS'), e('div', {
+    }, 'SEND PRO COLIS'), e('div', {
       style: {
         fontSize: 14,
         opacity: .9,

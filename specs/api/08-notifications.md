@@ -65,7 +65,7 @@ Message support :
   "parcelId": "uuid",
   "bidId": "uuid",
   "senderId": "uuid",
-  "senderName": "PRO COLIS",
+  "senderName": "SEND PRO COLIS",
   "type": "parcel_status",
   "title": "Colis en transit",
   "body": "Votre colis PC-20260628-A8F2K9 est en transit.",
@@ -123,8 +123,8 @@ Payload SMS :
 ```json
 {
   "to": "+221770000000",
-  "content": "PRO COLIS : Colis PC-20260628-A8F2K9 en transit.",
-  "senderName": "PRO COLIS"
+  "content": "SEND PRO COLIS : Colis PC-20260628-A8F2K9 en transit.",
+  "senderName": "SEND PRO COLIS"
 }
 ```
 
@@ -167,7 +167,7 @@ Payload préférences :
 ```
 BREVO_API_KEY=xkeysib-...
 BREVO_SENDER_EMAIL=no-reply@procolis.sn
-BREVO_SENDER_NAME=PRO COLIS
+BREVO_SENDER_NAME=SEND PRO COLIS
 BREVO_SMS_SENDER=PROCOLIS
 ```
 
