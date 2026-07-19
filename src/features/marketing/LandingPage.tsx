@@ -77,9 +77,7 @@ export function LandingPage() {
       }}>
         <div style={{ maxWidth: 1320, margin: '0 auto', display: 'flex', alignItems: 'center', height: 68, padding: '0 clamp(16px, 4vw, 40px)', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', flex: 'none' }} onClick={() => navigate('/')}>
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--gradient-brand)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span className="material-symbols-rounded" style={{ fontSize: 22, color: '#fff' }}>local_shipping</span>
-            </div>
+            <img src="/logo-procolis.png" alt="" style={{ width: 38, height: 38, objectFit: 'contain' }} />
             <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 19, color: 'var(--slate-900)', letterSpacing: '-0.02em' }}>
               SEND<span style={{ color: 'var(--color-primary)' }}>PRO</span>COLIS
             </span>
@@ -451,9 +449,9 @@ export function LandingPage() {
             className="pc-landing-footer-grid">
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, cursor: 'pointer' }} onClick={() => navigate('/')}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--gradient-brand)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span className="material-symbols-rounded" style={{ fontSize: 20, color: '#fff' }}>local_shipping</span>
-                </div>
+                <span style={{ width: 40, height: 40, borderRadius: 10, background: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+                  <img src="/logo-procolis.png" alt="" style={{ width: 31, height: 31, objectFit: 'contain' }} />
+                </span>
                 <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, color: '#fff' }}>
                   SEND<span style={{ color: 'var(--color-primary)' }}>PRO</span>COLIS
                 </span>
