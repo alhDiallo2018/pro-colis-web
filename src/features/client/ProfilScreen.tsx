@@ -66,7 +66,6 @@ export function ProfilScreen() {
 
   const error = update.error instanceof ApiError ? update.error.message : null
   const isPending = update.isPending || uploadingPhoto
-  const displayPhoto = photoDataUrl === '' ? null : photoDataUrl ?? user.profilePhoto ?? null
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>

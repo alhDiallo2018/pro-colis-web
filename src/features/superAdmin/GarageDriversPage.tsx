@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { Avatar, Badge, Button, Card, EmptyState } from '@/ds'
 import { useAdminDrivers, useAdminGarages } from '@/features/superAdmin/hooks'
-import type { DriverStatus, User } from '@/lib/api/types'
+import type { DriverStatus } from '@/lib/api/types'
 
 function driverStatusMeta(status: DriverStatus | null | undefined): { label: string; tone: 'green' | 'amber' | 'neutral' } {
   switch (status) {

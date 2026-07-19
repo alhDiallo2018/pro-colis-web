@@ -54,6 +54,13 @@ export async function getClientParcel(parcelId: string): Promise<Parcel> {
   return data.parcel
 }
 
+/** Garage admin : détail d'un colis de la zone. */
+export async function getParcel(parcelId: string): Promise<Parcel> {
+  const { data } = await api.get(`/garage-admin/parcels/${parcelId}`)
+  return data.parcel ?? data.data
+}
+
+/** The recipient's delivery code (proof of receipt), visible to the sender. */
 export async function deliveryCode(parcelId: string): Promise<string> {
   const { data } = await api.get(`/client/parcels/${parcelId}/delivery-code`)
   return data.code as string

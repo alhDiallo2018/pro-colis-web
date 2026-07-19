@@ -83,8 +83,6 @@ export function ItineraireScreen() {
   const dep = resolveCity(departure)
   const arr = resolveCity(arrival)
   const distance = calcDistance(dep.lat, dep.lng, arr.lat, arr.lng)
-  const midLat = (dep.lat + arr.lat) / 2
-  const midLng = (dep.lng + arr.lng) / 2
 
   const mapUrl = useMemo(() => {
     const token = import.meta.env.VITE_GOOGLE_MAPS_API_KEY

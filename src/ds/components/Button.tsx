@@ -3,12 +3,15 @@ import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'amber'
 export type ButtonSize = 'sm' | 'md' | 'lg'
+export type ButtonTone = 'default' | 'danger'
 
 export interface ButtonProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type' | 'style'> {
   children?: ReactNode
   variant?: ButtonVariant
   size?: ButtonSize
+  /** Semantic accent applied on top of the variant (e.g. a red ghost delete button). */
+  tone?: ButtonTone
   icon?: string
   iconTrailing?: string
   block?: boolean
@@ -24,6 +27,7 @@ export function Button({
   children,
   variant = 'primary',
   size = 'md',
+  tone = 'default',
   icon,
   iconTrailing,
   block = false,
@@ -47,7 +51,12 @@ export function Button({
     ghost: { bg: 'transparent', fg: 'var(--color-primary)', bd: 'transparent', sh: 'none', hb: 'var(--color-primary-soft)' },
     danger: { bg: 'var(--color-danger)', fg: '#fff', bd: 'transparent', sh: 'none', hb: 'var(--red-500)' },
   }
-  const v = variants[variant] || variants.primary
+  const baseV = variants[variant] || variants.primary
+  // `tone="danger"` recolors a non-solid variant (ghost/secondary) toward the danger palette.
+  const v =
+    tone === 'danger' && variant !== 'danger'
+      ? { ...baseV, fg: 'var(--color-danger)', hb: 'var(--red-50)' }
+      : baseV
   const [hover, setHover] = useState(false)
   const [press, setPress] = useState(false)
   const isDisabled = disabled || loading

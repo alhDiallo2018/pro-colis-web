@@ -7,11 +7,8 @@ import {
   useScores,
   useScore,
   useScoreHistory,
-  useAddPoints,
-  useRemovePoints,
 } from './hooks'
 import { formatDate, formatDateTime, formatPoints } from '@/lib/format'
-import type { ScoreEntry, ScoreTransaction } from '@/lib/api/admin-reputation'
 import { AddPointsDialog } from './AddPointsDialog'
 import { RemovePointsDialog } from './RemovePointsDialog'
 
@@ -76,8 +73,6 @@ export function ScoresPage() {
 
   const scoreQuery = useScore(view === 'detail' ? selectedUserId : undefined)
   const historyQuery = useScoreHistory(view === 'detail' ? selectedUserId : undefined, txFilter ? { type: txFilter } : {})
-  const addPoints = useAddPoints(selectedUserId)
-  const removePoints = useRemovePoints(selectedUserId)
 
   const scoreDetail = scoreQuery.data
   const transactions = historyQuery.data ?? []

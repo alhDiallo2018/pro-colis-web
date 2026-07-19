@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Button, Card, Badge, Avatar } from '@/ds'
+import { Button, Card, Badge } from '@/ds'
 import { Panel } from '@/components/Panel'
 import * as adsApi from '@/lib/api/advertisements'
 import { formatFcfa, formatDate, formatWeight } from '@/lib/format'

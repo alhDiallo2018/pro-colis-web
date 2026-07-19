@@ -33,7 +33,7 @@ export function ZoneFormDialog({ open, zone, onClose }: Props) {
   const isEdit = !!zone
   const [form, setForm] = useState<FormState>(EMPTY)
   const [localError, setLocalError] = useState<string | null>(null)
-  const [selectedPlace, setSelectedPlace] = useState<PlaceResult | null>(null)
+  const [, setSelectedPlace] = useState<PlaceResult | null>(null)
 
   const createMutation = useCreateZone()
   const updateMutation = useUpdateZone()
@@ -63,7 +63,8 @@ export function ZoneFormDialog({ open, zone, onClose }: Props) {
 
   const set = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }))
 
-  const handlePlaceSelected = (place: PlaceResult) => {
+  const handlePlaceSelected = (_value: string, place?: PlaceResult) => {
+    if (!place) return
     setSelectedPlace(place)
     if (!form.name) set({ name: place.mainText ?? place.description })
     if (!form.displayName) set({ displayName: place.description })
@@ -186,7 +187,7 @@ export function ZoneFormDialog({ open, zone, onClose }: Props) {
             type="number"
             value={String(form.radius)}
             onChange={(e) => set({ radius: Number(e.target.value) || 5000 })}
-            description={`${(form.radius / 1000).toFixed(1)} km`}
+            help={`${(form.radius / 1000).toFixed(1)} km`}
           />
         )}
 

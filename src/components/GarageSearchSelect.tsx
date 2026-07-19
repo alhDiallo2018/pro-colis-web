@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { Icon } from '@/ds'
 import type { Garage } from '@/lib/api/types'
 
 export interface GarageSearchSelectProps {
-  label?: string
+  label?: ReactNode
   icon?: string
   placeholder?: string
   garages: Garage[]

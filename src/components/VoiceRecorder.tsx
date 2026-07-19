@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
 import { Button } from '@/ds'
-import { ApiError } from '@/lib/api/client'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 

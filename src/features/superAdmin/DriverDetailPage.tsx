@@ -11,7 +11,7 @@ import {
   useRechargeWallet,
   useDebitWallet,
 } from './hooks'
-import { formatFcfa, formatDate, formatDateTime, formatPoints } from '@/lib/format'
+import { formatFcfa, formatDate, formatDateTime } from '@/lib/format'
 
 const LEVEL_TONE: Record<string, 'primary' | 'amber' | 'green' | 'neutral'> = {
   ELITE: 'primary',
@@ -186,7 +186,7 @@ export function DriverDetailPage() {
                             }}>
                               {tx.amount > 0 ? '+' : ''}{tx.amount} pts
                             </span>
-                            <span style={{ display: 'flex', alignItems: 'center', minWidth: 0, fontSize: 12.5, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                            <span style={{ minWidth: 0, fontSize: 12.5, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
                               {tx.description || '—'}
                             </span>
                           </div>
@@ -282,7 +282,7 @@ export function DriverDetailPage() {
                                   <span style={{ display: 'flex', alignItems: 'center', minWidth: 0, fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 12, color: 'var(--text-body)' }}>
                                     {formatFcfa(tx.balanceAfter)}
                                   </span>
-                                  <span style={{ display: 'flex', alignItems: 'center', minWidth: 0, fontSize: 12.5, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                                  <span style={{ minWidth: 0, fontSize: 12.5, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
                                     {tx.description ?? '—'}
                                   </span>
                                 </div>

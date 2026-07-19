@@ -33,13 +33,11 @@ export interface LocationInputProps {
   showGeolocate?: boolean
 }
 
-let googleLoaded = false
 let googleLoading = false
 const onLoadQueue: Array<() => void> = []
 
 function loadGoogleMaps(): Promise<void> {
   if (window.google?.maps?.places) {
-    googleLoaded = true
     return Promise.resolve()
   }
   if (googleLoading) {
@@ -53,7 +51,6 @@ function loadGoogleMaps(): Promise<void> {
     if (document.querySelector('script[src*="maps.googleapis.com"]')) return
 
     window.initGoogleMapsCallback = () => {
-      googleLoaded = true
       googleLoading = false
       onLoadQueue.forEach((cb) => cb())
       onLoadQueue.length = 0
@@ -68,12 +65,12 @@ function loadGoogleMaps(): Promise<void> {
   })
 }
 
-function debounce<T extends (...args: unknown[]) => void>(fn: T, ms: number): T {
+function debounce<A extends unknown[]>(fn: (...args: A) => void, ms: number): (...args: A) => void {
   let timer: ReturnType<typeof setTimeout>
-  return ((...args: unknown[]) => {
+  return (...args: A) => {
     clearTimeout(timer)
     timer = setTimeout(() => fn(...args), ms)
-  }) as T
+  }
 }
 
 export function LocationInput({
@@ -85,7 +82,6 @@ export function LocationInput({
   onCoordinates,
   error,
   disabled = false,
-  required = false,
   style,
   showGeolocate = true,
 }: LocationInputProps) {
@@ -95,7 +91,7 @@ export function LocationInput({
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [locating, setLocating] = useState(false)
   const [geoError, setGeoError] = useState<string | null>(null)
-  const [mapsReady, setMapsReady] = useState(false)
+  const [, setMapsReady] = useState(false)
 
   const wrapperRef = useRef<HTMLDivElement>(null)
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null)

@@ -7,12 +7,13 @@ export interface EmptyStateProps {
   title?: ReactNode
   message?: ReactNode
   action?: ReactNode
+  children?: ReactNode
   tone?: EmptyStateTone
   style?: CSSProperties
 }
 
 /** Empty / error / no-results state. Always offer a next action. */
-export function EmptyState({ icon = 'inbox', title, message, action, tone = 'neutral', style }: EmptyStateProps) {
+export function EmptyState({ icon = 'inbox', title, message, action, children, tone = 'neutral', style }: EmptyStateProps) {
   const tones: Record<EmptyStateTone, [string, string]> = {
     neutral: ['var(--surface-sunken)', 'var(--text-faint)'],
     primary: ['var(--color-primary-soft)', 'var(--color-primary)'],
@@ -54,6 +55,7 @@ export function EmptyState({ icon = 'inbox', title, message, action, tone = 'neu
       )}
       {message && <div style={{ fontSize: 14, color: 'var(--text-muted)', maxWidth: 280, lineHeight: 1.5 }}>{message}</div>}
       {action && <div style={{ marginTop: 14 }}>{action}</div>}
+      {children && <div style={{ marginTop: 14 }}>{children}</div>}
     </div>
   )
 }

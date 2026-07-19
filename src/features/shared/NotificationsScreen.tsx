@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button, Card, EmptyState } from '@/ds'
-import { Panel } from '@/components/Panel'
+import { Button, Card } from '@/ds'
 import { QueryState } from '@/components/QueryState'
 import * as notificationsApi from '@/lib/api/notifications'
 import { formatDateTime } from '@/lib/format'

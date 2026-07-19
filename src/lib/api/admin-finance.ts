@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { ListParams, Pagination, Parcel, User } from './types'
+import type { ListParams, Pagination, User } from './types'
 
 // --- Finance ---
 

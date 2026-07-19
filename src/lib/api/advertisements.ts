@@ -43,6 +43,12 @@ export interface Advertisement {
   description?: string | null
   audioUrl?: string | null
   status?: string
+  isActive?: boolean
+  offersCount?: number
+  maxWeight?: number | null
+  maxLength?: number | null
+  maxWidth?: number | null
+  maxHeight?: number | null
   offers?: AdvertisementOffer[]
   createdAt?: string
 }

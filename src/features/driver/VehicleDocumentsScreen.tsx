@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Button, Card, Badge, Toast } from '@/ds'
-import type { ApiError } from '@/lib/api/client'
+import { Card, Badge, Toast } from '@/ds'
 
 const DOC_TYPES = [
   { type: 'driver_license', label: 'Permis de conduire', icon: 'badge' },
@@ -151,7 +150,6 @@ export function VehicleDocumentsScreen() {
   }
 
   const triggerVehiclePhotoUpload = () => {
-    const idx = vehiclePhotos.length
     setPendingSlot({ docType: 'vehicle_photo', side: 'front' })
     fileInputRef.current?.click()
   }

@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Button, Card, Dialog, Input, Toast } from '@/ds'
 import { useWallet, useWalletTransactions, useRechargeWallet, useDebitWallet } from '@/features/superAdmin/hooks'
 import { formatFcfa } from '@/lib/format'
-import type { ApiError } from '@/lib/api/client'
 
 export function WalletDetailPage() {
   const { userId } = useParams<{ userId: string }>()

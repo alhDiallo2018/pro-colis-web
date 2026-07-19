@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Avatar, Badge, Button, Dialog, Icon, Select, StatusBadge, Stepper, Tag, Toast } from '@/ds'
+import { Avatar, Button, Dialog, Select, StatusBadge, Stepper, Tag, Toast } from '@/ds'
 import { ParcelMedia } from './ParcelMedia'
-import { QueryState } from './QueryState'
 import * as parcelsApi from '@/lib/api/parcels'
 import { estimate } from '@/lib/api/commission'
 import { payCashCommission } from '@/lib/api/commission'
 import { buildSteps } from '@/features/client/parcelSteps'
-import { formatFcfa, formatWeight, formatDate, toStatusKey } from '@/lib/format'
+import { formatFcfa, formatWeight, toStatusKey } from '@/lib/format'
 import type { Parcel } from '@/lib/api/types'
 
 interface ParcelDetailDialogProps {

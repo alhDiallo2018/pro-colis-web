@@ -30,7 +30,7 @@ export function ZonesPage() {
   const [editing, setEditing] = useState<Zone | null>(null)
   const [deleting, setDeleting] = useState<Zone | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
-  const [driversZoneId, setDriversZoneId] = useState<string | null>(null)
+  const [, setDriversZoneId] = useState<string | null>(null)
 
   const createOpen = searchParams.get('new') === '1'
   const openCreate = () => setSearchParams({ new: '1' })

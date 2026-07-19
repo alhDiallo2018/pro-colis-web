@@ -6,6 +6,7 @@ import type { ListParams, Pagination } from './types'
 export interface ScoreEntry {
   userId: string
   driverName?: string
+  fullName?: string
   garageName?: string | null
   region?: string | null
   points: number

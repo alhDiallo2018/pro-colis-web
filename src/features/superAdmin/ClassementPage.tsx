@@ -3,7 +3,6 @@ import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { useDriverRanking } from './hooks'
 import { formatFcfa, formatPoints } from '@/lib/format'
-import type { DriverRanking } from '@/lib/api/admin-reputation'
 
 const LEVEL_TONE: Record<string, 'primary' | 'amber' | 'green' | 'neutral'> = {
   ELITE: 'primary',
@@ -25,13 +24,6 @@ const MEDAL_ACCENTS = ['var(--amber-400)', 'var(--slate-400)', 'var(--amber-700)
 
 const GRID = '40px 44px 1fr 120px 100px 90px 70px 80px 140px 130px'
 const cell: React.CSSProperties = { display: 'flex', alignItems: 'center', minWidth: 0 }
-
-function getLevel(points: number): string {
-  if (points >= 1000) return 'ELITE'
-  if (points >= 500) return 'PREMIUM'
-  if (points >= 100) return 'STANDARD'
-  return 'NEW'
-}
 
 export function ClassementPage() {
   const query = useDriverRanking()

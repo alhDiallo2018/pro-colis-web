@@ -11,7 +11,7 @@ import { useAuthStore } from '@/store/auth'
 import { formatFcfa, formatWeight } from '@/lib/format'
 import type { User } from '@/lib/api/types'
 import { GarageSearchSelect } from '@/components/GarageSearchSelect'
-import { LocationInput, type PlaceResult } from '@/components/LocationInput'
+import { LocationInput } from '@/components/LocationInput'
 
 interface PhotoItem {
   id: string

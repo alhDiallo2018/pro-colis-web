@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 
-export type BadgeTone = 'neutral' | 'primary' | 'green' | 'amber' | 'red'
+export type BadgeTone = 'neutral' | 'primary' | 'green' | 'teal' | 'amber' | 'red'
 export type BadgeVariant = 'soft' | 'solid'
 
 export interface BadgeProps {
@@ -17,6 +17,7 @@ export function Badge({ children, tone = 'neutral', variant = 'soft', icon, styl
     neutral: { soft: ['var(--surface-sunken)', 'var(--text-body)'], solid: ['var(--slate-700)', '#fff'] },
     primary: { soft: ['var(--color-primary-soft)', 'var(--color-primary)'], solid: ['var(--color-primary)', '#fff'] },
     green: { soft: ['var(--green-50)', 'var(--green-700)'], solid: ['var(--green-600)', '#fff'] },
+    teal: { soft: ['var(--teal-50)', 'var(--teal-700)'], solid: ['var(--teal-500)', '#fff'] },
     amber: { soft: ['var(--amber-50)', 'var(--amber-600)'], solid: ['var(--amber-400)', '#3a2600'] },
     red: { soft: ['var(--red-50)', 'var(--red-500)'], solid: ['var(--red-400)', '#fff'] },
   }

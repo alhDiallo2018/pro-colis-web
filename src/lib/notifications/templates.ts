@@ -65,15 +65,6 @@ function emailShell(title: string, bodyContent: string): string {
 </html>`
 }
 
-function stepLine(step: string, detail: string, active: boolean) {
-  const color = active ? '#0d9488' : '#cbd5e1'
-  return `<tr><td style="padding:6px 0;">
-    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:10px;vertical-align:middle;"></span>
-    <span style="font-size:14px;color:${active ? '#1e293b' : '#94a3b8'};font-weight:${active ? 600 : 400};">${step}</span>
-    ${detail ? `<span style="font-size:12px;color:#94a3b8;margin-left:20px;">${detail}</span>` : ''}
-  </td></tr>`
-}
-
 const STATUS_LABEL: Record<string, string> = {
   pending: 'En attente',
   free: 'Disponible aux enchères',
@@ -270,7 +261,7 @@ export function driverAssignedSms(ctx: NotificationContext): string {
   return `${APP_NAME} : Chauffeur ${ctx.driverName ?? ''} assigné au colis ${t}. Suivi : ${PLATFORM_URL}/suivi`
 }
 
-export function welcomeSms(ctx: NotificationContext): string {
+export function welcomeSms(_ctx: NotificationContext): string {
   return `Bienvenue sur ${APP_NAME} ! Livraison de colis au Sénégal et à l'international. Téléchargez l'app ou connectez-vous sur ${PLATFORM_URL}`
 }
 
