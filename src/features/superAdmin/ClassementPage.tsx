@@ -3,6 +3,7 @@ import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { useDriverRanking } from './hooks'
 import { formatFcfa, formatPoints } from '@/lib/format'
+import { useIsMobile } from '@/lib/useMediaQuery'
 
 const LEVEL_TONE: Record<string, 'primary' | 'amber' | 'green' | 'neutral'> = {
   ELITE: 'primary',
@@ -25,7 +26,18 @@ const MEDAL_ACCENTS = ['var(--amber-400)', 'var(--slate-400)', 'var(--amber-700)
 const GRID = '40px 44px 1fr 120px 100px 90px 70px 80px 140px 130px'
 const cell: React.CSSProperties = { display: 'flex', alignItems: 'center', minWidth: 0 }
 
+/** Paire label/valeur d'une carte mobile. */
+function MobileField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, fontSize: 12.5 }}>
+      <span style={{ color: 'var(--text-muted)', flex: 'none' }}>{label}</span>
+      <span style={{ minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', color: 'var(--text-body)' }}>{children}</span>
+    </div>
+  )
+}
+
 export function ClassementPage() {
+  const isMobile = useIsMobile()
   const query = useDriverRanking()
   const rankings = query.data ?? []
   const top3 = rankings.slice(0, 3)
@@ -45,7 +57,7 @@ export function ClassementPage() {
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {top3.length > 0 && (
-              <div style={{ padding: '20px 18px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              <div style={{ padding: '20px 18px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}>
                 {top3.map((d, i) => (
                   <Card
                     key={d.userId}
@@ -81,7 +93,50 @@ export function ClassementPage() {
               </div>
             )}
 
-            {rest.length > 0 && (
+            {rest.length > 0 && isMobile && (
+              <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                {rest.map((d) => (
+                  <div key={d.userId} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: 'var(--text-body)', flex: 'none' }}>{d.rank}</span>
+                      <Avatar name={d.fullName} src={d.profilePhoto ?? undefined} size="xs" />
+                      <span style={{ flex: 1, minWidth: 0, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {d.fullName}
+                      </span>
+                      <Badge tone={LEVEL_TONE[d.level] ?? 'neutral'}>{LEVEL_LABEL[d.level] ?? d.level}</Badge>
+                    </div>
+                    <MobileField label="Zone">
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.garageName ?? '—'}</span>
+                    </MobileField>
+                    <MobileField label="Région">{d.region ?? '—'}</MobileField>
+                    <MobileField label="Score">
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13, color: 'var(--color-primary)' }}>{formatPoints(d.points)}</span>
+                    </MobileField>
+                    <MobileField label="Note">
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontWeight: 600 }}>
+                        {d.rating?.toFixed(1) ?? '—'}
+                        <span className="material-symbols-rounded" style={{ fontSize: 14, color: 'var(--amber-400)' }}>star</span>
+                      </span>
+                    </MobileField>
+                    <MobileField label="Livraisons">
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 12 }}>{d.totalDeliveries ?? '—'}</span>
+                    </MobileField>
+                    <MobileField label="Taux réussite">
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 12, color: d.successRate != null && d.successRate >= 80 ? 'var(--green-600)' : 'var(--text-body)' }}>
+                        {d.successRate != null ? `${d.successRate}%` : '—'}
+                      </span>
+                    </MobileField>
+                    <MobileField label="Solde">
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 12, color: 'var(--teal-600)' }}>
+                        {d.walletBalance != null ? formatFcfa(d.walletBalance) : '—'}
+                      </span>
+                    </MobileField>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {rest.length > 0 && !isMobile && (
               <div className="pc-table-scroll">
                 <div style={{ minWidth: 850 }}>
                   <div

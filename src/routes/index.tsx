@@ -166,6 +166,7 @@ export const router = createBrowserRouter([
   { path: '/register', element: <RegisterPage /> },
   { path: '/help', element: <HelpScreen /> },
   { path: '/track', element: <SuiviScreen /> },
+  { path: '/track/:trackingNumber', element: <SuiviScreen /> },
   { path: '/payment-status', element: <PaymentStatusPage /> },
   { path: '/payment-status.php', element: <PaymentStatusPage /> },
   { path: '/a-propos', element: <AProposPage /> },

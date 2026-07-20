@@ -9,6 +9,7 @@ import {
   useScoreHistory,
 } from './hooks'
 import { formatDate, formatDateTime, formatPoints } from '@/lib/format'
+import { useIsMobile } from '@/lib/useMediaQuery'
 import { AddPointsDialog } from './AddPointsDialog'
 import { RemovePointsDialog } from './RemovePointsDialog'
 
@@ -45,7 +46,18 @@ const TX_FILTERS = [
 const GRID = 'minmax(160px, 1fr) 120px 120px 100px 90px 80px 150px'
 const cell: React.CSSProperties = { display: 'flex', alignItems: 'center', minWidth: 0 }
 
+/** Paire label/valeur d'une carte mobile. */
+function MobileField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, fontSize: 12.5 }}>
+      <span style={{ color: 'var(--text-muted)', flex: 'none' }}>{label}</span>
+      <span style={{ minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', color: 'var(--text-body)' }}>{children}</span>
+    </div>
+  )
+}
+
 export function ScoresPage() {
+  const isMobile = useIsMobile()
   const [view, setView] = useState<'list' | 'detail'>('list')
   const [selectedUserId, setSelectedUserId] = useState<string>('')
   const [search, setSearch] = useState('')
@@ -165,6 +177,34 @@ export function ScoresPage() {
                     style={{ maxWidth: 200 }}
                   />
                 </div>
+                {isMobile ? (
+                  <QueryState
+                    isLoading={historyQuery.isLoading}
+                    isError={historyQuery.isError}
+                    error={historyQuery.error}
+                    isEmpty={transactions.length === 0}
+                    emptyTitle="Aucune transaction"
+                    emptyMessage="Aucune transaction trouvée pour ce chauffeur."
+                    onRetry={() => historyQuery.refetch()}
+                  >
+                    {transactions.map((tx) => (
+                      <div key={tx.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                          <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-body)' }}>{formatDateTime(tx.createdAt)}</span>
+                          <Badge tone={TX_TONE[tx.type] ?? 'neutral'}>{TX_LABEL[tx.type] ?? tx.type}</Badge>
+                        </div>
+                        <MobileField label="Points">
+                          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13, color: tx.amount > 0 ? 'var(--green-600)' : 'var(--red-500)' }}>
+                            {tx.amount > 0 ? '+' : ''}{tx.amount} pts
+                          </span>
+                        </MobileField>
+                        <MobileField label="Description">
+                          <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tx.description || '—'}</span>
+                        </MobileField>
+                      </div>
+                    ))}
+                  </QueryState>
+                ) : (
                 <div className="pc-table-scroll">
                   <div style={{ minWidth: 600 }}>
                     <div
@@ -221,6 +261,7 @@ export function ScoresPage() {
                     </QueryState>
                   </div>
                 </div>
+                )}
               </Panel>
             </>
           )}
@@ -299,6 +340,49 @@ export function ScoresPage() {
           />
         </div>
 
+        {isMobile ? (
+          <QueryState
+            isLoading={scoresQuery.isLoading}
+            isError={scoresQuery.isError}
+            error={scoresQuery.error}
+            isEmpty={scores.length === 0}
+            emptyTitle="Aucun score"
+            emptyMessage="Aucun chauffeur trouvé."
+            onRetry={() => scoresQuery.refetch()}
+          >
+            {scores.map((s) => (
+              <div
+                key={s.userId}
+                onClick={() => openDetail(s.userId)}
+                style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Avatar name={s.driverName ?? ''} size="xs" />
+                  <span style={{ flex: 1, minWidth: 0, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {s.driverName ?? '—'}
+                  </span>
+                  <Badge tone={LEVEL_TONE[s.level] ?? 'neutral'}>{s.level}</Badge>
+                </div>
+                <MobileField label="Zone">
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.garageName ?? '—'}</span>
+                </MobileField>
+                <MobileField label="Région">{s.region ?? '—'}</MobileField>
+                <MobileField label="Score">
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13, color: 'var(--color-primary)' }}>{formatPoints(s.points)}</span>
+                </MobileField>
+                <MobileField label="Note">
+                  <span style={{ fontWeight: 600 }}>{s.rating?.toFixed(1) ?? '—'} ★</span>
+                </MobileField>
+                <MobileField label="Livraisons">
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{s.totalDeliveries ?? '—'}</span>
+                </MobileField>
+                <MobileField label="Mise à jour">
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatDate(s.lastUpdated)}</span>
+                </MobileField>
+              </div>
+            ))}
+          </QueryState>
+        ) : (
         <div className="pc-table-scroll">
           <div style={{ minWidth: 760 }}>
             <div
@@ -366,6 +450,7 @@ export function ScoresPage() {
             </QueryState>
           </div>
         </div>
+        )}
       </Panel>
     </div>
   )

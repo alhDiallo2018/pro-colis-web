@@ -10,6 +10,7 @@ import {
   useDebitWallet,
 } from './hooks'
 import { formatFcfa, formatDate } from '@/lib/format'
+import { useIsMobile } from '@/lib/useMediaQuery'
 import type { Wallet } from '@/lib/api/admin-finance'
 import type { ListParams } from '@/lib/api/types'
 
@@ -41,6 +42,16 @@ const TX_TYPE_OPTIONS: { value: string; label: string }[] = [
 ]
 
 const WALLET_GRID = '1fr 140px 140px 120px 120px 140px 110px 150px 100px'
+
+/** Paire label/valeur d'une carte mobile. */
+function MobileField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, fontSize: 12.5 }}>
+      <span style={{ color: 'var(--text-muted)', flex: 'none' }}>{label}</span>
+      <span style={{ minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', color: 'var(--text-body)' }}>{children}</span>
+    </div>
+  )
+}
 
 function txBadgeTone(type: string): 'green' | 'red' | 'amber' | 'primary' | 'neutral' {
   switch (type) {
@@ -213,6 +224,7 @@ function DebitDialog({ userId, open, onClose }: { userId: string; open: boolean;
 }
 
 function WalletList() {
+  const isMobile = useIsMobile()
   const [search, setSearch] = useState('')
   const [garage, setGarage] = useState('')
   const [region, setRegion] = useState('')
@@ -313,6 +325,21 @@ function WalletList() {
       </div>
 
       <Panel title={`Wallets · ${query.data?.pagination?.total ?? wallets.length}`} flush>
+        {isMobile ? (
+          <QueryState
+            isLoading={query.isLoading}
+            isError={query.isError}
+            error={query.error}
+            isEmpty={wallets.length === 0}
+            emptyTitle="Aucun wallet"
+            emptyMessage="Aucun wallet ne correspond à ces filtres."
+            onRetry={() => query.refetch()}
+          >
+            {wallets.map((w) => (
+              <WalletRow key={w.id} wallet={w} />
+            ))}
+          </QueryState>
+        ) : (
         <div className="pc-table-scroll">
           <div style={{ minWidth: 1100 }}>
             <div
@@ -355,14 +382,49 @@ function WalletList() {
             </QueryState>
           </div>
         </div>
+        )}
       </Panel>
     </div>
   )
 }
 
 function WalletRow({ wallet: w }: { wallet: Wallet }) {
+  const isMobile = useIsMobile()
   const drv = w.driver
   const st = w.status === 'active'
+
+  if (isMobile) {
+    return (
+      <a
+        href={`#/super-admin/wallets?userId=${w.id}`}
+        style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Avatar name={drv?.fullName ?? 'Inconnu'} src={drv?.profilePhoto ?? undefined} size="xs" />
+          <span style={{ flex: 1, minWidth: 0, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {drv?.fullName ?? '—'}
+          </span>
+          <Badge tone={st ? 'green' : 'amber'}>{st ? 'Actif' : 'Suspendu'}</Badge>
+        </div>
+        <MobileField label="Téléphone">{drv?.phone ?? '—'}</MobileField>
+        <MobileField label="Zone">{drv?.garageName ?? '—'}</MobileField>
+        <MobileField label="Région">{drv?.region ?? '—'}</MobileField>
+        <MobileField label="Solde">
+          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 12.5, color: 'var(--teal-600)' }}>{formatFcfa(w.balance)}</span>
+        </MobileField>
+        <MobileField label="Total rechargé">
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5 }}>{formatFcfa(w.totalDeposited)}</span>
+        </MobileField>
+        <MobileField label="Total consommé">
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5 }}>{formatFcfa(w.totalSpent)}</span>
+        </MobileField>
+        <MobileField label="Dernière recharge">
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatDate(w.lastDepositAt)}</span>
+        </MobileField>
+      </a>
+    )
+  }
+
   return (
     <a
       href={`#/super-admin/wallets?userId=${w.id}`}
@@ -389,6 +451,7 @@ function WalletRow({ wallet: w }: { wallet: Wallet }) {
 }
 
 function WalletDetail({ userId, onBack }: { userId: string; onBack: () => void }) {
+  const isMobile = useIsMobile()
   const wallet = useWallet(userId)
   const [txType, setTxType] = useState('')
   const [showRecharge, setShowRecharge] = useState(false)
@@ -457,6 +520,46 @@ function WalletDetail({ userId, onBack }: { userId: string; onBack: () => void }
             </div>
 
             <Panel title={`Transactions · ${txQuery.data?.pagination?.total ?? transactions.length}`} flush>
+              {isMobile ? (
+                <QueryState
+                  isLoading={txQuery.isLoading}
+                  isError={txQuery.isError}
+                  error={txQuery.error}
+                  isEmpty={transactions.length === 0}
+                  emptyTitle="Aucune transaction"
+                  emptyMessage="Aucune transaction trouvée."
+                  onRetry={() => txQuery.refetch()}
+                >
+                  {transactions.map((tx) => (
+                    <div key={tx.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                        <span style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
+                          <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-body)' }}>{formatDate(tx.createdAt)}</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-faint)', fontFamily: 'var(--font-mono)' }}>
+                            {tx.createdAt ? new Date(tx.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                          </span>
+                        </span>
+                        <Badge tone={txBadgeTone(tx.type)}>{tx.type}</Badge>
+                      </div>
+                      <MobileField label="Montant">
+                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 12.5, color: tx.amount >= 0 ? 'var(--green-600)' : 'var(--red-500)' }}>
+                          {tx.amount >= 0 ? '+' : ''}{formatFcfa(tx.amount)}
+                        </span>
+                      </MobileField>
+                      <MobileField label="Description">
+                        <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tx.description ?? '—'}</span>
+                      </MobileField>
+                      <MobileField label="Solde avant">
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{formatFcfa(tx.balanceBefore)}</span>
+                      </MobileField>
+                      <MobileField label="Solde après">
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{formatFcfa(tx.balanceAfter)}</span>
+                      </MobileField>
+                      <MobileField label="Admin">{tx.admin?.fullName ?? tx.performedBy ?? '—'}</MobileField>
+                    </div>
+                  ))}
+                </QueryState>
+              ) : (
               <div className="pc-table-scroll">
                 <div style={{ minWidth: 820 }}>
                   <div
@@ -537,6 +640,7 @@ function WalletDetail({ userId, onBack }: { userId: string; onBack: () => void }
                   </QueryState>
                 </div>
               </div>
+              )}
             </Panel>
 
             <RechargeDialog userId={userId} open={showRecharge} onClose={() => setShowRecharge(false)} />

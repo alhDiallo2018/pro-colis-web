@@ -1,15 +1,25 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { Button, Card, EmptyState, Input, Stepper, StatusBadge, Tag } from '@/ds'
+import { QrCode } from '@/components/QrCode'
 import { useTrackParcel } from './hooks'
 import { buildSteps } from './parcelSteps'
 import { formatFcfa, formatWeight, toStatusKey } from '@/lib/format'
 import { ApiError } from '@/lib/api/client'
 
 export function SuiviScreen() {
-  const [input, setInput] = useState('')
-  const [tracking, setTracking] = useState('')
+  const { trackingNumber } = useParams<{ trackingNumber: string }>()
+  const [input, setInput] = useState(trackingNumber ?? '')
+  const [tracking, setTracking] = useState(trackingNumber?.trim().toUpperCase() ?? '')
   const query = useTrackParcel(tracking, !!tracking)
   const parcel = query.data
+
+  // QR mobile → /track/:trackingNumber : lance le suivi dès l'arrivée sur la page.
+  useEffect(() => {
+    if (!trackingNumber) return
+    setInput(trackingNumber)
+    setTracking(trackingNumber.trim().toUpperCase())
+  }, [trackingNumber])
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,6 +83,15 @@ export function SuiviScreen() {
           <Card>
             <h3 style={{ margin: '0 0 12px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>Historique</h3>
             <Stepper steps={buildSteps(parcel)} />
+          </Card>
+
+          <Card>
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0' }}>
+              <QrCode
+                value={`${window.location.origin}/track/${parcel.trackingNumber}`}
+                caption="Scanner pour suivre ce colis"
+              />
+            </div>
           </Card>
         </>
       )}

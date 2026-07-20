@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Avatar, Badge, Button, Card, Icon, IconButton, Stepper, StatusBadge, Tag, Textarea, Toast } from '@/ds'
 import { QueryState } from '@/components/QueryState'
 import { ParcelMedia } from '@/components/ParcelMedia'
+import { QrCode } from '@/components/QrCode'
 import { useCreateRating, useDeliveryCode, useParcel } from './hooks'
 import { createPaydunyaPayment } from '@/lib/api/paydunya'
 import { estimate } from '@/lib/api/commission'
@@ -67,6 +68,9 @@ export function ParcelDetailScreen() {
               <Row label="Destinataire" value={parcel.receiverName} />
               <Row label="Poids" value={parcel.weight != null ? formatWeight(parcel.weight) : '—'} />
               <Row label="Prix" value={formatFcfa(parcel.price)} />
+              <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 14, borderTop: '1px solid var(--border-subtle)', marginTop: 8 }}>
+                <QrCode value={`${window.location.origin}/track/${parcel.trackingNumber}`} size={150} caption="Scanner pour suivre ce colis" />
+              </div>
             </Card>
 
             {parcel.price && parcel.price > 0 && parcel.paymentStatus !== 'completed' && (
@@ -109,6 +113,11 @@ export function ParcelDetailScreen() {
                     {deliveryCode.data ?? '••••'}
                   </span>
                 </div>
+                {deliveryCode.data && (
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: 14 }}>
+                    <QrCode value={deliveryCode.data} size={140} caption="À faire scanner par le livreur" />
+                  </div>
+                )}
               </Card>
             )}
 

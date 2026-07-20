@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Button, Card, EmptyState, StatusBadge, Stepper, Tag } from '@/ds'
+import { Button, Card, Dialog, EmptyState, StatusBadge, Stepper, Tag } from '@/ds'
 import { Panel } from '@/components/Panel'
 import * as parcelsApi from '@/lib/api/parcels'
 import { buildSteps } from '@/features/client/parcelSteps'
 import { formatFcfa, formatWeight, formatDate, toStatusKey } from '@/lib/format'
+import { useDeleteGarageParcel } from './hooks'
 import type { Parcel } from '@/lib/api/types'
 
 export function GarageParcelDetailPage() {
@@ -13,6 +14,18 @@ export function GarageParcelDetailPage() {
   const [parcel, setParcel] = useState<Parcel | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const deleteMutation = useDeleteGarageParcel()
+
+  const handleDelete = async () => {
+    if (!parcelId) return
+    try {
+      await deleteMutation.mutateAsync(parcelId)
+      navigate('/garage/colis')
+    } catch {
+      setConfirmDelete(false)
+    }
+  }
 
   useEffect(() => {
     if (!parcelId) return
@@ -50,6 +63,15 @@ export function GarageParcelDetailPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <Button variant="ghost" size="sm" icon="arrow_back" onClick={() => navigate('/garage/colis')}>
           Retour
+        </Button>
+        <Button
+          variant="danger"
+          size="sm"
+          icon="delete"
+          style={{ marginLeft: 'auto' }}
+          onClick={() => setConfirmDelete(true)}
+        >
+          Supprimer
         </Button>
       </div>
 
@@ -91,6 +113,26 @@ export function GarageParcelDetailPage() {
       <Panel title="Historique">
         <Stepper steps={buildSteps(parcel)} />
       </Panel>
+
+      <Dialog
+        open={confirmDelete}
+        title="Supprimer le colis"
+        icon="delete_forever"
+        iconTone="danger"
+        onClose={() => setConfirmDelete(false)}
+      >
+        <p style={{ margin: 0 }}>
+          Voulez-vous vraiment supprimer le colis <strong>{parcel.trackingNumber}</strong> de votre zone ? Cette action est définitive.
+        </p>
+        <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
+          <Button variant="secondary" onClick={() => setConfirmDelete(false)} block>
+            Annuler
+          </Button>
+          <Button variant="danger" onClick={handleDelete} loading={deleteMutation.isPending} disabled={deleteMutation.isPending} block>
+            Supprimer
+          </Button>
+        </div>
+      </Dialog>
     </div>
   )
 }

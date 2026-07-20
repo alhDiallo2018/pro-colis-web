@@ -17,3 +17,10 @@ export function useAssignDriver() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['garage', 'parcels'] }),
   })
 }
+
+export function useDeleteGarageParcel() {
+  return useMutation({
+    mutationFn: (parcelId: string) => roles.garageDeleteParcel(parcelId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['garage', 'parcels'] }),
+  })
+}

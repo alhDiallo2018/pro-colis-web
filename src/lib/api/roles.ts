@@ -52,6 +52,11 @@ export async function garageAssignDriver(parcelId: string, driverId: string): Pr
   return data.parcel ?? data.data
 }
 
+/** Suppression d'un colis de la zone par l'admin de garage. */
+export async function garageDeleteParcel(parcelId: string): Promise<void> {
+  await api.delete(`/garage-admin/parcels/${parcelId}`)
+}
+
 /** Drivers of a given garage (public endpoint) — used by "Mon garage". */
 export async function garageColleagues(garageId: string): Promise<User[]> {
   const { data } = await api.get(`/public/drivers/garage/${garageId}`)
@@ -62,6 +67,10 @@ export async function garageColleagues(garageId: string): Promise<User[]> {
 export async function adminParcels(params: ListParams = {}): Promise<ParcelList> {
   const { data } = await api.get('/super-admin/parcels', { params })
   return { parcels: data.parcels ?? [], pagination: data.pagination }
+}
+
+export async function adminDeleteParcel(parcelId: string): Promise<void> {
+  await api.delete(`/super-admin/parcels/${parcelId}`)
 }
 
 export async function adminGarages(): Promise<Garage[]> {
@@ -87,6 +96,43 @@ export async function adminUsers(params: ListParams = {}): Promise<UserList> {
 export async function adminUpdateUserStatus(userId: string, status: 'active' | 'suspended'): Promise<User> {
   const { data } = await api.patch(`/super-admin/users/${userId}/status`, { status })
   return data.user ?? data.data
+}
+
+export interface AdminUserPayload {
+  fullName: string
+  phone: string
+  email?: string | null
+  role: string
+  status?: string
+  address?: string | null
+  city?: string | null
+  region?: string | null
+  /** Création uniquement — PIN initial du compte. */
+  pin?: string
+  gender?: string | null
+  vehiclePlate?: string | null
+  vehicleModel?: string | null
+  driverStatus?: string | null
+}
+
+export async function adminCreateUser(payload: AdminUserPayload): Promise<User> {
+  const { data } = await api.post('/super-admin/users', payload)
+  return data.user ?? data.data
+}
+
+export async function adminUpdateUser(userId: string, payload: Partial<AdminUserPayload>): Promise<User> {
+  const { data } = await api.put(`/super-admin/users/${userId}`, payload)
+  return data.user ?? data.data
+}
+
+export async function adminDeleteUser(userId: string): Promise<void> {
+  await api.delete(`/super-admin/users/${userId}`)
+}
+
+/** Réinitialise le PIN d'un utilisateur — le backend renvoie le nouveau PIN. */
+export async function adminResetUserPin(userId: string): Promise<string | null> {
+  const { data } = await api.post(`/super-admin/users/${userId}/reset-pin`)
+  return (data.pin as string) ?? (data.newPin as string) ?? null
 }
 
 /** Global stats — shape is backend-defined, returned as a loose record. */

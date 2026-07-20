@@ -4,6 +4,7 @@ import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { useAdminPayments } from './hooks'
 import { formatFcfa, formatDate } from '@/lib/format'
+import { useIsMobile } from '@/lib/useMediaQuery'
 import type { ListParams } from '@/lib/api/types'
 
 const STATUS_FILTERS = [
@@ -46,7 +47,18 @@ function statusBadgeTone(status: string): 'green' | 'amber' | 'red' | 'neutral' 
 const GRID = '160px 1fr 120px 110px 100px 130px 120px'
 const cell: React.CSSProperties = { display: 'flex', alignItems: 'center', minWidth: 0 }
 
+/** Paire label/valeur d'une carte mobile. */
+function MobileField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, fontSize: 12.5 }}>
+      <span style={{ color: 'var(--text-muted)', flex: 'none' }}>{label}</span>
+      <span style={{ minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', color: 'var(--text-body)' }}>{children}</span>
+    </div>
+  )
+}
+
 export function PaymentsPage() {
+  const isMobile = useIsMobile()
   const [status, setStatus] = useState('')
   const [method, setMethod] = useState('')
   const [page, setPage] = useState(1)
@@ -72,6 +84,45 @@ export function PaymentsPage() {
       </div>
 
       <Panel title={`Paiements${pagination ? ` · ${pagination.total}` : ''}`} flush>
+        {isMobile ? (
+          <QueryState
+            isLoading={query.isLoading}
+            isError={query.isError}
+            error={query.error}
+            isEmpty={payments.length === 0}
+            emptyTitle="Aucun paiement"
+            emptyMessage="Aucun paiement ne correspond à ces filtres."
+            onRetry={() => query.refetch()}
+          >
+            {payments.map((p) => (
+              <div key={p.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                  <span style={{ minWidth: 0, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {p.user?.fullName ?? p.user?.phone ?? '—'}
+                  </span>
+                  <Badge tone={statusBadgeTone(p.status)}>{p.status}</Badge>
+                </div>
+                <MobileField label="ID">
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 11.5, color: 'var(--text-faint)' }}>{p.id.slice(0, 8)}...</span>
+                </MobileField>
+                <MobileField label="Montant">
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 12.5, color: 'var(--teal-600)' }}>{formatFcfa(p.amount)}</span>
+                </MobileField>
+                <MobileField label="Méthode">
+                  <Badge tone="neutral">{p.method ?? '—'}</Badge>
+                </MobileField>
+                <MobileField label="Colis">
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {p.parcel?.trackingNumber ?? p.reference ?? '—'}
+                  </span>
+                </MobileField>
+                <MobileField label="Date">
+                  <span style={{ color: 'var(--text-muted)' }}>{formatDate(p.createdAt)}</span>
+                </MobileField>
+              </div>
+            ))}
+          </QueryState>
+        ) : (
         <div className="pc-table-scroll">
           <div style={{ minWidth: 860 }}>
             <div
@@ -143,6 +194,7 @@ export function PaymentsPage() {
             </QueryState>
           </div>
         </div>
+        )}
 
         {pagination && pagination.total > 20 && (
           <div

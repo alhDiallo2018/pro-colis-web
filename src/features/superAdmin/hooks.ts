@@ -12,6 +12,13 @@ export function useAdminParcels(params: ListParams = {}) {
   return useQuery({ queryKey: ['admin', 'parcels', params], queryFn: () => roles.adminParcels(params) })
 }
 
+export function useDeleteAdminParcel() {
+  return useMutation({
+    mutationFn: (parcelId: string) => roles.adminDeleteParcel(parcelId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'parcels'] }),
+  })
+}
+
 export function useAdminGarages() {
   return useQuery({ queryKey: ['admin', 'garages'], queryFn: () => roles.adminGarages() })
 }
@@ -139,6 +146,34 @@ export function useUpdateUserStatus() {
       roles.adminUpdateUserStatus(userId, status),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'users'] }),
   })
+}
+
+const invalidateUsers = () => queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
+
+export function useCreateUser() {
+  return useMutation({
+    mutationFn: (payload: roles.AdminUserPayload) => roles.adminCreateUser(payload),
+    onSuccess: invalidateUsers,
+  })
+}
+
+export function useUpdateUser() {
+  return useMutation({
+    mutationFn: ({ userId, payload }: { userId: string; payload: Partial<roles.AdminUserPayload> }) =>
+      roles.adminUpdateUser(userId, payload),
+    onSuccess: invalidateUsers,
+  })
+}
+
+export function useDeleteUser() {
+  return useMutation({
+    mutationFn: (userId: string) => roles.adminDeleteUser(userId),
+    onSuccess: invalidateUsers,
+  })
+}
+
+export function useResetUserPin() {
+  return useMutation({ mutationFn: (userId: string) => roles.adminResetUserPin(userId) })
 }
 
 export function useAdminStats() {
