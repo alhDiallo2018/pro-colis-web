@@ -60,6 +60,7 @@ import { ScoresPage } from '@/features/superAdmin/ScoresPage'
 import { ClassementPage } from '@/features/superAdmin/ClassementPage'
 import { DriverDetailPage } from '@/features/superAdmin/DriverDetailPage'
 import { BrevoConfigScreen } from '@/features/superAdmin/BrevoConfigScreen'
+import { PaydunyaConfigScreen } from '@/features/superAdmin/PaydunyaConfigScreen'
 import BroadcastsPage from '@/features/superAdmin/BroadcastsPage'
 import { BroadcastBanner } from '@/components/BroadcastBanner'
 import { WalletDetailPage } from '@/features/superAdmin/WalletDetailPage'
@@ -138,6 +139,7 @@ const SUPER_NAV: NavSection[] = [
       { label: 'Configuration', icon: 'settings', to: '/admin/finance/configuration' },
       { label: 'Paiements', icon: 'payments', to: '/admin/finance/payments' },
       { label: 'Notifications paiement', icon: 'notifications_active', to: '/admin/finance/payments-notifications' },
+      { label: 'Configuration PayDunya', icon: 'credit_card', to: '/admin/paydunya' },
     ],
   },
   {
@@ -320,6 +322,7 @@ export const router = createBrowserRouter([
       { path: 'reputation/scores/:userId', element: <ScoreDetailPage /> },
       { path: 'reputation/classement', element: <ClassementPage /> },
       { path: 'notifications-brevo', element: <BrevoConfigScreen /> },
+      { path: 'paydunya', element: <PaydunyaConfigScreen /> },
       { path: 'broadcasts', element: <BroadcastsPage /> },
       { path: 'chauffeurs/:userId', element: <DriverDetailPage /> },
       { path: 'garages/:garageId/drivers', element: <GarageDriversPage /> },
