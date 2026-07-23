@@ -36,6 +36,7 @@ const ROLE_OPTIONS = [
   { value: 'driver', label: 'Chauffeur' },
   { value: 'admin', label: 'Admin zone' },
   { value: 'super_admin', label: 'Super admin' },
+  { value: 'support', label: 'Support' },
 ]
 
 /** Création / édition d'un utilisateur par le super admin. */

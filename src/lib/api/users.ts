@@ -15,6 +15,7 @@ const PROFILE_PATH: Record<Role, string> = {
   driver: '/driver/profile',
   admin: '/garage-admin/profile',
   super_admin: '/super-admin/profile',
+  support: '/super-admin/profile',
 }
 
 /** Met à jour le profil de l'utilisateur courant selon son rôle. */

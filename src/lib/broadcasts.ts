@@ -10,7 +10,7 @@ export interface Broadcast {
   message: string
   imageUrl?: string
   scroll?: boolean
-  targetRoles: ('client' | 'driver' | 'admin' | 'super_admin')[]
+  targetRoles: ('client' | 'driver' | 'admin' | 'super_admin' | 'support')[]
   type: 'info' | 'warning' | 'success' | 'promo'
   active: boolean
   startsAt: string

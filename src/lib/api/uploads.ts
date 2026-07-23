@@ -36,6 +36,24 @@ export async function uploadChatAudio(file: Blob | string, filename = 'message.w
   return data.url as string
 }
 
+/** Upload a chat photo; returns its URL. */
+export async function uploadChatPhoto(file: Blob, filename = 'photo.jpg'): Promise<string> {
+  const form = new FormData()
+  form.append('file', file, filename)
+  form.append('mediaType', 'photo')
+  const { data } = await api.post('/upload', form)
+  return data.url as string
+}
+
+/** Upload a chat video; returns its URL. */
+export async function uploadChatVideo(file: Blob, filename = 'video.mp4'): Promise<string> {
+  const form = new FormData()
+  form.append('file', file, filename)
+  form.append('mediaType', 'video')
+  const { data } = await api.post('/upload', form)
+  return data.url as string
+}
+
 /**
  * Upload a user profile photo. Accepts a Blob or a data-URL string.
  * Compress before calling for best results (max ~1600 px, JPEG @ 0.8).

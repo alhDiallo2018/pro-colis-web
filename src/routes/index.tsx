@@ -42,6 +42,10 @@ import { MesAnnoncesScreen } from '@/features/driver/MesAnnoncesScreen'
 import { VehicleDocumentsScreen } from '@/features/driver/VehicleDocumentsScreen'
 import { ItineraireScreen } from '@/features/driver/ItineraireScreen'
 import { MessagesScreen } from '@/features/shared/MessagesScreen'
+import { SupportChatScreen } from '@/features/shared/SupportChatScreen'
+import { SupportChatWrapper } from '@/features/shared/SupportChatWrapper'
+import { AdminSupportScreen } from '@/features/shared/AdminSupportScreen'
+import { SupportAdminRedirect } from './SupportRedirect'
 import { AvailabilityToggle } from '@/features/driver/AvailabilityToggle'
 import { SuperAdminDashboard } from '@/features/superAdmin/SuperAdminDashboard'
 import { ColisPage } from '@/features/superAdmin/ColisPage'
@@ -116,6 +120,7 @@ const GARAGE_NAV: NavSection[] = [
       { label: 'Chauffeurs', icon: 'local_shipping', to: '/garage/chauffeurs' },
       { label: 'Assignations', icon: 'assignment_ind', to: '/garage/assignations' },
       { label: 'Rapports', icon: 'monitoring', to: '/garage/rapports' },
+      { label: 'Support', icon: 'support_agent', to: '/garage/support' },
     ],
   },
 ]
@@ -155,9 +160,22 @@ const SUPER_NAV: NavSection[] = [
     items: [
       { label: 'Zones (garages)', icon: 'garage', to: '/admin/garages' },
       { label: 'Zones géographiques', icon: 'map', to: '/admin/zones' },
+      { label: 'Support', icon: 'support_agent', to: '/admin/support' },
       { label: 'Statistiques', icon: 'monitoring', to: '/admin/stats' },
       { label: 'Notifications Brevo', icon: 'mail', to: '/admin/notifications-brevo' },
       { label: 'Bandeaux', icon: 'campaign', to: '/admin/broadcasts' },
+    ],
+  },
+]
+
+const SUPPORT_NAV: NavSection[] = [
+  {
+    items: [
+      { label: 'Tableau de bord', icon: 'dashboard', to: '/support-admin', end: true },
+      { label: 'Support', icon: 'support_agent', to: '/support-admin/conversations' },
+      { label: 'Colis', icon: 'package_2', to: '/support-admin/colis' },
+      { label: 'Chauffeurs', icon: 'local_shipping', to: '/support-admin/chauffeurs' },
+      { label: 'Utilisateurs', icon: 'group', to: '/support-admin/users' },
     ],
   },
 ]
@@ -167,6 +185,14 @@ export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
   { path: '/help', element: <HelpScreen /> },
+  {
+    path: '/support',
+    element: (
+      <RequireAuth>
+        <SupportChatWrapper />
+      </RequireAuth>
+    ),
+  },
   { path: '/track', element: <SuiviScreen /> },
   { path: '/track/:trackingNumber', element: <SuiviScreen /> },
   { path: '/payment-status', element: <PaymentStatusPage /> },
@@ -276,6 +302,7 @@ export const router = createBrowserRouter([
       { path: 'chauffeurs', element: <GarageChauffeursPage /> },
       { path: 'assignations', element: <GarageAssignationsPage /> },
       { path: 'rapports', element: <GarageRapportsPage /> },
+      { path: 'support', element: <AdminSupportScreen /> },
       { path: 'notifications', element: <NotificationsScreen /> },
     ],
   },
@@ -285,19 +312,21 @@ export const router = createBrowserRouter([
     path: '/admin',
     element: (
       <RequireRole roles={['super_admin']}>
-        <DashboardLayout
-          nav={SUPER_NAV}
-          roleLabel="Super Admin"
-          banner={<BroadcastBanner />}
-          actions={
-            <>
-              <NotifButton />
-              <NavButton to="/admin/garages?new=1" icon="add">
-                 Nouvelle zone
-              </NavButton>
-            </>
-          }
-        />
+        <SupportAdminRedirect>
+          <DashboardLayout
+            nav={SUPER_NAV}
+            roleLabel="Super Admin"
+            banner={<BroadcastBanner />}
+            actions={
+              <>
+                <NotifButton />
+                <NavButton to="/admin/garages?new=1" icon="add">
+                   Nouvelle zone
+                </NavButton>
+              </>
+            }
+          />
+        </SupportAdminRedirect>
       </RequireRole>
     ),
     children: [
@@ -326,6 +355,30 @@ export const router = createBrowserRouter([
       { path: 'broadcasts', element: <BroadcastsPage /> },
       { path: 'chauffeurs/:userId', element: <DriverDetailPage /> },
       { path: 'garages/:garageId/drivers', element: <GarageDriversPage /> },
+      { path: 'support', element: <AdminSupportScreen /> },
+      { path: 'notifications', element: <NotificationsScreen /> },
+    ],
+  },
+
+  // Support admin (super_admin or support role with limited UI)
+  {
+    path: '/support-admin',
+    element: (
+      <RequireRole roles={['super_admin', 'support']}>
+        <DashboardLayout
+          nav={SUPPORT_NAV}
+          roleLabel="Support"
+          banner={<BroadcastBanner />}
+          actions={<NotifButton />}
+        />
+      </RequireRole>
+    ),
+    children: [
+      { index: true, element: <AdminSupportScreen /> },
+      { path: 'conversations', element: <AdminSupportScreen /> },
+      { path: 'colis', element: <ColisPage /> },
+      { path: 'chauffeurs', element: <ChauffeursPage /> },
+      { path: 'users', element: <UtilisateursPage /> },
       { path: 'notifications', element: <NotificationsScreen /> },
     ],
   },

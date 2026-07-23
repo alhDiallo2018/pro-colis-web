@@ -12,6 +12,7 @@ const ROLE_LABEL: Record<Role, string> = {
   driver: 'Chauffeur',
   admin: 'Admin zone',
   super_admin: 'Super admin',
+  support: 'Support',
 }
 
 const STATUS_TONE: Record<UserStatus, 'green' | 'red' | 'neutral'> = {

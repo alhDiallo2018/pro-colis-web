@@ -5,7 +5,7 @@ import * as messagesApi from '@/lib/api/messages'
 import * as bidsApi from '@/lib/api/bids'
 import * as adsApi from '@/lib/api/advertisements'
 import type { ChatMessage } from '@/lib/api/messages'
-import { uploadChatAudio } from '@/lib/api/uploads'
+import { uploadChatAudio, uploadChatPhoto, uploadChatVideo } from '@/lib/api/uploads'
 import { useAuthStore } from '@/store/auth'
 
 const PRIX_PREFIX = '__PRIX__'
@@ -62,7 +62,7 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
   const messages = thread.data ?? []
 
   const send = useMutation({
-    mutationFn: (payload: { body?: string; audioUrl?: string }) =>
+    mutationFn: (payload: { body?: string; audioUrl?: string; photoUrl?: string; videoUrl?: string }) =>
       messagesApi.send({ receiverId: peerId, parcelId, ...payload }),
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
   })
@@ -117,6 +117,9 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
   const [paused, setPaused] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [busyAudio, setBusyAudio] = useState(false)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+  const videoInputRef = useRef<HTMLInputElement>(null)
+  const [busyMedia, setBusyMedia] = useState(false)
   const recorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const startedRef = useRef(0)
@@ -187,6 +190,32 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
         r.stop()
         r.stream.getTracks().forEach((t) => t.stop())
       } catch { /* noop */ }
+    }
+  }
+
+  const handlePhotoPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setBusyMedia(true)
+    try {
+      const url = await uploadChatPhoto(file)
+      await send.mutateAsync({ photoUrl: url })
+    } finally {
+      setBusyMedia(false)
+      if (photoInputRef.current) photoInputRef.current.value = ''
+    }
+  }
+
+  const handleVideoPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setBusyMedia(true)
+    try {
+      const url = await uploadChatVideo(file)
+      await send.mutateAsync({ videoUrl: url })
+    } finally {
+      setBusyMedia(false)
+      if (videoInputRef.current) videoInputRef.current.value = ''
     }
   }
 
@@ -310,6 +339,20 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
 
       {/* input bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 10 }}>
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={handlePhotoPick}
+        />
+        <input
+          ref={videoInputRef}
+          type="file"
+          accept="video/*"
+          style={{ display: 'none' }}
+          onChange={handleVideoPick}
+        />
         {recording ? (
           <>
             <button type="button" aria-label="Annuler" onClick={cancelRecording} style={iconBtn('var(--surface-sunken)', 'var(--text-muted)')}>
@@ -342,6 +385,26 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
               onClick={() => setShowPrice(!showPrice)}
               style={iconBtn(showPrice ? 'var(--amber-500)' : 'var(--surface-sunken)', showPrice ? '#fff' : 'var(--text-muted)')}>
               <Icon name="payments" size={20} />
+            </button>
+            <button
+              type="button"
+              aria-label="Envoyer une photo"
+              title="Envoyer une photo"
+              disabled={busyMedia || send.isPending}
+              onClick={() => photoInputRef.current?.click()}
+              style={iconBtn('var(--surface-sunken)', 'var(--text-muted)')}
+            >
+              <Icon name="photo_camera" size={20} />
+            </button>
+            <button
+              type="button"
+              aria-label="Envoyer une video"
+              title="Envoyer une video"
+              disabled={busyMedia || send.isPending}
+              onClick={() => videoInputRef.current?.click()}
+              style={iconBtn('var(--surface-sunken)', 'var(--text-muted)')}
+            >
+              <Icon name="videocam" size={20} />
             </button>
             <input
               value={text}
@@ -480,7 +543,7 @@ function MessageBubble({ message, mine, onAcceptPrice, onCounterPrice, bidPendin
   return (
     <div style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start' }}>
       <div style={{
-        maxWidth: '78%', padding: message.audioUrl && !message.body ? 6 : '8px 12px',
+        maxWidth: '78%', padding: (message.audioUrl && !message.body) || (message.photoUrl && !message.body) || (message.videoUrl && !message.body) ? 6 : '8px 12px',
         borderRadius: 14, borderBottomRightRadius: mine ? 4 : 14, borderBottomLeftRadius: mine ? 14 : 4,
         background: mine ? 'var(--teal-500)' : 'var(--surface-card)', color: mine ? '#fff' : 'var(--text-body)',
         border: mine ? 'none' : '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-xs)',
@@ -488,6 +551,17 @@ function MessageBubble({ message, mine, onAcceptPrice, onCounterPrice, bidPendin
         {message.body && <div style={{ fontSize: 'var(--fs-sm)', whiteSpace: 'pre-wrap' }}>{message.body}</div>}
         {message.audioUrl && (
           <audio controls src={message.audioUrl} style={{ height: 36, maxWidth: 220, display: 'block', marginTop: message.body ? 6 : 0 }} />
+        )}
+        {message.photoUrl && (
+          <img
+            src={message.photoUrl}
+            alt="Photo"
+            style={{ display: 'block', maxWidth: 220, maxHeight: 260, borderRadius: 8, marginTop: message.body ? 6 : 0, cursor: 'pointer' }}
+            onClick={() => window.open(message.photoUrl!, '_blank')}
+          />
+        )}
+        {message.videoUrl && (
+          <video controls src={message.videoUrl} style={{ display: 'block', maxWidth: 220, maxHeight: 260, borderRadius: 8, marginTop: message.body ? 6 : 0 }} />
         )}
         <div style={{ fontSize: 10, textAlign: 'right', marginTop: 3, color: mine ? 'rgba(255,255,255,0.7)' : 'var(--text-faint)' }}>
           {fmtTime(message.createdAt)}

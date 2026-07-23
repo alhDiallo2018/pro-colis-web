@@ -12,6 +12,7 @@ const ROLE_LABEL: Record<string, string> = {
   driver: 'Chauffeur',
   admin: 'Admin zone',
   super_admin: 'Super admin',
+  support: 'Support',
 }
 
 export function ProfilScreen() {

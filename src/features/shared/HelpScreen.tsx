@@ -220,9 +220,28 @@ export function HelpScreen() {
               Notre équipe répond 7j/7
             </div>
           </div>
-          <div>
-            <a href="mailto:support-technic@sendprocolis.com" style={{ textDecoration: 'none', color: 'var(--color-primary)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14 }}>
-              Contacter
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <a
+              href="/support"
+              style={{
+                textDecoration: 'none',
+                color: '#fff',
+                background: 'var(--color-primary)',
+                fontFamily: 'var(--font-display)',
+                fontWeight: 700,
+                fontSize: 13,
+                padding: '8px 16px',
+                borderRadius: 'var(--radius-pill)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <span className="material-symbols-rounded" style={{ fontSize: 16 }}>chat</span>
+              Chat support
+            </a>
+            <a href="mailto:support-technic@sendprocolis.com" style={{ textDecoration: 'none', color: 'var(--color-primary)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 12 }}>
+              Par e-mail
             </a>
           </div>
         </div>

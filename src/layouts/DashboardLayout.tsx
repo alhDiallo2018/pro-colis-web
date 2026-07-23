@@ -1,9 +1,10 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Avatar, Icon } from '@/ds'
-import { useAuthStore } from '@/store/auth'
 import { useLogout } from '@/features/auth/useAuth'
 import { useMediaQuery } from '@/lib/useMediaQuery'
+import { useAuthStore } from '@/store/auth'
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { SupportFAB } from '@/components/SupportFAB'
 
 export interface NavItem {
   label: string
@@ -30,7 +31,7 @@ export interface DashboardLayoutProps {
   greetOnIndex?: boolean
 }
 
-const LOGO = 'PRO'
+const LOGO = 'SEND'
 
 export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex }: DashboardLayoutProps) {
   const user = useAuthStore((s) => s.user)
@@ -98,7 +99,8 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
           </span>
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 17 }}>
             {LOGO}
-            <span style={{ color: 'var(--amber-400)' }}>COLIS</span>
+            <span style={{ color: 'var(--amber-400)' }}>PRO</span>
+            <span style={{ color: 'var(--font-display)' }}>COLIS</span>
           </span>
         </div>
 
@@ -240,6 +242,8 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
             <Outlet />
           </div>
         </main>
+
+        <SupportFAB />
       </div>
     </div>
   )

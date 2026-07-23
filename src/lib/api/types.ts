@@ -1,7 +1,7 @@
 // DTOs mirroring the ProColis Express API serializers
 // (ProColis-Api/src/utils/{user-serializer,mobile-serializers}.js).
 
-export type Role = 'client' | 'driver' | 'admin' | 'super_admin'
+export type Role = 'client' | 'driver' | 'admin' | 'super_admin' | 'support'
 export type UserStatus = 'active' | 'suspended' | 'deleted'
 export type DriverStatus = 'available' | 'busy' | 'offline'
 export type PaymentMethod = 'wave' | 'freeMoney' | 'orangeMoney' | 'card' | 'cash'
