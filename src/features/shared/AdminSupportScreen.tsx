@@ -306,6 +306,13 @@ export function AdminSupportScreen() {
                       via {c.supportUser?.fullName ?? 'Support'} · {c.messageCount ?? 0} message
                       {(c.messageCount ?? 0) !== 1 ? 's' : ''}
                     </div>
+                    {c.lastAgent && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 3, fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--teal-600)', background: 'var(--teal-50)', padding: '1px 8px', borderRadius: 'var(--radius-pill)' }}>
+                        <span className="material-symbols-rounded" style={{ fontSize: 13 }}>badge</span>
+                        {c.lastAgent.fullName}
+                        {(c.agents?.length ?? 0) > 1 ? ` +${(c.agents!.length - 1)}` : ''}
+                      </div>
+                    )}
                     <div
                       style={{
                         fontSize: 'var(--fs-xs)',
@@ -388,6 +395,18 @@ export function AdminSupportScreen() {
                 </div>
               </div>
 
+              {(selected.agents?.length ?? 0) > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', padding: '8px 4px 10px', borderBottom: '1px solid var(--border-subtle)', marginBottom: 8 }}>
+                  <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', fontWeight: 600 }}>Traité par&nbsp;:</span>
+                  {selected.agents!.map((a) => (
+                    <span key={a.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--teal-700)', background: 'var(--teal-50)', padding: '2px 10px', borderRadius: 'var(--radius-pill)' }}>
+                      <span className="material-symbols-rounded" style={{ fontSize: 14 }}>badge</span>
+                      {a.fullName}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <div
                 style={{
                   flex: 1,
@@ -444,7 +463,7 @@ export function AdminSupportScreen() {
                             }}
                           >
                             {isMine
-                              ? m.sender?.fullName ?? 'Support'
+                              ? `${m.handledBy?.fullName ?? m.sender?.fullName ?? 'Support'}${m.handledBy ? ` · ${selected.supportUser?.fullName ?? 'Support'}` : ''}`
                               : m.sender?.fullName ?? 'Utilisateur'}
                           </div>
                           {m.body && <div style={{ whiteSpace: 'pre-wrap' }}>{m.body}</div>}

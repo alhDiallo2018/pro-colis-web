@@ -6,6 +6,9 @@ import * as adminReputation from '@/lib/api/admin-reputation'
 import * as garagesApi from '@/lib/api/garages'
 import * as zonesApi from '@/lib/api/zones'
 import * as withdrawalsApi from '@/lib/api/withdrawals'
+import * as assistancesApi from '@/lib/api/assistances'
+import * as expensesApi from '@/lib/api/expenses'
+import * as identityApi from '@/lib/api/identity'
 import { queryClient } from '@/lib/queryClient'
 
 export function useAdminParcels(params: ListParams = {}) {
@@ -60,10 +63,19 @@ function invalidateZones() {
 export function useAdminZones(params?: {
   page?: number; limit?: number; country?: string; city?: string;
   type?: string; isActive?: boolean; search?: string;
+  status?: 'approved' | 'pending' | 'rejected'; source?: string;
 }) {
   return useQuery({
     queryKey: ['admin', 'zones', params],
     queryFn: () => zonesApi.listZones(params),
+  })
+}
+
+export function useSetZoneStatus() {
+  return useMutation({
+    mutationFn: ({ zoneId, status }: { zoneId: string; status: 'approved' | 'rejected' | 'pending' }) =>
+      zonesApi.setZoneStatus(zoneId, status),
+    onSuccess: invalidateZones,
   })
 }
 
@@ -359,5 +371,102 @@ export function useCompleteWithdrawal() {
   return useMutation({
     mutationFn: (id: string) => withdrawalsApi.completeWithdrawal(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'withdrawals'] }),
+  })
+}
+
+// --- Assistances (journal des interactions support) ---
+
+function invalidateAssistances() {
+  queryClient.invalidateQueries({ queryKey: ['admin', 'assistances'] })
+}
+
+export function useAssistances(params: ListParams = {}) {
+  return useQuery({
+    queryKey: ['admin', 'assistances', params],
+    queryFn: () => assistancesApi.listAssistances(params),
+  })
+}
+
+export function useCreateAssistance() {
+  return useMutation({
+    mutationFn: (payload: assistancesApi.AssistancePayload) => assistancesApi.createAssistance(payload),
+    onSuccess: invalidateAssistances,
+  })
+}
+
+export function useUpdateAssistance() {
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: Partial<assistancesApi.AssistancePayload> }) =>
+      assistancesApi.updateAssistance(id, payload),
+    onSuccess: invalidateAssistances,
+  })
+}
+
+export function useDeleteAssistance() {
+  return useMutation({
+    mutationFn: (id: string) => assistancesApi.deleteAssistance(id),
+    onSuccess: invalidateAssistances,
+  })
+}
+
+// --- Dépenses ---
+
+function invalidateExpenses() {
+  queryClient.invalidateQueries({ queryKey: ['admin', 'expenses'] })
+}
+
+export function useExpenses(params: ListParams = {}) {
+  return useQuery({
+    queryKey: ['admin', 'expenses', params],
+    queryFn: () => expensesApi.listExpenses(params),
+  })
+}
+
+export function useCreateExpense() {
+  return useMutation({
+    mutationFn: (payload: expensesApi.ExpensePayload) => expensesApi.createExpense(payload),
+    onSuccess: invalidateExpenses,
+  })
+}
+
+export function useUpdateExpense() {
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: Partial<expensesApi.ExpensePayload> }) =>
+      expensesApi.updateExpense(id, payload),
+    onSuccess: invalidateExpenses,
+  })
+}
+
+export function useDeleteExpense() {
+  return useMutation({
+    mutationFn: (id: string) => expensesApi.deleteExpense(id),
+    onSuccess: invalidateExpenses,
+  })
+}
+
+// --- Vérifications d'identité (KYC chauffeur) ---
+
+function invalidateVerifications() {
+  queryClient.invalidateQueries({ queryKey: ['admin', 'identity'] })
+}
+
+export function useIdentityVerifications(params: ListParams = {}) {
+  return useQuery({
+    queryKey: ['admin', 'identity', params],
+    queryFn: () => identityApi.listVerifications(params),
+  })
+}
+
+export function useApproveVerification() {
+  return useMutation({
+    mutationFn: (id: string) => identityApi.approveVerification(id),
+    onSuccess: invalidateVerifications,
+  })
+}
+
+export function useRejectVerification() {
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => identityApi.rejectVerification(id, reason),
+    onSuccess: invalidateVerifications,
   })
 }

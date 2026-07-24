@@ -41,6 +41,7 @@ export interface User {
   cancelledDeliveries?: number
   isEmailVerified?: boolean
   isPhoneVerified?: boolean
+  isVerified?: boolean
   isProfileComplete?: boolean
   lastLogin?: string | null
   lastActiveAt?: string | null
@@ -76,6 +77,8 @@ export interface Zone {
   boundary?: number[][] | null
   type: 'CIRCLE' | 'POLYGON'
   isActive: boolean
+  status?: 'approved' | 'pending' | 'rejected'
+  source?: string
   parentId?: string | null
   metadata?: Record<string, unknown> | null
   _count?: { driverZones?: number; parcels?: number }

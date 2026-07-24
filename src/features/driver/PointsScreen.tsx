@@ -108,9 +108,6 @@ export function DriverPointsScreen() {
           <Button variant="amber" block icon="add" onClick={() => setShowRecharge(true)}>
             Recharger
           </Button>
-          <Button variant="secondary" block icon="redeem">
-            Utiliser
-          </Button>
         </div>
       </div>
 

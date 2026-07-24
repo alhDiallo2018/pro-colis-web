@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Card, Badge, Toast } from '@/ds'
+import { useAuthStore } from '@/store/auth'
 
 const DOC_TYPES = [
   { type: 'driver_license', label: 'Permis de conduire', icon: 'badge' },
@@ -17,6 +18,7 @@ function resolveUrl(url: string): string {
 }
 
 export function VehicleDocumentsScreen() {
+  const isVerified = useAuthStore((s) => s.user?.isVerified)
   const [loading, setLoading] = useState(true)
   const [vehiclePhotos, setVehiclePhotos] = useState<string[]>([])
   const [docUrls, setDocUrls] = useState<Record<string, string>>({})
@@ -163,6 +165,21 @@ export function VehicleDocumentsScreen() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 720 }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 'var(--radius-md)',
+        background: isVerified ? 'var(--green-50)' : 'var(--amber-50)',
+        border: `1px solid ${isVerified ? 'var(--green-200)' : 'var(--amber-200)'}`,
+        color: isVerified ? 'var(--green-700)' : 'var(--amber-700)',
+      }}>
+        <span className="material-symbols-rounded" style={{ fontSize: 22 }}>
+          {isVerified ? 'verified' : 'gpp_maybe'}
+        </span>
+        <div style={{ fontSize: 13.5, fontWeight: 600 }}>
+          {isVerified
+            ? 'Identité vérifiée — vous pouvez enchérir et publier des annonces.'
+            : 'Identité non vérifiée. Envoyez vos documents ci-dessous : un administrateur les validera.'}
+        </div>
+      </div>
       <input
         ref={fileInputRef}
         type="file"

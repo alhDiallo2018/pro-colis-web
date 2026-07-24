@@ -74,6 +74,10 @@ export interface SupportConversation {
     id: string
     fullName: string
   }
+  /** Agents (comptes) ayant réellement répondu dans cette conversation. */
+  agents?: { id: string; fullName: string }[]
+  /** Dernier agent ayant répondu (le plus récent). */
+  lastAgent?: { id: string; fullName: string } | null
 }
 
 export interface SupportThreadMessage {
@@ -86,6 +90,9 @@ export interface SupportThreadMessage {
   audioUrl?: string | null
   photoUrl?: string | null
   videoUrl?: string | null
+  /** Agent réel (compte) ayant tapé la réponse — distinct du compte support partagé. */
+  handledById?: string | null
+  handledBy?: { id: string; fullName: string; role?: string } | null
   sender: { id: string; fullName: string; profilePhoto: string | null; role: string }
   receiver: { id: string; fullName: string; profilePhoto: string | null; role: string }
 }

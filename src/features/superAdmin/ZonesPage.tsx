@@ -6,7 +6,7 @@ import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import type { Zone } from '@/lib/api/types'
 import { ZoneFormDialog } from './ZoneFormDialog'
-import { useAdminZones, useDeleteZone, useUpdateZone } from './hooks'
+import { useAdminZones, useDeleteZone, useUpdateZone, useSetZoneStatus } from './hooks'
 
 const flagOf = (country: string): string => {
   const codes: Record<string, string> = {
@@ -38,6 +38,9 @@ export function ZonesPage() {
 
   const updateMutation = useUpdateZone()
   const deleteMutation = useDeleteZone()
+  const statusMutation = useSetZoneStatus()
+
+  const pendingCount = useMemo(() => zones.filter((z) => z.status === 'pending').length, [zones])
 
   const countries = useMemo(() => {
     const set = new Set<string>()
@@ -52,6 +55,8 @@ export function ZonesPage() {
       if (zoneType && z.type !== zoneType) return false
       if (status === 'active' && z.isActive === false) return false
       if (status === 'inactive' && z.isActive !== false) return false
+      if (status === 'pending' && z.status !== 'pending') return false
+      if (status === 'rejected' && z.status !== 'rejected') return false
       if (!q) return true
       return [z.name, z.displayName, z.country, z.city, z.placeId]
         .some((v) => (v ?? '').toLowerCase().includes(q))
@@ -127,10 +132,12 @@ export function ZonesPage() {
           onChange={(e: ChangeEvent<HTMLSelectElement>) => setStatus(e.target.value)}
           options={[
             { value: '', label: 'Tous les statuts' },
+            { value: 'pending', label: '⏳ À valider' },
+            { value: 'rejected', label: '⛔ Rejetées' },
             { value: 'active', label: 'Actives' },
             { value: 'inactive', label: 'Inactives' },
           ]}
-          style={{ minWidth: 140 }}
+          style={{ minWidth: 150 }}
         />
         <Button variant="primary" icon="add_location_alt" onClick={openCreate}>
           Nouvelle zone
@@ -138,6 +145,16 @@ export function ZonesPage() {
       </div>
 
       {actionError && <Toast tone="error" message={actionError} onClose={() => setActionError(null)} />}
+
+      {pendingCount > 0 && status !== 'pending' && (
+        <div
+          onClick={() => setStatus('pending')}
+          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', marginBottom: 12, borderRadius: 'var(--radius-md)', background: 'var(--amber-50)', border: '1px solid var(--amber-200)', color: 'var(--amber-700)', fontWeight: 600, fontSize: 13 }}
+        >
+          <span className="material-symbols-rounded" style={{ fontSize: 20 }}>pending_actions</span>
+          {pendingCount} zone{pendingCount > 1 ? 's' : ''} créée{pendingCount > 1 ? 's' : ''} automatiquement à valider — cliquez pour filtrer.
+        </div>
+      )}
 
       <Panel
         title={`Zones géographiques · ${filtered.length}${countries.length ? ` · ${countries.length} pays` : ''}`}
@@ -199,14 +216,26 @@ export function ZonesPage() {
                   <Badge tone={z.type === 'CIRCLE' ? 'teal' : 'neutral'}>
                     {z.type === 'CIRCLE' ? 'Cercle' : 'Polygone'}
                   </Badge>
+                  {z.status === 'pending' && <Badge tone="amber">⏳ À valider</Badge>}
+                  {z.status === 'rejected' && <Badge tone="red">⛔ Rejetée</Badge>}
+                  {z.source === 'places' && z.status !== 'pending' && <Badge tone="neutral">Places</Badge>}
                   <Badge tone={z.isActive === false ? 'neutral' : 'green'}>
                     {z.isActive === false ? 'Inactive' : 'Active'}
                   </Badge>
-                  <Switch
-                    checked={z.isActive !== false}
-                    onChange={() => handleToggle(z)}
-                    disabled={updateMutation.isPending}
-                  />
+                  {z.status === 'pending' ? (
+                    <>
+                      <IconButton icon="check_circle" size="sm" variant="soft" title="Approuver la zone"
+                        onClick={() => statusMutation.mutate({ zoneId: z.id, status: 'approved' })} />
+                      <IconButton icon="cancel" size="sm" variant="danger" title="Rejeter la zone"
+                        onClick={() => statusMutation.mutate({ zoneId: z.id, status: 'rejected' })} />
+                    </>
+                  ) : (
+                    <Switch
+                      checked={z.isActive !== false}
+                      onChange={() => handleToggle(z)}
+                      disabled={updateMutation.isPending}
+                    />
+                  )}
                   <IconButton
                     icon="group"
                     size="sm"

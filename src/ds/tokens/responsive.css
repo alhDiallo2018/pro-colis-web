@@ -60,21 +60,47 @@
 }
 @media (max-width: 720px) {
   .pc-landing-stats { grid-template-columns: 1fr 1fr; }
+  /* On the 2-up layout the right column's border-right hangs at the edge. */
+  .pc-landing-stats > :nth-child(2n) { border-right: none !important; }
+  /* First row keeps a subtle divider from the second row. */
+  .pc-landing-stats > :nth-child(-n + 2) { border-bottom: 1px solid rgba(255,255,255,0.06); }
+}
+@media (max-width: 420px) {
+  .pc-landing-stats { grid-template-columns: 1fr; }
+  .pc-landing-stats > * { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .pc-landing-stats > :last-child { border-bottom: none; }
 }
 
-/* Marketing landing: secondary nav links, hidden on narrow screens. */
+/* ---- Marketing landing: navbar (desktop links ⇄ mobile hamburger) ----
+   The hamburger takes over exactly when the inline links disappear (820px),
+   so section links + sign-in stay reachable on tablet and phone. */
+.pc-landing-burger { display: none; }
 @media (max-width: 820px) {
   .pc-landing-nav-links { display: none !important; }
+  .pc-landing-signin { display: none !important; }
+  .pc-landing-burger { display: inline-flex !important; }
+}
+/* Keep a stale-open menu from ever showing once back on desktop widths. */
+@media (min-width: 821px) {
+  .pc-landing-mobile-menu { display: none !important; }
 }
 
-/* Hide non-essential chrome on very small screens (e.g. secondary CTA). */
-@media (max-width: 480px) {
-  .pc-hide-xs { display: none !important; }
+/* Navbar primary CTA — its label shrinks so the row never overflows a phone:
+   "Créer un compte" → "S'inscrire" → icon only. */
+.pc-navbar-cta-short { display: none; }
+@media (max-width: 560px) {
+  .pc-navbar-cta-full { display: none; }
+  .pc-navbar-cta-short { display: inline; }
+}
+@media (max-width: 380px) {
+  .pc-navbar-cta-short { display: none; }
 }
 
-/* Show element ONLY on very small screens. */
-@media (min-width: 481px) {
-  .pc-show-xs { display: none !important; }
+/* Hero tracking form: input + button sit side-by-side, stack on tiny phones
+   so the "Suivre" button never squeezes the tracking field to nothing. */
+@media (max-width: 400px) {
+  .pc-landing-track-form { flex-direction: column; }
+  .pc-landing-track-form .pc-landing-track-btn { width: 100%; }
 }
 
 /* Landing: hero section — two columns stack on tablet. */
@@ -84,6 +110,16 @@
 }
 @media (max-width: 860px) {
   .pc-landing-hero-grid { grid-template-columns: 1fr; }
+}
+
+/* Grid/flex children default to min-width:auto, so a long unbreakable child
+   (e.g. the hero badge, a wide button row) blows the track past the viewport
+   and everything clips on the right. Letting them shrink to 0 fixes the reflow. */
+.pc-landing-hero-grid > *,
+.pc-landing-drivers-grid > *,
+.pc-landing-stats > *,
+.pc-landing-footer-grid > * {
+  min-width: 0;
 }
 
 /* Landing: drivers section — two columns stack. */

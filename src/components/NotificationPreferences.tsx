@@ -8,6 +8,7 @@ import {
   loadPreferences,
   savePreferences,
 } from '@/lib/notifications'
+import { getPreferences, updatePreferences } from '@/lib/api/notifications'
 
 const EVENT_LABELS: Record<NotificationEventType, { label: string; icon: string }> = {
   parcel_created: { label: 'Colis créé', icon: 'package_2' },
@@ -37,6 +38,18 @@ interface NotificationPreferencesSheetProps {
 export function NotificationPreferencesSheet({ userEmail, userPhone }: NotificationPreferencesSheetProps) {
   const [prefs, setPrefs] = useState<NotificationPreference[]>(() => loadPreferences())
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  // Source de vérité : le serveur. Repli sur les défauts locaux si le serveur est vide.
+  useEffect(() => {
+    let alive = true
+    getPreferences()
+      .then((server) => {
+        if (alive && Array.isArray(server) && server.length > 0) setPrefs(server)
+      })
+      .catch(() => { /* garde les valeurs locales par défaut */ })
+    return () => { alive = false }
+  }, [])
 
   useEffect(() => {
     if (saved) {
@@ -60,9 +73,17 @@ export function NotificationPreferencesSheet({ userEmail, userPhone }: Notificat
     setSaved(false)
   }, [])
 
-  const handleSave = () => {
-    savePreferences(prefs)
-    setSaved(true)
+  const handleSave = async () => {
+    setSaving(true)
+    savePreferences(prefs) // cache local : le déclencheur email/SMS client lit encore le localStorage
+    try {
+      await updatePreferences(prefs) // persistance serveur (source de vérité)
+    } catch {
+      /* en cas d'échec réseau, la copie locale reste appliquée */
+    } finally {
+      setSaving(false)
+      setSaved(true)
+    }
   }
 
   return (
@@ -137,7 +158,7 @@ export function NotificationPreferencesSheet({ userEmail, userPhone }: Notificat
       </div>
 
       <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <Button icon="save" onClick={handleSave}>
+        <Button icon="save" onClick={handleSave} loading={saving}>
           Enregistrer les préférences
         </Button>
         {saved && <Toast tone="success" message="Préférences enregistrées." />}

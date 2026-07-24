@@ -29,10 +29,35 @@ export async function listZones(params?: {
   city?: string
   type?: string
   isActive?: boolean
+  status?: 'approved' | 'pending' | 'rejected'
+  source?: string
   search?: string
 }): Promise<{ zones: Zone[]; pagination: { total: number; page: number; limit: number; totalPages: number } }> {
   const { data } = await api.get('/super-admin/zones', { params })
   return { zones: data.data ?? [], pagination: data.pagination }
+}
+
+export interface ResolveZonePayload {
+  placeId?: string
+  name?: string
+  displayName?: string
+  latitude: number
+  longitude: number
+  country?: string
+  region?: string
+  city?: string
+}
+
+/** Résout un lieu Google Places en zone (la crée en "pending" si nécessaire). */
+export async function resolveZone(payload: ResolveZonePayload): Promise<{ zone: Zone; created: boolean; pending?: boolean; matchedBy?: string }> {
+  const { data } = await api.post('/zones/resolve', payload)
+  return { zone: data.data, created: data.created ?? false, pending: data.pending, matchedBy: data.matchedBy }
+}
+
+/** Admin : approuver / rejeter une zone en attente. */
+export async function setZoneStatus(zoneId: string, status: 'approved' | 'rejected' | 'pending'): Promise<Zone> {
+  const { data } = await api.patch(`/super-admin/zones/${zoneId}/status`, { status })
+  return data.data
 }
 
 export async function getZone(zoneId: string): Promise<Zone> {

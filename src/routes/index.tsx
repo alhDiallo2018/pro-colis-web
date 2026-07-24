@@ -70,6 +70,9 @@ import { BroadcastBanner } from '@/components/BroadcastBanner'
 import { WalletDetailPage } from '@/features/superAdmin/WalletDetailPage'
 import { ScoreDetailPage } from '@/features/superAdmin/ScoreDetailPage'
 import { WithdrawalsPage } from '@/features/superAdmin/WithdrawalsPage'
+import { AssistancesPage } from '@/features/superAdmin/AssistancesPage'
+import { ExpensesPage } from '@/features/superAdmin/ExpensesPage'
+import { IdentityVerificationsPage } from '@/features/superAdmin/IdentityVerificationsPage'
 import { GarageDriversPage } from '@/features/superAdmin/GarageDriversPage'
 import { NotificationsScreen } from '@/features/shared/NotificationsScreen'
 import { GarageDashboard } from '@/features/garageAdmin/GarageDashboard'
@@ -144,6 +147,7 @@ const SUPER_NAV: NavSection[] = [
       { label: 'Configuration', icon: 'settings', to: '/admin/finance/configuration' },
       { label: 'Paiements', icon: 'payments', to: '/admin/finance/payments' },
       { label: 'Notifications paiement', icon: 'notifications_active', to: '/admin/finance/payments-notifications' },
+      { label: 'Dépenses', icon: 'receipt_long', to: '/admin/finance/expenses' },
       { label: 'Configuration PayDunya', icon: 'credit_card', to: '/admin/paydunya' },
     ],
   },
@@ -161,6 +165,8 @@ const SUPER_NAV: NavSection[] = [
       { label: 'Zones (garages)', icon: 'garage', to: '/admin/garages' },
       { label: 'Zones géographiques', icon: 'map', to: '/admin/zones' },
       { label: 'Support', icon: 'support_agent', to: '/admin/support' },
+      { label: 'Assistances', icon: 'contact_support', to: '/admin/assistances' },
+      { label: 'Vérifications identité', icon: 'verified_user', to: '/admin/verifications' },
       { label: 'Statistiques', icon: 'monitoring', to: '/admin/stats' },
       { label: 'Notifications Brevo', icon: 'mail', to: '/admin/notifications-brevo' },
       { label: 'Bandeaux', icon: 'campaign', to: '/admin/broadcasts' },
@@ -346,6 +352,9 @@ export const router = createBrowserRouter([
       { path: 'finance/payments', element: <PaymentsPage /> },
       { path: 'finance/payments-notifications', element: <PaymentNotificationsPage /> },
       { path: 'finance/withdrawals', element: <WithdrawalsPage /> },
+      { path: 'finance/expenses', element: <ExpensesPage /> },
+      { path: 'assistances', element: <AssistancesPage /> },
+      { path: 'verifications', element: <IdentityVerificationsPage /> },
       { path: 'reputation', element: <ReputationDashboardPage /> },
       { path: 'reputation/scores', element: <ScoresPage /> },
       { path: 'reputation/scores/:userId', element: <ScoreDetailPage /> },

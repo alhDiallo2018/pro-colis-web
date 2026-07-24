@@ -1,0 +1,283 @@
+import { useState } from 'react'
+import { Button, Dialog, Input, Select, Textarea, SegmentedControl } from '@/ds'
+import { Panel } from '@/components/Panel'
+import { QueryState } from '@/components/QueryState'
+import {
+  useAssistances,
+  useCreateAssistance,
+  useUpdateAssistance,
+  useDeleteAssistance,
+} from '@/features/superAdmin/hooks'
+import type {
+  Assistance,
+  AssistanceChannel,
+  AssistanceStatus,
+  AssistancePayload,
+} from '@/lib/api/assistances'
+
+const CHANNEL_META: Record<AssistanceChannel, { label: string; icon: string; color: string }> = {
+  email: { label: 'E-mail', icon: 'mail', color: 'var(--slate-600)' },
+  chat: { label: 'Chat', icon: 'chat', color: 'var(--color-primary)' },
+  call: { label: 'Appel', icon: 'call', color: 'var(--green-600)' },
+}
+
+const STATUS_META: Record<AssistanceStatus, { label: string; color: string; bg: string }> = {
+  open: { label: 'Ouvert', color: 'var(--amber-700)', bg: 'var(--amber-50)' },
+  in_progress: { label: 'En cours', color: 'var(--teal-600)', bg: 'var(--teal-50)' },
+  resolved: { label: 'Résolu', color: 'var(--green-700)', bg: 'var(--green-50)' },
+}
+
+const COL_GRID = '110px 90px 1.4fr 1fr 100px 130px 90px'
+
+const EMPTY_FORM: AssistancePayload = {
+  channel: 'chat',
+  subject: '',
+  notes: '',
+  contactName: '',
+  contactPhone: '',
+  status: 'open',
+}
+
+export function AssistancesPage() {
+  const [status, setStatus] = useState('')
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const limit = 20
+
+  const params = { page, limit, ...(status ? { status } : {}), ...(search ? { search } : {}) }
+  const assistances = useAssistances(params)
+  const create = useCreateAssistance()
+  const update = useUpdateAssistance()
+  const remove = useDeleteAssistance()
+
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editing, setEditing] = useState<Assistance | null>(null)
+  const [form, setForm] = useState<AssistancePayload>(EMPTY_FORM)
+
+  const items = assistances.data?.assistances ?? []
+  const summary = assistances.data?.summary
+  const pagination = assistances.data?.pagination
+
+  const openCreate = () => {
+    setEditing(null)
+    setForm(EMPTY_FORM)
+    setDialogOpen(true)
+  }
+
+  const openEdit = (a: Assistance) => {
+    setEditing(a)
+    setForm({
+      channel: a.channel,
+      subject: a.subject,
+      notes: a.notes ?? '',
+      contactName: a.contactName ?? '',
+      contactPhone: a.contactPhone ?? '',
+      status: a.status,
+    })
+    setDialogOpen(true)
+  }
+
+  const submit = () => {
+    if (!form.subject.trim()) return
+    if (editing) {
+      update.mutate({ id: editing.id, payload: form }, { onSuccess: () => setDialogOpen(false) })
+    } else {
+      create.mutate(form, { onSuccess: () => setDialogOpen(false) })
+    }
+  }
+
+  return (
+    <Panel
+      title="Assistances"
+      action={<Button icon="add" onClick={openCreate}>Nouvelle assistance</Button>}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        {summary && (
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <SummaryTile label="Total" value={summary.total} color="var(--text-strong)" />
+            <SummaryTile label="Ouverts" value={summary.open} color="var(--amber-700)" />
+            <SummaryTile label="En cours" value={summary.inProgress} color="var(--teal-600)" />
+            <SummaryTile label="Résolus" value={summary.resolved} color="var(--green-700)" />
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <SegmentedControl
+            options={[
+              { value: '', label: 'Tous' },
+              { value: 'open', label: 'Ouverts' },
+              { value: 'in_progress', label: 'En cours' },
+              { value: 'resolved', label: 'Résolus' },
+            ]}
+            value={status}
+            onChange={(s) => { setStatus(s); setPage(1) }}
+          />
+          <Input
+            icon="search"
+            placeholder="Rechercher (code, motif, utilisateur…)"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+            style={{ minWidth: 240, flex: 1 }}
+          />
+        </div>
+
+        <QueryState
+          isLoading={assistances.isLoading}
+          isError={assistances.isError}
+          error={assistances.error}
+          isEmpty={!assistances.isLoading && items.length === 0}
+          emptyMessage="Aucune assistance enregistrée."
+          onRetry={() => assistances.refetch()}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={headerRowStyle}>
+              <span>Code</span>
+              <span>Canal</span>
+              <span>Motif</span>
+              <span>Utilisateur</span>
+              <span>Statut</span>
+              <span>Date</span>
+              <span />
+            </div>
+
+            {items.map((a) => {
+              const ch = CHANNEL_META[a.channel] ?? { label: a.channel, icon: 'help', color: 'var(--text-muted)' }
+              const st = STATUS_META[a.status] ?? { label: a.status, color: 'var(--text-muted)', bg: 'var(--surface-sunken)' }
+              const who = a.user?.fullName ?? a.contactName ?? '—'
+              const contact = a.user?.phone ?? a.contactPhone ?? ''
+              return (
+                <div key={a.id} style={rowStyle}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--color-primary)' }}>{a.code}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: ch.color, fontWeight: 600 }}>
+                    <span className="material-symbols-rounded" style={{ fontSize: 16 }}>{ch.icon}</span>
+                    {ch.label}
+                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.subject}>{a.subject}</span>
+                  <span style={{ fontSize: 12.5 }}>
+                    <div style={{ fontWeight: 500 }}>{who}</div>
+                    {contact ? <div style={{ color: 'var(--text-muted)', fontSize: 11 }}>{contact}</div> : null}
+                  </span>
+                  <span>
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: st.color, background: st.bg, padding: '3px 10px', borderRadius: 'var(--radius-pill)' }}>{st.label}</span>
+                  </span>
+                  <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{a.createdAt ? new Date(a.createdAt).toLocaleDateString('fr-FR') : ''}</span>
+                  <span style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                    <Button icon="edit" size="sm" variant="ghost" onClick={() => openEdit(a)} aria-label="Modifier" />
+                    <Button icon="delete" size="sm" variant="ghost" tone="danger"
+                      onClick={() => { if (confirm(`Supprimer l'assistance ${a.code} ?`)) remove.mutate(a.id) }}
+                      aria-label="Supprimer" />
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+
+          {pagination && pagination.totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12 }}>
+              <Button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} size="sm">Précédent</Button>
+              <span style={{ lineHeight: '32px', fontSize: 13, color: 'var(--text-muted)' }}>Page {page} / {pagination.totalPages}</span>
+              <Button disabled={page >= pagination.totalPages} onClick={() => setPage((p) => p + 1)} size="sm">Suivant</Button>
+            </div>
+          )}
+        </QueryState>
+      </div>
+
+      {dialogOpen && (
+        <Dialog
+          open
+          title={editing ? `Assistance ${editing.code}` : 'Nouvelle assistance'}
+          onClose={() => setDialogOpen(false)}
+          actions={
+            <>
+              <Button variant="ghost" onClick={() => setDialogOpen(false)}>Annuler</Button>
+              <Button onClick={submit} loading={create.isPending || update.isPending} disabled={!form.subject.trim()}>
+                {editing ? 'Enregistrer' : 'Créer'}
+              </Button>
+            </>
+          }
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 'min(420px, 80vw)' }}>
+            <Select
+              label="Canal"
+              value={form.channel}
+              onChange={(e) => setForm((f) => ({ ...f, channel: e.target.value as AssistanceChannel }))}
+              options={[
+                { value: 'chat', label: 'Chat' },
+                { value: 'email', label: 'E-mail' },
+                { value: 'call', label: 'Appel téléphonique' },
+              ]}
+            />
+            <Input
+              label="Motif / résumé"
+              value={form.subject}
+              onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
+              placeholder="Ex: Problème de paiement PayDunya"
+            />
+            <Textarea
+              label="Notes"
+              value={form.notes ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              rows={3}
+              placeholder="Détails de l'échange, actions menées…"
+            />
+            <div className="pc-field-pair">
+              <Input
+                label="Nom du contact"
+                value={form.contactName ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, contactName: e.target.value }))}
+                placeholder="Si non inscrit"
+              />
+              <Input
+                label="Téléphone"
+                value={form.contactPhone ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, contactPhone: e.target.value }))}
+                placeholder="+221…"
+              />
+            </div>
+            <Select
+              label="Statut"
+              value={form.status ?? 'open'}
+              onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as AssistanceStatus }))}
+              options={[
+                { value: 'open', label: 'Ouvert' },
+                { value: 'in_progress', label: 'En cours' },
+                { value: 'resolved', label: 'Résolu' },
+              ]}
+            />
+          </div>
+        </Dialog>
+      )}
+    </Panel>
+  )
+}
+
+function SummaryTile({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div style={{ flex: '1 1 120px', minWidth: 120, background: 'var(--surface-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', padding: '12px 16px' }}>
+      <div style={{ fontSize: 11.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>{label}</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 24, color }}>{value}</div>
+    </div>
+  )
+}
+
+const headerRowStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: COL_GRID,
+  gap: 8,
+  padding: '6px 12px',
+  fontSize: 11,
+  fontWeight: 600,
+  color: 'var(--text-muted)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  borderBottom: '1px solid var(--border)',
+}
+
+const rowStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: COL_GRID,
+  gap: 8,
+  padding: '10px 12px',
+  alignItems: 'center',
+  borderBottom: '1px solid var(--border-subtle)',
+}

@@ -143,8 +143,8 @@ export function LandingPage() {
       }}>
         <div style={{ maxWidth: 1320, margin: '0 auto', display: 'flex', alignItems: 'center', height: 68, padding: '0 clamp(16px, 4vw, 40px)', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', flex: 'none' }} onClick={() => navigate('/')}>
-            <img src="/logo-procolis.png" alt="" style={{ width: 38, height: 38, objectFit: 'contain' }} />
-            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 19, color: 'var(--slate-900)', letterSpacing: '-0.02em' }}>
+            <img src="/logo-procolis.png" alt="" style={{ width: 'clamp(30px, 8vw, 38px)', height: 'clamp(30px, 8vw, 38px)', objectFit: 'contain', flex: 'none' }} />
+            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(15px, 4.4vw, 19px)', color: 'var(--slate-900)', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
               SEND<span style={{ color: 'var(--color-primary)' }}>PRO</span>COLIS
             </span>
           </div>
@@ -162,24 +162,31 @@ export function LandingPage() {
           </div>
 
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span className="pc-hide-xs">
+            <span className="pc-landing-signin">
               <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>Se connecter</Button>
             </span>
-            <Button size="sm" icon="person_add" onClick={() => navigate('/register')}>Créer un compte</Button>
-            <button className="pc-show-xs" onClick={() => setMobileMenu(!mobileMenu)} style={{ background: 'none', border: 'none', padding: 8, cursor: 'pointer', display: 'none' }}>
-              <span className="material-symbols-rounded" style={{ fontSize: 28, color: 'var(--text-strong)' }}>menu</span>
+            <Button size="sm" icon="person_add" onClick={() => navigate('/register')} className="pc-navbar-cta">
+              <span className="pc-navbar-cta-full">Créer un compte</span>
+              <span className="pc-navbar-cta-short">S'inscrire</span>
+            </Button>
+            <button className="pc-landing-burger" aria-label="Ouvrir le menu" aria-expanded={mobileMenu}
+              onClick={() => setMobileMenu(!mobileMenu)}
+              style={{ background: 'none', border: 'none', padding: 8, cursor: 'pointer', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+              <span className="material-symbols-rounded" style={{ fontSize: 28, color: 'var(--text-strong)' }}>{mobileMenu ? 'close' : 'menu'}</span>
             </button>
           </div>
         </div>
         {mobileMenu && (
-          <div className="pc-show-xs" style={{ padding: '0 20px 16px', display: 'none', flexDirection: 'column', gap: 8 }}>
+          <div className="pc-landing-mobile-menu" style={{ padding: '4px 20px 18px', display: 'flex', flexDirection: 'column', gap: 4, borderTop: '1px solid var(--border-subtle)' }}>
             {NAV_ITEMS.map((item) => (
-              <span key={item.label} style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-body)', cursor: 'pointer', padding: '8px 0' }}
+              <span key={item.label} style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-body)', cursor: 'pointer', padding: '12px 4px', borderRadius: 10 }}
                 onClick={() => { document.getElementById(item.target)?.scrollIntoView({ behavior: 'smooth' }); setMobileMenu(false) }}>
                 {item.label}
               </span>
             ))}
-            <Button variant="ghost" size="sm" block onClick={() => { navigate('/login'); setMobileMenu(false) }}>Se connecter</Button>
+            <div style={{ marginTop: 8 }}>
+              <Button variant="ghost" size="md" block onClick={() => { navigate('/login'); setMobileMenu(false) }}>Se connecter</Button>
+            </div>
           </div>
         )}
       </nav>
@@ -188,7 +195,7 @@ export function LandingPage() {
       <section style={{ position: 'relative', background: 'linear-gradient(135deg, #0d2818 0%, #0f766e 40%, #0d9488 100%)', color: '#fff', overflow: 'hidden' }}>
         <FloatingShapes />
         <div style={{ position: 'relative', maxWidth: 1320, margin: '0 auto', padding: 'clamp(48px, 7vw, 80px) clamp(16px, 4vw, 40px) clamp(56px, 8vw, 96px)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr minmax(280px, 400px)', gap: 'clamp(32px, 6vw, 64px)', alignItems: 'center' }}
+          <div style={{ gap: 'clamp(32px, 6vw, 64px)', alignItems: 'center' }}
             className="pc-landing-hero-grid">
             <div>
               <span style={{
@@ -199,7 +206,7 @@ export function LandingPage() {
                 <span className="material-symbols-rounded" style={{ fontSize: 16, color: 'var(--amber-400)' }}>bolt</span>
                 Livraison interurbaine & internationale
               </span>
-              <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(36px, 5.5vw, 56px)', lineHeight: 1.08, letterSpacing: '-0.03em', margin: '0 0 20px' }}>
+              <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(28px, 6vw, 56px)', lineHeight: 1.1, letterSpacing: '-0.03em', margin: '0 0 20px' }}>
                 Envoyez vos colis<br />de ville en ville,<br />
                 <span style={{ color: 'var(--amber-400)' }}>partout en Afrique et au-delà</span>
               </h1>
@@ -244,7 +251,7 @@ export function LandingPage() {
               <p style={{ fontSize: 13.5, color: 'var(--text-muted)', margin: '0 0 18px' }}>
                 Entrez votre numéro de suivi pour savoir où se trouve votre colis en temps réel.
               </p>
-              <form onSubmit={handleTrack} style={{ display: 'flex', gap: 10 }}>
+              <form onSubmit={handleTrack} className="pc-landing-track-form" style={{ display: 'flex', gap: 10 }}>
                 <Input
                   icon="qr_code_2"
                   mono
@@ -253,7 +260,8 @@ export function LandingPage() {
                   onChange={(e) => setTrackingInput(e.target.value)}
                   style={{ flex: 1 }}
                 />
-                <Button type="submit" size="lg" iconTrailing="arrow_forward" disabled={!trackingInput.trim()}>
+                <Button type="submit" size="lg" iconTrailing="arrow_forward" disabled={!trackingInput.trim()}
+                  className="pc-landing-track-btn">
                   Suivre
                 </Button>
               </form>
@@ -278,7 +286,7 @@ export function LandingPage() {
       {/* ===== STATS ===== */}
       <section style={{ background: 'var(--slate-900)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, var(--color-primary), var(--amber-400))' }} />
-        <div className="pc-landing-stats" style={{ maxWidth: 1320, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <div className="pc-landing-stats" style={{ maxWidth: 1320, margin: '0 auto' }}>
           {STATS.map((s) => (
             <div key={s.label} style={{
               padding: 'clamp(22px, 4vw, 36px) clamp(16px, 3vw, 36px)',
@@ -347,7 +355,7 @@ export function LandingPage() {
       {/* ===== FOR DRIVERS ===== */}
       <section id="for-drivers" style={{ background: 'var(--surface-page)', padding: 'clamp(56px, 7vw, 80px) clamp(16px, 4vw, 40px)' }}>
         <div style={{ maxWidth: 1320, margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(32px, 6vw, 64px)', alignItems: 'center' }}
+          <div style={{ gap: 'clamp(32px, 6vw, 64px)', alignItems: 'center' }}
             className="pc-landing-drivers-grid">
             <div>
               <span style={{
@@ -511,7 +519,7 @@ export function LandingPage() {
       {/* ===== FOOTER ===== */}
       <footer id="footer" style={{ background: 'var(--deep-800)', color: 'rgba(255,255,255,0.65)', padding: 'clamp(40px, 6vw, 64px) 0 24px' }}>
         <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 clamp(16px, 4vw, 40px)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 'clamp(24px, 4vw, 48px)' }}
+          <div style={{ gap: 'clamp(24px, 4vw, 48px)' }}
             className="pc-landing-footer-grid">
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, cursor: 'pointer' }} onClick={() => navigate('/')}>

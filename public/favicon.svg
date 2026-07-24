@@ -1,4 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
-  <rect width="48" height="48" rx="12" fill="#0D9488"/>
-  <text x="24" y="32" text-anchor="middle" font-family="Arial,sans-serif" font-weight="800" font-size="22" fill="#fff">PC</text>
+  <defs>
+    <linearGradient id="pcBg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0FA958"/>
+      <stop offset="1" stop-color="#07803E"/>
+    </linearGradient>
+  </defs>
+  <!-- Brand rounded tile — legible on light or dark browser tabs -->
+  <rect width="48" height="48" rx="11" fill="url(#pcBg)"/>
+  <!-- Isometric package: white body, amber tape (echoes the ProColis logo box) -->
+  <g stroke="#07803E" stroke-width="0.9" stroke-linejoin="round">
+    <!-- top face -->
+    <path d="M24 12.5 36 19 24 25.5 12 19Z" fill="#FFFFFF"/>
+    <!-- left face -->
+    <path d="M12 19 24 25.5 24 38.5 12 32Z" fill="#CDEBD8"/>
+    <!-- right face -->
+    <path d="M36 19 24 25.5 24 38.5 36 32Z" fill="#A7DCBC"/>
+  </g>
+  <!-- amber tape over the top and down the front seam -->
+  <path d="M20 14.67 24 12.5 28 14.67 28 23.33 24 25.5 20 23.33Z" fill="#FCA202"/>
+  <path d="M20 23.33 24 25.5 28 23.33 28 36.33 24 38.5 20 36.33Z" fill="#FCA202"/>
 </svg>
