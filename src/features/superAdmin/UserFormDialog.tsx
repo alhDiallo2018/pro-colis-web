@@ -37,6 +37,8 @@ const ROLE_OPTIONS = [
   { value: 'admin', label: 'Admin zone' },
   { value: 'super_admin', label: 'Super admin' },
   { value: 'support', label: 'Support' },
+  { value: 'support_technique', label: 'Support technique' },
+  { value: 'support_commercial', label: 'Support commercial' },
 ]
 
 /** Création / édition d'un utilisateur par le super admin. */

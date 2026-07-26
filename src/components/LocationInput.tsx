@@ -19,18 +19,60 @@ export interface PlaceResult {
   secondaryText: string
 }
 
+/** Découpage administratif d'un lieu, extrait des `address_components` Google. */
+export interface PlaceDetails {
+  placeId?: string
+  formattedAddress?: string
+  city?: string
+  region?: string
+  country?: string
+}
+
 export interface LocationInputProps {
   label?: string
   placeholder?: string
   icon?: string
   value?: string
   onChange: (value: string, place?: PlaceResult) => void
-  onCoordinates?: (lat: number, lng: number) => void
+  /**
+   * Appelé dès que le lieu est résolu en coordonnées. `details` porte le
+   * découpage administratif (ville / région / pays) : sans lui, les zones
+   * créées à la volée arrivent sans ville et deviennent illisibles dans les
+   * sélecteurs de trajet.
+   */
+  onCoordinates?: (lat: number, lng: number, details?: PlaceDetails) => void
   error?: string
   disabled?: boolean
   required?: boolean
   style?: CSSProperties
   showGeolocate?: boolean
+}
+
+const COMPONENT_TYPES = {
+  city: ['locality', 'postal_town', 'administrative_area_level_2'],
+  region: ['administrative_area_level_1'],
+  country: ['country'],
+} as const
+
+/** Extrait ville / région / pays d'une liste de composants d'adresse Google. */
+export function extractPlaceDetails(
+  components: google.maps.GeocoderAddressComponent[] | undefined,
+): PlaceDetails {
+  if (!components) return {}
+  const pick = (types: readonly string[]) => {
+    // Les types sont classés du plus précis au plus large : on garde le premier
+    // qui matche pour éviter qu'un département écrase une ville.
+    for (const type of types) {
+      const found = components.find((c) => c.types.includes(type))
+      if (found) return found.long_name
+    }
+    return undefined
+  }
+  return {
+    city: pick(COMPONENT_TYPES.city),
+    region: pick(COMPONENT_TYPES.region),
+    country: pick(COMPONENT_TYPES.country),
+  }
 }
 
 let googleLoading = false
@@ -174,13 +216,14 @@ export function LocationInput({
 
     if (placesServiceRef.current && onCoordinates) {
       placesServiceRef.current.getDetails(
-        { placeId: place.placeId, fields: ['geometry'] },
+        { placeId: place.placeId, fields: ['geometry', 'address_components', 'formatted_address'] },
         (result, status) => {
           if (status === google.maps.places.PlacesServiceStatus.OK && result?.geometry?.location) {
-            onCoordinates(
-              result.geometry.location.lat(),
-              result.geometry.location.lng(),
-            )
+            onCoordinates(result.geometry.location.lat(), result.geometry.location.lng(), {
+              ...extractPlaceDetails(result.address_components),
+              placeId: place.placeId,
+              formattedAddress: result.formatted_address ?? place.description,
+            })
           }
         },
       )
@@ -226,6 +269,7 @@ export function LocationInput({
       async (position) => {
         setLocating(false)
         const { latitude, longitude } = position.coords
+        let details: PlaceDetails | undefined
 
         if (placesServiceRef.current) {
           try {
@@ -234,11 +278,17 @@ export function LocationInput({
               location: { lat: latitude, lng: longitude },
             })
             if (geocodeResult.results.length > 0) {
-              const addr = buildAddress(geocodeResult.results[0].address_components) ?? geocodeResult.results[0].formatted_address
+              const first = geocodeResult.results[0]
+              const addr = buildAddress(first.address_components) ?? first.formatted_address
+              details = {
+                ...extractPlaceDetails(first.address_components),
+                placeId: first.place_id,
+                formattedAddress: first.formatted_address,
+              }
               setQuery(addr)
               onChange(addr, {
                 description: addr,
-                placeId: geocodeResult.results[0].place_id,
+                placeId: first.place_id,
                 mainText: addr.split(',')[0],
                 secondaryText: addr.split(',').slice(1).join(',').trim(),
               })
@@ -266,7 +316,7 @@ export function LocationInput({
           onChange(fallback)
         }
 
-        onCoordinates?.(latitude, longitude)
+        onCoordinates?.(latitude, longitude, details)
       },
       (err) => {
         setLocating(false)

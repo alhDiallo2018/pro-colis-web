@@ -9,15 +9,27 @@ import { CreateAnnonceDialog } from './CreateAnnonceDialog'
 import { RechargeDialog } from './RechargeDialog'
 import { ItineraireDialog } from './ItineraireDialog'
 import { useDriverBidsSent, useDriverFreeParcels, useDriverParcels, useMyAdvertisements, useScoreBalance } from './hooks'
+import { useMyDriverStats } from '@/features/shared/profile/hooks'
 import { formatDate, formatFcfa, formatPoints, formatWeight } from '@/lib/format'
 import type { Parcel } from '@/lib/api/types'
 
-const REVENUE_BARS = [46, 62, 40, 78, 55, 88, 100]
-const DAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+const DAY_LETTERS = ['D', 'L', 'M', 'M', 'J', 'V', 'S']
+
+/** Montant encaissé par le chauffeur pour un colis livré. */
+function parcelRevenue(p: Parcel): number {
+  return Number(p.negotiatedPrice ?? p.price ?? p.totalAmount ?? 0)
+}
+
+function startOfDay(d: Date): Date {
+  const copy = new Date(d)
+  copy.setHours(0, 0, 0, 0)
+  return copy
+}
 
 export function DriverDashboard() {
   const navigate = useNavigate()
-  const mine = useDriverParcels()
+  const mine = useDriverParcels({ limit: 200 })
+  const stats = useMyDriverStats()
   const free = useDriverFreeParcels()
   const sent = useDriverBidsSent()
   const ads = useMyAdvertisements()
@@ -29,7 +41,7 @@ export function DriverDashboard() {
   const [showRecharge, setShowRecharge] = useState(false)
   const [showItineraire, setShowItineraire] = useState(false)
 
-  const parcels = mine.data?.parcels ?? []
+  const parcels = useMemo(() => mine.data?.parcels ?? [], [mine.data])
   const freeParcels = free.data?.parcels ?? []
   const active = parcels.find((p) => !['delivered', 'cancelled'].includes(p.status))
   const delivered = parcels.filter((p) => p.status === 'delivered').length
@@ -42,6 +54,38 @@ export function DriverDashboard() {
     return map
   }, [sent.data])
 
+  // Revenus réels : colis livrés sur les 7 derniers jours, comparés aux 7 précédents.
+  const revenue = useMemo(() => {
+    const today = startOfDay(new Date())
+    const buckets = Array.from({ length: 7 }, (_, i) => {
+      const day = new Date(today)
+      day.setDate(today.getDate() - (6 - i))
+      return { day, total: 0 }
+    })
+    let previousWeek = 0
+
+    for (const p of parcels) {
+      if (p.status !== 'delivered') continue
+      const raw = p.deliveryDate ?? p.updatedAt
+      if (!raw) continue
+      const date = startOfDay(new Date(raw))
+      if (Number.isNaN(date.getTime())) continue
+      const diffDays = Math.round((today.getTime() - date.getTime()) / 86_400_000)
+      if (diffDays >= 0 && diffDays <= 6) buckets[6 - diffDays].total += parcelRevenue(p)
+      else if (diffDays >= 7 && diffDays <= 13) previousWeek += parcelRevenue(p)
+    }
+
+    const total = buckets.reduce((sum, b) => sum + b.total, 0)
+    const delta = previousWeek > 0 ? Math.round(((total - previousWeek) / previousWeek) * 100) : null
+    return {
+      total,
+      delta,
+      bars: buckets.map((b) => b.total),
+      labels: buckets.map((b) => DAY_LETTERS[b.day.getDay()]),
+      hasData: total > 0 || previousWeek > 0,
+    }
+  }, [parcels])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
@@ -51,11 +95,13 @@ export function DriverDashboard() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
-        <StatBox icon="local_shipping" tone="primary" value={parcels.length} label="Missions" />
-        <StatBox icon="sell" tone="green" value={freeParcels.length} label="Annonces" />
-        <StatBox icon="gavel" tone="amber" value={sent.data?.length ?? 0} label="Offres envoyées" />
-        <StatBox icon="task_alt" tone="neutral" value={delivered} label="Colis livrés" />
-        <StatBox icon="account_balance_wallet" tone="teal" value={balance.data ?? '—'} label="Points" />
+        <StatBox icon="local_shipping" tone="primary" value={stats.data?.assignedParcels ?? parcels.length} label="Missions" />
+        <StatBox icon="pending_actions" tone="teal" value={stats.data?.activeParcels ?? '—'} label="En cours" />
+        <StatBox icon="sell" tone="green" value={freeParcels.length} label="Annonces dispo" />
+        <StatBox icon="gavel" tone="amber" value={stats.data?.pendingBids ?? sent.data?.length ?? 0} label="Offres en attente" />
+        <StatBox icon="task_alt" tone="neutral" value={stats.data?.completedDeliveries ?? delivered} label="Colis livrés" />
+        <StatBox icon="star" tone="amber" value={stats.data?.rating ? stats.data.rating.toFixed(1) : '—'} label="Note moyenne" />
+        <StatBox icon="account_balance_wallet" tone="teal" value={balance.data ?? stats.data?.scoreBalance ?? '—'} label="Points" />
       </div>
 
       <div className="pc-split">
@@ -184,11 +230,27 @@ export function DriverDashboard() {
             </div>
           </div>
 
-          <Panel title="Revenus · 7 jours" action={<Badge tone="green">+14%</Badge>}>
+          <Panel
+            title="Revenus · 7 jours"
+            action={
+              revenue.delta != null ? (
+                <Badge tone={revenue.delta >= 0 ? 'green' : 'red'}>
+                  {revenue.delta >= 0 ? '+' : ''}
+                  {revenue.delta}%
+                </Badge>
+              ) : undefined
+            }
+          >
             <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 26, color: 'var(--text-strong)', marginBottom: 14 }}>
-              214 000 <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>FCFA</span>
+              {formatFcfa(revenue.total)}
             </div>
-            <BarChart bars={REVENUE_BARS} labels={DAYS} highlightLast />
+            {revenue.hasData ? (
+              <BarChart bars={revenue.bars} labels={revenue.labels} highlightLast />
+            ) : (
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                Aucune livraison terminée sur les 14 derniers jours.
+              </div>
+            )}
           </Panel>
 
           <Panel title="Mes offres" flush>

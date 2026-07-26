@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Badge, Button, Card, Input, Select, StatBox, Toast } from '@/ds'
 import { useAuthStore } from '@/store/auth'
-import { useDriverParcels, useDriverVehicle, useDriverWallet, useScoreBalance, useUpdateDriverProfile, useUpsertVehicle } from './hooks'
-import { ProfilePhotoCapture } from '@/components/ProfilePhotoCapture'
-import { uploadProfilePhoto } from '@/lib/api/uploads'
+import {
+  useDriverVehicle,
+  useDriverWallet,
+  useMyAdvertisements,
+  useMyRatings,
+  useScoreBalance,
+  useUpsertVehicle,
+} from './hooks'
+import { ProfileHeader } from '@/features/shared/profile/ProfileHeader'
+import { IdentityCard } from '@/features/shared/profile/IdentityCard'
+import { useMyDriverStats, useMyIdentityStatus } from '@/features/shared/profile/hooks'
 import { ApiError } from '@/lib/api/client'
-import { LocationInput } from '@/components/LocationInput'
-import { formatFcfa } from '@/lib/format'
+import { formatDate, formatFcfa } from '@/lib/format'
 
 const VEHICLE_TYPES = [
   { value: 'Minibus', label: 'Minibus' },
@@ -31,27 +39,24 @@ function Stars({ rating }: { rating: number }) {
     <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14, color: 'var(--amber-500)' }}>
       {'★'.repeat(full)}
       {half ? '½' : ''}
-      {'☆'.repeat(empty)}
+      {'☆'.repeat(Math.max(0, empty))}
     </span>
   )
 }
 
 export function DriverProfilScreen() {
   const user = useAuthStore((s) => s.user)
-  const updateProfile = useUpdateDriverProfile()
+  const navigate = useNavigate()
   const vehicleQ = useDriverVehicle()
   const upsertVehicle = useUpsertVehicle()
   const walletQ = useDriverWallet()
   const pointsQ = useScoreBalance()
-  const parcelsQ = useDriverParcels({ limit: 500 })
+  const statsQ = useMyDriverStats()
+  const identityQ = useMyIdentityStatus()
+  const ratingsQ = useMyRatings(user?.id)
+  const adsQ = useMyAdvertisements()
 
-  const [fullName, setFullName] = useState(user?.fullName ?? '')
-  const [email, setEmail] = useState(user?.email ?? '')
-  const [city, setCity] = useState(user?.city ?? '')
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
-  const [profileSaved, setProfileSaved] = useState(false)
-  const [uploadingPhoto, setUploadingPhoto] = useState(false)
-
   const [plateNumber, setPlate] = useState('')
   const [model, setModel] = useState('')
   const [type, setType] = useState('')
@@ -67,56 +72,19 @@ export function DriverProfilScreen() {
     }
   }, [vehicleQ.data])
 
-  const parcels = parcelsQ.data?.parcels ?? []
-  let parcelDelivered = 0
-  let parcelCancelled = 0
-  let parcelInProgress = 0
-  for (const p of parcels) {
-    if (p.status === 'delivered') parcelDelivered++
-    else if (p.status === 'cancelled') parcelCancelled++
-    else parcelInProgress++
-  }
-
-  const wallet = walletQ.data
-  const statusInfo = DRIVER_STATUS_LABEL[user?.driverStatus ?? ''] ?? { label: user?.driverStatus ?? 'Inconnu', tone: 'neutral' as const }
-
   if (!user) return null
 
-  const saveProfile = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setProfileSaved(false)
-
-    let profilePhotoUrl = user.profilePhoto ?? undefined
-
-    if (photoDataUrl !== null) {
-      if (photoDataUrl === '') {
-        profilePhotoUrl = undefined
-      } else {
-        setUploadingPhoto(true)
-        try {
-          profilePhotoUrl = await uploadProfilePhoto(photoDataUrl, `profile-${user.id}.jpg`)
-        } catch {
-          profilePhotoUrl = user.profilePhoto ?? undefined
-        }
-        setUploadingPhoto(false)
-      }
-    }
-
-    updateProfile.mutate(
-      {
-        fullName: fullName.trim(),
-        email: email.trim() || null,
-        city: city.trim() || null,
-        profilePhoto: profilePhotoUrl ?? null,
-      },
-      {
-        onSuccess: () => {
-          setProfileSaved(true)
-          setPhotoDataUrl(null)
-        },
-      },
-    )
+  const stats = statsQ.data
+  const wallet = walletQ.data
+  const ratings = ratingsQ.data ?? []
+  const avgRating = ratings.length
+    ? ratings.reduce((sum, r) => sum + Number(r.rating ?? 0), 0) / ratings.length
+    : (user.rating ?? 0)
+  const statusInfo = DRIVER_STATUS_LABEL[user.driverStatus ?? ''] ?? {
+    label: user.driverStatus ?? 'Inconnu',
+    tone: 'neutral' as const,
   }
+  const kycStatus = identityQ.data?.documents?.length ? identityQ.data.status : null
 
   const saveVehicle = (e: React.FormEvent) => {
     e.preventDefault()
@@ -127,101 +95,102 @@ export function DriverProfilScreen() {
     )
   }
 
-  const profileError = updateProfile.error instanceof ApiError ? updateProfile.error.message : null
   const vehicleError = upsertVehicle.error instanceof ApiError ? upsertVehicle.error.message : null
   const vehicleValid = plateNumber.trim().length >= 2 && model.trim().length >= 1 && type.trim().length >= 1
-  const isPending = updateProfile.isPending || uploadingPhoto
 
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Header */}
-      <Card padding="lg">
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-          <ProfilePhotoCapture
-            currentPhotoUrl={user.profilePhoto}
-            userName={user.fullName}
-            onChange={(dataUrl) => setPhotoDataUrl(dataUrl ?? '')}
-          />
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--fs-h2)', color: 'var(--text-strong)' }}>
-              {user.fullName}
-            </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', marginTop: 4, flexWrap: 'wrap' }}>
-              <Badge tone="primary">Chauffeur</Badge>
-              <Badge tone={statusInfo.tone}>{statusInfo.label}</Badge>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
-                {user.phone}
-              </span>
-              {user.garageName && <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>· {user.garageName}</span>}
-            </div>
-            {user.rating != null && user.rating > 0 && (
-              <div style={{ marginTop: 6, fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
-                <Stars rating={user.rating} />
-                <span style={{ marginLeft: 4, fontFamily: 'var(--font-mono)' }}>{user.rating.toFixed(1)}</span>
-              </div>
+    <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <ProfileHeader
+        user={user}
+        onPhotoChange={setPhotoDataUrl}
+        kycStatus={kycStatus}
+        badges={
+          <>
+            <Badge tone={statusInfo.tone} icon="local_shipping">
+              {statusInfo.label}
+            </Badge>
+            {avgRating > 0 && (
+              <Badge tone="amber" icon="star">
+                {avgRating.toFixed(1)} / 5
+              </Badge>
             )}
-          </div>
+          </>
+        }
+        meta={[
+          { icon: 'directions_car', label: 'Véhicule', value: vehicleQ.data ? `${vehicleQ.data.model ?? '—'} · ${vehicleQ.data.plateNumber ?? '—'}` : 'Non renseigné' },
+          { icon: 'task_alt', label: 'Livraisons terminées', value: stats?.completedDeliveries ?? user.completedDeliveries ?? 0 },
+          { icon: 'account_balance_wallet', label: 'Solde portefeuille', value: wallet ? formatFcfa(wallet.balance) : '—' },
+        ]}
+      />
+
+      {/* Activité */}
+      <Card padding="lg">
+        <h3 style={{ margin: '0 0 14px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
+          Mon activité
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+          <StatBox icon="inventory_2" tone="primary" value={stats?.assignedParcels ?? '—'} label="Missions totales" />
+          <StatBox icon="local_shipping" tone="teal" value={stats?.activeParcels ?? '—'} label="En cours" />
+          <StatBox icon="task_alt" tone="green" value={stats?.completedDeliveries ?? '—'} label="Livrées" />
+          <StatBox icon="gavel" tone="amber" value={stats?.pendingBids ?? '—'} label="Offres en attente" />
+          <StatBox icon="campaign" tone="neutral" value={stats?.openAdvertisements ?? adsQ.data?.length ?? '—'} label="Annonces ouvertes" />
+          <StatBox icon="star" tone="amber" value={avgRating > 0 ? avgRating.toFixed(1) : '—'} label="Note moyenne" />
         </div>
       </Card>
 
-      {/* Stats colis */}
+      {/* Portefeuille & points */}
       <Card padding="lg">
-        <h3 style={{ margin: '0 0 14px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>Mes colis</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
-          <StatBox icon="task_alt" tone="green" value={parcelDelivered} label="Livrés" />
-          <StatBox icon="local_shipping" tone="teal" value={parcelInProgress} label="En cours" />
-          <StatBox icon="cancel" tone="red" value={parcelCancelled} label="Annulés" />
-          <StatBox icon="inventory_2" tone="primary" value={parcels.length} label="Total missions" />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
+          <h3 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
+            Portefeuille & points
+          </h3>
+          <Button size="sm" variant="secondary" iconTrailing="chevron_right" onClick={() => navigate('/driver/points')}>
+            Historique
+          </Button>
         </div>
-      </Card>
-
-      {/* Portefeuille */}
-      <Card padding="lg">
-        <h3 style={{ margin: '0 0 14px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>Portefeuille</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
           <StatBox icon="account_balance_wallet" tone="teal" value={wallet ? formatFcfa(wallet.balance) : '—'} label="Solde disponible" />
           <StatBox icon="savings" tone="green" value={wallet?.totalEarned != null ? formatFcfa(wallet.totalEarned) : '—'} label="Total gagné" />
           <StatBox icon="receipt_long" tone="amber" value={wallet?.totalCommissionsPaid != null ? formatFcfa(wallet.totalCommissionsPaid) : '—'} label="Commissions payées" />
           <StatBox icon="payments" tone="neutral" value={wallet?.totalWithdrawn != null ? formatFcfa(wallet.totalWithdrawn) : '—'} label="Retraits" />
+          <StatBox icon="stars" tone="primary" value={pointsQ.data ?? stats?.scoreBalance ?? '—'} label="Points" />
         </div>
       </Card>
 
-      {/* Points */}
+      {/* Vérification d'identité */}
       <Card padding="lg">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)', marginBottom: 2 }}>Points fidélité</div>
-            <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>Accumulez des points à chaque livraison</div>
+            <h3 style={{ margin: '0 0 4px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
+              Vérification d'identité
+            </h3>
+            <p style={{ margin: 0, fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
+              {identityQ.data?.documents?.length
+                ? `${identityQ.data.documents.length} document(s) envoyé(s)${
+                    identityQ.data.identity?.updatedAt ? ` · dernier envoi le ${formatDate(identityQ.data.identity.updatedAt)}` : ''
+                  }`
+                : "Aucun document envoyé. Vos papiers sont requis pour recevoir des missions."}
+            </p>
+            {identityQ.data?.status === 'rejected' && identityQ.data.identity?.rejectionReason && (
+              <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-sm)', color: 'var(--red-500)' }}>
+                Motif du refus : {identityQ.data.identity.rejectionReason}
+              </p>
+            )}
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, color: 'var(--color-primary)' }}>
-              {pointsQ.data != null ? pointsQ.data : '—'}
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>pts</div>
-          </div>
+          <Button size="sm" variant="secondary" icon="description" onClick={() => navigate('/driver/documents')}>
+            Mes documents
+          </Button>
         </div>
       </Card>
 
-      {/* Identity */}
-      <Card padding="lg">
-        <h3 style={{ margin: '0 0 16px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>Informations personnelles</h3>
-        <form onSubmit={saveProfile} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Input label="Nom complet" icon="badge" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          <div className="pc-field-pair" style={{ gap: 16 }}>
-            <Input label="Email" icon="mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <LocationInput label="Ville" icon="location_on" placeholder="Votre ville..." value={city} onChange={setCity} />
-          </div>
-          {profileError && <Toast tone="error" message={profileError} />}
-          {profileSaved && !profileError && <Toast tone="success" message="Profil mis à jour." />}
-          <div>
-            <Button type="submit" icon="save" loading={isPending} disabled={!fullName.trim()}>
-              Enregistrer le profil
-            </Button>
-          </div>
-        </form>
-      </Card>
+      <IdentityCard
+        user={user}
+        photoDataUrl={photoDataUrl}
+        onPhotoSaved={() => setPhotoDataUrl(null)}
+        fields={['email', 'gender', 'city', 'region', 'address']}
+      />
 
-      {/* Vehicle */}
+      {/* Véhicule */}
       <Card padding="lg">
         <h3 style={{ margin: '0 0 4px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>Mon véhicule</h3>
         <p style={{ margin: '0 0 16px', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
@@ -247,6 +216,60 @@ export function DriverProfilScreen() {
             </Button>
           </div>
         </form>
+      </Card>
+
+      {/* Avis clients */}
+      <Card padding="lg">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 4 }}>
+          <h3 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
+            Avis clients
+          </h3>
+          {ratings.length > 0 && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <Stars rating={avgRating} />
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13.5, color: 'var(--text-muted)' }}>
+                {avgRating.toFixed(1)} · {ratings.length} avis
+              </span>
+            </span>
+          )}
+        </div>
+        {ratings.length === 0 ? (
+          <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 10 }}>
+            Aucun avis pour le moment. Vos clients pourront vous noter après chaque livraison.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', marginTop: 10 }}>
+            {ratings.slice(0, 6).map((r) => (
+              <div key={r.id} style={{ padding: '12px 0', borderTop: '1px solid var(--border-subtle)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <Stars rating={Number(r.rating ?? 0)} />
+                  <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: 'var(--text-strong)' }}>
+                    {r.author?.fullName ?? 'Client'}
+                  </span>
+                  <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>{formatDate(r.createdAt)}</span>
+                </div>
+                {r.comment && <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>{r.comment}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Renvoi vers les paramètres (PIN, disponibilité, notifications) */}
+      <Card padding="lg">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div>
+            <h3 style={{ margin: '0 0 4px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
+              Sécurité & préférences
+            </h3>
+            <p style={{ margin: 0, fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
+              Code PIN, disponibilité et notifications.
+            </p>
+          </div>
+          <Button size="sm" variant="secondary" icon="settings" onClick={() => navigate('/driver/parametres')}>
+            Paramètres
+          </Button>
+        </div>
       </Card>
     </div>
   )

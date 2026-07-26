@@ -13,6 +13,8 @@ const ROLE_LABEL: Record<Role, string> = {
   admin: 'Admin zone',
   super_admin: 'Super admin',
   support: 'Support',
+  support_technique: 'Support technique',
+  support_commercial: 'Support commercial',
 }
 
 const STATUS_TONE: Record<UserStatus, 'green' | 'red' | 'neutral'> = {

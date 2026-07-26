@@ -8,6 +8,7 @@ import * as vehiclesApi from '@/lib/api/vehicles'
 import * as usersApi from '@/lib/api/users'
 import * as scoreApi from '@/lib/api/score'
 import * as withdrawalsApi from '@/lib/api/withdrawals'
+import * as ratingsApi from '@/lib/api/ratings'
 import type { ListParams } from '@/lib/api/types'
 import { useAuthStore } from '@/store/auth'
 import { queryClient } from '@/lib/queryClient'
@@ -55,6 +56,16 @@ export function useCancelWithdrawal() {
       queryClient.invalidateQueries({ queryKey: ['driver', 'wallet'] })
       queryClient.invalidateQueries({ queryKey: ['driver', 'withdrawals'] })
     },
+  })
+}
+
+/** Avis laissés par les clients sur le chauffeur connecté. */
+export function useMyRatings(driverId: string | undefined) {
+  return useQuery({
+    queryKey: ['ratings', 'driver', driverId],
+    queryFn: () => ratingsApi.getDriverRatings(driverId as string),
+    enabled: !!driverId,
+    retry: false,
   })
 }
 

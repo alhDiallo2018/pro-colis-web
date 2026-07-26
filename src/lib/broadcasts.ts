@@ -1,6 +1,7 @@
 import { useMemo, useEffect, useState } from 'react'
 import { useAuthStore } from '@/store/auth'
 import { fetchActiveBroadcasts } from '@/lib/api/broadcasts'
+import type { Role } from '@/lib/api/types'
 
 const STORAGE_KEY = 'procolis-broadcasts'
 
@@ -10,7 +11,7 @@ export interface Broadcast {
   message: string
   imageUrl?: string
   scroll?: boolean
-  targetRoles: ('client' | 'driver' | 'admin' | 'super_admin' | 'support')[]
+  targetRoles: Role[]
   type: 'info' | 'warning' | 'success' | 'promo'
   active: boolean
   startsAt: string

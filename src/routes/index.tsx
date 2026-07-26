@@ -45,6 +45,8 @@ import { MessagesScreen } from '@/features/shared/MessagesScreen'
 import { SupportChatScreen } from '@/features/shared/SupportChatScreen'
 import { SupportChatWrapper } from '@/features/shared/SupportChatWrapper'
 import { AdminSupportScreen } from '@/features/shared/AdminSupportScreen'
+import { SupportDashboard } from '@/features/shared/SupportDashboard'
+import { StaffProfilScreen } from '@/features/shared/StaffProfilScreen'
 import { SupportAdminRedirect } from './SupportRedirect'
 import { AvailabilityToggle } from '@/features/driver/AvailabilityToggle'
 import { SuperAdminDashboard } from '@/features/superAdmin/SuperAdminDashboard'
@@ -58,6 +60,7 @@ import { ConfigConsommationPage } from '@/features/superAdmin/ConfigConsommation
 import { FinanceDashboardPage } from '@/features/superAdmin/FinanceDashboardPage'
 import { WalletsPage } from '@/features/superAdmin/WalletsPage'
 import { PaymentsPage } from '@/features/superAdmin/PaymentsPage'
+import { CashDeclarationsPage } from '@/features/superAdmin/CashDeclarationsPage'
 import { PaymentNotificationsPage } from '@/features/superAdmin/PaymentNotificationsPage'
 import { ReputationDashboardPage } from '@/features/superAdmin/ReputationDashboardPage'
 import { ScoresPage } from '@/features/superAdmin/ScoresPage'
@@ -124,6 +127,7 @@ const GARAGE_NAV: NavSection[] = [
       { label: 'Assignations', icon: 'assignment_ind', to: '/garage/assignations' },
       { label: 'Rapports', icon: 'monitoring', to: '/garage/rapports' },
       { label: 'Support', icon: 'support_agent', to: '/garage/support' },
+      { label: 'Profil', icon: 'person', to: '/garage/profil' },
     ],
   },
 ]
@@ -146,6 +150,7 @@ const SUPER_NAV: NavSection[] = [
       { label: 'Retraits', icon: 'money', to: '/admin/finance/withdrawals' },
       { label: 'Configuration', icon: 'settings', to: '/admin/finance/configuration' },
       { label: 'Paiements', icon: 'payments', to: '/admin/finance/payments' },
+      { label: 'Espèces à valider', icon: 'price_check', to: '/admin/finance/payments-cash' },
       { label: 'Notifications paiement', icon: 'notifications_active', to: '/admin/finance/payments-notifications' },
       { label: 'Dépenses', icon: 'receipt_long', to: '/admin/finance/expenses' },
       { label: 'Configuration PayDunya', icon: 'credit_card', to: '/admin/paydunya' },
@@ -172,6 +177,10 @@ const SUPER_NAV: NavSection[] = [
       { label: 'Bandeaux', icon: 'campaign', to: '/admin/broadcasts' },
     ],
   },
+  {
+    heading: 'Mon compte',
+    items: [{ label: 'Profil', icon: 'person', to: '/admin/profil' }],
+  },
 ]
 
 const SUPPORT_NAV: NavSection[] = [
@@ -179,9 +188,11 @@ const SUPPORT_NAV: NavSection[] = [
     items: [
       { label: 'Tableau de bord', icon: 'dashboard', to: '/support-admin', end: true },
       { label: 'Support', icon: 'support_agent', to: '/support-admin/conversations' },
+      { label: 'Assistances', icon: 'contact_support', to: '/support-admin/assistances' },
       { label: 'Colis', icon: 'package_2', to: '/support-admin/colis' },
       { label: 'Chauffeurs', icon: 'local_shipping', to: '/support-admin/chauffeurs' },
       { label: 'Utilisateurs', icon: 'group', to: '/support-admin/users' },
+      { label: 'Profil', icon: 'person', to: '/support-admin/profil' },
     ],
   },
 ]
@@ -296,6 +307,7 @@ export const router = createBrowserRouter([
         <DashboardLayout
           nav={GARAGE_NAV}
           roleLabel="Admin zone"
+          greetOnIndex
           banner={<BroadcastBanner />}
           actions={<NotifButton />}
         />
@@ -309,6 +321,7 @@ export const router = createBrowserRouter([
       { path: 'assignations', element: <GarageAssignationsPage /> },
       { path: 'rapports', element: <GarageRapportsPage /> },
       { path: 'support', element: <AdminSupportScreen /> },
+      { path: 'profil', element: <StaffProfilScreen /> },
       { path: 'notifications', element: <NotificationsScreen /> },
     ],
   },
@@ -350,6 +363,7 @@ export const router = createBrowserRouter([
       { path: 'finance/commissions', element: <Navigate to="/admin/finance/configuration" replace /> },
       { path: 'finance/configuration', element: <ConfigConsommationPage /> },
       { path: 'finance/payments', element: <PaymentsPage /> },
+      { path: 'finance/payments-cash', element: <CashDeclarationsPage /> },
       { path: 'finance/payments-notifications', element: <PaymentNotificationsPage /> },
       { path: 'finance/withdrawals', element: <WithdrawalsPage /> },
       { path: 'finance/expenses', element: <ExpensesPage /> },
@@ -365,29 +379,33 @@ export const router = createBrowserRouter([
       { path: 'chauffeurs/:userId', element: <DriverDetailPage /> },
       { path: 'garages/:garageId/drivers', element: <GarageDriversPage /> },
       { path: 'support', element: <AdminSupportScreen /> },
+      { path: 'profil', element: <StaffProfilScreen /> },
       { path: 'notifications', element: <NotificationsScreen /> },
     ],
   },
 
-  // Support admin (super_admin or support role with limited UI)
+  // Support admin (super_admin ou rôles support, UI restreinte)
   {
     path: '/support-admin',
     element: (
-      <RequireRole roles={['super_admin', 'support']}>
+      <RequireRole roles={['super_admin', 'support', 'support_technique', 'support_commercial']}>
         <DashboardLayout
           nav={SUPPORT_NAV}
           roleLabel="Support"
+          greetOnIndex
           banner={<BroadcastBanner />}
           actions={<NotifButton />}
         />
       </RequireRole>
     ),
     children: [
-      { index: true, element: <AdminSupportScreen /> },
+      { index: true, element: <SupportDashboard /> },
       { path: 'conversations', element: <AdminSupportScreen /> },
+      { path: 'assistances', element: <AssistancesPage /> },
       { path: 'colis', element: <ColisPage /> },
       { path: 'chauffeurs', element: <ChauffeursPage /> },
       { path: 'users', element: <UtilisateursPage /> },
+      { path: 'profil', element: <StaffProfilScreen /> },
       { path: 'notifications', element: <NotificationsScreen /> },
     ],
   },

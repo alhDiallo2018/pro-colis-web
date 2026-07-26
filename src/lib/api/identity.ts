@@ -58,3 +58,21 @@ export async function rejectVerification(id: string, reason: string): Promise<Id
   const { data } = await api.post(`/super-admin/identity-verifications/${id}/reject`, { reason })
   return data.verification ?? data.data
 }
+
+export interface MyIdentityStatus {
+  /** `approved` seulement si tous les documents le sont, `rejected` dès qu'un l'est. */
+  status: IdentityStatus
+  identity: IdentityVerification | null
+  documents: IdentityVerification[]
+}
+
+/** Statut de vérification d'identité de l'utilisateur connecté. */
+export async function myIdentityStatus(): Promise<MyIdentityStatus> {
+  const { data } = await api.get('/identity/status')
+  const documents = (data.documents ?? data.data?.documents ?? []) as IdentityVerification[]
+  return {
+    status: (data.status ?? data.data?.status ?? 'pending') as IdentityStatus,
+    identity: (data.identity ?? data.data?.identity ?? null) as IdentityVerification | null,
+    documents,
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button, Dialog, Input, Select, Switch, Toast } from '@/ds'
-import { LocationInput, type PlaceResult } from '@/components/LocationInput'
+import { LocationInput, type PlaceDetails, type PlaceResult } from '@/components/LocationInput'
+import { MapPicker } from '@/components/MapPicker'
 import type { Zone } from '@/lib/api/types'
 import { useCreateZone, useUpdateZone } from './hooks'
 
@@ -71,10 +72,14 @@ export function ZoneFormDialog({ open, zone, onClose }: Props) {
     set({ placeId: place.placeId ?? '' })
   }
 
-  const handleCoordinates = (lat: number, lng: number, city?: string, country?: string) => {
-    set({ latitude: String(lat), longitude: String(lng) })
-    if (city && !form.city) set({ city })
-    if (country && !form.country) set({ country })
+  const handleCoordinates = (lat: number, lng: number, details?: PlaceDetails) => {
+    setForm((f) => ({
+      ...f,
+      latitude: String(lat),
+      longitude: String(lng),
+      city: f.city || details?.city || '',
+      country: f.country || details?.country || '',
+    }))
   }
 
   const handleSubmit = async () => {
@@ -198,18 +203,12 @@ export function ZoneFormDialog({ open, zone, onClose }: Props) {
           </div>
         )}
 
-        {hasCoords && apiKey && (
-          <div style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--slate-200)', height: 200 }}>
-            <iframe
-              title="Apercu de la zone"
-              width="100%"
-              height="200"
-              style={{ border: 0 }}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              src={`https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${previewLat},${previewLng}&center=${previewLat},${previewLng}&zoom=13`}
-            />
-          </div>
+        {apiKey && (
+          <MapPicker
+            value={hasCoords ? { lat: previewLat, lng: previewLng } : null}
+            onChange={handleCoordinates}
+            height={200}
+          />
         )}
 
         <Switch

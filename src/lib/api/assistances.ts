@@ -45,6 +45,28 @@ export interface AssistancePayload {
   status?: AssistanceStatus
 }
 
+/** Utilisateur candidat au rattachement d'une assistance. */
+export interface AssistanceUser {
+  id: string
+  fullName: string
+  phone: string
+  email?: string | null
+  role: string
+  city?: string | null
+  status?: string
+}
+
+/**
+ * Recherche d'utilisateurs inscrits pour rattacher l'assistance au bon compte.
+ * Sans terme, l'API renvoie les comptes récemment actifs (liste jamais vide).
+ */
+export async function searchAssistanceUsers(search: string): Promise<AssistanceUser[]> {
+  const { data } = await api.get('/super-admin/assistances/users/search', {
+    params: search ? { search } : {},
+  })
+  return data.users ?? data.data ?? []
+}
+
 /** Admin — liste paginée des assistances (avec filtres search / channel / status). */
 export async function listAssistances(params: ListParams = {}): Promise<AssistanceList> {
   const { data } = await api.get('/super-admin/assistances', { params })

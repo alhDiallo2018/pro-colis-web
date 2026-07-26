@@ -16,6 +16,8 @@ const PROFILE_PATH: Record<Role, string> = {
   admin: '/garage-admin/profile',
   super_admin: '/super-admin/profile',
   support: '/super-admin/profile',
+  support_technique: '/support-technique/profile',
+  support_commercial: '/support-commercial/profile',
 }
 
 /** Met à jour le profil de l'utilisateur courant selon son rôle. */

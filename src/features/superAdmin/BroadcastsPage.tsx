@@ -25,7 +25,15 @@ function empty(): Broadcast {
 }
 
 function roleLabel(r: Broadcast['targetRoles'][number]) {
-  return { client: 'Client', driver: 'Chauffeur', admin: 'Admin zone', super_admin: 'Super Admin', support: 'Support' }[r]
+  return {
+    client: 'Client',
+    driver: 'Chauffeur',
+    admin: 'Admin zone',
+    super_admin: 'Super Admin',
+    support: 'Support',
+    support_technique: 'Support technique',
+    support_commercial: 'Support commercial',
+  }[r]
 }
 
 export default function BroadcastsPage() {
@@ -273,7 +281,7 @@ function BroadcastForm({
           Cibler les rôles
         </label>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          {(['client', 'driver', 'admin', 'super_admin', 'support'] as const).map((r) => (
+          {(['client', 'driver', 'admin', 'super_admin', 'support', 'support_technique', 'support_commercial'] as const).map((r) => (
             <label key={r} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
               <input type="checkbox" checked={b.targetRoles.includes(r)} onChange={() => toggleRole(r)} />
               {roleLabel(r)}

@@ -2,8 +2,8 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Icon } from '@/ds'
 import type { Garage } from '@/lib/api/types'
-import { resolveZone } from '@/lib/api/zones'
-import { LocationInput } from './LocationInput'
+import type { ResolvedZone } from '@/lib/api/zones'
+import { ZonePickerDialog } from './ZonePickerDialog'
 
 export interface GarageSearchSelectProps {
   label?: ReactNode
@@ -12,6 +12,10 @@ export interface GarageSearchSelectProps {
   garages: Garage[]
   value?: string
   onChange: (garageId: string) => void
+  /**
+   * Zone ajoutée à la volée. Le `Garage` reçu est le garage miroir renvoyé par
+   * l'API : son id est celui attendu par `departureGarageId` / `arrivalGarageId`.
+   */
   onAddNew?: (garage: Garage) => void
   error?: string
   disabled?: boolean
@@ -34,12 +38,10 @@ export function GarageSearchSelect({
 }: GarageSearchSelectProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const [adding, setAdding] = useState(false)
-  const [resolveBusy, setResolveBusy] = useState(false)
-  const [resolveError, setResolveError] = useState<string | null>(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const pendingPlace = useRef<{ placeId?: string; name: string } | null>(null)
   const canAddNew = Boolean(onAddNew)
 
   useEffect(() => {
@@ -47,7 +49,6 @@ export function GarageSearchSelect({
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         setOpen(false)
         setQuery('')
-        setAdding(false)
       }
     }
     document.addEventListener('mousedown', handler)
@@ -55,16 +56,10 @@ export function GarageSearchSelect({
   }, [])
 
   useEffect(() => {
-    if (!open) {
-      setQuery('')
-      setAdding(false)
-    }
+    if (!open) setQuery('')
   }, [open])
 
-  const selected = useMemo(
-    () => garages.find((g) => g.id === value),
-    [garages, value],
-  )
+  const selected = useMemo(() => garages.find((g) => g.id === value), [garages, value])
 
   const filtered = useMemo(() => {
     if (!query) return garages
@@ -99,42 +94,25 @@ export function GarageSearchSelect({
     onChange(garageId)
     setOpen(false)
     setQuery('')
-    setAdding(false)
+    setNotice(null)
   }
 
   const handleStartAdd = () => {
-    setAdding(true)
-    setResolveError(null)
+    setPickerOpen(true)
+    setOpen(false)
   }
 
-  const handleResolve = async (lat: number, lng: number) => {
-    const p = pendingPlace.current
-    if (!p || !onAddNew) return
-    setResolveBusy(true)
-    setResolveError(null)
-    try {
-      const { zone } = await resolveZone({ placeId: p.placeId, name: p.name, latitude: lat, longitude: lng })
-      const garage: Garage = {
-        id: zone.id,
-        name: zone.name,
-        city: zone.city ?? null,
-        region: zone.region ?? null,
-        country: zone.country ?? null,
-      }
-      onAddNew(garage)
-      onChange(garage.id)
-      setOpen(false)
-      setAdding(false)
-      setQuery('')
-      pendingPlace.current = null
-    } catch (e) {
-      setResolveError((e as Error)?.message ?? 'Impossible de créer ce lieu.')
-    } finally {
-      setResolveBusy(false)
-    }
+  const handleResolved = (garage: Garage, result: ResolvedZone) => {
+    onAddNew?.(garage)
+    onChange(garage.id)
+    setPickerOpen(false)
+    setQuery('')
+    setNotice(
+      result.created
+        ? `« ${garage.name} » a été ajoutée et sera validée par l’équipe.`
+        : `« ${garage.name} » existait déjà : elle a été sélectionnée.`,
+    )
   }
-
-  const borderColorEffective = resolveError ? 'var(--color-danger)' : borderColor
 
   return (
     <div ref={wrapperRef} style={{ position: 'relative', ...style }}>
@@ -144,122 +122,83 @@ export function GarageSearchSelect({
         </div>
       )}
 
-      {/* Adding mode: show LocationInput instead of the selector */}
-      {adding ? (
-        <LocationInput
-          label="Rechercher un lieu"
-          icon="add_location_alt"
-          placeholder="Tapez une ville ou adresse..."
-          disabled={resolveBusy}
-          onChange={(_val, place) => {
-            if (place) pendingPlace.current = { placeId: place.placeId, name: place.mainText || _val }
-          }}
-          onCoordinates={(lat, lng) => handleResolve(lat, lng)}
-        />
-      ) : (
-        <div
-          onClick={() => {
-            if (!disabled) {
-              setOpen(!open)
-              setTimeout(() => inputRef.current?.focus(), 50)
-            }
-          }}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            height: 48,
-            padding: '0 14px',
-            background: disabled ? 'var(--surface-sunken)' : 'var(--surface-card)',
-            border: `1px solid ${borderColorEffective}`,
-            borderRadius: 'var(--radius-md)',
-            boxShadow: open && !error ? 'var(--ring-focus)' : 'none',
-            transition: 'border-color var(--dur-fast), box-shadow var(--dur-fast)',
-            cursor: disabled ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {icon && (
-            <span className="material-symbols-rounded" style={{ fontSize: 20, color: open ? 'var(--color-primary)' : 'var(--text-faint)' }}>
-              {icon}
-            </span>
-          )}
-
-          {open ? (
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder="Tapez une ville ou zone..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                flex: 1,
-                minWidth: 0,
-                border: 'none',
-                outline: 'none',
-                background: 'transparent',
-                fontFamily: 'var(--font-body)',
-                fontWeight: 500,
-                fontSize: 15,
-                color: 'var(--text-strong)',
-              }}
-            />
-          ) : (
-            <span
-              style={{
-                flex: 1,
-                minWidth: 0,
-                fontFamily: 'var(--font-body)',
-                fontWeight: 500,
-                fontSize: 15,
-                color: selected ? 'var(--text-strong)' : 'var(--text-faint)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {selected ? `${selected.name} — ${selected.city ?? ''}` : placeholder}
-            </span>
-          )}
-
-          <span className="material-symbols-rounded" style={{ fontSize: 22, color: 'var(--text-muted)' }}>
-            {open ? 'search' : 'expand_more'}
+      <div
+        onClick={() => {
+          if (!disabled) {
+            setOpen(!open)
+            setTimeout(() => inputRef.current?.focus(), 50)
+          }
+        }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          height: 48,
+          padding: '0 14px',
+          background: disabled ? 'var(--surface-sunken)' : 'var(--surface-card)',
+          border: `1px solid ${borderColor}`,
+          borderRadius: 'var(--radius-md)',
+          boxShadow: open && !error ? 'var(--ring-focus)' : 'none',
+          transition: 'border-color var(--dur-fast), box-shadow var(--dur-fast)',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+        }}
+      >
+        {icon && (
+          <span className="material-symbols-rounded" style={{ fontSize: 20, color: open ? 'var(--color-primary)' : 'var(--text-faint)' }}>
+            {icon}
           </span>
-        </div>
-      )}
+        )}
 
-      {/* Adding mode: cancel button */}
-      {adding && (
-        <button
-          type="button"
-          onClick={() => {
-            setAdding(false)
-            pendingPlace.current = null
-            setResolveError(null)
-          }}
-          style={{
-            display: 'block',
-            marginTop: 6,
-            background: 'none',
-            border: 'none',
-            padding: 0,
-            cursor: 'pointer',
-            color: 'var(--text-muted)',
-            fontSize: 12,
-            fontWeight: 600,
-            fontFamily: 'inherit',
-          }}
-        >
-          ← Annuler et revenir à la liste
-        </button>
-      )}
+        {open ? (
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Tapez une ville ou zone..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              fontFamily: 'var(--font-body)',
+              fontWeight: 500,
+              fontSize: 15,
+              color: 'var(--text-strong)',
+            }}
+          />
+        ) : (
+          <span
+            style={{
+              flex: 1,
+              minWidth: 0,
+              fontFamily: 'var(--font-body)',
+              fontWeight: 500,
+              fontSize: 15,
+              color: selected ? 'var(--text-strong)' : 'var(--text-faint)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {selected ? [selected.name, selected.city].filter(Boolean).join(' — ') : placeholder}
+          </span>
+        )}
 
-      {resolveError && adding && (
-        <span style={{ fontSize: 12, color: 'var(--color-danger)', display: 'block', marginTop: 4 }}>{resolveError}</span>
-      )}
+        <span className="material-symbols-rounded" style={{ fontSize: 22, color: 'var(--text-muted)' }}>
+          {open ? 'search' : 'expand_more'}
+        </span>
+      </div>
 
-      {(error || resolveError) && !adding && (
-        <span style={{ fontSize: 12, color: 'var(--color-danger)', display: 'block', marginTop: 4 }}>{error}</span>
+      {error && <span style={{ fontSize: 12, color: 'var(--color-danger)', display: 'block', marginTop: 4 }}>{error}</span>}
+
+      {notice && !error && (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--teal-700)', marginTop: 4 }}>
+          <Icon name="check_circle" size={14} />
+          {notice}
+        </span>
       )}
 
       {open && (
@@ -282,11 +221,13 @@ export function GarageSearchSelect({
           {filtered.length === 0 ? (
             <div style={{ padding: 24, textAlign: 'center' }}>
               <Icon name="search_off" size={28} style={{ color: 'var(--text-faint)', marginBottom: 8 }} />
-              <p style={{ margin: '0 0 12px', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>Aucune zone trouvée pour "{query}"</p>
+              <p style={{ margin: '0 0 12px', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
+                {query ? `Aucune zone trouvée pour "${query}"` : 'Aucune zone disponible'}
+              </p>
               {canAddNew && (
                 <button
                   type="button"
-                  onClick={() => { handleStartAdd() }}
+                  onClick={handleStartAdd}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -303,98 +244,84 @@ export function GarageSearchSelect({
                   }}
                 >
                   <span className="material-symbols-rounded" style={{ fontSize: 18 }}>add_location_alt</span>
-                  Ajouter «{query}» comme nouveau lieu
+                  {query ? `Ajouter «${query}»` : 'Ajouter un lieu'}
                 </button>
               )}
             </div>
-          ) : grouped.length === 1 ? (
-            <>
-              {filtered.map((g) => (
-                <button
-                  key={g.id}
-                  type="button"
-                  onClick={() => handleSelect(g.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: 'none',
-                    borderBottom: '1px solid var(--border-subtle)',
-                    background: g.id === value ? 'var(--surface-sunken)' : 'transparent',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)' }}
-                  onMouseLeave={(e) => { if (g.id !== value) e.currentTarget.style.background = 'transparent' }}
-                >
-                  <Icon name="garage" size={18} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--text-strong)' }}>{g.name}</div>
-                    {(g.city || g.region) && (
-                      <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
-                        {[g.city, g.region].filter(Boolean).join(', ')}
-                        {g.address ? ` · ${g.address}` : ''}
-                      </div>
-                    )}
-                  </div>
-                </button>
-              ))}
-              {canAddNew && (
-                <AddZoneButton
-                  onClick={handleStartAdd}
-                  query={query}
-                />
-              )}
-            </>
           ) : (
             <>
-              {grouped.map(([city, list]) => (
-                <div key={city}>
-                  <div style={{ padding: '8px 16px', fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--color-primary)', background: 'var(--surface-sunken)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    {city}
-                  </div>
-                  {list.map((g) => (
-                    <button
-                      key={g.id}
-                      type="button"
-                      onClick={() => handleSelect(g.id)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        width: '100%',
-                        padding: '10px 16px 10px 28px',
-                        border: 'none',
-                        borderBottom: '1px solid var(--border-subtle)',
-                        background: g.id === value ? 'var(--surface-sunken)' : 'transparent',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)' }}
-                      onMouseLeave={(e) => { if (g.id !== value) e.currentTarget.style.background = 'transparent' }}
-                    >
-                      <Icon name="garage" size={18} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--text-strong)' }}>{g.name}</div>
-                        {g.address && <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>{g.address}</div>}
+              {grouped.length === 1
+                ? filtered.map((g) => <GarageRow key={g.id} garage={g} selected={g.id === value} onSelect={handleSelect} />)
+                : grouped.map(([city, list]) => (
+                    <div key={city}>
+                      <div style={{ padding: '8px 16px', fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--color-primary)', background: 'var(--surface-sunken)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                        {city}
                       </div>
-                    </button>
+                      {list.map((g) => (
+                        <GarageRow key={g.id} garage={g} selected={g.id === value} onSelect={handleSelect} indented />
+                      ))}
+                    </div>
                   ))}
-                </div>
-              ))}
-              {canAddNew && (
-                <AddZoneButton
-                  onClick={handleStartAdd}
-                  query={query}
-                />
-              )}
+              {canAddNew && <AddZoneButton onClick={handleStartAdd} query={query} />}
             </>
           )}
         </div>
       )}
+
+      {canAddNew && (
+        <ZonePickerDialog
+          open={pickerOpen}
+          initialQuery={query}
+          onClose={() => setPickerOpen(false)}
+          onResolved={handleResolved}
+        />
+      )}
     </div>
+  )
+}
+
+function GarageRow({
+  garage,
+  selected,
+  onSelect,
+  indented = false,
+}: {
+  garage: Garage
+  selected: boolean
+  onSelect: (id: string) => void
+  indented?: boolean
+}) {
+  const subtitle = [garage.city, garage.region].filter(Boolean).join(', ')
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(garage.id)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        width: '100%',
+        padding: indented ? '10px 16px 10px 28px' : '12px 16px',
+        border: 'none',
+        borderBottom: '1px solid var(--border-subtle)',
+        background: selected ? 'var(--surface-sunken)' : 'transparent',
+        cursor: 'pointer',
+        textAlign: 'left',
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)' }}
+      onMouseLeave={(e) => { if (!selected) e.currentTarget.style.background = 'transparent' }}
+    >
+      <Icon name="garage" size={18} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--text-strong)' }}>{garage.name}</div>
+        {(subtitle || garage.address) && (
+          <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
+            {subtitle}
+            {garage.address ? `${subtitle ? ' · ' : ''}${garage.address}` : ''}
+          </div>
+        )}
+      </div>
+    </button>
   )
 }
 
@@ -418,12 +345,14 @@ function AddZoneButton({ onClick, query }: { onClick: () => void; query: string 
         fontFamily: 'inherit',
         fontSize: 'var(--fs-sm)',
         fontWeight: 600,
+        position: 'sticky',
+        bottom: 0,
       }}
       onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--teal-100)' }}
       onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--teal-50)' }}
     >
       <span className="material-symbols-rounded" style={{ fontSize: 20 }}>add_location_alt</span>
-      {query ? `Ajouter «${query}» comme nouveau lieu` : 'Ajouter un nouveau lieu…'}
+      {query ? `Ajouter «${query}» comme nouveau lieu` : 'Ma zone n’est pas dans la liste…'}
     </button>
   )
 }

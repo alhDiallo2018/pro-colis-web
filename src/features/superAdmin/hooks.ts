@@ -9,6 +9,7 @@ import * as withdrawalsApi from '@/lib/api/withdrawals'
 import * as assistancesApi from '@/lib/api/assistances'
 import * as expensesApi from '@/lib/api/expenses'
 import * as identityApi from '@/lib/api/identity'
+import * as cashPaymentsApi from '@/lib/api/cash-payments'
 import { queryClient } from '@/lib/queryClient'
 
 export function useAdminParcels(params: ListParams = {}) {
@@ -273,6 +274,33 @@ export function useAdminPayments(params: ListParams = {}) {
   return useQuery({ queryKey: ['admin', 'payments', params], queryFn: () => adminFinance.listPayments(params) })
 }
 
+function invalidateCashDeclarations() {
+  queryClient.invalidateQueries({ queryKey: ['admin', 'payments', 'cash'] })
+  queryClient.invalidateQueries({ queryKey: ['admin', 'payments'] })
+}
+
+export function useCashDeclarations(status: cashPaymentsApi.CashDeclarationStatus = 'processing') {
+  return useQuery({
+    queryKey: ['admin', 'payments', 'cash', status],
+    queryFn: () => cashPaymentsApi.listCashDeclarations({ status, limit: 100 }),
+  })
+}
+
+export function useValidateCashDeclaration() {
+  return useMutation({
+    mutationFn: cashPaymentsApi.validateCashDeclaration,
+    onSuccess: invalidateCashDeclarations,
+  })
+}
+
+export function useRejectCashDeclaration() {
+  return useMutation({
+    mutationFn: ({ paymentId, reason }: { paymentId: string; reason: string }) =>
+      cashPaymentsApi.rejectCashDeclaration(paymentId, reason),
+    onSuccess: invalidateCashDeclarations,
+  })
+}
+
 /** Live payment feed: latest payments first, polled every 15s (notifications page). */
 export function usePaymentFeed(status = '', limit = 30) {
   const params: ListParams = { page: 1, limit, sortBy: 'createdAt', sortOrder: 'desc' }
@@ -384,6 +412,19 @@ export function useAssistances(params: ListParams = {}) {
   return useQuery({
     queryKey: ['admin', 'assistances', params],
     queryFn: () => assistancesApi.listAssistances(params),
+  })
+}
+
+/**
+ * Recherche d'utilisateurs pour rattacher une assistance. `enabled` permet de
+ * ne rien requêter tant que le sélecteur est fermé.
+ */
+export function useAssistanceUserSearch(search: string, enabled = true) {
+  return useQuery({
+    queryKey: ['admin', 'assistances', 'users', search],
+    queryFn: () => assistancesApi.searchAssistanceUsers(search),
+    enabled,
+    staleTime: 30_000,
   })
 }
 

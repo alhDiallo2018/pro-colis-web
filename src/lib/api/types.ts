@@ -1,10 +1,27 @@
 // DTOs mirroring the ProColis Express API serializers
 // (ProColis-Api/src/utils/{user-serializer,mobile-serializers}.js).
 
-export type Role = 'client' | 'driver' | 'admin' | 'super_admin' | 'support'
+export type Role =
+  | 'client'
+  | 'driver'
+  | 'admin'
+  | 'super_admin'
+  /** Rôle support historique — accès transverse à l'espace support. */
+  | 'support'
+  | 'support_technique'
+  | 'support_commercial'
+
+/** Les trois rôles qui partagent l'espace /support-admin. */
+export const SUPPORT_ROLES = ['support', 'support_technique', 'support_commercial'] as const
+
+export function isSupportRole(role: Role | undefined | null): boolean {
+  return !!role && (SUPPORT_ROLES as readonly string[]).includes(role)
+}
 export type UserStatus = 'active' | 'suspended' | 'deleted'
 export type DriverStatus = 'available' | 'busy' | 'offline'
-export type PaymentMethod = 'wave' | 'freeMoney' | 'orangeMoney' | 'card' | 'cash'
+export type PaymentMethod = 'wave' | 'freemMoney' | 'orange_money' | 'card' | 'cash'
+export type PaymentChannel = 'cash' | 'platform'
+export type CashCollectionPoint = 'sender_pickup' | 'receiver_delivery'
 
 /** Raw parcel status as stored by the API (Prisma enum). */
 export type ApiParcelStatus =
@@ -181,6 +198,11 @@ export interface Parcel {
   isFreeForBidding?: boolean
   selectedBidId?: string | null
   paymentMethod?: PaymentMethod | string | null
+  paymentChannel?: PaymentChannel | null
+  acceptedPaymentChannels?: PaymentChannel[]
+  cashCollectionPoint?: CashCollectionPoint | null
+  cashCollectedAmount?: number | null
+  cashCollectedAt?: string | null
   paymentPhoneNumber?: string | null
   paymentStatus?: string | null
   signatureUrl?: string | null

@@ -7,6 +7,8 @@ export const ROLE_HOME: Record<Role, string> = {
   admin: '/garage',
   super_admin: '/admin',
   support: '/support-admin',
+  support_technique: '/support-admin',
+  support_commercial: '/support-admin',
 }
 
 export function homeForRole(role: Role | undefined | null): string {

@@ -1,18 +1,22 @@
 import { useState } from 'react'
-import { Button, Dialog, Input, Select, Textarea, SegmentedControl } from '@/ds'
+import { Button, Checkbox, Dialog, Input, Select, Textarea, SegmentedControl } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
+import { UserSearchSelect } from '@/components/UserSearchSelect'
 import {
   useAssistances,
   useCreateAssistance,
   useUpdateAssistance,
   useDeleteAssistance,
 } from '@/features/superAdmin/hooks'
+import { useAuthStore } from '@/store/auth'
+import { isSupportRole } from '@/lib/api/types'
 import type {
   Assistance,
   AssistanceChannel,
   AssistanceStatus,
   AssistancePayload,
+  AssistanceUser,
 } from '@/lib/api/assistances'
 
 const CHANNEL_META: Record<AssistanceChannel, { label: string; icon: string; color: string }> = {
@@ -27,24 +31,39 @@ const STATUS_META: Record<AssistanceStatus, { label: string; color: string; bg: 
   resolved: { label: 'Résolu', color: 'var(--green-700)', bg: 'var(--green-50)' },
 }
 
-const COL_GRID = '110px 90px 1.4fr 1fr 100px 130px 90px'
+const COL_GRID = '110px 90px 1.4fr 1fr 100px 120px 130px'
 
 const EMPTY_FORM: AssistancePayload = {
   channel: 'chat',
   subject: '',
   notes: '',
+  userId: null,
   contactName: '',
   contactPhone: '',
   status: 'open',
 }
 
 export function AssistancesPage() {
+  const role = useAuthStore((s) => s.user?.role)
+  const isSupport = isSupportRole(role)
+  // La suppression efface la trace d'une intervention : elle reste au super
+  // admin (et au rôle `support` historique), comme côté API.
+  const canDelete = role === 'super_admin' || role === 'support'
+
   const [status, setStatus] = useState('')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  // Un agent support arrive sur ses propres assistances ; il peut élargir.
+  const [onlyMine, setOnlyMine] = useState(isSupport)
   const limit = 20
 
-  const params = { page, limit, ...(status ? { status } : {}), ...(search ? { search } : {}) }
+  const params = {
+    page,
+    limit,
+    ...(status ? { status } : {}),
+    ...(search ? { search } : {}),
+    ...(onlyMine ? { mine: 1 } : {}),
+  }
   const assistances = useAssistances(params)
   const create = useCreateAssistance()
   const update = useUpdateAssistance()
@@ -53,6 +72,10 @@ export function AssistancesPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Assistance | null>(null)
   const [form, setForm] = useState<AssistancePayload>(EMPTY_FORM)
+  /** Personne assistée non inscrite : bascule sur la saisie libre. */
+  const [manualContact, setManualContact] = useState(false)
+  const [pickedUser, setPickedUser] = useState<AssistanceUser | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const items = assistances.data?.assistances ?? []
   const summary = assistances.data?.summary
@@ -61,6 +84,9 @@ export function AssistancesPage() {
   const openCreate = () => {
     setEditing(null)
     setForm(EMPTY_FORM)
+    setManualContact(false)
+    setPickedUser(null)
+    setFormError(null)
     setDialogOpen(true)
   }
 
@@ -70,21 +96,57 @@ export function AssistancesPage() {
       channel: a.channel,
       subject: a.subject,
       notes: a.notes ?? '',
+      userId: a.userId ?? null,
       contactName: a.contactName ?? '',
       contactPhone: a.contactPhone ?? '',
       status: a.status,
     })
+    setManualContact(!a.userId && Boolean(a.contactName || a.contactPhone))
+    setPickedUser(
+      a.user
+        ? { id: a.user.id, fullName: a.user.fullName, phone: a.user.phone, email: a.user.email, role: a.user.role }
+        : null,
+    )
+    setFormError(null)
     setDialogOpen(true)
+  }
+
+  const pickUser = (user: AssistanceUser | null) => {
+    setPickedUser(user)
+    setForm((f) => ({ ...f, userId: user?.id ?? null, contactName: '', contactPhone: '' }))
+    setFormError(null)
+  }
+
+  const switchToManual = () => {
+    setManualContact(true)
+    setPickedUser(null)
+    setForm((f) => ({ ...f, userId: null }))
+  }
+
+  const switchToRegistered = () => {
+    setManualContact(false)
+    setForm((f) => ({ ...f, contactName: '', contactPhone: '' }))
   }
 
   const submit = () => {
     if (!form.subject.trim()) return
+    if (!form.userId && !(form.contactName ?? '').trim()) {
+      setFormError('Sélectionnez l’utilisateur assisté, ou saisissez son nom s’il n’est pas inscrit.')
+      return
+    }
+    setFormError(null)
+    const payload: AssistancePayload = manualContact
+      ? { ...form, userId: null }
+      : { ...form, contactName: '', contactPhone: '' }
     if (editing) {
-      update.mutate({ id: editing.id, payload: form }, { onSuccess: () => setDialogOpen(false) })
+      update.mutate({ id: editing.id, payload }, { onSuccess: () => setDialogOpen(false) })
     } else {
-      create.mutate(form, { onSuccess: () => setDialogOpen(false) })
+      create.mutate(payload, { onSuccess: () => setDialogOpen(false) })
     }
   }
+
+  /** Clôture en un clic depuis la liste, sans réouvrir le formulaire. */
+  const resolve = (a: Assistance) => update.mutate({ id: a.id, payload: { status: 'resolved' } })
 
   return (
     <Panel
@@ -119,6 +181,11 @@ export function AssistancesPage() {
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             style={{ minWidth: 240, flex: 1 }}
           />
+          <Checkbox
+            checked={onlyMine}
+            onChange={(v) => { setOnlyMine(v); setPage(1) }}
+            label="Mes assistances"
+          />
         </div>
 
         <QueryState
@@ -136,7 +203,7 @@ export function AssistancesPage() {
               <span>Motif</span>
               <span>Utilisateur</span>
               <span>Statut</span>
-              <span>Date</span>
+              <span>Traité par</span>
               <span />
             </div>
 
@@ -154,18 +221,44 @@ export function AssistancesPage() {
                   </span>
                   <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={a.subject}>{a.subject}</span>
                   <span style={{ fontSize: 12.5 }}>
-                    <div style={{ fontWeight: 500 }}>{who}</div>
+                    <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {who}
+                      {a.user ? (
+                        <span
+                          className="material-symbols-rounded"
+                          title="Compte inscrit"
+                          style={{ fontSize: 14, color: 'var(--green-600)' }}
+                        >
+                          verified_user
+                        </span>
+                      ) : null}
+                    </div>
                     {contact ? <div style={{ color: 'var(--text-muted)', fontSize: 11 }}>{contact}</div> : null}
                   </span>
                   <span>
                     <span style={{ fontSize: 11.5, fontWeight: 700, color: st.color, background: st.bg, padding: '3px 10px', borderRadius: 'var(--radius-pill)' }}>{st.label}</span>
                   </span>
-                  <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{a.createdAt ? new Date(a.createdAt).toLocaleDateString('fr-FR') : ''}</span>
+                  <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
+                    <div>{a.handledBy?.fullName ?? '—'}</div>
+                    <div style={{ fontSize: 10.5 }}>{a.createdAt ? new Date(a.createdAt).toLocaleDateString('fr-FR') : ''}</div>
+                  </span>
                   <span style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                    {a.status !== 'resolved' && (
+                      <Button
+                        icon="task_alt"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => resolve(a)}
+                        aria-label="Marquer résolu"
+                        title="Marquer résolu"
+                      />
+                    )}
                     <Button icon="edit" size="sm" variant="ghost" onClick={() => openEdit(a)} aria-label="Modifier" />
-                    <Button icon="delete" size="sm" variant="ghost" tone="danger"
-                      onClick={() => { if (confirm(`Supprimer l'assistance ${a.code} ?`)) remove.mutate(a.id) }}
-                      aria-label="Supprimer" />
+                    {canDelete && (
+                      <Button icon="delete" size="sm" variant="ghost" tone="danger"
+                        onClick={() => { if (confirm(`Supprimer l'assistance ${a.code} ?`)) remove.mutate(a.id) }}
+                        aria-label="Supprimer" />
+                    )}
                   </span>
                 </div>
               )
@@ -207,6 +300,44 @@ export function AssistancesPage() {
                 { value: 'call', label: 'Appel téléphonique' },
               ]}
             />
+            {manualContact ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div className="pc-field-pair">
+                  <Input
+                    label="Nom du contact"
+                    value={form.contactName ?? ''}
+                    onChange={(e) => { setForm((f) => ({ ...f, contactName: e.target.value })); setFormError(null) }}
+                    placeholder="Personne non inscrite"
+                  />
+                  <Input
+                    label="Téléphone"
+                    value={form.contactPhone ?? ''}
+                    onChange={(e) => setForm((f) => ({ ...f, contactPhone: e.target.value }))}
+                    placeholder="+221…"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={switchToRegistered}
+                  style={linkButtonStyle}
+                >
+                  <span className="material-symbols-rounded" style={{ fontSize: 16 }}>person_search</span>
+                  Finalement, choisir un utilisateur inscrit
+                </button>
+              </div>
+            ) : (
+              <UserSearchSelect
+                label="Utilisateur assisté"
+                required
+                value={form.userId ?? null}
+                initialUser={pickedUser}
+                onChange={pickUser}
+                onNotRegistered={switchToManual}
+              />
+            )}
+            {formError && (
+              <span style={{ fontSize: 12, color: 'var(--color-danger)' }}>{formError}</span>
+            )}
             <Input
               label="Motif / résumé"
               value={form.subject}
@@ -220,20 +351,6 @@ export function AssistancesPage() {
               rows={3}
               placeholder="Détails de l'échange, actions menées…"
             />
-            <div className="pc-field-pair">
-              <Input
-                label="Nom du contact"
-                value={form.contactName ?? ''}
-                onChange={(e) => setForm((f) => ({ ...f, contactName: e.target.value }))}
-                placeholder="Si non inscrit"
-              />
-              <Input
-                label="Téléphone"
-                value={form.contactPhone ?? ''}
-                onChange={(e) => setForm((f) => ({ ...f, contactPhone: e.target.value }))}
-                placeholder="+221…"
-              />
-            </div>
             <Select
               label="Statut"
               value={form.status ?? 'open'}
@@ -258,6 +375,22 @@ function SummaryTile({ label, value, color }: { label: string; value: number; co
       <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 24, color }}>{value}</div>
     </div>
   )
+}
+
+/** Bascule discrète entre sélection d'un compte et saisie libre. */
+const linkButtonStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  alignSelf: 'flex-start',
+  padding: 0,
+  border: 'none',
+  background: 'transparent',
+  color: 'var(--color-primary)',
+  fontFamily: 'inherit',
+  fontSize: 12.5,
+  fontWeight: 600,
+  cursor: 'pointer',
 }
 
 const headerRowStyle: React.CSSProperties = {

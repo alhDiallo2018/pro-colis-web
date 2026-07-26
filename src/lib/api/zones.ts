@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { Zone, ZoneDriver } from './types'
+import type { Garage, Zone, ZoneDriver } from './types'
 
 export interface ZonePayload {
   name: string
@@ -48,10 +48,33 @@ export interface ResolveZonePayload {
   city?: string
 }
 
+export interface ResolvedZone {
+  zone: Zone
+  /**
+   * Garage miroir de la zone. Colis et annonces référencent `garages.id` (clé
+   * étrangère), jamais `zones.id` : c'est **cet** identifiant qu'il faut poser
+   * dans `departureGarageId` / `arrivalGarageId`.
+   */
+  garage: Garage | null
+  garageId: string | null
+  created: boolean
+  pending?: boolean
+  matchedBy?: 'placeId' | 'proximity' | 'created' | string
+}
+
 /** Résout un lieu Google Places en zone (la crée en "pending" si nécessaire). */
-export async function resolveZone(payload: ResolveZonePayload): Promise<{ zone: Zone; created: boolean; pending?: boolean; matchedBy?: string }> {
+export async function resolveZone(payload: ResolveZonePayload): Promise<ResolvedZone> {
   const { data } = await api.post('/zones/resolve', payload)
-  return { zone: data.data, created: data.created ?? false, pending: data.pending, matchedBy: data.matchedBy }
+  const zone: Zone = data.data
+  const garage: Garage | null = data.garage ?? null
+  return {
+    zone,
+    garage,
+    garageId: data.garageId ?? garage?.id ?? null,
+    created: data.created ?? false,
+    pending: data.pending,
+    matchedBy: data.matchedBy,
+  }
 }
 
 /** Admin : approuver / rejeter une zone en attente. */
