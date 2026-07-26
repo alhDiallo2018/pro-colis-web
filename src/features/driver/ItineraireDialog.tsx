@@ -79,7 +79,7 @@ export function ItineraireDialog({ parcel, open, onClose }: ItineraireDialogProp
       icon="route"
       iconTone="primary"
       title="Itineraire"
-      style={{ width: 'min(600px, 94vw)' }}
+      style={{ maxWidth: 600 }}
       actions={
         <Button variant="secondary" block onClick={onClose}>
           Fermer

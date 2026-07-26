@@ -45,7 +45,7 @@ export function OfferDialog({ parcel, onClose, onSuccess, existingBidId }: Offer
       icon="forum"
       iconTone="primary"
       title={`Negocier — ${parcel.senderName || 'le client'}`}
-      style={{ width: 'min(640px, 96vw)' }}
+      style={{ maxWidth: 640 }}
       actions={
         <Button variant="secondary" block onClick={onClose}>
           Fermer

@@ -119,7 +119,7 @@ export function MesAnnoncesScreen() {
           icon="forum"
           iconTone="primary"
           title={`Negocier avec ${chatTarget.peerName}`}
-          style={{ width: 'min(640px, 96vw)' }}
+          style={{ maxWidth: 640 }}
           actions={
             <Button variant="secondary" block onClick={() => setChatTarget(null)}>
               Fermer
@@ -250,7 +250,7 @@ function OfferRow({
         icon="package_2"
         iconTone="primary"
         title={`Colis — ${offer.parcel.trackingNumber}`}
-        style={{ width: 'min(480px, 94vw)' }}
+        style={{ maxWidth: 480 }}
         actions={
           <Button variant="secondary" block onClick={() => setShowParcel(false)}>
             Fermer

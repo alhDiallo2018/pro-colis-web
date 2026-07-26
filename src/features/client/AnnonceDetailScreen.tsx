@@ -137,7 +137,7 @@ export function AnnonceDetailScreen() {
                 icon="forum"
                 iconTone="primary"
                 title={`Negocier avec ${driverName}`}
-                style={{ width: 'min(640px, 96vw)' }}
+                style={{ maxWidth: 640 }}
                 actions={
                   <Button variant="secondary" block onClick={() => setChatOpen(false)}>
                     Fermer
@@ -287,7 +287,7 @@ function OfferDialog({
           icon="forum"
           iconTone="primary"
           title={`Negocier avec ${driverName}`}
-          style={{ width: 'min(640px, 96vw)' }}
+          style={{ maxWidth: 640 }}
           actions={
             <Button variant="secondary" block onClick={() => setChatOpen(false)}>
               Fermer

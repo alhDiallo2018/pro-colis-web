@@ -6,6 +6,7 @@ import * as garagesApi from '@/lib/api/garages'
 import { ApiError } from '@/lib/api/client'
 import { GarageSearchSelect } from '@/components/GarageSearchSelect'
 import { VoiceRecorder } from '@/components/VoiceRecorder'
+import type { Garage } from '@/lib/api/types'
 
 interface Props {
   open: boolean
@@ -26,9 +27,12 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
   const [description, setDescription] = useState('')
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
 
+  const [extraZones, setExtraZones] = useState<Garage[]>([])
+  const garageList = [...garages, ...extraZones]
+
   if (!open) return null
 
-  const cityOf = (id: string) => garages.find((g) => g.id === id)?.city ?? undefined
+  const cityOf = (id: string) => garageList.find((g) => g.id === id)?.city ?? undefined
   const valid = !!departureGarageId && !!arrivalGarageId && departureGarageId !== arrivalGarageId
 
   const reset = () => {
@@ -65,6 +69,9 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
 
   const error = createAd.error instanceof ApiError ? createAd.error.message : null
 
+  const addResolvedZone = (g: Garage) =>
+    setExtraZones((prev) => [...prev.filter((x) => x.id !== g.id), g])
+
   return (
     <Dialog
       open
@@ -90,17 +97,19 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
             label="Départ"
             icon="garage"
             placeholder={garagesQ.isLoading ? 'Chargement…' : 'Rechercher une zone...'}
-            garages={garages}
+            garages={garageList}
             value={departureGarageId}
             onChange={setDeparture}
+            onAddNew={addResolvedZone}
           />
           <GarageSearchSelect
             label="Arrivée"
             icon="pin_drop"
             placeholder={garagesQ.isLoading ? 'Chargement…' : 'Rechercher une zone...'}
-            garages={garages}
+            garages={garageList}
             value={arrivalGarageId}
             onChange={setArrival}
+            onAddNew={addResolvedZone}
           />
         </div>
         <Input

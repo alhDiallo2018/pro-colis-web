@@ -62,7 +62,7 @@ export function ParcelDetailDialog({ parcel, onClose }: ParcelDetailDialogProps)
       icon="package_2"
       iconTone="primary"
       title={`Colis ${parcel.trackingNumber}`}
-      style={{ width: 'min(560px, 96vw)', maxHeight: '90vh', overflow: 'auto' }}
+      style={{ maxWidth: 560, textAlign: 'left' }}
       actions={
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
           {showCashButton && commissionInfo && (

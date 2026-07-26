@@ -51,7 +51,7 @@ function ChatDialog({ bid, onClose }: { bid: Bid | null; onClose: () => void }) 
       icon="forum"
       iconTone="primary"
       title={`Négocier avec ${driverName}`}
-      style={{ width: 'min(640px, 96vw)' }}
+      style={{ maxWidth: 640 }}
       actions={
         <Button variant="secondary" block onClick={onClose}>
           Fermer

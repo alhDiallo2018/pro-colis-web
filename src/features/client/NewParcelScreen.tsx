@@ -10,7 +10,6 @@ import { uploadParcelAudio, uploadParcelPhoto, uploadParcelVideo } from '@/lib/a
 import { useAuthStore } from '@/store/auth'
 import { formatFcfa, formatWeight } from '@/lib/format'
 import type { User, Garage } from '@/lib/api/types'
-import { resolveZone } from '@/lib/api/zones'
 import { GarageSearchSelect } from '@/components/GarageSearchSelect'
 import { LocationInput } from '@/components/LocationInput'
 
@@ -243,10 +242,8 @@ export function NewParcelScreen() {
                 garages={garageList}
                 value={watch('departureGarageId') ?? ''}
                 onChange={(id) => setValue('departureGarageId', id, { shouldValidate: true })}
+                onAddNew={(g) => { addResolvedZone(g); setValue('departureGarageId', g.id, { shouldValidate: true }) }}
                 error={errors.departureGarageId?.message}
-              />
-              <ZonePlaceResolver
-                onResolved={(g) => { addResolvedZone(g); setValue('departureGarageId', g.id, { shouldValidate: true }) }}
               />
               <GarageSearchSelect
                 label={required(`Zone d'arrivée`)}
@@ -255,10 +252,8 @@ export function NewParcelScreen() {
                 garages={garageList}
                 value={watch('arrivalGarageId') ?? ''}
                 onChange={(id) => setValue('arrivalGarageId', id, { shouldValidate: true })}
+                onAddNew={(g) => { addResolvedZone(g); setValue('arrivalGarageId', g.id, { shouldValidate: true }) }}
                 error={errors.arrivalGarageId?.message}
-              />
-              <ZonePlaceResolver
-                onResolved={(g) => { addResolvedZone(g); setValue('arrivalGarageId', g.id, { shouldValidate: true }) }}
               />
 
               {watch('departureGarageId') && watch('arrivalGarageId') && (
@@ -498,61 +493,6 @@ function FieldLabel({ children }: { children: ReactNode }) {
     <label style={{ display: 'block', marginBottom: 8, fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 600, color: 'var(--text-body)' }}>
       {children}
     </label>
-  )
-}
-
-/**
- * Repli « Autre lieu » : si la zone recherchée n'existe pas dans la liste,
- * l'utilisateur choisit un lieu Google Places ; on le résout en zone via l'API
- * (créée en "pending" côté serveur) et on renvoie la zone au parent.
- */
-function ZonePlaceResolver({ onResolved }: { onResolved: (zone: Garage) => void }) {
-  const [open, setOpen] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const pending = useRef<{ placeId?: string; name: string } | null>(null)
-
-  const doResolve = async (lat: number, lng: number) => {
-    const p = pending.current
-    if (!p) return
-    setBusy(true)
-    try {
-      const { zone } = await resolveZone({ placeId: p.placeId, name: p.name, latitude: lat, longitude: lng })
-      onResolved({
-        id: zone.id,
-        name: zone.name,
-        city: zone.city ?? null,
-        region: zone.region ?? null,
-        country: zone.country ?? null,
-      })
-      setOpen(false)
-      pending.current = null
-    } catch {
-      /* l'échec réseau est silencieux ; l'utilisateur peut réessayer */
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        style={{ alignSelf: 'flex-start', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--color-primary)', fontSize: 12.5, fontWeight: 600 }}
-      >
-        + Autre lieu (hors liste)
-      </button>
-    )
-  }
-  return (
-    <LocationInput
-      label={busy ? 'Résolution du lieu…' : 'Ajouter un lieu (Google Places)'}
-      icon="add_location_alt"
-      placeholder="Tapez une ville / adresse…"
-      disabled={busy}
-      onChange={(val, place) => { if (place) pending.current = { placeId: place.placeId, name: place.mainText || val } }}
-      onCoordinates={(lat, lng) => doResolve(lat, lng)}
-    />
   )
 }
 

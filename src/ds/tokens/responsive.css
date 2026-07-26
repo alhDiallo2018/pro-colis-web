@@ -156,3 +156,12 @@
 @media (max-width: 720px) {
   .pc-hide-sm { display: none !important; }
 }
+
+/* Dialog: full-width with reduced border-radius on small screens. */
+@media (max-width: 560px) {
+  .pc-dialog {
+    max-width: calc(100vw - 16px) !important;
+    max-height: 92vh !important;
+    border-radius: var(--radius-md) !important;
+  }
+}

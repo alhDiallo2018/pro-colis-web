@@ -47,6 +47,9 @@ export interface User {
   lastActiveAt?: string | null
   createdAt?: string
   updatedAt?: string
+  walletBalance?: number
+  vehiclePlate?: string | null
+  vehicleModel?: string | null
 }
 
 export interface Garage {

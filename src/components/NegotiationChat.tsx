@@ -439,7 +439,7 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
           onClose={() => setShowParcelDetail(false)}
           icon="package_2" iconTone="primary"
           title={parcelInfo.trackingNumber ? `Colis - ${parcelInfo.trackingNumber}` : 'Details du colis'}
-          style={{ width: 'min(460px, 94vw)' }}
+          style={{ maxWidth: 460 }}
           actions={<Button variant="secondary" block onClick={() => setShowParcelDetail(false)}>Fermer</Button>}
         >
           <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 12 }}>
