@@ -251,13 +251,14 @@ JWT_REFRESH_SECRET=...</pre>
     <section id="run">
       <h2><span class="badge">5</span>Build &amp; démarrage</h2>
       <pre>cd ~/sendprocolis/SendProColis-Web
-docker compose build          <span class="c"># build SPA + image API (quelques minutes)</span>
-docker compose up -d          <span class="c"># démarre caddy + api + postgres</span>
+docker compose up -d --build --force-recreate
+<span class="c"># construit les images puis (re)crée caddy + api + postgres</span>
 
 <span class="c"># Les migrations Prisma s'exécutent automatiquement au démarrage de l'API.</span>
 
 docker compose ps             <span class="c"># tout doit être running / healthy</span>
 docker compose logs -f caddy  <span class="c"># vérifier l'émission du certificat TLS</span></pre>
+      <div class="note"><span class="ic">🔄</span><div>Utiliser la commande complète avec <code>--build --force-recreate</code> : un simple <code>docker compose build</code> construit les nouvelles images, mais ne remplace pas les conteneurs déjà en cours d'exécution.</div></div>
       <p>Caddy obtient le certificat au premier accès HTTPS. Tester :</p>
       <pre>curl -I https://sendprocolis.exemple.com/api/v1/health   <span class="c"># 200 attendu</span></pre>
       <p>Puis ouvrir <code>https://sendprocolis.exemple.com</code> dans un navigateur.</p>
@@ -265,6 +266,28 @@ docker compose logs -f caddy  <span class="c"># vérifier l'émission du certifi
       <h3>(Optionnel) Peupler la base avec les comptes de test</h3>
       <div class="warn"><span class="ic">⚠️</span><div>Le seed crée les utilisateurs de démo (PIN <code>123456</code>). À <strong>ne pas</strong> exécuter sur une vraie production.</div></div>
       <pre>docker compose exec api node prisma/seed.js</pre>
+
+      <h3>Créer ou sécuriser le compte super-admin de production</h3>
+      <p>Le seed dédié ne crée aucune donnée de démonstration. Il crée uniquement le super-admin ou met à jour un super-admin existant portant le même email ou téléphone.</p>
+      <pre><span class="c"># Saisir les secrets sans les écrire en clair dans l'historique du shell.</span>
+read -r -p "Nom complet : " PROCOLIS_SUPERADMIN_FULL_NAME
+read -r -p "Email : " PROCOLIS_SUPERADMIN_EMAIL
+read -r -p "Téléphone international (+221...) : " PROCOLIS_SUPERADMIN_PHONE
+read -r -s -p "PIN sécurisé à 6 chiffres : " PROCOLIS_SUPERADMIN_PIN &amp;&amp; echo
+read -r -s -p "Mot de passe (12 caractères minimum) : " PROCOLIS_SUPERADMIN_PASSWORD &amp;&amp; echo
+
+docker compose exec \
+  -e PROCOLIS_SUPERADMIN_FULL_NAME="$PROCOLIS_SUPERADMIN_FULL_NAME" \
+  -e PROCOLIS_SUPERADMIN_EMAIL="$PROCOLIS_SUPERADMIN_EMAIL" \
+  -e PROCOLIS_SUPERADMIN_PHONE="$PROCOLIS_SUPERADMIN_PHONE" \
+  -e PROCOLIS_SUPERADMIN_PIN="$PROCOLIS_SUPERADMIN_PIN" \
+  -e PROCOLIS_SUPERADMIN_PASSWORD="$PROCOLIS_SUPERADMIN_PASSWORD" \
+  api npm run seed:super-admin
+
+unset PROCOLIS_SUPERADMIN_FULL_NAME PROCOLIS_SUPERADMIN_EMAIL \
+  PROCOLIS_SUPERADMIN_PHONE PROCOLIS_SUPERADMIN_PIN \
+  PROCOLIS_SUPERADMIN_PASSWORD</pre>
+      <div class="note"><span class="ic">🔐</span><div>Le script refuse les PIN courants comme <code>123456</code>, n'affiche jamais les secrets et refuse de transformer automatiquement un compte d'un autre rôle en super-admin.</div></div>
     </section>
 
     <!-- UPDATE -->
@@ -274,10 +297,13 @@ docker compose logs -f caddy  <span class="c"># vérifier l'émission du certifi
 cd ~/sendprocolis/SendProColis-Api &amp;&amp; git pull
 cd ~/sendprocolis/SendProColis-Web
 
-docker compose build
-docker compose up -d           <span class="c"># recrée uniquement ce qui a changé</span>
+docker compose up -d --build --force-recreate
+<span class="c"># garantit que les conteneurs utilisent les nouvelles images</span>
+
+docker compose ps              <span class="c"># vérifier l'état des services</span>
+docker compose logs --tail=100 caddy api
 docker image prune -f          <span class="c"># nettoie les anciennes images</span></pre>
-      <div class="note"><span class="ic">🏗️</span><div><code>VITE_API_BASE_URL</code> est figé <strong>au build</strong> du front. Un changement de <code>DOMAIN</code> impose <code>docker compose build caddy</code> (pas seulement un restart).</div></div>
+      <div class="note"><span class="ic">🏗️</span><div><code>VITE_API_BASE_URL</code> est figé <strong>au build</strong> du front. La commande ci-dessus reconstruit donc systématiquement le front et recrée son conteneur, y compris après un changement de <code>DOMAIN</code>.</div></div>
     </section>
 
     <!-- BACKUP -->
@@ -319,7 +345,12 @@ docker compose exec postgres psql -U sendprocolis sendprocolis   <span class="c"
         <tr>
           <td>Front charge mais appels API en erreur réseau</td>
           <td><code>DOMAIN</code> changé sans rebuild du front</td>
-          <td><code>docker compose build caddy &amp;&amp; docker compose up -d caddy</code></td>
+          <td><code>docker compose up -d --build --force-recreate caddy</code></td>
+        </tr>
+        <tr>
+          <td>Le déploiement réussit mais le site reste sur l'ancienne version</td>
+          <td>Images reconstruites sans recréation des conteneurs en cours</td>
+          <td><code>docker compose up -d --build --force-recreate</code>, puis effectuer un rechargement forcé du navigateur</td>
         </tr>
         <tr>
           <td>Images/audios uploadés cassés</td>
