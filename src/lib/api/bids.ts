@@ -38,3 +38,9 @@ export async function negotiate(bidId: string, payload: { price: number; message
   const { data } = await api.post(`/client/bids/${bidId}/negotiate`, payload)
   return data.bid ?? data.data
 }
+
+/** Driver responds to a counter-offer: accept or counter. */
+export async function driverRespond(bidId: string, payload: { action: 'accept' | 'counter'; price?: number; message?: string }): Promise<{ bid?: Bid; parcel?: any }> {
+  const { data } = await api.post(`/driver/bids/${bidId}/respond`, payload)
+  return data
+}

@@ -124,7 +124,7 @@ export interface ZoneDriver {
   }
 }
 
-export type BidStatus = 'pending' | 'accepted' | 'rejected' | string
+export type BidStatus = 'pending' | 'countered' | 'accepted' | 'rejected' | string
 
 export interface Bid {
   id: string

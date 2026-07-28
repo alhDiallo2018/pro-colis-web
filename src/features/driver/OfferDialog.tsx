@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button, Dialog } from '@/ds'
-import { useCreateBid } from './hooks'
+import { useCreateBid, useRespondToBid } from './hooks'
 import { NegotiationChat } from '@/components/NegotiationChat'
 import type { Parcel } from '@/lib/api/types'
 
@@ -13,6 +13,7 @@ interface OfferDialogProps {
 
 export function OfferDialog({ parcel, onClose, onSuccess, existingBidId }: OfferDialogProps) {
   const createBid = useCreateBid()
+  const respondToBid = useRespondToBid()
   const [bidId, setBidId] = useState<string | null>(existingBidId ?? null)
   const [audioUrl] = useState<string | null>(null)
   const bidCreatedRef = useRef(false)
@@ -35,6 +36,14 @@ export function OfferDialog({ parcel, onClose, onSuccess, existingBidId }: Offer
           onSuccess?.()
         },
       },
+    )
+  }
+
+  const handleAcceptBid = (price: number, message?: string) => {
+    if (!bidId) return
+    respondToBid.mutate(
+      { bidId, action: 'accept', price, message },
+      { onSuccess: () => onSuccess?.() },
     )
   }
 
@@ -74,6 +83,7 @@ export function OfferDialog({ parcel, onClose, onSuccess, existingBidId }: Offer
           audioUrls: parcel.audioUrls,
         }}
           onCreateBid={!existingBidId ? handleFirstOffer : undefined}
+          onAcceptBid={existingBidId || bidId ? handleAcceptBid : undefined}
         />
       </div>
     </Dialog>

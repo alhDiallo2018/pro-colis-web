@@ -12,6 +12,11 @@ export async function driverParcels(params: ListParams = {}): Promise<ParcelList
   return { parcels: data.parcels ?? [], pagination: data.pagination }
 }
 
+export async function driverParcel(parcelId: string): Promise<Parcel> {
+  const { data } = await api.get(`/driver/parcels/${parcelId}`)
+  return data.parcel ?? data.data
+}
+
 export async function driverBidsSent(): Promise<Bid[]> {
   const { data } = await api.get('/driver/bids/sent')
   return data.bids ?? data.data ?? []

@@ -13,6 +13,22 @@ export interface ChatMessage {
   createdAt?: string
 }
 
+/** From GET /messages/conversations */
+export interface ConversationSummary {
+  id: string
+  body: string
+  isRead: boolean
+  createdAt: string
+  parcelId?: string | null
+  trackingNumber?: string | null
+  otherUser: {
+    id: string
+    fullName: string
+    profilePhoto?: string | null
+    role: string
+  }
+}
+
 export interface ConversationMessage extends ChatMessage {
   sender?: { id: string; fullName: string }
   receiver?: { id: string; fullName: string }
@@ -51,9 +67,9 @@ export async function send(payload: {
 }
 
 /** Recent messages for the current user (used to build conversation list). */
-export async function conversations(): Promise<ConversationMessage[]> {
+export async function conversations(): Promise<ConversationSummary[]> {
   const { data } = await api.get('/messages/conversations')
-  return (data.conversations ?? data.messages ?? data.data ?? []) as ConversationMessage[]
+  return (data.conversations ?? data.data ?? []) as ConversationSummary[]
 }
 
 export interface SupportConversation {

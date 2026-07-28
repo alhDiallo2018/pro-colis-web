@@ -4,42 +4,22 @@ import { Avatar, Badge, Icon } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { NegotiationChat } from '@/components/NegotiationChat'
 import * as messagesApi from '@/lib/api/messages'
-import type { ConversationMessage } from '@/lib/api/messages'
-import { useAuthStore } from '@/store/auth'
+import type { ConversationSummary } from '@/lib/api/messages'
 import { useIsMobile } from '@/lib/useMediaQuery'
-
-function extractParcel(p: NonNullable<ConversationMessage['parcel']>): NonNullable<ConversationMessage['parcel']> {
-  return {
-    id: p.id,
-    trackingNumber: p.trackingNumber,
-    description: p.description,
-    weight: p.weight,
-    type: p.type,
-    status: p.status,
-    receiverName: p.receiverName,
-    receiverPhone: p.receiverPhone,
-    receiverAddress: p.receiverAddress,
-    photoUrls: (p as any).media?.filter((m: any) => m.mediaType === 'photo').map((m: any) => m.url) ?? [],
-    videoUrls: (p as any).media?.filter((m: any) => m.mediaType === 'video').map((m: any) => m.url) ?? [],
-    audioUrls: (p as any).media?.filter((m: any) => m.mediaType === 'audio').map((m: any) => m.url) ?? [],
-  }
-}
 
 interface Thread {
   key: string
   peerId: string
   peerName: string
   parcelId?: string | null
-  parcel?: ConversationMessage['parcel']
-  trackingNumber?: string
-  parcelDescription?: string
-  lastMessage?: string
-  lastAt?: string
+  trackingNumber?: string | null
+  lastMessage: string
+  lastAt: string
   unread: number
 }
 
-function previewText(msg: ConversationMessage): string {
-  if (msg.audioUrl && !msg.body) return 'Message vocal'
+function previewText(msg: ConversationSummary): string {
+  if (!msg.body) return ''
   if (msg.body.startsWith('__PRIX__')) {
     const parts = msg.body.split(':')
     const amount = Number(parts[1])
@@ -49,7 +29,6 @@ function previewText(msg: ConversationMessage): string {
 }
 
 export function MessagesScreen() {
-  const userId = useAuthStore((s) => s.user?.id)
   const conv = useQuery({
     queryKey: ['messages', 'conversations'],
     queryFn: () => messagesApi.conversations(),
@@ -62,30 +41,27 @@ export function MessagesScreen() {
     const map = new Map<string, Thread>()
 
     for (const m of msgs) {
-      const other = m.senderId === userId ? m.receiver : m.sender
-      if (!other) continue
-      const key = `${other.id}::${m.parcelId ?? '_'}`
+      const peer = m.otherUser
+      if (!peer?.id) continue
+      const key = `${peer.id}::${m.parcelId ?? '_'}`
+      const peerName = peer.fullName?.trim() || 'Inconnu'
+
+      const unread = !m.isRead ? 1 : 0
 
       const existing = map.get(key)
-      const unread = !m.isRead && m.receiverId === userId ? 1 : 0
       if (existing) {
         if (unread) existing.unread += 1
-        if (m.parcelId && m.parcel) {
-          existing.parcelId = m.parcelId
-          existing.trackingNumber = m.parcel.trackingNumber ?? existing.trackingNumber
-          existing.parcelDescription = m.parcel.description ?? existing.parcelDescription
-          if (!existing.parcel) existing.parcel = extractParcel(m.parcel)
+        if (m.createdAt > existing.lastAt) {
+          existing.lastMessage = previewText(m)
+          existing.lastAt = m.createdAt
         }
       } else {
-        const parcel = m.parcelId && m.parcel ? extractParcel(m.parcel) : undefined
         map.set(key, {
           key,
-          peerId: other.id,
-          peerName: other.fullName ?? 'Inconnu',
+          peerId: peer.id,
+          peerName,
           parcelId: m.parcelId,
-          parcel,
-          trackingNumber: m.parcel?.trackingNumber,
-          parcelDescription: m.parcel?.description ?? undefined,
+          trackingNumber: m.trackingNumber,
           lastMessage: previewText(m),
           lastAt: m.createdAt,
           unread,
@@ -93,7 +69,7 @@ export function MessagesScreen() {
       }
     }
     return Array.from(map.values()).sort((a, b) => (b.lastAt ?? '').localeCompare(a.lastAt ?? ''))
-  }, [conv.data, userId])
+  }, [conv.data])
 
   const selected = activeThread
   const isMobile = useIsMobile()
@@ -119,7 +95,7 @@ export function MessagesScreen() {
               <p>Aucune conversation pour le moment.</p>
               <p style={{ fontSize: 'var(--fs-xs)' }}>Negociez une offre pour demarrer un chat.</p>
             </div>
-          ) : (
+              ) : (
             threads.map((t) => (
               <div
                 key={t.key}
@@ -141,23 +117,19 @@ export function MessagesScreen() {
                     <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-sm)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {t.peerName}
                     </span>
+                    {t.trackingNumber && (
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, color: 'var(--teal-600)', background: 'var(--teal-50)', padding: '2px 6px', borderRadius: 'var(--radius-pill)', whiteSpace: 'nowrap' }}>
+                        {t.trackingNumber}
+                      </span>
+                    )}
                     {t.unread > 0 && <Badge tone="primary">{t.unread}</Badge>}
                   </div>
-                  {t.trackingNumber ? (
-                    <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--teal-600)', fontFamily: 'var(--font-mono)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {t.trackingNumber}
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-faint)', fontStyle: 'italic', marginTop: 1 }}>
-                      Sans colis
-                    </div>
-                  )}
                   <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-faint)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {t.lastMessage}
                   </div>
                 </div>
               </div>
-            ))
+            ))  
           )}
         </div>
       </Panel>
@@ -183,12 +155,6 @@ export function MessagesScreen() {
                 <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-body)', color: 'var(--text-strong)' }}>
                   {selected.peerName}
                 </div>
-                {selected.trackingNumber && (
-                  <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                    {selected.trackingNumber}
-                    {selected.parcelDescription ? ` · ${selected.parcelDescription.slice(0, 40)}` : ''}
-                  </div>
-                )}
               </div>
             </div>
             <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -196,23 +162,6 @@ export function MessagesScreen() {
                 peerId={selected.peerId}
                 peerName={selected.peerName}
                 parcelId={selected.parcelId ?? undefined}
-                parcelInfo={
-                  selected.parcel
-                    ? {
-                        trackingNumber: selected.parcel.trackingNumber,
-                        description: selected.parcel.description,
-                        weight: selected.parcel.weight,
-                        type: selected.parcel.type,
-                        status: selected.parcel.status,
-                        receiverName: selected.parcel.receiverName,
-                        receiverPhone: selected.parcel.receiverPhone,
-                        receiverAddress: selected.parcel.receiverAddress,
-                        photoUrls: selected.parcel.photoUrls,
-                        videoUrls: selected.parcel.videoUrls,
-                        audioUrls: selected.parcel.audioUrls,
-                      }
-                    : undefined
-                }
               />
             </div>
           </div>

@@ -127,7 +127,11 @@ export function useDriverFreeParcels(params: ListParams = {}) {
 }
 
 export function useDriverBidsSent() {
-  return useQuery({ queryKey: ['driver', 'bids', 'sent'], queryFn: () => roles.driverBidsSent() })
+  return useQuery({
+    queryKey: ['driver', 'bids', 'sent'],
+    queryFn: () => roles.driverBidsSent(),
+    refetchInterval: 15_000,
+  })
 }
 
 export function useCreateBid() {
@@ -136,6 +140,18 @@ export function useCreateBid() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['parcels', 'free'] })
       queryClient.invalidateQueries({ queryKey: ['driver', 'bids'] })
+    },
+  })
+}
+
+export function useRespondToBid() {
+  return useMutation({
+    mutationFn: ({ bidId, action, price, message }: { bidId: string; action: 'accept' | 'counter'; price?: number; message?: string }) =>
+      bidsApi.driverRespond(bidId, { action, price, message }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['parcels', 'free'] })
+      queryClient.invalidateQueries({ queryKey: ['driver', 'bids'] })
+      queryClient.invalidateQueries({ queryKey: ['driver', 'parcels'] })
     },
   })
 }

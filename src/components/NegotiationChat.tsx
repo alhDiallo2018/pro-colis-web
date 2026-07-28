@@ -47,16 +47,20 @@ interface Props {
     audioUrls?: string[]
   }
   onCreateBid?: (price: number, message?: string) => void
+  onAcceptBid?: (price: number, message?: string) => void
 }
 
-export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertisementId, offerId, parcelInfo, onCreateBid }: Props) {
-  const userId = useAuthStore((s) => s.user?.id)
+export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertisementId, offerId, parcelInfo, onCreateBid, onAcceptBid }: Props) {
+  const user = useAuthStore((s) => s.user)
+  const userId = user?.id
+  const role = user?.role
   const qc = useQueryClient()
   const key = ['messages', 'thread', peerId, parcelId ?? null]
 
   const thread = useQuery({
     queryKey: key,
     queryFn: () => messagesApi.thread(peerId, parcelId),
+    enabled: Boolean(peerId),
     refetchInterval: 4000,
   })
   const messages = thread.data ?? []
@@ -64,7 +68,11 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
   const send = useMutation({
     mutationFn: (payload: { body?: string; audioUrl?: string; photoUrl?: string; videoUrl?: string }) =>
       messagesApi.send({ receiverId: peerId, parcelId, ...payload }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: key })
+      qc.invalidateQueries({ queryKey: ['client', 'bids'] })
+      qc.invalidateQueries({ queryKey: ['driver', 'bids'] })
+    },
   })
 
   const negotiate = useMutation({
@@ -72,9 +80,32 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
       if (offerId && advertisementId) {
         return adsApi.negotiateOffer(advertisementId, offerId, payload) as any
       }
-      return bidsApi.negotiate(bidId ?? '', payload)
+      if (!bidId) return Promise.resolve()
+      if (role === 'driver') {
+        return bidsApi.driverRespond(bidId, { action: 'counter', price: payload.price, message: payload.message })
+      }
+      return bidsApi.negotiate(bidId, payload)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+  })
+
+  const acceptPrice = useMutation({
+    mutationFn: (payload: { amount: number; message?: string }) => {
+      if (offerId && advertisementId) {
+        return adsApi.negotiateOffer(advertisementId, offerId, { price: payload.amount, message: payload.message }) as any
+      }
+      if (!bidId || !parcelId) return Promise.resolve()
+      if (role === 'driver') {
+        return bidsApi.driverRespond(bidId, { action: 'accept', price: payload.amount, message: payload.message })
+      }
+      return bidsApi.accept(parcelId, bidId)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['client', 'bids'] })
+      qc.invalidateQueries({ queryKey: ['driver', 'bids'] })
+      qc.invalidateQueries({ queryKey: ['client', 'parcels'] })
+      qc.invalidateQueries({ queryKey: ['parcels', 'free'] })
+    },
   })
 
   const [text, setText] = useState('')
@@ -220,9 +251,17 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
   }
 
   const handleAcceptPrice = (amount: number) => {
-    if ((!bidId && !offerId) || negotiate.isPending) return
-    negotiate.mutate(
-      { price: amount, message: `Prix accepte: ${nf(amount)} FCFA` },
+    if ((!bidId && !offerId) || acceptPrice.isPending) return
+
+    if (onAcceptBid) {
+      onAcceptBid(amount, `Prix accept\u00e9: ${nf(amount)} FCFA`)
+      send.mutate({ body: `J'accepte le prix de ${nf(amount)} FCFA.` })
+      return
+    }
+
+    const msg = `Prix accept\u00e9: ${nf(amount)} FCFA`
+    acceptPrice.mutate(
+      { amount, message: msg },
       { onSuccess: () => send.mutate({ body: `J'accepte le prix de ${nf(amount)} FCFA.` }) },
     )
   }
@@ -303,7 +342,7 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
               mine={m.senderId === userId}
               onAcceptPrice={(amount) => handleAcceptPrice(amount)}
               onCounterPrice={(amount) => handleCounterPrice(amount)}
-              bidPending={!!(bidId || offerId) && !negotiate.isPending}
+              bidPending={!!(bidId || offerId) && !acceptPrice.isPending}
             />
           ))
         )}

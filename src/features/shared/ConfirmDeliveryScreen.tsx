@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { Button, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
-import * as parcelsApi from '@/lib/api/parcels'
 import * as roles from '@/lib/api/roles'
 import { queryClient } from '@/lib/queryClient'
 import { useAuthStore } from '@/store/auth'
@@ -16,12 +15,6 @@ export function ConfirmDeliveryScreen() {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const { data: code, isLoading: codeLoading, isError: codeError, refetch: refetchCode } = useQuery({
-    queryKey: ['delivery-code', parcelId],
-    queryFn: () => parcelsApi.deliveryCode(parcelId!),
-    enabled: !!parcelId,
-  })
 
   const deliver = useMutation({
     mutationFn: (otp: string) => roles.driverDeliver(parcelId!, { otp }),
@@ -42,29 +35,25 @@ export function ConfirmDeliveryScreen() {
       if (pin.length >= 4) return
       const next = pin + key
       setPin(next)
-      if (next.length === 4 && code) {
-        submitPin(next, code)
+      if (next.length === 4) {
+        submitPin(next)
       }
     },
-    [pin, submitting, success, code],
+    [pin, submitting, success],
   )
 
-  const submitPin = async (entered: string, expected: string) => {
-    if (entered !== expected) {
-      setError('Code PIN incorrect')
-      setPin('')
-      setTimeout(() => setError(null), 2000)
-      return
-    }
+  const submitPin = async (entered: string) => {
     setSubmitting(true)
     setError(null)
     deliver.mutate(entered, {
       onError: (err) => {
-        setError(err instanceof Error ? err.message : 'Échec de la confirmation')
+        setError(err instanceof Error ? err.message : 'Code PIN incorrect')
         setPin('')
         setSubmitting(false)
       },
-      onSettled: () => setSubmitting(false),
+      onSettled: () => {
+        if (!deliver.isSuccess) setSubmitting(false)
+      },
     })
   }
 
@@ -178,25 +167,6 @@ export function ConfirmDeliveryScreen() {
               </div>
             ))}
           </div>
-
-          {codeLoading && (
-            <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 12 }}>
-              Chargement du code...
-            </div>
-          )}
-          {codeError && (
-            <div style={{ fontSize: 12.5, color: 'var(--red-500)', marginBottom: 12 }}>
-              Impossible de récupérer le code.{' '}
-              <span style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--color-primary)' }} onClick={() => refetchCode()}>
-                Réessayer
-              </span>
-            </div>
-          )}
-          {code && !codeLoading && (
-            <div style={{ fontSize: 12.5, color: 'var(--green-600)', fontWeight: 600, marginBottom: 12 }}>
-              Code de validation chargé
-            </div>
-          )}
 
           {error && <Toast tone="error" message={error} style={{ marginBottom: 12 }} />}
           {submitting && (

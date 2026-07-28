@@ -77,7 +77,11 @@ export function useFreeParcels(params: ListParams = {}) {
 }
 
 export function useReceivedBids() {
-  return useQuery({ queryKey: ['client', 'bids', 'received'], queryFn: () => bidsApi.listReceived() })
+  return useQuery({
+    queryKey: ['client', 'bids', 'received'],
+    queryFn: () => bidsApi.listReceived(),
+    refetchInterval: 15_000,
+  })
 }
 
 /** Drivers' trip advertisements that the client can browse and bid on. */

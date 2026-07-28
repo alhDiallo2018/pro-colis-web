@@ -43,7 +43,7 @@ export function LibreServiceScreen() {
                 role="button"
                 tabIndex={0}
                 style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}
-                onClick={() => setDetailTarget(p)}
+                onClick={() => setOfferTarget(p)}
               >
                 <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-soft)', color: 'var(--color-primary)', flex: 'none' }}>
                   <span className="material-symbols-rounded fill" style={{ fontSize: 23 }}>
@@ -77,6 +77,13 @@ export function LibreServiceScreen() {
                   </div>
                 </div>
                 <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 15, color: 'var(--teal-600)' }}>{formatFcfa(p.price)}</span>
+                <button
+                  onClick={(e: React.MouseEvent) => { e.stopPropagation(); setDetailTarget(p); }}
+                  style={{ flex: 'none', width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'var(--surface-sunken)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                  title="Voir les details du colis"
+                >
+                  <span className="material-symbols-rounded" style={{ fontSize: 20 }}>info</span>
+                </button>
                 <Button size="sm" icon={hasBid ? 'forum' : 'gavel'} onClick={(e: React.MouseEvent) => { e.stopPropagation(); setOfferTarget(p); }}>
                   {hasBid ? 'Negocier' : 'Faire une offre'}
                 </Button>

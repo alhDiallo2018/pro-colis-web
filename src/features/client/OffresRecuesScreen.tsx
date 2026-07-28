@@ -7,8 +7,9 @@ import { ApiError } from '@/lib/api/client'
 import { formatFcfa } from '@/lib/format'
 import type { Bid } from '@/lib/api/types'
 
-const STATUS_META: Record<string, { label: string; tone: 'amber' | 'green' | 'red' | 'neutral' }> = {
+const STATUS_META: Record<string, { label: string; tone: 'amber' | 'blue' | 'green' | 'red' | 'neutral' }> = {
   pending: { label: 'En attente', tone: 'amber' },
+  countered: { label: 'Contre-offre', tone: 'blue' },
   accepted: { label: 'Acceptée', tone: 'green' },
   rejected: { label: 'Refusée', tone: 'red' },
 }
@@ -42,8 +43,15 @@ export function OffresRecuesScreen() {
 }
 
 function ChatDialog({ bid, onClose }: { bid: Bid | null; onClose: () => void }) {
+  const acceptBid = useAcceptBid(bid?.parcelId ?? '')
+
   if (!bid) return null
   const driverName = bid.driverName ?? 'Chauffeur'
+
+  const handleAccept = (_price: number, _message?: string) => {
+    acceptBid.mutate(bid.id)
+  }
+
   return (
     <Dialog
       open
@@ -72,6 +80,7 @@ function ChatDialog({ bid, onClose }: { bid: Bid | null; onClose: () => void }) 
               }
             : undefined
           }
+          onAcceptBid={handleAccept}
         />
       </div>
     </Dialog>
@@ -105,7 +114,7 @@ function Bubble({ side, who, text }: { side: 'left' | 'right'; who: string; text
 function BidRow({ bid, onNegotiate }: { bid: Bid; onNegotiate: () => void }) {
   const accept = useAcceptBid(bid.parcelId)
   const status = STATUS_META[bid.status] ?? STATUS_META.pending
-  const isPending = bid.status === 'pending'
+  const isActive = bid.status === 'pending' || bid.status === 'countered'
   const error = accept.error instanceof ApiError ? accept.error.message : null
 
   return (
@@ -144,7 +153,7 @@ function BidRow({ bid, onNegotiate }: { bid: Bid; onNegotiate: () => void }) {
         </div>
       )}
 
-      {isPending ? (
+      {isActive ? (
         <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
           <Button variant="secondary" size="sm" icon="forum" onClick={onNegotiate}>
             Négocier
