@@ -109,8 +109,8 @@ export function AnnonceDetailScreen() {
                 </div>
                 {ad.driverId && (
                   <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
-                    <Button size="sm" variant="secondary" icon="forum" onClick={() => setChatOpen(true)}>
-                      Voir la discussion
+                    <Button block size="lg" icon="forum" onClick={() => setChatOpen(true)}>
+                      Suivi offre
                     </Button>
                   </div>
                 )}

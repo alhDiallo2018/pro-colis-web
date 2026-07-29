@@ -18,6 +18,8 @@ export function RequireRole({ roles, children }: { roles: Role[]; children: Reac
   const { user, accessToken, hydrated } = useAuthStore()
   if (!hydrated) return null
   if (!accessToken) return <Navigate to="/login" replace />
-  if (user && !roles.includes(user.role)) return <Navigate to={homeForRole(user.role)} replace />
+  // Un jeton sans profil ne doit jamais suffire à afficher une zone privilégiée.
+  if (!user) return <Navigate to="/login" replace />
+  if (!roles.includes(user.role)) return <Navigate to={homeForRole(user.role)} replace />
   return <>{children}</>
 }

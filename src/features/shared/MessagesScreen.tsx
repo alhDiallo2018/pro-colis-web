@@ -46,11 +46,11 @@ export function MessagesScreen() {
       const key = `${peer.id}::${m.parcelId ?? '_'}`
       const peerName = peer.fullName?.trim() || 'Inconnu'
 
-      const unread = !m.isRead ? 1 : 0
+      const unread = m.unreadCount ?? (!m.isRead ? 1 : 0)
 
       const existing = map.get(key)
       if (existing) {
-        if (unread) existing.unread += 1
+        if (unread) existing.unread += unread
         if (m.createdAt > existing.lastAt) {
           existing.lastMessage = previewText(m)
           existing.lastAt = m.createdAt

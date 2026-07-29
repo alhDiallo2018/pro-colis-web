@@ -1,7 +1,8 @@
 import { Button, Input } from '@/ds'
 import { useAuthStore } from '@/store/auth'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { homeForRole } from '@/routes/paths'
 
 const NAV_ITEMS = [
   { label: 'Comment ça marche', target: 'how-it-works' },
@@ -93,7 +94,7 @@ export function LandingPage() {
   const handleTrack = (e: React.FormEvent) => {
     e.preventDefault()
     if (trackingInput.trim()) {
-      navigate(`/client/suivi?tracking=${trackingInput.trim().toUpperCase()}`)
+      navigate(`/track/${encodeURIComponent(trackingInput.trim().toUpperCase())}`)
     }
   }
 
@@ -159,14 +160,18 @@ export function LandingPage() {
           gap: 16
         }}>
           {/* Logo */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            cursor: 'pointer',
-            flex: 'none'
-          }}
-            onClick={() => navigate('/')}>
+          <Link
+            to="/"
+            aria-label="Retour à l'accueil SendProColis"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              color: 'inherit',
+              textDecoration: 'none',
+              flex: 'none'
+            }}
+          >
             <img
               src="/logo-procolis.png"
               alt="SendProColis"
@@ -187,7 +192,7 @@ export function LandingPage() {
             }}>
               SEND<span style={{ color: 'var(--color-primary)' }}>PRO</span>COLIS
             </span>
-          </div>
+          </Link>
 
           {/* Navigation Links - caché sur mobile */}
           <div className="pc-landing-nav-links" style={{
@@ -228,7 +233,7 @@ export function LandingPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate(homeForRole(user.role))}
                   icon="account_circle"
                 >
                   {user.fullName || user.email || 'Mon compte'}
@@ -326,7 +331,7 @@ export function LandingPage() {
                     size="md"
                     block
                     onClick={() => {
-                      navigate('/dashboard');
+                      navigate(homeForRole(user.role));
                       setMobileMenu(false)
                     }}
                   >
@@ -1034,7 +1039,7 @@ export function LandingPage() {
               variant="amber"
               size="lg"
               icon="add_box"
-              onClick={() => navigate(user ? '/dashboard' : '/register')}
+              onClick={() => navigate(user ? homeForRole(user.role) : '/register')}
               style={{ fontSize: 15, padding: '14px 32px', borderRadius: 14, fontWeight: 800 }}
             >
               {user ? 'Accéder à mon espace' : 'Créer un compte gratuit'}
@@ -1061,14 +1066,19 @@ export function LandingPage() {
         <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 clamp(16px, 4vw, 40px)' }}>
           <div className="pc-landing-footer-grid" style={{ gap: 'clamp(24px, 4vw, 48px)' }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                marginBottom: 16,
-                cursor: 'pointer'
-              }}
-                onClick={() => navigate('/')}>
+              <Link
+                to="/"
+                aria-label="Retour à l'accueil SendProColis"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  width: 'fit-content',
+                  marginBottom: 16,
+                  color: 'inherit',
+                  textDecoration: 'none'
+                }}
+              >
                 <span style={{
                   width: 40,
                   height: 40,
@@ -1084,7 +1094,7 @@ export function LandingPage() {
                 <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, color: '#fff' }}>
                   SEND<span style={{ color: 'var(--color-primary)' }}>PRO</span>COLIS
                 </span>
-              </div>
+              </Link>
               <p style={{ fontSize: 13.5, lineHeight: 1.65, margin: '0 0 20px', maxWidth: 300 }}>
                 La plateforme qui connecte expéditeurs et chauffeurs pour le transport de colis au Sénégal,
                 partout en Afrique et à l'international.

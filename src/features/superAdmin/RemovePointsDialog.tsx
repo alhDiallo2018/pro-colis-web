@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button, Dialog, Input, Textarea, Toast } from '@/ds'
 import { useRemovePoints } from './hooks'
+import { ApiError } from '@/lib/api/client'
 
 interface RemovePointsDialogProps {
   userId: string
@@ -31,8 +32,8 @@ export function RemovePointsDialog({ userId, open, onClose }: RemovePointsDialog
       setAmount('')
       setDescription('')
       onClose()
-    } catch (_e) {
-      setLocalError('Erreur lors du retrait de points.')
+    } catch (error) {
+      setLocalError(error instanceof ApiError ? error.message : 'Erreur lors du retrait de points.')
     }
   }
 

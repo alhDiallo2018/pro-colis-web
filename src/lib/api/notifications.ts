@@ -9,8 +9,11 @@ export interface AppNotification {
   isRead: boolean
   priority?: string
   parcelId?: string | null
+  bidId?: string | null
+  senderId?: string | null
   senderName?: string | null
   data?: { trackingNumber?: string; status?: string } & Record<string, unknown>
+  readAt?: string | null
   createdAt?: string
 }
 

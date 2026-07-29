@@ -52,7 +52,7 @@ export function MesColisScreen() {
   const receivedQuery = useReceivedParcels({ limit: 100 })
 
   const tabQuery = tab === 'sent' ? sentQuery : receivedQuery
-  const all = useMemo(() => tabQuery.data?.parcels ?? [], [tabQuery.data?.parcels, tab])
+  const all = useMemo(() => tabQuery.data?.parcels ?? [], [tabQuery.data?.parcels])
 
   const parcels = useMemo(() => {
     const q = search.trim().toLowerCase()

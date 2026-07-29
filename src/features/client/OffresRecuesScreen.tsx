@@ -7,9 +7,9 @@ import { ApiError } from '@/lib/api/client'
 import { formatFcfa } from '@/lib/format'
 import type { Bid } from '@/lib/api/types'
 
-const STATUS_META: Record<string, { label: string; tone: 'amber' | 'blue' | 'green' | 'red' | 'neutral' }> = {
+const STATUS_META: Record<string, { label: string; tone: 'amber' | 'primary' | 'green' | 'red' | 'neutral' }> = {
   pending: { label: 'En attente', tone: 'amber' },
-  countered: { label: 'Contre-offre', tone: 'blue' },
+  countered: { label: 'Contre-offre', tone: 'primary' },
   accepted: { label: 'Acceptée', tone: 'green' },
   rejected: { label: 'Refusée', tone: 'red' },
 }
@@ -173,4 +173,3 @@ function BidRow({ bid, onNegotiate }: { bid: Bid; onNegotiate: () => void }) {
     </Card>
   )
 }
-

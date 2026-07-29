@@ -27,6 +27,7 @@ export function ParcelDetailScreen() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const query = useParcel(parcelId)
+  const { refetch } = query
   const parcel = query.data
   const showCode = !!parcel && IN_TRANSIT_STATUSES.includes(parcel.status)
   const deliveryCode = useDeliveryCode(parcelId, showCode)
@@ -35,9 +36,9 @@ export function ParcelDetailScreen() {
   useEffect(() => {
     const paymentStatus = searchParams.get('payment')
     if (paymentStatus === 'success' || paymentStatus === 'cancelled') {
-      query.refetch()
+      refetch()
     }
-  }, [searchParams])
+  }, [refetch, searchParams])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>

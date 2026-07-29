@@ -12,6 +12,8 @@ import { useDriverBidsSent, useDriverFreeParcels, useDriverParcels, useMyAdverti
 import { useMyDriverStats } from '@/features/shared/profile/hooks'
 import { formatDate, formatFcfa, formatPoints, formatWeight } from '@/lib/format'
 import type { Parcel } from '@/lib/api/types'
+import { useAuthStore } from '@/store/auth'
+import { getDriverHomeZone } from './freeParcelZone'
 
 const DAY_LETTERS = ['D', 'L', 'M', 'M', 'J', 'V', 'S']
 
@@ -28,6 +30,7 @@ function startOfDay(d: Date): Date {
 
 export function DriverDashboard() {
   const navigate = useNavigate()
+  const user = useAuthStore((state) => state.user)
   const mine = useDriverParcels({ limit: 200 })
   const stats = useMyDriverStats()
   const free = useDriverFreeParcels()
@@ -43,6 +46,7 @@ export function DriverDashboard() {
 
   const parcels = useMemo(() => mine.data?.parcels ?? [], [mine.data])
   const freeParcels = free.data?.parcels ?? []
+  const homeZone = getDriverHomeZone(user)
   const active = parcels.find((p) => !['delivered', 'cancelled'].includes(p.status))
   const delivered = parcels.filter((p) => p.status === 'delivered').length
 
@@ -97,7 +101,7 @@ export function DriverDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
         <StatBox icon="local_shipping" tone="primary" value={stats.data?.assignedParcels ?? parcels.length} label="Missions" />
         <StatBox icon="pending_actions" tone="teal" value={stats.data?.activeParcels ?? '—'} label="En cours" />
-        <StatBox icon="sell" tone="green" value={freeParcels.length} label="Annonces dispo" />
+        <StatBox icon="sell" tone="green" value={freeParcels.length} label="Colis disponibles" />
         <StatBox icon="gavel" tone="amber" value={stats.data?.pendingBids ?? sent.data?.length ?? 0} label="Offres en attente" />
         <StatBox icon="task_alt" tone="neutral" value={stats.data?.completedDeliveries ?? delivered} label="Colis livrés" />
         <StatBox icon="star" tone="amber" value={stats.data?.rating ? stats.data.rating.toFixed(1) : '—'} label="Note moyenne" />
@@ -155,9 +159,9 @@ export function DriverDashboard() {
             )}
           </div>
 
-          {/* Annonces pool */}
+          {/* Colis libres limités à la zone exacte du chauffeur connecté. */}
           <Panel
-            title="Annonces"
+            title={`Colis à prendre · ${homeZone.name ?? 'Zone non renseignée'}`}
             flush
             action={
               <Button size="sm" variant="secondary" iconTrailing="chevron_right" onClick={() => navigate('/driver/libre')}>
@@ -166,7 +170,11 @@ export function DriverDashboard() {
             }
           >
             {freeParcels.length === 0 ? (
-              <div style={{ padding: 18, fontSize: 13.5, color: 'var(--text-muted)' }}>Aucun colis disponible pour le moment.</div>
+              <div style={{ padding: 18, fontSize: 13.5, color: 'var(--text-muted)' }}>
+                {homeZone.id || homeZone.name
+                  ? 'Aucun colis disponible dans votre zone pour le moment.'
+                  : 'Renseignez votre zone dans le profil pour voir les colis à prendre.'}
+              </div>
             ) : (
               freeParcels.slice(0, 4).map((p) => {
                 const hasBid = bidMap.has(p.id)
@@ -196,7 +204,7 @@ export function DriverDashboard() {
                   </div>
                   <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 15, color: 'var(--teal-600)' }}>{formatFcfa(p.price)}</span>
                   <Button size="sm" icon={hasBid ? 'forum' : 'gavel'} onClick={(e: React.MouseEvent) => { e.stopPropagation(); setOfferTarget(p); }}>
-                    {hasBid ? 'Negocier' : 'Faire une offre'}
+                    {hasBid ? 'Suivi offre' : 'Faire une offre'}
                   </Button>
                 </div>
               )}))}

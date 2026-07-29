@@ -12,6 +12,15 @@ import { formatFcfa, formatWeight } from '@/lib/format'
 import type { User, Garage } from '@/lib/api/types'
 import { GarageSearchSelect } from '@/components/GarageSearchSelect'
 import { LocationInput } from '@/components/LocationInput'
+import { ALL_COUNTRIES } from '@/components/CountryCodePicker'
+import {
+  CONTACT_PICKER_PROPERTIES,
+  getContactsManager,
+  inferDialCode,
+  isContactPickerCancellation,
+  toRecipientContact,
+  type ContactPickerProperty,
+} from '@/lib/contactPicker'
 
 interface PhotoItem {
   id: string
@@ -79,6 +88,12 @@ export function NewParcelScreen() {
   const [maxStep, setMaxStep] = useState(0)
   const [mode, setMode] = useState<Mode>('free')
   const [driverError, setDriverError] = useState<string | null>(null)
+  const [contactPickerAvailable, setContactPickerAvailable] = useState(false)
+  const [contactPickerProperties, setContactPickerProperties] = useState<ContactPickerProperty[]>([
+    ...CONTACT_PICKER_PROPERTIES,
+  ])
+  const [selectingContact, setSelectingContact] = useState(false)
+  const [contactError, setContactError] = useState<string | null>(null)
 
   const [photos, setPhotos] = useState<PhotoItem[]>([])
   const [voice, setVoice] = useState<VoiceNote | null>(null)
@@ -113,6 +128,40 @@ export function NewParcelScreen() {
   const addResolvedZone = (g: Garage) =>
     setExtraZones((prev) => [...prev.filter((x) => x.id !== g.id), g])
   const selectedDriver = (drivers.data ?? []).find((d) => d.id === watch('driverId'))
+  const accountDialCode = inferDialCode(
+    user?.phone,
+    ALL_COUNTRIES.map((country) => country.dialCode),
+  )
+
+  useEffect(() => {
+    const manager = getContactsManager()
+    if (!manager) return
+
+    setContactPickerAvailable(true)
+    if (!manager.getProperties) return
+
+    let active = true
+    // La vérification se fait avant le clic pour que select() conserve le geste
+    // utilisateur exigé par les navigateurs mobiles.
+    manager
+      .getProperties()
+      .then((properties) => {
+        if (!active) return
+        const supported = CONTACT_PICKER_PROPERTIES.filter((property) =>
+          properties.includes(property),
+        )
+        setContactPickerProperties(supported)
+        setContactPickerAvailable(supported.includes('tel'))
+      })
+      .catch(() => {
+        // Certains navigateurs exposent select() sans getProperties() fiable.
+        // Les propriétés usuelles restent alors utilisées au moment du clic.
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   const goTo = (s: number) => {
     setStep(s)
@@ -143,6 +192,41 @@ export function NewParcelScreen() {
     setMode(m)
     setDriverError(null)
     if (m === 'free') setValue('driverId', '')
+  }
+
+  const chooseRecipientFromContacts = async () => {
+    const manager = getContactsManager()
+    if (!manager) {
+      setContactError("Le carnet de contacts n'est pas disponible sur ce navigateur.")
+      return
+    }
+
+    setSelectingContact(true)
+    setContactError(null)
+    try {
+      const contacts = await manager.select(contactPickerProperties, { multiple: false })
+      const selected = contacts[0]
+      if (!selected) return
+
+      const recipient = toRecipientContact(selected, accountDialCode)
+      if (recipient.name) {
+        setValue('receiverName', recipient.name, { shouldDirty: true, shouldValidate: true })
+      }
+      if (recipient.email) {
+        setValue('receiverEmail', recipient.email, { shouldDirty: true, shouldValidate: true })
+      }
+      if (recipient.phone) {
+        setValue('receiverPhone', recipient.phone, { shouldDirty: true, shouldValidate: true })
+      } else {
+        setContactError("Le contact sélectionné ne contient aucun numéro de téléphone.")
+      }
+    } catch (error) {
+      if (!isContactPickerCancellation(error)) {
+        setContactError("Impossible d'ouvrir les contacts. Vérifiez l'autorisation du navigateur.")
+      }
+    } finally {
+      setSelectingContact(false)
+    }
   }
 
   const doCreate = handleSubmit(async (values) => {
@@ -219,9 +303,51 @@ export function NewParcelScreen() {
           {/* STEP 0 — Destinataire */}
           {step === 0 && (
             <StepBody n={1} title="Qui reçoit le colis ?" hint="Les coordonnées du destinataire à l'arrivée.">
-              <Input label={required('Nom du destinataire')} icon="person" placeholder="Ex : Awa Ndiaye" error={errors.receiverName?.message} {...register('receiverName')} />
-              <Input label={required('Téléphone')} icon="call" placeholder="+221 77 000 00 00" error={errors.receiverPhone?.message} {...register('receiverPhone')} />
-              <Input label="Email du destinataire" icon="mail" type="email" placeholder="exemple@email.com" error={errors.receiverEmail?.message} {...register('receiverEmail')} />
+              {contactPickerAvailable && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <Button
+                    type="button"
+                    block
+                    variant="secondary"
+                    icon="contact_phone"
+                    loading={selectingContact}
+                    onClick={chooseRecipientFromContacts}
+                  >
+                    Choisir dans mes contacts
+                  </Button>
+                  <p style={{ margin: 0, fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', textAlign: 'center' }}>
+                    Vous choisissez les informations à partager avec SendProcolis.
+                  </p>
+                </div>
+              )}
+              {contactError && <Toast tone="error" message={contactError} onClose={() => setContactError(null)} />}
+              <Input
+                label={required('Nom du destinataire')}
+                icon="person"
+                placeholder="Ex : Awa Ndiaye"
+                autoComplete="name"
+                error={errors.receiverName?.message}
+                {...register('receiverName')}
+              />
+              <Input
+                label={required('Téléphone')}
+                icon="call"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="+221 77 000 00 00"
+                error={errors.receiverPhone?.message}
+                {...register('receiverPhone')}
+              />
+              <Input
+                label="Email du destinataire"
+                icon="mail"
+                type="email"
+                autoComplete="email"
+                placeholder="exemple@email.com"
+                error={errors.receiverEmail?.message}
+                {...register('receiverEmail')}
+              />
               <LocationInput
                 label="Adresse de livraison"
                 icon="home"

@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Button, Input, Textarea, Toast } from '@/ds'
 import type { ToastTone } from '@/ds'
 import { MarketingHeader } from './MarketingHeader'
-import { sendSupportMessage, checkSupportRateLimit, recordSupportSend, formatWait, SUPPORT_EMAIL } from '@/lib/api/support'
+import { buildSupportMailto, sendSupportMessage, checkSupportRateLimit, recordSupportSend, formatWait, SUPPORT_EMAIL } from '@/lib/api/support'
+import { useAuthStore } from '@/store/auth'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -14,6 +15,7 @@ interface ContactErrors {
 }
 
 export function ContactPage() {
+  const accessToken = useAuthStore((s) => s.accessToken)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [subject, setSubject] = useState('')
@@ -48,8 +50,19 @@ export function ContactPage() {
     setSending(true)
     const fullSubject = `[Contact] ${subject.trim()}`
     const fullMessage = `Nom : ${name.trim()}\nEmail : ${email.trim()}\n\n${message.trim()}`
+    const payload = { subject: fullSubject, message: fullMessage, name: name.trim(), email: email.trim() }
+
+    // L'API de support exige une session. Pour un visiteur, le client mail est
+    // le recours sûr car aucune clé d'envoi tierce ne doit vivre dans le bundle.
+    if (!accessToken) {
+      window.location.href = buildSupportMailto(payload)
+      setFeedback({ tone: 'warning', message: `Votre application email va s'ouvrir pour envoyer le message à ${SUPPORT_EMAIL}.` })
+      setSending(false)
+      return
+    }
+
     try {
-      await sendSupportMessage({ subject: fullSubject, message: fullMessage, name: name.trim(), email: email.trim() })
+      await sendSupportMessage(payload)
       recordSupportSend()
       setFeedback({ tone: 'success', message: 'Message envoyé ! Notre équipe vous répondra sous 24h ouvrées.' })
       setName('')
@@ -57,9 +70,10 @@ export function ContactPage() {
       setSubject('')
       setMessage('')
     } catch {
+      window.location.href = buildSupportMailto(payload)
       setFeedback({
-        tone: 'error',
-        message: `L'envoi a échoué. Veuillez réessayer dans quelques instants ou nous écrire à ${SUPPORT_EMAIL}.`,
+        tone: 'warning',
+        message: `L'API est indisponible : votre application email va s'ouvrir pour écrire à ${SUPPORT_EMAIL}.`,
       })
     } finally {
       setSending(false)

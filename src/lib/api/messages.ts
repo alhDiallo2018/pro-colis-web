@@ -21,6 +21,7 @@ export interface ConversationSummary {
   createdAt: string
   parcelId?: string | null
   trackingNumber?: string | null
+  unreadCount?: number
   otherUser: {
     id: string
     fullName: string
@@ -75,7 +76,7 @@ export async function conversations(): Promise<ConversationSummary[]> {
 export interface SupportConversation {
   id: string
   body: string
-  isRead: boolean
+  isRead?: boolean
   createdAt: string
   senderId: string
   receiverId: string
@@ -85,6 +86,8 @@ export interface SupportConversation {
     fullName: string
     profilePhoto: string | null
     role: string
+    email?: string | null
+    phone?: string | null
   }
   supportUser: {
     id: string
@@ -131,23 +134,12 @@ export async function adminSupportThread(
   userId: string,
 ): Promise<SupportThreadMessage[]> {
   const { data } = await api.get(`/messages/admin/support/conversations/${supportUserId}/${userId}`)
-  
-  // ✅ CORRECTION: L'API retourne { data: { user, support, messages } }
-  // On extrait le tableau de messages
-  if (data?.data?.messages && Array.isArray(data.data.messages)) {
-    return data.data.messages as SupportThreadMessage[]
-  }
-  
-  // Fallback: si data.data est un tableau
-  if (data?.data && Array.isArray(data.data)) {
-    return data.data as SupportThreadMessage[]
-  }
-  
-  // Fallback: si data est un tableau
-  if (Array.isArray(data)) {
-    return data as SupportThreadMessage[]
-  }
-  
+  const payload = data.data ?? data
+
+  // Le contrat courant enveloppe les messages dans data.messages ; les deux
+  // variantes de tableau restent acceptées pour les déploiements plus anciens.
+  if (Array.isArray(payload.messages)) return payload.messages as SupportThreadMessage[]
+  if (Array.isArray(payload)) return payload as SupportThreadMessage[]
   return []
 }
 

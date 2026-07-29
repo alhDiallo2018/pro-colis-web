@@ -1,4 +1,5 @@
-import { useState, type ChangeEvent } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Avatar, Badge, Button, Input, Select, StatBox, Dialog, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
@@ -395,8 +396,8 @@ function WalletRow({ wallet: w }: { wallet: Wallet }) {
 
   if (isMobile) {
     return (
-      <a
-        href={`#/super-admin/wallets?userId=${w.id}`}
+      <Link
+        to={`/admin/finance/wallets?userId=${encodeURIComponent(w.id)}`}
         style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -421,13 +422,13 @@ function WalletRow({ wallet: w }: { wallet: Wallet }) {
         <MobileField label="Dernière recharge">
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatDate(w.lastDepositAt)}</span>
         </MobileField>
-      </a>
+      </Link>
     )
   }
 
   return (
-    <a
-      href={`#/super-admin/wallets?userId=${w.id}`}
+    <Link
+      to={`/admin/finance/wallets?userId=${encodeURIComponent(w.id)}`}
       style={{ display: 'grid', gridTemplateColumns: WALLET_GRID, alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}
     >
       <span style={{ ...cell, gap: 8 }}>
@@ -446,7 +447,7 @@ function WalletRow({ wallet: w }: { wallet: Wallet }) {
       <span style={cell}>
         <Badge tone={st ? 'green' : 'amber'}>{st ? 'Actif' : 'Suspendu'}</Badge>
       </span>
-    </a>
+    </Link>
   )
 }
 
@@ -456,6 +457,7 @@ function WalletDetail({ userId, onBack }: { userId: string; onBack: () => void }
   const [txType, setTxType] = useState('')
   const [showRecharge, setShowRecharge] = useState(false)
   const [showDebit, setShowDebit] = useState(false)
+  const historyRef = useRef<HTMLDivElement>(null)
 
   const txParams: ListParams = {}
   if (txType) txParams.type = txType
@@ -504,7 +506,9 @@ function WalletDetail({ userId, onBack }: { userId: string; onBack: () => void }
             <div style={{ display: 'flex', gap: 10 }}>
               <Button icon="add_card" onClick={() => setShowRecharge(true)}>Recharger</Button>
               <Button icon="remove" variant="danger" onClick={() => setShowDebit(true)}>Débiter</Button>
-              <Button variant="secondary" icon="history">Historique</Button>
+              <Button variant="secondary" icon="history" onClick={() => historyRef.current?.scrollIntoView({ behavior: 'smooth' })}>
+                Historique
+              </Button>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -519,6 +523,7 @@ function WalletDetail({ userId, onBack }: { userId: string; onBack: () => void }
               />
             </div>
 
+            <div ref={historyRef}>
             <Panel title={`Transactions · ${txQuery.data?.pagination?.total ?? transactions.length}`} flush>
               {isMobile ? (
                 <QueryState
@@ -642,6 +647,7 @@ function WalletDetail({ userId, onBack }: { userId: string; onBack: () => void }
               </div>
               )}
             </Panel>
+            </div>
 
             <RechargeDialog userId={userId} open={showRecharge} onClose={() => setShowRecharge(false)} />
             <DebitDialog userId={userId} open={showDebit} onClose={() => setShowDebit(false)} />
@@ -653,12 +659,11 @@ function WalletDetail({ userId, onBack }: { userId: string; onBack: () => void }
 }
 
 export function WalletsPage() {
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.hash.split('?')[1] ?? '') : null
-  const initialUserId = searchParams?.get('userId') ?? undefined
-  const [selectedUserId, setSelectedUserId] = useState<string | undefined>(initialUserId)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const selectedUserId = searchParams.get('userId') ?? undefined
 
   if (selectedUserId) {
-    return <WalletDetail userId={selectedUserId} onBack={() => setSelectedUserId(undefined)} />
+    return <WalletDetail userId={selectedUserId} onBack={() => setSearchParams({}, { replace: true })} />
   }
 
   return <WalletList />

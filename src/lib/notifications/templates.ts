@@ -36,6 +36,11 @@ export interface NotificationContext {
 const APP_NAME = 'SENDPROCOLIS'
 const PLATFORM_URL = import.meta.env.VITE_APP_URL || 'https://sendprocolis.com'
 
+/** Produit un lien de suivi public et encode le numéro avant son insertion dans l'email. */
+function trackingUrl(trackingNumber: string): string {
+  return `${PLATFORM_URL}/track/${encodeURIComponent(trackingNumber)}`
+}
+
 function emailShell(title: string, bodyContent: string): string {
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -99,7 +104,7 @@ export function parcelCreatedEmail(ctx: NotificationContext): string {
     <p style="margin:0 0 24px;font-size:14px;color:#64748b;">
       Suivez l'avancement de votre colis à tout moment via votre tableau de bord.
     </p>
-    <a href="${PLATFORM_URL}/client/suivi?tracking=${t}" style="display:inline-block;padding:12px 28px;background:#0d9488;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Suivre mon colis</a>
+    <a href="${trackingUrl(t)}" style="display:inline-block;padding:12px 28px;background:#0d9488;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Suivre mon colis</a>
   `
   return emailShell(`Colis ${t} enregistré avec succès`, body)
 }
@@ -118,7 +123,7 @@ export function parcelStatusEmail(ctx: NotificationContext): string {
     </div>
     ${ctx.driverName ? `<p style="margin:0 0 16px;font-size:14px;color:#475569;">Chauffeur assigné : <strong>${ctx.driverName}</strong></p>` : ''}
     ${price ? `<p style="margin:0 0 16px;font-size:14px;color:#475569;">Montant : <strong>${price.toLocaleString('fr-FR')} FCFA</strong></p>` : ''}
-    <a href="${PLATFORM_URL}/client/suivi?tracking=${t}" style="display:inline-block;padding:12px 28px;background:#0d9488;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Voir le détail</a>
+    <a href="${trackingUrl(t)}" style="display:inline-block;padding:12px 28px;background:#0d9488;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Voir le détail</a>
   `
   return emailShell(`Colis ${t} : ${status}`, body)
 }
@@ -181,7 +186,7 @@ export function driverAssignedEmail(ctx: NotificationContext): string {
       Un chauffeur a été assigné à votre colis <strong style="color:#0d9488;">${t}</strong>.
     </p>
     ${ctx.driverName ? `<p style="margin:0 0 16px;font-size:14px;color:#475569;">Chauffeur : <strong>${ctx.driverName}</strong></p>` : ''}
-    <a href="${PLATFORM_URL}/client/suivi?tracking=${t}" style="display:inline-block;padding:12px 28px;background:#0d9488;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Suivre mon colis</a>
+    <a href="${trackingUrl(t)}" style="display:inline-block;padding:12px 28px;background:#0d9488;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Suivre mon colis</a>
   `
   return emailShell(`Chauffeur assigné — Colis ${t}`, body)
 }

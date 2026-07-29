@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Button, Input, Select, Textarea, Toast } from '@/ds'
 import type { ToastTone } from '@/ds'
 import { MarketingHeader } from './MarketingHeader'
-import { sendSupportMessage, checkSupportRateLimit, recordSupportSend, formatWait, SUPPORT_EMAIL } from '@/lib/api/support'
+import { buildSupportMailto, sendSupportMessage, checkSupportRateLimit, recordSupportSend, formatWait, SUPPORT_EMAIL } from '@/lib/api/support'
+import { useAuthStore } from '@/store/auth'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -23,6 +24,7 @@ interface ReclamationErrors {
 }
 
 export function ReclamationsPage() {
+  const accessToken = useAuthStore((s) => s.accessToken)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [tracking, setTracking] = useState('')
@@ -68,8 +70,19 @@ export function ReclamationsPage() {
     ]
       .filter((l) => l !== null)
       .join('\n')
+    const payload = { subject: fullSubject, message: fullMessage, name: name.trim(), email: email.trim() }
+
+    // Les visiteurs anonymes passent par leur client mail : l'endpoint support
+    // est authentifié et aucune clé Brevo ne doit être exposée dans le frontend.
+    if (!accessToken) {
+      window.location.href = buildSupportMailto(payload)
+      setFeedback({ tone: 'warning', message: `Votre application email va s'ouvrir pour envoyer la réclamation à ${SUPPORT_EMAIL}.` })
+      setSending(false)
+      return
+    }
+
     try {
-      await sendSupportMessage({ subject: fullSubject, message: fullMessage, name: name.trim(), email: email.trim() })
+      await sendSupportMessage(payload)
       recordSupportSend()
       setFeedback({ tone: 'success', message: 'Réclamation envoyée ! Un accusé de réception vous sera adressé sous 48h ouvrées.' })
       setName('')
@@ -78,9 +91,10 @@ export function ReclamationsPage() {
       setType('')
       setDescription('')
     } catch {
+      window.location.href = buildSupportMailto(payload)
       setFeedback({
-        tone: 'error',
-        message: `L'envoi a échoué. Veuillez réessayer dans quelques instants ou nous écrire à ${SUPPORT_EMAIL}.`,
+        tone: 'warning',
+        message: `L'API est indisponible : votre application email va s'ouvrir pour écrire à ${SUPPORT_EMAIL}.`,
       })
     } finally {
       setSending(false)

@@ -42,12 +42,12 @@ import { MesAnnoncesScreen } from '@/features/driver/MesAnnoncesScreen'
 import { VehicleDocumentsScreen } from '@/features/driver/VehicleDocumentsScreen'
 import { ItineraireScreen } from '@/features/driver/ItineraireScreen'
 import { MessagesScreen } from '@/features/shared/MessagesScreen'
-import { SupportChatScreen } from '@/features/shared/SupportChatScreen'
 import { SupportChatWrapper } from '@/features/shared/SupportChatWrapper'
 import { AdminSupportScreen } from '@/features/shared/AdminSupportScreen'
 import { SupportDashboard } from '@/features/shared/SupportDashboard'
+import { SupportConversationsScreen } from '@/features/shared/SupportConversationsScreen'
 import { StaffProfilScreen } from '@/features/shared/StaffProfilScreen'
-import { SupportAdminRedirect } from './SupportRedirect'
+import { RoleHomeRedirect } from './RoleHomeRedirect'
 import { AvailabilityToggle } from '@/features/driver/AvailabilityToggle'
 import { SuperAdminDashboard } from '@/features/superAdmin/SuperAdminDashboard'
 import { ColisPage } from '@/features/superAdmin/ColisPage'
@@ -102,7 +102,7 @@ const DRIVER_NAV: NavSection[] = [
   {
     items: [
       { label: 'Tableau de bord', icon: 'dashboard', to: '/driver', end: true },
-      { label: 'Annonces', icon: 'sell', to: '/driver/libre' },
+      { label: 'Colis à prendre', icon: 'sell', to: '/driver/libre' },
       { label: 'Mes annonces', icon: 'campaign', to: '/driver/annonces' },
       { label: 'Mes missions', icon: 'local_shipping', to: '/driver/missions' },
       { label: 'Revenus', icon: 'payments', to: '/driver/revenus' },
@@ -331,21 +331,19 @@ export const router = createBrowserRouter([
     path: '/admin',
     element: (
       <RequireRole roles={['super_admin']}>
-        <SupportAdminRedirect>
-          <DashboardLayout
-            nav={SUPER_NAV}
-            roleLabel="Super Admin"
-            banner={<BroadcastBanner />}
-            actions={
-              <>
-                <NotifButton />
-                <NavButton to="/admin/garages?new=1" icon="add">
-                   Nouvelle zone
-                </NavButton>
-              </>
-            }
-          />
-        </SupportAdminRedirect>
+        <DashboardLayout
+          nav={SUPER_NAV}
+          roleLabel="Super Admin"
+          banner={<BroadcastBanner />}
+          actions={
+            <>
+              <NotifButton />
+              <NavButton to="/admin/garages?new=1" icon="add">
+                 Nouvelle zone
+              </NavButton>
+            </>
+          }
+        />
       </RequireRole>
     ),
     children: [
@@ -400,7 +398,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <SupportDashboard /> },
-      { path: 'conversations', element: <AdminSupportScreen /> },
+      { path: 'conversations', element: <SupportConversationsScreen /> },
       { path: 'assistances', element: <AssistancesPage /> },
       { path: 'colis', element: <ColisPage /> },
       { path: 'chauffeurs', element: <ChauffeursPage /> },
@@ -414,7 +412,7 @@ export const router = createBrowserRouter([
     path: '*',
     element: (
       <RequireAuth>
-        <Navigate to="/" replace />
+        <RoleHomeRedirect />
       </RequireAuth>
     ),
   },

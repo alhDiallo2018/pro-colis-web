@@ -66,7 +66,11 @@ export function MissionsScreen() {
                     size="sm"
                     icon={next.icon}
                     loading={advance.isPending && advance.variables?.parcelId === p.id}
-                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); next.step === 'deliver' ? setDeliverTarget(p) : advance.mutate({ parcelId: p.id, step: next.step }); }}
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation()
+                      if (next.step === 'deliver') setDeliverTarget(p)
+                      else advance.mutate({ parcelId: p.id, step: next.step })
+                    }}
                   >
                     {next.label}
                   </Button>

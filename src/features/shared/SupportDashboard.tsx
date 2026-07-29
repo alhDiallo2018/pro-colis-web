@@ -7,6 +7,7 @@ import * as assistancesApi from '@/lib/api/assistances'
 import { useAuthStore } from '@/store/auth'
 import { usePlatformStats, useMyStats } from './profile/hooks'
 import { formatDateTime } from '@/lib/format'
+import type { SupportConversation } from '@/lib/api/messages'
 
 const ROLE_LABEL: Record<string, string> = {
   client: 'Client',
@@ -22,12 +23,38 @@ const ROLE_LABEL: Record<string, string> = {
 export function SupportDashboard() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
+  const usesPersonalInbox = user?.role === 'support_technique' || user?.role === 'support_commercial'
   const myStats = useMyStats()
   const platform = usePlatformStats()
 
   const conversations = useQuery({
-    queryKey: ['admin', 'support', 'conversations'],
-    queryFn: () => messagesApi.adminSupportConversations(),
+    queryKey: ['admin', 'support', 'conversations', user?.role],
+    queryFn: async (): Promise<SupportConversation[]> => {
+      if (!usesPersonalInbox) return messagesApi.adminSupportConversations()
+
+      // Les comptes support spécialisés ne sont pas acceptés par l'endpoint
+      // agrégé historique. On adapte donc leur boîte personnelle au même modèle.
+      const personal = await messagesApi.conversations()
+      return personal.map((conversation) => ({
+        id: conversation.id,
+        body: conversation.body,
+        isRead: (conversation.unreadCount ?? (conversation.isRead ? 0 : 1)) === 0,
+        createdAt: conversation.createdAt,
+        senderId: conversation.otherUser.id,
+        receiverId: user?.id ?? '',
+        messageCount: Math.max(conversation.unreadCount ?? 0, 1),
+        user: {
+          id: conversation.otherUser.id,
+          fullName: conversation.otherUser.fullName,
+          profilePhoto: conversation.otherUser.profilePhoto ?? null,
+          role: conversation.otherUser.role,
+        },
+        supportUser: {
+          id: user?.id ?? '',
+          fullName: user?.fullName ?? 'Support',
+        },
+      }))
+    },
     refetchInterval: 15_000,
   })
 
@@ -38,7 +65,7 @@ export function SupportDashboard() {
   })
 
   const list = conversations.data ?? []
-  const unread = list.filter((c) => !c.isRead).length
+  const unread = list.filter((c) => c.isRead === false).length
   const handledByMe = list.filter((c) => c.agents?.some((a) => a.id === user?.id) || c.lastAgent?.id === user?.id).length
   const summary = assistances.data?.summary
 
@@ -117,7 +144,7 @@ export function SupportDashboard() {
                 </div>
                 <div style={{ textAlign: 'right', flex: 'none' }}>
                   <div style={{ fontSize: 11, color: 'var(--text-faint)', fontFamily: 'var(--font-mono)' }}>{formatDateTime(c.createdAt)}</div>
-                  {!c.isRead && <Badge tone="amber">Non lue</Badge>}
+                  {c.isRead === false && <Badge tone="amber">Non lue</Badge>}
                 </div>
               </div>
             ))

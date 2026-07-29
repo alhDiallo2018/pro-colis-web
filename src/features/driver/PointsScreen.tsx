@@ -8,7 +8,7 @@ import { formatDateTime, formatFcfa, formatPoints } from '@/lib/format'
 import { RechargeDialog } from './RechargeDialog'
 import { ApiError } from '@/lib/api/client'
 import { useAuthStore } from '@/store/auth'
-import type { Withdrawal, WithdrawalStatus } from '@/lib/api/withdrawals'
+import type { Withdrawal, WithdrawalMethod, WithdrawalStatus } from '@/lib/api/withdrawals'
 
 const WALLET_PACKS = [
   { label: '1 000 FCFA', amount: 1000 },
@@ -33,7 +33,7 @@ export function DriverPointsScreen() {
   const [useCustomWallet, setUseCustomWallet] = useState(false)
   const [showWithdraw, setShowWithdraw] = useState(false)
   const [withdrawAmount, setWithdrawAmount] = useState('')
-  const [withdrawMethod, setWithdrawMethod] = useState('wave')
+  const [withdrawMethod, setWithdrawMethod] = useState<WithdrawalMethod>('wave')
   const [withdrawPhone, setWithdrawPhone] = useState(userPhone)
   const withdraw = useWithdrawWallet()
   const cancelWithdrawal = useCancelWithdrawal()
@@ -467,11 +467,11 @@ export function DriverPointsScreen() {
           <Select
             label="Mode de retrait"
             value={withdrawMethod}
-            onChange={(e) => setWithdrawMethod(e.target.value)}
+            onChange={(e) => setWithdrawMethod(e.target.value as WithdrawalMethod)}
             options={[
               { value: 'wave', label: 'Wave' },
               { value: 'orange_money', label: 'Orange Money' },
-              { value: 'freemMoney', label: 'FreeMoney' },
+              { value: 'freeMoney', label: 'FreeMoney' },
               { value: 'bank', label: 'Virement bancaire' },
             ]}
           />
@@ -558,7 +558,7 @@ export function DriverPointsScreen() {
                     Retrait {formatFcfa(w.amount)} vers {methodLabels[w.method] ?? w.method}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                    {new Date(w.createdAt).toLocaleString('fr-FR')}
+                    {formatDateTime(w.requestedAt ?? w.createdAt)}
                     {w.phoneNumber ? <> · {w.phoneNumber}</> : null}
                   </div>
                 </div>

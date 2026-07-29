@@ -25,6 +25,20 @@ export function ConfirmDeliveryScreen() {
     },
   })
 
+  const submitPin = useCallback((entered: string) => {
+    setSubmitting(true)
+    setError(null)
+    deliver.mutate(entered, {
+      onError: (err) => {
+        setError(err instanceof Error ? err.message : 'Code PIN incorrect')
+        setPin('')
+      },
+      onSettled: () => {
+        setSubmitting(false)
+      },
+    })
+  }, [deliver])
+
   const pushKey = useCallback(
     (key: string) => {
       if (submitting || success) return
@@ -39,23 +53,8 @@ export function ConfirmDeliveryScreen() {
         submitPin(next)
       }
     },
-    [pin, submitting, success],
+    [pin, submitPin, submitting, success],
   )
-
-  const submitPin = async (entered: string) => {
-    setSubmitting(true)
-    setError(null)
-    deliver.mutate(entered, {
-      onError: (err) => {
-        setError(err instanceof Error ? err.message : 'Code PIN incorrect')
-        setPin('')
-        setSubmitting(false)
-      },
-      onSettled: () => {
-        if (!deliver.isSuccess) setSubmitting(false)
-      },
-    })
-  }
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

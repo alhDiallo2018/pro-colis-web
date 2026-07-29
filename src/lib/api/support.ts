@@ -1,12 +1,6 @@
-import axios from 'axios'
 import { api } from './client'
 
 export const SUPPORT_EMAIL = 'support-commercial@sendprocolis.com'
-
-const BREVO_SEND_URL = 'https://api.brevo.com/v3/smtp/email'
-const BREVO_API_KEY: string = import.meta.env.VITE_BREVO_API_KEY || ''
-const BREVO_SENDER_EMAIL: string = import.meta.env.VITE_BREVO_SENDER_EMAIL || 'no-reply@sendprocolis.com'
-const BREVO_SENDER_NAME: string = import.meta.env.VITE_BREVO_SENDER_NAME || 'SENDPROCOLIS'
 
 export interface SupportMessage {
   id: string
@@ -23,50 +17,17 @@ export interface SendSupportMessagePayload {
   email?: string
 }
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
-
-/** Deliver the message straight to the support inbox via the Brevo API (no backend needed). */
-async function sendViaBrevo(payload: SendSupportMessagePayload): Promise<SupportMessage> {
-  const { data } = await axios.post(
-    BREVO_SEND_URL,
-    {
-      sender: { email: BREVO_SENDER_EMAIL, name: BREVO_SENDER_NAME },
-      to: [{ email: SUPPORT_EMAIL, name: 'Support SendProColis' }],
-      replyTo: payload.email ? { email: payload.email, name: payload.name || payload.email } : undefined,
-      subject: payload.subject,
-      textContent: payload.message,
-      htmlContent: `<p>${escapeHtml(payload.message).replace(/\n/g, '<br/>')}</p>`,
-    },
-    { headers: { 'api-key': BREVO_API_KEY, 'content-type': 'application/json', accept: 'application/json' } },
-  )
-  return {
-    id: (data?.messageId as string) || 'brevo',
-    subject: payload.subject,
-    message: payload.message,
-    createdAt: new Date().toISOString(),
-  }
-}
-
-/**
- * Send a message to the support team (contact / réclamation forms).
- * Tries the backend first (`POST /support/messages`); when it is unreachable
- * and a Brevo key is configured, the email is delivered directly to the
- * support inbox via Brevo.
- */
+/** Envoie un message authentifié au support via l'API, qui garde les secrets d'envoi côté serveur. */
 export async function sendSupportMessage(payload: SendSupportMessagePayload): Promise<SupportMessage> {
-  try {
-    const { data } = await api.post('/support/messages', payload)
-    return (data.supportMessage ?? data.data) as SupportMessage
-  } catch (backendError) {
-    if (!BREVO_API_KEY) throw backendError
-    return sendViaBrevo(payload)
-  }
+  const { data } = await api.post('/support/messages', payload)
+  return (data.supportMessage ?? data.data) as SupportMessage
+}
+
+/** Construit un recours sûr pour les visiteurs anonymes sans exposer de clé d'email dans le navigateur. */
+export function buildSupportMailto(payload: SendSupportMessagePayload): string {
+  const identity = [payload.name, payload.email].filter(Boolean).join(' — ')
+  const body = identity ? `${identity}\n\n${payload.message}` : payload.message
+  return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(payload.subject)}&body=${encodeURIComponent(body)}`
 }
 
 /* ------------------------------------------------------------------ */

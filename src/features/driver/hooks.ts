@@ -12,6 +12,7 @@ import * as ratingsApi from '@/lib/api/ratings'
 import type { ListParams } from '@/lib/api/types'
 import { useAuthStore } from '@/store/auth'
 import { queryClient } from '@/lib/queryClient'
+import { filterFreeParcelsByDriverZone } from './freeParcelZone'
 
 export function useScoreBalance() {
   return useQuery({ queryKey: ['score', 'balance'], queryFn: () => scoreApi.getBalance() })
@@ -37,7 +38,7 @@ export function useDriverWallet() {
 
 export function useWithdrawWallet() {
   return useMutation({
-    mutationFn: (payload: scoreApi.WithdrawPayload) => scoreApi.withdrawWallet(payload),
+    mutationFn: (payload: withdrawalsApi.CreateWithdrawalPayload) => withdrawalsApi.requestWithdrawal(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['driver', 'wallet'] })
       queryClient.invalidateQueries({ queryKey: ['driver', 'withdrawals'] })
@@ -123,7 +124,17 @@ export function useDriverParcels(params: ListParams = {}) {
 }
 
 export function useDriverFreeParcels(params: ListParams = {}) {
-  return useQuery({ queryKey: ['parcels', 'free', params], queryFn: () => parcelsApi.listFree(params) })
+  const user = useAuthStore((state) => state.user)
+
+  return useQuery({
+    queryKey: ['parcels', 'free', params],
+    queryFn: () => parcelsApi.listFree(params),
+    // Le même filtre alimente le tableau de bord et la page « Colis à prendre ».
+    select: (data) => ({
+      ...data,
+      parcels: filterFreeParcelsByDriverZone(data.parcels, user),
+    }),
+  })
 }
 
 export function useDriverBidsSent() {

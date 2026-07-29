@@ -5,6 +5,7 @@ import { Button, Icon } from '@/ds'
 import * as notificationsApi from '@/lib/api/notifications'
 import type { AppNotification } from '@/lib/api/notifications'
 import { useAuthStore } from '@/store/auth'
+import { notificationsPathForRole } from '@/lib/notification-links'
 
 /** Topbar primary button that navigates to a route. */
 export function NavButton({ to, icon, children }: { to: string; icon?: string; children: React.ReactNode }) {
@@ -68,10 +69,9 @@ export function NotifButton() {
 
   const onOpen = (n: AppNotification) => {
     if (!n.isRead) markRead.mutate(n.id)
-    if (n.parcelId && role === 'client') {
-      setOpen(false)
-      navigate(`/client/colis/${n.parcelId}`)
-    }
+    setOpen(false)
+    const path = notificationsPathForRole(role)
+    navigate(`${path}?notification=${encodeURIComponent(n.id)}`)
   }
 
   return (

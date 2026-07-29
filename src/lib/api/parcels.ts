@@ -34,9 +34,20 @@ export interface CreateParcelPayload {
 
 export async function listMine(params: ListParams = {}): Promise<ParcelList> {
   const { data } = await api.get('/client/parcels/my-parcels', { params })
-  const sent = data.sent ?? []
-  const received = data.received ?? data.parcels ?? []
-  return { parcels: [...sent, ...received], pagination: data.pagination, sent, received, sentTotal: data.sentTotal, receivedTotal: data.receivedTotal }
+  const parcels = data.parcels ?? []
+  const sent = data.sent
+  const received = data.received
+
+  // L'API renvoie soit une liste unique, soit deux groupes sur les anciennes versions.
+  // Ne pas classer arbitrairement la liste unique comme « reçue ».
+  return {
+    parcels: sent || received ? [...(sent ?? []), ...(received ?? [])] : parcels,
+    pagination: data.pagination,
+    sent,
+    received,
+    sentTotal: data.sentTotal,
+    receivedTotal: data.receivedTotal,
+  }
 }
 
 export async function listSent(params: ListParams = {}): Promise<ParcelList> {

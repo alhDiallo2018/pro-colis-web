@@ -61,7 +61,10 @@ export function CashDeclarationsPage() {
   const query = useCashDeclarations(status)
   const validateMutation = useValidateCashDeclaration()
   const rejectMutation = useRejectCashDeclaration()
-  const declarations = query.data?.declarations ?? []
+  const declarations = useMemo(
+    () => query.data?.declarations ?? [],
+    [query.data?.declarations],
+  )
 
   // La sélection suit la liste après un changement de filtre ou une mutation :
   // aucun panneau de détail ne doit conserver une déclaration disparue.

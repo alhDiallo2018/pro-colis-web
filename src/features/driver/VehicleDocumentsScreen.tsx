@@ -1,6 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Card, Badge, Toast } from '@/ds'
 import { useAuthStore } from '@/store/auth'
+import * as identityApi from '@/lib/api/identity'
+import * as uploadsApi from '@/lib/api/uploads'
+import * as vehiclesApi from '@/lib/api/vehicles'
+import type { Vehicle } from '@/lib/api/vehicles'
 
 const DOC_TYPES = [
   { type: 'driver_license', label: 'Permis de conduire', icon: 'badge' },
@@ -25,128 +29,84 @@ export function VehicleDocumentsScreen() {
   const [uploading, setUploading] = useState<Set<string>>(new Set())
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [pendingSlot, setPendingSlot] = useState<{ docType: string; side: string } | null>(null)
+  const [pendingSlot, setPendingSlot] = useState<{ docType: string; side: 'front' | 'back' } | null>(null)
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null)
 
-  useEffect(() => {
-    loadIdentity()
-  }, [])
-
-  const loadIdentity = async () => {
+  const loadIdentity = useCallback(async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('sendprocolis-auth')
-        ? JSON.parse((localStorage.getItem('sendprocolis-auth') ?? '{}')).state?.accessToken
-        : null
-      if (!token) {
-        setLoading(false)
-        return
-      }
+      const [identityStatus, driverVehicle] = await Promise.all([
+        identityApi.myIdentityStatus(),
+        vehiclesApi.getMine(),
+      ])
 
-      const res = await fetch(`${API_BASE}/identity/status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) throw new Error('Failed')
-
-      const data = await res.json()
-      const identity = data.identity
-      if (identity?.documents && Array.isArray(identity.documents)) {
-        const photos: string[] = []
-        const docs: Record<string, string> = {}
-        for (const d of identity.documents) {
-          const type = d.documentType
-          const side = d.side
-          const url = d.url
-          if (!type || !url) continue
-          if (type === 'vehicle_photo') {
-            photos.push(url)
-          } else if (side) {
-            docs[`${type}_${side}`] = url
-          }
+      // L'API retourne un enregistrement par type avec des URL recto/verso,
+      // et plusieurs enregistrements distincts pour les photos du véhicule.
+      const photos: string[] = []
+      const docs: Record<string, string> = {}
+      for (const document of identityStatus.documents) {
+        const type = document.documentType
+        if (!type) continue
+        if (type === 'vehicle_photo') {
+          if (document.documentFrontUrl) photos.push(document.documentFrontUrl)
+          if (document.documentBackUrl) photos.push(document.documentBackUrl)
+          continue
         }
-        setVehiclePhotos(photos)
-        setDocUrls(docs)
+        if (document.documentFrontUrl && !docs[`${type}_front`]) {
+          docs[`${type}_front`] = document.documentFrontUrl
+        }
+        if (document.documentBackUrl && !docs[`${type}_back`]) {
+          docs[`${type}_back`] = document.documentBackUrl
+        }
       }
-
-      const vehRes = await fetch(`${API_BASE}/driver/vehicle`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (vehRes.ok) {
-        const vehData = await vehRes.json()
-        setVehicle(vehData.vehicle)
-      }
+      setVehiclePhotos(photos)
+      setDocUrls(docs)
+      setVehicle(driverVehicle)
     } catch {
-      // Non-fatal
+      setToastMessage('Impossible de charger les documents pour le moment.')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const [vehicle, setVehicle] = useState<Record<string, unknown> | null>(null)
+  useEffect(() => {
+    loadIdentity()
+  }, [loadIdentity])
 
   const showToast = (msg: string) => {
     setToastMessage(msg)
     setTimeout(() => setToastMessage(null), 3000)
   }
 
-  const uploadFile = async (file: File): Promise<string | null> => {
-    try {
-      const token = JSON.parse(localStorage.getItem('sendprocolis-auth') ?? '{}')?.state?.accessToken
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('mediaType', 'photo')
-      const res = await fetch(`${API_BASE}/upload`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      })
-      const data = await res.json()
-      return data.url ?? data.data?.url ?? null
-    } catch {
-      return null
-    }
-  }
-
-  const persistDoc = async (documentType: string, side: string, url: string) => {
-    try {
-      const token = JSON.parse(localStorage.getItem('sendprocolis-auth') ?? '{}')?.state?.accessToken
-      await fetch(`${API_BASE}/identity/upload`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ documentType, side, url }),
-      })
-    } catch {
-      // Non-fatal
-    }
-  }
-
   const handleFileSelected = async (file: File) => {
     if (!pendingSlot) return
-    const slotKey = `${pendingSlot.docType}_${pendingSlot.side}`
+    const slot = pendingSlot
+    const slotKey = `${slot.docType}_${slot.side}`
     setUploading((s) => new Set(s).add(slotKey))
     setPendingSlot(null)
 
-    const url = await uploadFile(file)
-    if (url) {
-      await persistDoc(pendingSlot.docType, pendingSlot.side, url)
-      if (pendingSlot.docType === 'vehicle_photo') {
+    try {
+      // Le fichier doit être téléversé avant que son URL soit rattachée au
+      // document d'identité ; l'UI n'est mise à jour qu'après les deux appels.
+      const url = await uploadsApi.uploadChatPhoto(file, file.name)
+      await identityApi.uploadDocument(slot.docType, slot.side, url)
+      if (slot.docType === 'vehicle_photo') {
         setVehiclePhotos((p) => [...p, url])
       } else {
         setDocUrls((p) => ({ ...p, [slotKey]: url }))
       }
-    } else {
+    } catch {
       showToast('Échec du téléversement')
+    } finally {
+      setUploading((s) => {
+        const next = new Set(s)
+        next.delete(slotKey)
+        return next
+      })
     }
-    setUploading((s) => {
-      const next = new Set(s)
-      next.delete(slotKey)
-      return next
-    })
   }
 
-  const triggerUpload = (docType: string, side: string) => {
+  const triggerUpload = (docType: string, side: 'front' | 'back') => {
     setPendingSlot({ docType, side })
     fileInputRef.current?.click()
   }
@@ -251,7 +211,7 @@ export function VehicleDocumentsScreen() {
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {vehiclePhotos.map((url, i) => (
               <div key={i} style={{ width: 96, height: 96, borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
-                <img src={resolveUrl(url)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={resolveUrl(url)} alt={`Véhicule — photo ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
             ))}
             <button
@@ -337,7 +297,7 @@ export function VehicleDocumentsScreen() {
                         <div style={{ position: 'relative' }}>
                           <img
                             src={resolveUrl(url)}
-                            alt=""
+                            alt={`${doc.label} — ${side === 'front' ? 'recto' : 'verso'}`}
                             style={{
                               width: '100%',
                               height: 96,

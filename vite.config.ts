@@ -51,7 +51,7 @@ function broadcastsPlugin(): Plugin {
         next()
       })
 
-      server.middlewares.use('/api/v1/broadcasts', (req, res) => {
+      server.middlewares.use('/api/v1/public/broadcasts', (req, res) => {
         if (req.method === 'GET') {
           const broadcasts = load()
           res.setHeader('Content-Type', 'application/json')

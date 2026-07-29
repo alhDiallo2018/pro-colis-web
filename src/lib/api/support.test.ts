@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
-import { checkSupportRateLimit, recordSupportSend, formatWait } from './support'
+import { buildSupportMailto, checkSupportRateLimit, recordSupportSend, formatWait } from './support'
 
-vi.mock('axios', () => ({ default: { post: vi.fn() } }))
 vi.mock('./client', () => ({ api: { post: vi.fn() } }))
 
 describe('support rate limit', () => {
@@ -56,7 +55,6 @@ describe('support rate limit', () => {
 
 describe('sendSupportMessage delivery', () => {
   afterEach(() => {
-    vi.unstubAllEnvs()
     vi.clearAllMocks()
   })
 
@@ -70,31 +68,15 @@ describe('sendSupportMessage delivery', () => {
     expect(res.id).toBe('sm-1')
   })
 
-  it('falls back to a direct Brevo email to the support inbox when the backend is unreachable', async () => {
-    vi.resetModules()
-    vi.stubEnv('VITE_BREVO_API_KEY', 'xkeysib-test')
-    const axios = (await import('axios')).default
-    const { api } = await import('./client')
-    ;(api.post as Mock).mockRejectedValue(new Error('network down'))
-    ;(axios.post as Mock).mockResolvedValue({ data: { messageId: 'brevo-42' } })
-    const { sendSupportMessage } = await import('./support')
-    const res = await sendSupportMessage({ subject: '[Contact] Test', message: 'Bonjour', email: 'a@b.sn', name: 'Awa' })
-    expect(axios.post).toHaveBeenCalledWith(
-      'https://api.brevo.com/v3/smtp/email',
-      expect.objectContaining({
-        to: [{ email: 'support-commercial@sendprocolis.com', name: 'Support SendProColis' }],
-        replyTo: { email: 'a@b.sn', name: 'Awa' },
-        subject: '[Contact] Test',
-        textContent: 'Bonjour',
-      }),
-      expect.objectContaining({ headers: expect.objectContaining({ 'api-key': 'xkeysib-test' }) }),
-    )
-    expect(res.id).toBe('brevo-42')
+  it('builds a safe mailto fallback for anonymous visitors', () => {
+    const href = buildSupportMailto({ subject: '[Contact] Test', message: 'Bonjour', email: 'a@b.sn', name: 'Awa' })
+    expect(href).toContain('mailto:support-commercial@sendprocolis.com')
+    expect(decodeURIComponent(href)).toContain('Awa — a@b.sn')
+    expect(decodeURIComponent(href)).toContain('Bonjour')
   })
 
-  it('rethrows the backend error when no Brevo key is configured', async () => {
+  it('rethrows backend errors so the UI can offer the mailto fallback', async () => {
     vi.resetModules()
-    vi.stubEnv('VITE_BREVO_API_KEY', '')
     const { api } = await import('./client')
     const boom = new Error('backend down')
     ;(api.post as Mock).mockRejectedValue(boom)

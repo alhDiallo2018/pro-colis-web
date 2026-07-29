@@ -3,7 +3,7 @@ import { useLogout } from '@/features/auth/useAuth'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { useAuthStore } from '@/store/auth'
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { SupportFAB } from '@/components/SupportFAB'
 
 export interface NavItem {
@@ -93,7 +93,11 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
 
       {/* Sidebar */}
       <aside style={asideStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 8px 18px' }}>
+        <Link
+          to="/"
+          aria-label="Retour à l'accueil SendProColis"
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 8px 18px', color: 'inherit', textDecoration: 'none' }}
+        >
           <span style={{ width: 40, height: 40, borderRadius: 10, background: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
             <img src="/logo-procolis.png" alt="" style={{ width: 31, height: 31, objectFit: 'contain' }} />
           </span>
@@ -102,7 +106,7 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
             <span style={{ color: 'var(--amber-400)' }}>PRO</span>
             <span style={{ color: 'var(--font-display)' }}>COLIS</span>
           </span>
-        </div>
+        </Link>
 
         <nav style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto' }}>
           {nav.map((section, i) => (

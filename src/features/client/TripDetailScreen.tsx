@@ -1,15 +1,17 @@
 import { useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { Button, Card, Badge } from '@/ds'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Button, Card, Badge, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
 import * as adsApi from '@/lib/api/advertisements'
 import { formatFcfa, formatDate, formatWeight } from '@/lib/format'
 import { useAuthStore } from '@/store/auth'
+import { ApiError } from '@/lib/api/client'
 
 export function TripDetailScreen() {
   const { advertisementId } = useParams<{ advertisementId: string }>()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const user = useAuthStore((s) => s.user)
 
   const { data: trip, isLoading, error } = useQuery({
@@ -19,6 +21,14 @@ export function TripDetailScreen() {
   })
 
   const audioRef = useMemo(() => (trip?.audioUrl ? new Audio(trip.audioUrl) : null), [trip?.audioUrl])
+  const closeTrip = useMutation({
+    mutationFn: () => adsApi.close(advertisementId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['advertisements'] })
+      queryClient.invalidateQueries({ queryKey: ['driver', 'advertisements'] })
+      navigate('/driver/annonces')
+    },
+  })
 
   if (isLoading) {
     return (
@@ -57,6 +67,7 @@ export function TripDetailScreen() {
   const price = trip.proposedPrice
   const availableWeight = trip.availableWeight ?? trip.maxWeight
   const isOwnAd = user?.id === trip.driverId
+  const hasOffer = trip.offers?.some((offer) => offer.clientId === user?.id) ?? false
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -236,18 +247,24 @@ export function TripDetailScreen() {
               <Button icon="forum" onClick={() => navigate('/client/messages')}>Contacter</Button>
             )}
             {trip.isActive && (
-              <Button variant="amber" icon="gavel" onClick={() => navigate(`/client/nouveau?ad=${trip.id}`)}>
-                Faire une offre
+              <Button variant="amber" icon={hasOffer ? 'forum' : 'gavel'} onClick={() => navigate(`/client/annonces/${trip.id}`)}>
+                {hasOffer ? 'Suivi offre' : 'Faire une offre'}
               </Button>
             )}
           </>
         )}
         {isOwnAd && trip.isActive && (
-          <Button variant="secondary" icon="cancel" onClick={() => adsApi.close(trip.id).then(() => window.location.reload())}>
+          <Button variant="secondary" icon="cancel" loading={closeTrip.isPending} onClick={() => closeTrip.mutate()}>
             Clôturer l'annonce
           </Button>
         )}
       </div>
+      {closeTrip.isError && (
+        <Toast
+          tone="error"
+          message={closeTrip.error instanceof ApiError ? closeTrip.error.message : "Impossible de clôturer l'annonce."}
+        />
+      )}
     </div>
   )
 }

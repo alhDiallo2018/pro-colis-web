@@ -87,9 +87,12 @@ export interface DriverDetail {
     pendingBalance?: number
     totalDeposited: number
     totalSpent: number
+    totalRefunded?: number
     totalWithdrawn?: number
     totalCommissionsPaid?: number
     status: string
+    lastDepositAt?: string | null
+    lastActivityAt?: string | null
   } | null
 }
 
@@ -120,6 +123,13 @@ export interface AddPointsPayload {
   motif?: string
 }
 
+export interface ScoreMutationResult {
+  userId: string
+  points: number
+  level: string
+  transaction: ScoreTransaction
+}
+
 /** Dashboard réputation */
 export async function reputationDashboard(): Promise<ReputationDashboard> {
   const { data } = await api.get('/super-admin/reputation/dashboard')
@@ -135,7 +145,24 @@ export async function listScores(params: ListParams = {}): Promise<ScoreList> {
 /** Détail d'un score */
 export async function getScore(userId: string): Promise<ScoreDetail> {
   const { data } = await api.get(`/super-admin/scores/${userId}`)
-  return data.score ?? data.data
+  const payload = data.data ?? data
+  const user = payload.user ?? {}
+  const score = payload.score ?? {}
+  return {
+    userId: user.id ?? userId,
+    driverName: user.fullName,
+    fullName: user.fullName,
+    garageName: user.garageName ?? user.garage?.name ?? null,
+    region: user.region ?? null,
+    rating: user.rating ?? null,
+    totalDeliveries: user.totalDeliveries,
+    points: score.points ?? 0,
+    totalEarned: score.totalEarned ?? 0,
+    totalSpent: score.totalSpent ?? 0,
+    level: score.level ?? 'NEW',
+    lastUpdated: score.lastUpdated,
+    transactions: payload.transactions ?? [],
+  }
 }
 
 /** Historique des transactions de score */
@@ -145,15 +172,15 @@ export async function scoreHistory(userId: string, params: ListParams = {}): Pro
 }
 
 /** Ajouter des points */
-export async function addPoints(userId: string, payload: AddPointsPayload): Promise<ScoreDetail> {
+export async function addPoints(userId: string, payload: AddPointsPayload): Promise<ScoreMutationResult> {
   const { data } = await api.post(`/super-admin/scores/${userId}/add`, payload)
-  return data.score ?? data.data
+  return (data.data ?? data) as ScoreMutationResult
 }
 
 /** Retirer des points */
-export async function removePoints(userId: string, payload: { amount: number; description: string; type?: string; motif?: string }): Promise<ScoreDetail> {
+export async function removePoints(userId: string, payload: { amount: number; description: string; type?: string; motif?: string }): Promise<ScoreMutationResult> {
   const { data } = await api.post(`/super-admin/scores/${userId}/remove`, payload)
-  return data.score ?? data.data
+  return (data.data ?? data) as ScoreMutationResult
 }
 
 /** Classement chauffeurs */
@@ -165,5 +192,5 @@ export async function driverRanking(): Promise<DriverRanking[]> {
 /** Fiche chauffeur combinée */
 export async function driverDetail(userId: string): Promise<DriverDetail> {
   const { data } = await api.get(`/super-admin/drivers/${userId}`)
-  return data.driver ?? data.data
+  return (data.data ?? data) as DriverDetail
 }

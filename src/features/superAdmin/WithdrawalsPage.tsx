@@ -3,7 +3,7 @@ import { Button, Dialog, Input, SegmentedControl } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { useWithdrawals, useApproveWithdrawal, useRejectWithdrawal, useCompleteWithdrawal } from '@/features/superAdmin/hooks'
-import { formatFcfa } from '@/lib/format'
+import { formatDateTime, formatFcfa } from '@/lib/format'
 import type { WithdrawalStatus } from '@/lib/api/withdrawals'
 
 const STATUS_LABELS: Record<WithdrawalStatus, { label: string; color: string }> = {
@@ -126,7 +126,7 @@ export function WithdrawalsPage() {
                       </div>
                     ) : null}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{new Date(w.createdAt).toLocaleString('fr-FR')}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{formatDateTime(w.requestedAt ?? w.createdAt)}</div>
                   <div style={{ display: 'flex', gap: 4 }}>
                     {w.status === 'PENDING' && (
                       <>

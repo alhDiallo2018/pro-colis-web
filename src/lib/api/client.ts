@@ -1,7 +1,7 @@
 import axios, { AxiosError, type AxiosRequestConfig, type AxiosInstance } from 'axios'
 import { authStore, useAuthStore } from '@/store/auth'
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:18081/api/v1'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
 /** Standard error envelope from the API: { success:false, message, error:{ code, details } }. */
 export class ApiError extends Error {

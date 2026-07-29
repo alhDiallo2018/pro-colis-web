@@ -7,11 +7,15 @@ import { OfferDialog } from './OfferDialog'
 import { useDriverFreeParcels, useDriverBidsSent } from './hooks'
 import { formatFcfa, formatWeight } from '@/lib/format'
 import type { Parcel } from '@/lib/api/types'
+import { useAuthStore } from '@/store/auth'
+import { getDriverHomeZone } from './freeParcelZone'
 
 export function LibreServiceScreen() {
+  const user = useAuthStore((state) => state.user)
   const query = useDriverFreeParcels()
   const bidsQuery = useDriverBidsSent()
   const parcels = query.data?.parcels ?? []
+  const homeZone = getDriverHomeZone(user)
   const [offerTarget, setOfferTarget] = useState<Parcel | null>(null)
   const [detailTarget, setDetailTarget] = useState<Parcel | null>(null)
 
@@ -25,14 +29,27 @@ export function LibreServiceScreen() {
 
   return (
     <div style={{ maxWidth: 920, margin: '0 auto' }}>
-      <Panel title="Annonces" flush action={<Badge tone="primary">{parcels.length}</Badge>}>
+      <Panel
+        title="Colis à prendre"
+        flush
+        action={
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <Badge tone="neutral">{homeZone.name ?? 'Zone non renseignée'}</Badge>
+            <Badge tone="primary">{parcels.length}</Badge>
+          </span>
+        }
+      >
         <QueryState
           isLoading={query.isLoading}
           isError={query.isError}
           error={query.error}
           isEmpty={parcels.length === 0}
-          emptyTitle="Aucune annonce"
-          emptyMessage="Aucune annonce sur vos trajets pour le moment."
+          emptyTitle="Aucun colis"
+          emptyMessage={
+            homeZone.id || homeZone.name
+              ? 'Aucun colis disponible dans votre zone pour le moment.'
+              : 'Renseignez votre zone dans le profil pour voir les colis à prendre.'
+          }
           onRetry={() => query.refetch()}
         >
           {parcels.map((p) => {
@@ -85,7 +102,7 @@ export function LibreServiceScreen() {
                   <span className="material-symbols-rounded" style={{ fontSize: 20 }}>info</span>
                 </button>
                 <Button size="sm" icon={hasBid ? 'forum' : 'gavel'} onClick={(e: React.MouseEvent) => { e.stopPropagation(); setOfferTarget(p); }}>
-                  {hasBid ? 'Negocier' : 'Faire une offre'}
+                  {hasBid ? 'Suivi offre' : 'Faire une offre'}
                 </Button>
               </div>
             )

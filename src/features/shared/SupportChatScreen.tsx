@@ -4,13 +4,13 @@ import { Icon } from '@/ds'
 
 const SUPPORT_USERS = {
   commercial: {
-    id: import.meta.env.VITE_SUPPORT_COMMERCIAL_ID || 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+    id: import.meta.env.VITE_SUPPORT_COMMERCIAL_ID || '3a3a3a3a-0000-4000-8000-000000000002',
     name: import.meta.env.VITE_SUPPORT_COMMERCIAL_NAME || 'Support Commercial SENDPROCOLIS',
     label: 'Commercial',
     desc: 'Aide pour les commandes, paiements, litiges',
   },
   technique: {
-    id: import.meta.env.VITE_SUPPORT_TECHNIC_ID || 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e7',
+    id: import.meta.env.VITE_SUPPORT_TECHNIC_ID || '3a3a3a3a-0000-4000-8000-000000000001',
     name: import.meta.env.VITE_SUPPORT_TECHNIC_NAME || 'Support Technique SENDPROCOLIS',
     label: 'Technique',
     desc: 'Problèmes techniques, bugs, application',

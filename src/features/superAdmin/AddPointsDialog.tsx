@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button, Dialog, Input, Textarea, Toast } from '@/ds'
 import { useAddPoints } from './hooks'
+import { ApiError } from '@/lib/api/client'
 
 interface AddPointsDialogProps {
   userId: string
@@ -31,8 +32,8 @@ export function AddPointsDialog({ userId, open, onClose }: AddPointsDialogProps)
       setAmount('')
       setDescription('')
       onClose()
-    } catch (_e) {
-      setLocalError("Erreur lors de l'ajout de points.")
+    } catch (error) {
+      setLocalError(error instanceof ApiError ? error.message : "Erreur lors de l'ajout de points.")
     }
   }
 

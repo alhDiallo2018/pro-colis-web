@@ -91,7 +91,7 @@ export function BrevoConfigScreen() {
 
         {loading && <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>Chargement...</p>}
 
-        {(config || !config) && !loading && (
+        {!loading && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <Input
               label="Email expéditeur"

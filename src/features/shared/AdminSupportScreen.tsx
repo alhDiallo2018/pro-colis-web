@@ -5,7 +5,6 @@ import { Panel } from '@/components/Panel'
 import * as messagesApi from '@/lib/api/messages'
 import * as uploadsApi from '@/lib/api/uploads'
 import type { SupportConversation, SupportThreadMessage } from '@/lib/api/messages'
-import { useAuthStore } from '@/store/auth'
 import { useIsMobile } from '@/lib/useMediaQuery'
 
 function fmtTime(iso?: string) {
@@ -20,7 +19,6 @@ function fmtDuration(ms: number) {
 }
 
 export function AdminSupportScreen() {
-  const userId = useAuthStore((s) => s.user?.id)
   const qc = useQueryClient()
   const isMobile = useIsMobile()
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -38,26 +36,16 @@ export function AdminSupportScreen() {
     queryKey: ['admin', 'support', 'thread', selected?.supportUser?.id, selected?.user?.id],
     queryFn: async () => {
       if (!selected) return []
-      try {
-        const result = await messagesApi.adminSupportThread(
-          selected.supportUser.id,
-          selected.user.id,
-        )
-        if (Array.isArray(result)) return result
-        if (result && typeof result === 'object' && 'messages' in result)
-          return (result as any).messages || []
-        if (result && typeof result === 'object' && 'data' in result && Array.isArray((result as any).data))
-          return (result as any).data
-        return []
-      } catch {
-        return []
-      }
+      return messagesApi.adminSupportThread(selected.supportUser.id, selected.user.id)
     },
     enabled: Boolean(selected),
     refetchInterval: 4000,
   })
 
-  const messages = (threadQuery.data ?? []) as SupportThreadMessage[]
+  const messages = useMemo(
+    () => (threadQuery.data ?? []) as SupportThreadMessage[],
+    [threadQuery.data],
+  )
 
   const sendMutation = useMutation({
     mutationFn: async (payload: { body?: string; audioUrl?: string; photoUrl?: string; videoUrl?: string }) => {
@@ -292,7 +280,7 @@ export function AdminSupportScreen() {
                       >
                         {c.user?.fullName ?? 'Utilisateur inconnu'}
                       </span>
-                      {!c.isRead && c.receiverId === c.supportUser?.id && (
+                      {c.isRead === false && c.receiverId === c.supportUser?.id && (
                         <Badge tone="primary">!</Badge>
                       )}
                     </div>

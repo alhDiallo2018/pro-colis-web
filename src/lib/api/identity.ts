@@ -76,3 +76,13 @@ export async function myIdentityStatus(): Promise<MyIdentityStatus> {
     documents,
   }
 }
+
+/** Enregistre l'URL d'un recto/verso après son téléversement. */
+export async function uploadDocument(
+  documentType: string,
+  side: 'front' | 'back',
+  url: string,
+): Promise<IdentityVerification> {
+  const { data } = await api.post('/identity/upload', { documentType, side, url })
+  return (data.identity ?? data.data?.identity ?? data.data) as IdentityVerification
+}

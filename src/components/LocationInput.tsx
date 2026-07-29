@@ -1,4 +1,4 @@
-import { useId, useState, useRef, useEffect, useCallback } from 'react'
+import { useId, useState, useRef, useEffect, useMemo } from 'react'
 import type { CSSProperties, ChangeEvent } from 'react'
 import { Button, Icon, Input } from '@/ds'
 
@@ -55,6 +55,7 @@ const COMPONENT_TYPES = {
 } as const
 
 /** Extrait ville / région / pays d'une liste de composants d'adresse Google. */
+// eslint-disable-next-line react-refresh/only-export-components
 export function extractPlaceDetails(
   components: google.maps.GeocoderAddressComponent[] | undefined,
 ): PlaceDetails {
@@ -164,8 +165,8 @@ export function LocationInput({
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const fetchSuggestions = useCallback(
-    debounce((q: string) => {
+  const fetchSuggestions = useMemo(
+    () => debounce((q: string) => {
       if (!q || !autocompleteServiceRef.current) {
         setSuggestions([])
         return
@@ -424,4 +425,5 @@ export function LocationInput({
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { loadGoogleMaps }

@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { Button } from '@/ds'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+import { uploadChatAudio } from '@/lib/api/uploads'
 
 export interface VoiceRecorderProps {
   onUploaded: (url: string) => void
@@ -19,6 +18,21 @@ export function VoiceRecorder({ onUploaded, existingUrl }: VoiceRecorderProps) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  const uploadAudio = useCallback(async (blob: Blob) => {
+    setUploading(true)
+    try {
+      // Le client API centralise l'authentification et le renouvellement du jeton.
+      const uploadedUrl = await uploadChatAudio(blob, 'voice-note.webm')
+      if (!uploadedUrl) throw new Error('Upload without URL')
+      setUrl(uploadedUrl)
+      onUploaded(uploadedUrl)
+    } catch {
+      setError('Téléversement impossible.')
+    } finally {
+      setUploading(false)
+    }
+  }, [onUploaded])
 
   const startRecording = useCallback(async () => {
     setError(null)
@@ -41,7 +55,7 @@ export function VoiceRecorder({ onUploaded, existingUrl }: VoiceRecorderProps) {
     } catch {
       setError("Accès au microphone refusé ou non disponible.")
     }
-  }, [])
+  }, [uploadAudio])
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && recording) {
@@ -60,36 +74,6 @@ export function VoiceRecorder({ onUploaded, existingUrl }: VoiceRecorderProps) {
     mediaRecorderRef.current?.resume()
     setPaused(false)
   }, [])
-
-  const uploadAudio = async (blob: Blob) => {
-    setUploading(true)
-    try {
-      const token = JSON.parse(localStorage.getItem('sendprocolis-auth') ?? '{}')?.state?.accessToken
-      const formData = new FormData()
-      formData.append('file', blob, 'voice-note.webm')
-      formData.append('mediaType', 'audio')
-
-      const res = await fetch(`${API_BASE}/upload`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      })
-      if (!res.ok) throw new Error('Upload failed')
-
-      const data = await res.json()
-      const uploadedUrl: string = data.url ?? data.data?.url ?? ''
-      if (uploadedUrl) {
-        setUrl(uploadedUrl)
-        onUploaded(uploadedUrl)
-      } else {
-        setError('Échec du téléversement audio.')
-      }
-    } catch {
-      setError('Téléversement impossible.')
-    } finally {
-      setUploading(false)
-    }
-  }
 
   const togglePlay = useCallback(() => {
     if (!url) return

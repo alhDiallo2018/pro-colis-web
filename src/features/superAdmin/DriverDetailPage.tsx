@@ -13,6 +13,7 @@ import {
 } from './hooks'
 import { formatFcfa, formatDate, formatDateTime } from '@/lib/format'
 import { useIsMobile } from '@/lib/useMediaQuery'
+import { ApiError } from '@/lib/api/client'
 
 const LEVEL_TONE: Record<string, 'primary' | 'amber' | 'green' | 'neutral'> = {
   ELITE: 'primary',
@@ -417,8 +418,8 @@ function RechargeWalletDialog({ open, onClose, mutation }: WalletDialogProps) {
       setAmount('')
       setDescription('')
       onClose()
-    } catch (_e) {
-      setLocalError('Erreur lors du rechargement.')
+    } catch (error) {
+      setLocalError(error instanceof ApiError ? error.message : 'Erreur lors du rechargement.')
     }
   }
 
@@ -485,8 +486,8 @@ function DebitWalletDialog({ open, onClose, mutation }: WalletDialogProps) {
       setAmount('')
       setDescription('')
       onClose()
-    } catch (_e) {
-      setLocalError('Erreur lors du débit.')
+    } catch (error) {
+      setLocalError(error instanceof ApiError ? error.message : 'Erreur lors du débit.')
     }
   }
 

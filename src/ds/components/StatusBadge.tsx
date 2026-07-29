@@ -19,6 +19,7 @@ export interface ParcelStatusMeta {
 }
 
 /** Status meta for the colis lifecycle. Keys match the spec's statuses. */
+// eslint-disable-next-line react-refresh/only-export-components
 export const PARCEL_STATUS: Record<ParcelStatus, ParcelStatusMeta> = {
   pending: { label: 'En attente', icon: 'schedule', key: 'pending' },
   free: { label: 'Annonce', icon: 'sell', key: 'free' },

@@ -8,6 +8,7 @@ export interface Country {
   flag: string
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ALL_COUNTRIES: Country[] = [
   { code: 'AF', dialCode: '+93', name: 'Afghanistan', flag: '🇦🇫' },
   { code: 'AL', dialCode: '+355', name: 'Albanie', flag: '🇦🇱' },

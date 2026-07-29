@@ -6,18 +6,21 @@ export type WithdrawalMethod = 'wave' | 'orange_money' | 'freeMoney' | 'freemMon
 
 export interface Withdrawal {
   id: string
-  walletId: string
+  walletId?: string
   amount: number
   method: WithdrawalMethod
+  phone?: string | null
   phoneNumber?: string | null
-  idempotencyKey: string
+  idempotencyKey?: string
   status: WithdrawalStatus
   providerRef?: string | null
+  reference?: string | null
   failureReason?: string | null
   reviewedBy?: string | null
   reviewedAt?: string | null
   completedAt?: string | null
-  createdAt: string
+  requestedAt?: string
+  createdAt?: string
   updatedAt?: string
   driver?: { id: string; fullName: string; phone: string } | null
 }
@@ -31,7 +34,7 @@ export interface CreateWithdrawalPayload {
   amount: number
   method: WithdrawalMethod
   phone?: string
-  idempotencyKey: string
+  idempotencyKey?: string
 }
 
 /** Demander un retrait (driver) */

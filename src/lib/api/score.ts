@@ -34,7 +34,7 @@ export interface PurchasePayload {
 }
 
 export interface PurchaseResult {
-  payment: { id: string; amount: number; method: string; status: string; reference: string }
+  payment?: { id: string; amount: number; method: string; status: string; reference: string }
   transaction: { id: string; amount: number; type: string; description: string }
 }
 
@@ -52,19 +52,8 @@ export async function purchaseWithWallet(points: number): Promise<PurchaseResult
   return data
 }
 
-export interface WithdrawPayload {
-  amount: number
-  method?: string
-  phone?: string
-}
-
-export async function withdrawWallet(payload: WithdrawPayload): Promise<{ transaction: unknown }> {
-  const { data } = await api.post('/driver/wallet/withdraw', payload)
-  return data
-}
-
 export interface DriverWallet {
-  userId: string
+  userId?: string
   balance: number
   pendingBalance?: number
   totalEarned?: number
