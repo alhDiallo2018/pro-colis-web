@@ -14,6 +14,8 @@ export function Panel({ title, action, children, flush = false, style }: PanelPr
   return (
     <section
       style={{
+        display: 'flex',
+        flexDirection: 'column',
         background: 'var(--surface-card)',
         border: '1px solid var(--border-subtle)',
         borderRadius: 'var(--radius-lg)',
@@ -28,6 +30,7 @@ export function Panel({ title, action, children, flush = false, style }: PanelPr
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            flexShrink: 0,
             padding: '16px 18px',
             borderBottom: '1px solid var(--border-subtle)',
           }}
@@ -38,7 +41,7 @@ export function Panel({ title, action, children, flush = false, style }: PanelPr
           {action}
         </header>
       )}
-      <div style={flush ? undefined : { padding: 18 }}>{children}</div>
+      <div style={flush ? { flex: '1 1 auto', minHeight: 0 } : { flex: '1 1 auto', minHeight: 0, padding: 18 }}>{children}</div>
     </section>
   )
 }

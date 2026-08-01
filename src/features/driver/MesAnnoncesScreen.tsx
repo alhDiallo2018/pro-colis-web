@@ -133,6 +133,7 @@ export function MesAnnoncesScreen() {
               parcelId={chatTarget.parcelId ?? undefined}
               advertisementId={chatTarget.ad.id}
               offerId={chatTarget.offer?.id}
+              isOwner
               parcelInfo={{
                 trackingNumber: chatTarget.offer?.parcel?.trackingNumber,
                 departureCity: chatTarget.ad.departureCity,
@@ -218,9 +219,9 @@ function OfferRow({
             {offer.parcel.receiverName && <> · {offer.parcel.receiverName}</>}
           </div>
         )}
-        {offer.message && (
+        {(offer.message || offer.responseMessage) && (
           <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {offer.message}
+            {offer.responseMessage ?? offer.message}
           </div>
         )}
       </div>

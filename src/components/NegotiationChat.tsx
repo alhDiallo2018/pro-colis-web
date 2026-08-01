@@ -46,11 +46,12 @@ interface Props {
     videoUrls?: string[]
     audioUrls?: string[]
   }
+  isOwner?: boolean
   onCreateBid?: (price: number, message?: string) => void
   onAcceptBid?: (price: number, message?: string) => void
 }
 
-export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertisementId, offerId, parcelInfo, onCreateBid, onAcceptBid }: Props) {
+export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertisementId, offerId, parcelInfo, isOwner: _isOwner = false, onCreateBid, onAcceptBid }: Props) {
   const user = useAuthStore((s) => s.user)
   const userId = user?.id
   const role = user?.role
@@ -90,9 +91,9 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
   })
 
   const acceptPrice = useMutation({
-    mutationFn: (payload: { amount: number; message?: string }) => {
+    mutationFn: async (payload: { amount: number; message?: string }) => {
       if (offerId && advertisementId) {
-        return adsApi.negotiateOffer(advertisementId, offerId, { price: payload.amount, message: payload.message }) as any
+        return adsApi.acceptOffer(advertisementId, offerId)
       }
       if (!bidId || !parcelId) return Promise.resolve()
       if (role === 'driver') {
@@ -251,13 +252,28 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
   }
 
   const handleAcceptPrice = (amount: number) => {
-    if ((!bidId && !offerId) || acceptPrice.isPending) return
+    if (acceptPrice.isPending) return
 
     if (onAcceptBid) {
       onAcceptBid(amount, `Prix accept\u00e9: ${nf(amount)} FCFA`)
       send.mutate({ body: `J'accepte le prix de ${nf(amount)} FCFA.` })
       return
     }
+
+    if (!bidId && !offerId) {
+      send.mutate({ body: `J'accepte le prix de ${nf(amount)} FCFA.` })
+      return
+    }
+
+    if (offerId && advertisementId) {
+      acceptPrice.mutate(
+        { amount, message: `Prix accept\u00e9: ${nf(amount)} FCFA` },
+        { onSuccess: () => send.mutate({ body: `J'accepte le prix de ${nf(amount)} FCFA.` }) },
+      )
+      return
+    }
+
+    if (!bidId || !parcelId) return
 
     const msg = `Prix accept\u00e9: ${nf(amount)} FCFA`
     acceptPrice.mutate(
@@ -335,16 +351,26 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
             </p>
           </div>
         ) : (
-          messages.map((m) => (
-            <MessageBubble
-              key={m.id}
-              message={m}
-              mine={m.senderId === userId}
-              onAcceptPrice={(amount) => handleAcceptPrice(amount)}
-              onCounterPrice={(amount) => handleCounterPrice(amount)}
-              bidPending={!!(bidId || offerId) && !acceptPrice.isPending}
-            />
-          ))
+          (() => {
+            const lastNonMinePriceIdx = [...messages].reverse().findIndex(
+              (m) => m.senderId !== userId && m.body.startsWith(PRIX_PREFIX)
+            )
+            const lastNonMinePriceId = lastNonMinePriceIdx >= 0
+              ? messages[messages.length - 1 - lastNonMinePriceIdx]?.id
+              : null
+
+            return messages.map((m) => (
+              <MessageBubble
+                key={m.id}
+                message={m}
+                mine={m.senderId === userId}
+                isOwner={_isOwner}
+                isLastNonMinePrice={m.id === lastNonMinePriceId}
+                onAcceptPrice={(amount) => handleAcceptPrice(amount)}
+                onCounterPrice={(amount) => handleCounterPrice(amount)}
+              />
+            ))
+          })()
         )}
         {busyAudio && (
           <div style={{ alignSelf: 'flex-end', fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', padding: '2px 6px' }}>
@@ -529,9 +555,10 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
 interface BubbleProps {
   message: ChatMessage
   mine: boolean
+  isOwner?: boolean
+  isLastNonMinePrice?: boolean
   onAcceptPrice?: (amount: number) => void
   onCounterPrice?: (amount: number) => void
-  bidPending?: boolean
 }
 
 function parsePriceProposal(body: string): { isPrice: boolean; amount: number; message: string } | null {
@@ -542,7 +569,7 @@ function parsePriceProposal(body: string): { isPrice: boolean; amount: number; m
   return { isPrice: true, amount, message: parts.slice(1).join(':').trim() }
 }
 
-function MessageBubble({ message, mine, onAcceptPrice, onCounterPrice, bidPending }: BubbleProps) {
+function MessageBubble({ message, mine, isOwner = false, isLastNonMinePrice = false, onAcceptPrice, onCounterPrice }: BubbleProps) {
   const priceData = parsePriceProposal(message.body)
 
   if (priceData) {
@@ -565,7 +592,7 @@ function MessageBubble({ message, mine, onAcceptPrice, onCounterPrice, bidPendin
           {priceData.message && (
             <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-body)', marginTop: 6 }}>{priceData.message}</div>
           )}
-          {!mine && onAcceptPrice && bidPending && (
+          {!mine && isOwner && isLastNonMinePrice && onAcceptPrice && (
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               <Button size="sm" variant="secondary" onClick={() => onCounterPrice?.(priceData.amount)}>Contre-proposition</Button>
               <Button size="sm" icon="check" onClick={() => onAcceptPrice(priceData.amount)}>Accepter</Button>

@@ -12,8 +12,8 @@ export function MentionsLegalesPage() {
       <p>
         La plateforme <strong>SendProColis</strong> est éditée par la société SendProColis SARL, immatriculée au
         Registre du Commerce et du Crédit Mobilier (RCCM) de Dakar sous le numéro{' '}
-        <strong>SP0123456789_fictif</strong>, titulaire du Numéro d'Identification Nationale des Entreprises
-        et Associations (NINEA) <strong>SP170720267_fictif</strong>.
+        <strong>SP0123456789_f</strong>, titulaire du Numéro d'Identification Nationale des Entreprises
+        et Associations (NINEA) <strong>SP170720267_f</strong>.
       </p>
       <p>
         <strong>Siège social :</strong> Dakar, Sénégal<br />

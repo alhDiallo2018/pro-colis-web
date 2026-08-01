@@ -81,6 +81,7 @@ function ChatDialog({ bid, onClose }: { bid: Bid | null; onClose: () => void }) 
             : undefined
           }
           onAcceptBid={handleAccept}
+          isOwner
         />
       </div>
     </Dialog>
@@ -140,8 +141,9 @@ function BidRow({ bid, onNegotiate }: { bid: Bid; onNegotiate: () => void }) {
 
       {(bid.message || bid.responseMessage) && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
-          {bid.message && <Bubble side="left" who={bid.driverName ?? 'Chauffeur'} text={bid.message} />}
-          {bid.responseMessage && <Bubble side="right" who="Vous (contre-proposition)" text={bid.responseMessage} />}
+          {bid.responseMessage
+            ? <Bubble side="right" who="Vous (contre-proposition)" text={bid.responseMessage} />
+            : (bid.message && <Bubble side="left" who={bid.driverName ?? 'Chauffeur'} text={bid.message} />)}
         </div>
       )}
 
