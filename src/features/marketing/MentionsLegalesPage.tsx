@@ -10,19 +10,22 @@ export function MentionsLegalesPage() {
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>1. Éditeur de la plateforme</h2>
       <p>
-        La plateforme <strong>SendProColis</strong> est éditée par la société SendProColis SARL, immatriculée au
-        Registre du Commerce et du Crédit Mobilier (RCCM) de Dakar sous le numéro{' '}
-        <strong>SP0123456789_f</strong>, titulaire du Numéro d'Identification Nationale des Entreprises
-        et Associations (NINEA) <strong>SP170720267_f</strong>.
+        La plateforme <strong>SendProColis</strong> est une solution de mise en relation entre expéditeurs et 
+        transporteurs, développée et opérée par SendProColis SARL, société de droit sénégalais dont le siège 
+        social est situé à Dakar, Sénégal.
       </p>
       <p>
-        <strong>Siège social :</strong> Dakar, Sénégal<br />
-        <strong>Email :</strong> <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>support-commercial@sendprocolis.com</a>
+        <strong>Contact :</strong>{' '}
+        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>
+          support-commercial@sendprocolis.com
+        </a>
+        <br />
+        <strong>Téléphone :</strong> +221 76 516 27 96
       </p>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>2. Directeur de publication</h2>
       <p>
-        <strong>Serigne Fallou</strong>, Directeur général de SendProColis SARL.
+        <strong>Serigne Fallou</strong>, en sa qualité de Directeur général de SendProColis SARL.
       </p>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>3. Hébergement</h2>
@@ -32,137 +35,193 @@ export function MentionsLegalesPage() {
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>4. Objet de la plateforme</h2>
       <p>
-        La plateforme SendProColis a pour objet :
+        SendProColis est une plateforme digitale dont l'objectif est de :
       </p>
       <ul style={{ paddingLeft: 24 }}>
-        <li>la création d'expéditions de colis au Sénégal, en Afrique et à l'international ;</li>
-        <li>la mise en relation entre expéditeurs et chauffeurs transporteurs vérifiés ;</li>
-        <li>le suivi en temps réel des colis ;</li>
-        <li>la gestion des paiements liés aux expéditions ;</li>
-        <li>le prélèvement de commissions sur les transactions ;</li>
-        <li>la communication entre utilisateurs de la plateforme.</li>
+        <li>permettre la création et le suivi d'expéditions de colis au Sénégal, en Afrique et à l'international ;</li>
+        <li>mettre en relation des expéditeurs avec des chauffeurs transporteurs vérifiés ;</li>
+        <li>assurer le suivi en temps réel des colis ;</li>
+        <li>gérer les paiements liés aux expéditions ;</li>
+        <li>prélever des commissions sur les transactions réalisées via la plateforme ;</li>
+        <li>faciliter la communication entre les utilisateurs.</li>
       </ul>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>5. Fonctionnement de SendProColis</h2>
+      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>5. Fonctionnement</h2>
       <p>
-        SendProColis est une plateforme de mise en relation qui :
+        SendProColis agit comme un intermédiaire technologique qui :
       </p>
       <ul style={{ paddingLeft: 24 }}>
         <li>facilite la mise en relation entre expéditeurs et chauffeurs transporteurs ;</li>
-        <li>gère les paiements pour le compte des utilisateurs ;</li>
-        <li>assure le suivi des colis depuis l'enlèvement jusqu'à la livraison.</li>
+        <li>sécurise les transactions financières entre les parties ;</li>
+        <li>assure le suivi des colis depuis l'enlèvement jusqu'à la livraison finale ;</li>
+        <li>permet l'évaluation et la notation des chauffeurs pour garantir la qualité du service.</li>
       </ul>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>6. Transport de colis</h2>
       <p>
         L'expéditeur est tenu de fournir des informations exactes et complètes sur le colis (nature, poids,
-        dimensions, valeur). Il est seul responsable du contenu du colis et de sa conformité aux lois et
-        règlements en vigueur.
+        dimensions, valeur estimée). Il est seul responsable du contenu du colis et de sa conformité aux lois
+        et règlements en vigueur au Sénégal et dans les pays de transit et de destination.
       </p>
       <p>
-        <strong>Sont strictement interdits :</strong> les armes, explosifs, drogues, produits dangereux,
-        animaux vivants sans autorisation, contrefaçons et tout objet illicite. La liste complète des colis
-        interdits est disponible sur la page dédiée.
+        <strong>Sont strictement interdits :</strong> les armes, explosifs, stupéfiants, produits dangereux,
+        animaux vivants sans autorisation, contrefaçons, biens culturels, et tout objet dont le transport
+        est prohibé par la loi. La liste complète des colis interdits est disponible sur la page dédiée.
       </p>
       <p>
         Les droits de douane et taxes applicables au transport restent à la charge de l'expéditeur ou du
-        destinataire selon les termes convenus.
+        destinataire selon les termes convenus entre les parties.
       </p>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>7. Responsabilité de SendProColis</h2>
+      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>7. Responsabilité</h2>
       <p>
-        SendProColis agit en tant qu'intermédiaire et ne garantit pas la disponibilité continue de la
-        plateforme. La société ne saurait être tenue responsable des dommages indirects, pertes de données,
-        ou préjudices commerciaux résultant de l'utilisation de la plateforme.
+        SendProColis agit en tant qu'intermédiaire et ne saurait être tenue responsable :
       </p>
+      <ul style={{ paddingLeft: 24 }}>
+        <li>des retards, pertes ou avaries survenant pendant le transport, qui relèvent de la responsabilité du transporteur ;</li>
+        <li>des dommages indirects, pertes de données, ou préjudices commerciaux résultant de l'utilisation de la plateforme ;</li>
+        <li>des actes ou omissions des chauffeurs transporteurs ou des expéditeurs ;</li>
+        <li>des cas de force majeure.</li>
+      </ul>
       <p>
-        SendProColis ne saurait être tenue responsable des actes ou omissions des chauffeurs transporteurs
-        ou des expéditeurs, ni des dommages résultant de cas de force majeure.
+        La plateforme est fournie "en l'état" et SendProColis ne garantit pas une disponibilité continue 
+        et sans interruption du service.
       </p>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>8. Paiements</h2>
       <p>
-        Les paiements sur la plateforme sont traités via des prestataires partenaires agréés. SendProColis
-        propose différents moyens de paiement adaptés aux marchés sénégalais, africains et internationaux (mobile money, carte bancaire,
-        espèces).
+        Les paiements sur la plateforme sont sécurisés et traités via des prestataires partenaires agréés. 
+        SendProColis propose différents moyens de paiement adaptés aux marchés sénégalais, africains et 
+        internationaux :
       </p>
+      <ul style={{ paddingLeft: 24 }}>
+        <li>Mobile money (Wave, Orange Money, etc.) ;</li>
+        <li>Carte bancaire (Visa, Mastercard) ;</li>
+        <li>Espèces (via les points de collecte).</li>
+      </ul>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>9. Données personnelles</h2>
       <p>
-        SendProColis collecte les données personnelles suivantes : nom, prénom, numéro de téléphone, adresse
-        email, adresse postale, données de localisation, et informations relatives aux colis.
+        Conformément à la loi sénégalaise sur la protection des données à caractère personnel, SendProColis 
+        collecte les données suivantes :
       </p>
+      <ul style={{ paddingLeft: 24 }}>
+        <li>Nom, prénom, numéro de téléphone, adresse email ;</li>
+        <li>Adresse postale et données de localisation ;</li>
+        <li>Informations relatives aux colis expédiés ;</li>
+        <li>Données de connexion et d'utilisation de la plateforme.</li>
+      </ul>
       <p>
-        Ces données sont collectées pour les finalités suivantes : création et gestion des comptes
-        utilisateurs, mise en relation entre expéditeurs et chauffeurs, suivi des expéditions, traitement
-        des paiements, sécurité de la plateforme, amélioration du service.
+        Ces données sont collectées pour les finalités suivantes :
       </p>
+      <ul style={{ paddingLeft: 24 }}>
+        <li>Création et gestion des comptes utilisateurs ;</li>
+        <li>Mise en relation entre expéditeurs et chauffeurs ;</li>
+        <li>Suivi des expéditions ;</li>
+        <li>Traitement des paiements ;</li>
+        <li>Sécurité de la plateforme ;</li>
+        <li>Amélioration continue du service.</li>
+      </ul>
       <p>
-        Le responsable du traitement des données est SendProColis SARL. Pour toute question relative à vos
-        données, contactez-nous à{' '}
-        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>support-commercial@sendprocolis.com</a>.
+        Conformément à la réglementation, vous disposez d'un droit d'accès, de rectification, de suppression 
+        et d'opposition au traitement de vos données. Pour exercer ces droits, contactez-nous à{' '}
+        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>
+          support-commercial@sendprocolis.com
+        </a>.
       </p>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>10. Comptes utilisateurs</h2>
       <p>
-        Les utilisateurs s'engagent à fournir des informations exactes et à les maintenir à jour. Chaque
-        utilisateur est responsable de la confidentialité de ses identifiants.
+        Les utilisateurs s'engagent à :
       </p>
+      <ul style={{ paddingLeft: 24 }}>
+        <li>fournir des informations exactes, complètes et à les maintenir à jour ;</li>
+        <li>préserver la confidentialité de leurs identifiants de connexion ;</li>
+        <li>ne pas créer de faux comptes ou usurper l'identité d'autrui ;</li>
+        <li>utiliser la plateforme de manière loyale et conforme aux lois en vigueur.</li>
+      </ul>
       <p>
-        Sont interdits : la création de faux comptes, l'usurpation d'identité, l'utilisation frauduleuse
-        de la plateforme. SendProColis se réserve le droit de suspendre ou de supprimer tout compte en
-        cas de manquement à ces obligations.
+        SendProColis se réserve le droit de suspendre ou de supprimer tout compte en cas de manquement 
+        à ces obligations ou d'utilisation frauduleuse de la plateforme.
       </p>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>11. Chauffeurs et transporteurs</h2>
       <p>
-        Les chauffeurs et transporteurs s'engagent à fournir des documents valides (permis de conduire,
-        carte grise, assurance, pièce d'identité) et à respecter le code de la route ainsi que l'ensemble
-        des réglementations applicables au transport de marchandises.
+        Les chauffeurs et transporteurs inscrits sur la plateforme s'engagent à :
+      </p>
+      <ul style={{ paddingLeft: 24 }}>
+        <li>fournir des documents valides (permis de conduire, carte grise, assurance, pièce d'identité) ;</li>
+        <li>respecter le code de la route et les réglementations applicables au transport de marchandises ;</li>
+        <li>assurer la sécurité et l'intégrité des colis confiés ;</li>
+        <li>respecter les délais de livraison convenus.</li>
+      </ul>
+
+      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>12. Système de réputation</h2>
+      <p>
+        SendProColis intègre un système d'évaluation des chauffeurs basé sur les retours des expéditeurs. 
+        Ce système attribue :
+      </p>
+      <ul style={{ paddingLeft: 24 }}>
+        <li>des notes (de 1 à 5 étoiles) ;</li>
+        <li>des points de réputation (Score) ;</li>
+        <li>des badges de performance.</li>
+      </ul>
+      <p>
+        Le classement et les badges n'ont aucune valeur monétaire. Ils servent uniquement à informer les 
+        expéditeurs sur la fiabilité et la qualité de service des chauffeurs.
       </p>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>12. Système de réputation et Score</h2>
+      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>13. Portefeuille chauffeur (Wallet)</h2>
       <p>
-        La plateforme intègre un système d'évaluation des chauffeurs basé sur les retours des expéditeurs.
-        Ce système attribue des scores et des badges aux chauffeurs selon leurs performances.
+        Le Wallet Chauffeur est un outil de gestion financière indépendant du système de réputation. Il permet :
       </p>
-      <p>
-        Le classement et les badges n'ont aucune valeur monétaire. Ils servent uniquement à informer les
-        expéditeurs sur la fiabilité des chauffeurs.
-      </p>
-
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>13. Wallet Chauffeur</h2>
-      <p>
-        Le Wallet Chauffeur est indépendant du Score de réputation. Il permet aux chauffeurs de cumuler
-        des crédits issus des commissions et des bonus éventuels.
-      </p>
+      <ul style={{ paddingLeft: 24 }}>
+        <li>de cumuler les gains issus des livraisons ;</li>
+        <li>de gérer les commissions prélevées ;</li>
+        <li>d'effectuer des retraits sécurisés.</li>
+      </ul>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>14. Propriété intellectuelle</h2>
       <p>
-        La marque <strong>SendProColis</strong>, son logo, et l'ensemble des éléments graphiques de la
-        plateforme sont protégés par les lois relatives à la propriété intellectuelle. Toute reproduction
-        sans autorisation est interdite.
+        La marque <strong>SendProColis</strong>, son logo, son nom de domaine, et l'ensemble des éléments 
+        graphiques, textuels et techniques de la plateforme sont protégés par les lois relatives à la 
+        propriété intellectuelle. Toute reproduction, représentation, modification ou utilisation sans 
+        autorisation préalable est strictement interdite.
       </p>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>15. Réclamations</h2>
+      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>15. Réclamations et médiation</h2>
       <p>
-        Toute réclamation peut être adressée par email à{' '}
-        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>support-commercial@sendprocolis.com</a>.
-        Nous nous engageons à accuser réception dans les meilleurs délais et à traiter votre demande avec
-        diligence.
+        En cas de litige, l'utilisateur s'engage à contacter SendProColis en priorité par email à{' '}
+        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>
+          support-commercial@sendprocolis.com
+        </a>{' '}
+        pour trouver une solution amiable.
+      </p>
+      <p>
+        Nous nous engageons à accuser réception de toute réclamation dans un délai de 48 heures et à 
+        traiter votre demande avec diligence. À défaut d'accord amiable, les tribunaux compétents de 
+        Dakar seront saisis.
       </p>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>16. Droit applicable</h2>
       <p>
-        Les présentes mentions légales sont soumises au droit sénégalais. Tout litige relatif à leur
-        interprétation ou exécution relève de la compétence des tribunaux de Dakar.
+        Les présentes mentions légales sont soumises au droit sénégalais. Tout litige relatif à leur 
+        interprétation ou exécution relève de la compétence exclusive des tribunaux de Dakar.
       </p>
 
       <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>17. Modification des mentions légales</h2>
       <p>
-        SendProColis se réserve le droit de modifier les présentes mentions légales à tout moment. Les
-        utilisateurs seront informés de toute modification substantielle par email ou via une notification
-        sur la plateforme.
+        SendProColis se réserve le droit de modifier les présentes mentions légales à tout moment pour 
+        s'adapter aux évolutions légales, réglementaires ou techniques. Les utilisateurs seront informés 
+        de toute modification substantielle :
+      </p>
+      <ul style={{ paddingLeft: 24 }}>
+        <li>par email ;</li>
+        <li>via une notification sur la plateforme ;</li>
+        <li>par un message lors de leur prochaine connexion.</li>
+      </ul>
+      <p>
+        La version en vigueur est celle accessible en ligne sur cette page.
       </p>
     </div>
   )
