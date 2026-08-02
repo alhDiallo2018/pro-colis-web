@@ -135,7 +135,7 @@ export function ScoresPage() {
                   </div>
                   <div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 2 }}>Zone</div>
-                    <div style={{ fontWeight: 500, color: 'var(--text-body)' }}>{user.garageName ?? '—'}</div>
+                    <div style={{ fontWeight: 500, color: 'var(--text-body)' }}>{user.zoneName ?? '—'}</div>
                   </div>
                   <div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 2 }}>Région</div>
@@ -364,7 +364,7 @@ export function ScoresPage() {
                   <Badge tone={LEVEL_TONE[s.level] ?? 'neutral'}>{s.level}</Badge>
                 </div>
                 <MobileField label="Zone">
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.garageName ?? '—'}</span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.zoneName ?? '—'}</span>
                 </MobileField>
                 <MobileField label="Région">{s.region ?? '—'}</MobileField>
                 <MobileField label="Score">
@@ -431,7 +431,7 @@ export function ScoresPage() {
                     </span>
                   </span>
                   <span style={{ ...cell, fontSize: 12.5, color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                    {s.garageName ?? '—'}
+                    {s.zoneName ?? '—'}
                   </span>
                   <span style={{ ...cell, fontSize: 12.5, color: 'var(--text-body)' }}>{s.region ?? '—'}</span>
                   <span style={{ ...cell, fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13.5, color: 'var(--color-primary)', justifyContent: 'flex-end' }}>

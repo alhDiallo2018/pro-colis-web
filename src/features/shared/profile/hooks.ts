@@ -97,13 +97,13 @@ export function useSetDefaultAddress() {
 
 /* ------------------------------------------------------------ zones favorites */
 
-export function useFavoriteGarages() {
-  return useQuery({ queryKey: ['me', 'favorite-garages'], queryFn: () => addressesApi.favoriteGarages(), retry: false })
+export function useFavoriteZones() {
+  return useQuery({ queryKey: ['me', 'favorite-zones'], queryFn: () => addressesApi.favoriteZones(), retry: false })
 }
 
-export function useRemoveFavoriteGarage() {
+export function useRemoveFavoriteZone() {
   return useMutation({
-    mutationFn: (garageId: string) => addressesApi.removeFavoriteGarage(garageId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['me', 'favorite-garages'] }),
+    mutationFn: (zoneId: string) => addressesApi.removeFavoriteZone(zoneId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['me', 'favorite-zones'] }),
   })
 }

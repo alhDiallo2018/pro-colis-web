@@ -52,7 +52,7 @@ export function AnnonceDetailScreen() {
                 <Avatar name={driverName} src={ad.driver?.profilePhoto ?? undefined} size="lg" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-title)', color: 'var(--text-strong)' }}>{driverName}</div>
-                  <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>{ad.driver?.garageName ?? ad.driver?.city ?? 'Indépendant'}</div>
+                  <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>{ad.driver?.zoneName ?? ad.driver?.city ?? 'Indépendant'}</div>
                   {ad.driver?.phone && <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>{ad.driver.phone}</div>}
                 </div>
                 {ad.driver?.rating != null && (

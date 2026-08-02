@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Parcel, User } from '@/lib/api/types'
 import { filterFreeParcelsByDriverZone, getDriverHomeZone } from './freeParcelZone'
 
-function parcel(id: string, departureCity: string, departureGarageName?: string): Parcel {
+function parcel(id: string, departureCity: string, departureZoneName?: string): Parcel {
   return {
     id,
     trackingNumber: `PC-${id}`,
@@ -12,7 +12,7 @@ function parcel(id: string, departureCity: string, departureGarageName?: string)
     receiverPhone: '+221780000000',
     status: 'free',
     departureCity,
-    departureGarageName,
+    departureZoneName,
   }
 }
 
@@ -46,7 +46,7 @@ describe('filterFreeParcelsByDriverZone', () => {
   })
 
   it('accepte la correspondance exacte par identifiant de zone de départ', () => {
-    const matching = { ...parcel('1', 'Autre ville'), departureGarageId: 'zone-1' }
+    const matching = { ...parcel('1', 'Autre ville'), departureZoneId: 'zone-1' }
     const user = driver({ primaryZoneId: 'zone-1', primaryZoneName: 'Cocody' })
 
     expect(filterFreeParcelsByDriverZone([matching], user)).toEqual([matching])

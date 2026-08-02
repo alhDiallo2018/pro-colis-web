@@ -43,7 +43,7 @@ describe('contrats API critiques', () => {
   it('recompose le détail score renvoyé en trois blocs par l’API', async () => {
     mockedGet.mockResolvedValue({
       data: {
-        user: { id: 'u-1', fullName: 'Awa Test', garageName: 'Dakar' },
+        user: { id: 'u-1', fullName: 'Awa Test', zoneName: 'Dakar' },
         score: {
           points: 120,
           totalEarned: 150,

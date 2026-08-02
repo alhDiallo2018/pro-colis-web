@@ -85,7 +85,7 @@ export function ReputationDashboardPage() {
                 <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {d.fullName}
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{d.garageName ?? '—'}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{d.zoneName ?? '—'}</div>
               </div>
               <Badge tone={LEVEL_TONE[d.level] ?? 'neutral'}>{LEVEL_LABEL[d.level] ?? d.level}</Badge>
               <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13, color: 'var(--text-strong)', flex: 'none' }}>

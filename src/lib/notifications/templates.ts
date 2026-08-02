@@ -23,7 +23,7 @@ export interface NotificationContext {
   parcel?: Pick<Parcel, 'trackingNumber' | 'description' | 'status' | 'senderName' | 'receiverName' | 'departureCity' | 'arrivalCity' | 'price'>
   user?: Pick<User, 'fullName' | 'email' | 'phone'>
   driverName?: string
-  garageName?: string
+  zoneName?: string
   trackingNumber?: string
   price?: number
   bidPrice?: number

@@ -103,7 +103,7 @@ export function DriverDetailPage() {
                   </div>
                   <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>
                     {user.phone}
-                    {user.garageName && ` · ${user.garageName}`}
+                    {user.zoneName && ` · ${user.zoneName}`}
                     {user.region && ` · ${user.region}`}
                   </div>
                   <div style={{ marginTop: 6, display: 'flex', gap: 6, alignItems: 'center' }}>

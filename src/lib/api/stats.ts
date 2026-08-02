@@ -75,7 +75,7 @@ export async function driverStats(): Promise<DriverStats> {
 
 /** GET /garage-admin/stats — activité de la zone de l'admin connecté. */
 export interface GarageStats {
-  garageId: string | null
+  zoneId: string | null
   totalParcels: number
   activeParcels: number
   deliveredToday: number
@@ -88,7 +88,7 @@ export async function garageStats(): Promise<GarageStats> {
   const { data } = await api.get('/garage-admin/stats')
   const s = (data.stats ?? data.data?.stats ?? {}) as Record<string, unknown>
   return {
-    garageId: (s.garageId as string) ?? null,
+    zoneId: (s.zoneId as string) ?? null,
     totalParcels: Number(s.totalParcels ?? 0),
     activeParcels: Number(s.activeParcels ?? 0),
     deliveredToday: Number(s.deliveredToday ?? 0),
@@ -103,7 +103,7 @@ export interface GlobalStats {
   totalUsers: number
   totalDrivers: number
   totalClients: number
-  totalGarages: number
+  totalZones: number
   totalVehicles: number
   totalParcels: number
   parcelsInTransit: number
@@ -120,7 +120,7 @@ export async function globalStats(): Promise<GlobalStats> {
     totalUsers: num('totalUsers'),
     totalDrivers: num('totalDrivers'),
     totalClients: num('totalClients'),
-    totalGarages: num('totalGarages'),
+    totalZones: num('totalGarages'),
     totalVehicles: num('totalVehicles'),
     totalParcels: num('totalParcels'),
     parcelsInTransit: num('parcelsInTransit'),

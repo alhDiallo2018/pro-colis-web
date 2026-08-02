@@ -4,22 +4,22 @@ import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { useAuthStore } from '@/store/auth'
 import * as roles from '@/lib/api/roles'
-import * as garagesApi from '@/lib/api/garages'
+import * as zonesApi from '@/lib/api/zones'
 
 const AVATAR_STATUS: Record<string, AvatarStatus> = { available: 'online', busy: 'busy', offline: 'offline' }
 
 export function MonGarageScreen() {
   const user = useAuthStore((s) => s.user)
-  const garageId = user?.garageId ?? undefined
+  const zoneId = user?.zoneId ?? undefined
 
-  const garages = useQuery({ queryKey: ['garages', 'public'], queryFn: () => garagesApi.listPublic(), staleTime: 5 * 60_000 })
+  const zones = useQuery({ queryKey: ['zones', 'public'], queryFn: () => zonesApi.listPublic(), staleTime: 5 * 60_000 })
   const colleagues = useQuery({
-    queryKey: ['driver', 'garage-colleagues', garageId],
-    queryFn: () => roles.garageColleagues(garageId as string),
-    enabled: !!garageId,
+    queryKey: ['driver', 'garage-colleagues', zoneId],
+    queryFn: () => roles.garageColleagues(zoneId as string),
+    enabled: !!zoneId,
   })
 
-  if (!garageId) {
+  if (!zoneId) {
     return (
       <EmptyState
         icon="garage"
@@ -30,7 +30,7 @@ export function MonGarageScreen() {
     )
   }
 
-  const garage = (garages.data ?? []).find((g) => g.id === garageId)
+  const zone = (zones.data ?? []).find((z) => z.id === zoneId)
   const team = (colleagues.data ?? []).filter((d) => d.id !== user?.id)
 
   return (
@@ -42,11 +42,11 @@ export function MonGarageScreen() {
           </span>
           <div>
             <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--fs-h2)', color: 'var(--text-strong)' }}>
-              {garage?.name ?? user?.garageName ?? 'Ma zone'}
+              {zone?.name ?? user?.zoneName ?? 'Ma zone'}
             </div>
             <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', marginTop: 2 }}>
-              {[garage?.city, garage?.region].filter(Boolean).join(', ') || '—'}
-              {garage?.phone && ` · ${garage.phone}`}
+              {[zone?.city, zone?.region].filter(Boolean).join(', ') || '—'}
+              {zone?.phone && ` · ${zone.phone}`}
             </div>
           </div>
         </div>

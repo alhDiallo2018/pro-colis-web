@@ -90,9 +90,9 @@ export function GarageParcelDetailPage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-          <Field label="Départ" value={parcel.departureCity ?? parcel.departureGarageName ?? '—'} />
+          <Field label="Départ" value={parcel.departureCity ?? parcel.departureZoneName ?? '—'} />
           <span className="material-symbols-rounded" style={{ color: 'var(--teal-400)', fontSize: 20 }}>local_shipping</span>
-          <Field label="Arrivée" value={parcel.arrivalCity ?? parcel.arrivalGarageName ?? '—'} align="right" />
+          <Field label="Arrivée" value={parcel.arrivalCity ?? parcel.arrivalZoneName ?? '—'} align="right" />
           <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--teal-600)' }}>
             {parcel.weight != null ? formatWeight(parcel.weight) : ''}{' '}
             {parcel.price != null ? formatFcfa(parcel.price) : ''}

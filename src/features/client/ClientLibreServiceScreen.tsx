@@ -37,7 +37,7 @@ export function ClientLibreServiceScreen() {
     const filtered = all.filter((p) => {
       if (type && p.type !== type) return false
       if (!q) return true
-      return [p.trackingNumber, p.arrivalCity, p.arrivalGarageName, p.departureCity, p.departureGarageName, p.receiverName]
+      return [p.trackingNumber, p.arrivalCity, p.arrivalZoneName, p.departureCity, p.departureZoneName, p.receiverName]
         .some((v) => v && String(v).toLowerCase().includes(q))
     })
     return [...filtered].sort((a, b) => {
@@ -122,8 +122,8 @@ export function ClientLibreServiceScreen() {
               onClick={() => navigate(`/client/colis/${p.id}`)}
               parcel={{
                 tracking: p.trackingNumber,
-                from: p.departureCity ?? p.departureGarageName ?? '—',
-                to: p.arrivalCity ?? p.arrivalGarageName ?? '—',
+                from: p.departureCity ?? p.departureZoneName ?? '—',
+                to: p.arrivalCity ?? p.arrivalZoneName ?? '—',
                 status: toStatusKey(p.status),
                 price: p.price != null ? formatFcfa(p.price) : undefined,
                 weight: p.weight != null ? formatWeight(p.weight) : undefined,

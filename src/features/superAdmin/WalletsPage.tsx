@@ -408,7 +408,7 @@ function WalletRow({ wallet: w }: { wallet: Wallet }) {
           <Badge tone={st ? 'green' : 'amber'}>{st ? 'Actif' : 'Suspendu'}</Badge>
         </div>
         <MobileField label="Téléphone">{drv?.phone ?? '—'}</MobileField>
-        <MobileField label="Zone">{drv?.garageName ?? '—'}</MobileField>
+        <MobileField label="Zone">{drv?.zoneName ?? '—'}</MobileField>
         <MobileField label="Région">{drv?.region ?? '—'}</MobileField>
         <MobileField label="Solde">
           <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 12.5, color: 'var(--teal-600)' }}>{formatFcfa(w.balance)}</span>
@@ -438,7 +438,7 @@ function WalletRow({ wallet: w }: { wallet: Wallet }) {
         </span>
       </span>
       <span style={{ ...cell, fontSize: 12.5, color: 'var(--text-body)' }}>{drv?.phone ?? '—'}</span>
-      <span style={{ ...cell, fontSize: 12.5, color: 'var(--text-body)' }}>{drv?.garageName ?? '—'}</span>
+      <span style={{ ...cell, fontSize: 12.5, color: 'var(--text-body)' }}>{drv?.zoneName ?? '—'}</span>
       <span style={{ ...cell, fontSize: 12.5, color: 'var(--text-body)' }}>{drv?.region ?? '—'}</span>
       <span style={{ ...cell, fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 12.5, color: 'var(--teal-600)' }}>{formatFcfa(w.balance)}</span>
       <span style={{ ...cell, fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--text-body)' }}>{formatFcfa(w.totalDeposited)}</span>
@@ -490,7 +490,7 @@ function WalletDetail({ userId, onBack }: { userId: string; onBack: () => void }
                   {w.driver?.fullName ?? 'Inconnu'}
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>
-                  {w.driver?.phone ?? '—'} · {w.driver?.garageName ?? '—'} · {w.driver?.region ?? '—'}
+                  {w.driver?.phone ?? '—'} · {w.driver?.zoneName ?? '—'} · {w.driver?.region ?? '—'}
                 </div>
               </div>
             </div>

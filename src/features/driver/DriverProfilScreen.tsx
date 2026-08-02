@@ -205,7 +205,7 @@ export function DriverProfilScreen() {
             <Select label="Type" icon="category" placeholder="Type de véhicule" options={VEHICLE_TYPES} value={type} onChange={(e) => setType(e.target.value)} />
             <Input label="Capacité (places / kg)" icon="weight" type="number" inputMode="numeric" mono value={capacity} onChange={(e) => setCapacity(e.target.value)} />
           </div>
-          {!user.garageId && (
+          {!user.zoneId && (
             <Toast tone="info" message="Vous n'êtes rattaché à aucune zone — votre véhicule sera enregistré sans zone." />
           )}
           {vehicleError && <Toast tone="error" message={vehicleError} />}

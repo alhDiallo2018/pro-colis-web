@@ -85,9 +85,9 @@ export function ColisPage() {
                   <StatusBadge status={toStatusKey(p.status)} size="sm" />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0, fontSize: 13, color: 'var(--text-body)', fontWeight: 500 }}>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.departureCity ?? p.departureGarageName ?? '—'}</span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.departureCity ?? p.departureZoneName ?? '—'}</span>
                   <span className="material-symbols-rounded" style={{ fontSize: 15, color: 'var(--text-faint)', flex: 'none' }}>arrow_right_alt</span>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.arrivalCity ?? p.arrivalGarageName ?? '—'}</span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.arrivalCity ?? p.arrivalZoneName ?? '—'}</span>
                 </div>
                 <MobileField label="Client">
                   <span style={{ fontSize: 12.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.senderName}</span>
@@ -140,9 +140,9 @@ export function ColisPage() {
               <span style={{ ...cell, fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 12, color: 'var(--text-strong)' }}>{p.trackingNumber}</span>
               <span style={{ ...cell, fontSize: 13, color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{p.senderName}</span>
               <span style={{ ...cell, gap: 5, fontSize: 13, color: 'var(--text-body)', fontWeight: 500 }}>
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.departureCity ?? p.departureGarageName ?? '—'}</span>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.departureCity ?? p.departureZoneName ?? '—'}</span>
                 <span className="material-symbols-rounded" style={{ fontSize: 15, color: 'var(--text-faint)', flex: 'none' }}>arrow_right_alt</span>
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.arrivalCity ?? p.arrivalGarageName ?? '—'}</span>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.arrivalCity ?? p.arrivalZoneName ?? '—'}</span>
               </span>
               <span style={cell}>{renderDriver(p)}</span>
               <span style={cell}>

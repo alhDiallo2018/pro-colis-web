@@ -33,8 +33,8 @@ export interface Advertisement {
   driverId: string
   driverName?: string
   driver?: User | null
-  departureGarageId?: string | null
-  arrivalGarageId?: string | null
+  departureZoneId?: string | null
+  arrivalZoneId?: string | null
   departureCity?: string | null
   arrivalCity?: string | null
   departureAt?: string | null
@@ -56,8 +56,8 @@ export interface Advertisement {
 export interface CreateAdvertisementPayload {
   departureCity?: string
   arrivalCity?: string
-  departureGarageId?: string | null
-  arrivalGarageId?: string | null
+  departureZoneId?: string | null
+  arrivalZoneId?: string | null
   departureAt?: string | null
   availableWeight?: number | null
   proposedPrice?: number | null

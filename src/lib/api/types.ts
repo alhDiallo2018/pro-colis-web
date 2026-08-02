@@ -47,8 +47,8 @@ export interface User {
   city?: string | null
   region?: string | null
   gender?: string | null
-  garageId?: string | null
-  garageName?: string | null
+  zoneId?: string | null
+  zoneName?: string | null
   primaryZoneId?: string | null
   primaryZoneName?: string | null
   driverStatus?: DriverStatus | null
@@ -67,21 +67,6 @@ export interface User {
   walletBalance?: number
   vehiclePlate?: string | null
   vehicleModel?: string | null
-}
-
-export interface Garage {
-  id: string
-  name: string
-  country?: string | null
-  city?: string | null
-  region?: string | null
-  address?: string | null
-  phone?: string | null
-  latitude?: number | null
-  longitude?: number | null
-  isActive?: boolean
-  createdAt?: string
-  updatedAt?: string
 }
 
 export interface Zone {
@@ -175,11 +160,11 @@ export interface Parcel {
   height?: number | null
   type?: string | null
   status: ApiParcelStatus
-  departureGarageId?: string | null
-  departureGarageName?: string | null
+  departureZoneId?: string | null
+  departureZoneName?: string | null
   departureCity?: string | null
-  arrivalGarageId?: string | null
-  arrivalGarageName?: string | null
+  arrivalZoneId?: string | null
+  arrivalZoneName?: string | null
   arrivalCity?: string | null
   zoneId?: string | null
   driverId?: string | null

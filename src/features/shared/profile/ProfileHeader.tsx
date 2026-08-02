@@ -50,8 +50,8 @@ export function ProfileHeader({ user, onPhotoChange, kycStatus, badges, meta = [
     { icon: 'location_on', label: 'Ville', value: user.city || 'Non renseignée' },
     ...(user.region ? [{ icon: 'map', label: 'Région', value: user.region }] : []),
     ...(user.address ? [{ icon: 'home', label: 'Adresse', value: user.address }] : []),
-    ...(user.garageName || user.primaryZoneName
-      ? [{ icon: 'garage', label: 'Zone', value: user.garageName ?? user.primaryZoneName ?? '—' }]
+    ...(user.zoneName || user.primaryZoneName
+      ? [{ icon: 'garage', label: 'Zone', value: user.zoneName ?? user.primaryZoneName ?? '—' }]
       : []),
     { icon: 'event', label: 'Membre depuis', value: formatDate(user.createdAt) },
     { icon: 'login', label: 'Dernière connexion', value: formatDateTime(user.lastLogin) },

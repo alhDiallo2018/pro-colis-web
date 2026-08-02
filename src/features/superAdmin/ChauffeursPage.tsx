@@ -33,7 +33,7 @@ export function ChauffeursPage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14.5, color: 'var(--text-strong)' }}>{d.fullName}</div>
                 <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
-                  {d.city ?? d.garageName ?? '—'} · {d.phone}
+                  {d.city ?? d.zoneName ?? '—'} · {d.phone}
                 </div>
               </div>
               <div style={{ textAlign: 'right', fontSize: 12.5, color: 'var(--text-muted)' }}>

@@ -49,11 +49,11 @@ export function MissionsScreen() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, color: 'var(--text-strong)' }}>
-                    {p.departureCity ?? p.departureGarageName ?? '—'}
+                    {p.departureCity ?? p.departureZoneName ?? '—'}
                     <span className="material-symbols-rounded" style={{ fontSize: 16, color: 'var(--text-faint)' }}>
                       arrow_right_alt
                     </span>
-                    {p.arrivalCity ?? p.arrivalGarageName ?? '—'}
+                    {p.arrivalCity ?? p.arrivalZoneName ?? '—'}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                     <span style={{ fontFamily: 'var(--font-mono)' }}>{p.trackingNumber}</span> · {p.receiverName}

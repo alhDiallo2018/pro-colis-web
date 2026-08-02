@@ -19,13 +19,13 @@ function ParcelRoute({ parcel: p, iconSize = 16 }: { parcel: Parcel; iconSize?: 
   return (
     <>
       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {p.departureCity ?? p.departureGarageName ?? '—'}
+        {p.departureCity ?? p.departureZoneName ?? '—'}
       </span>
       <span className="material-symbols-rounded" style={{ fontSize: iconSize, color: 'var(--text-faint)', flex: 'none' }}>
         arrow_right_alt
       </span>
       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {p.arrivalCity ?? p.arrivalGarageName ?? '—'}
+        {p.arrivalCity ?? p.arrivalZoneName ?? '—'}
       </span>
     </>
   )

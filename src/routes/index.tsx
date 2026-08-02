@@ -53,7 +53,6 @@ import { SuperAdminDashboard } from '@/features/superAdmin/SuperAdminDashboard'
 import { ColisPage } from '@/features/superAdmin/ColisPage'
 import { ChauffeursPage } from '@/features/superAdmin/ChauffeursPage'
 import { UtilisateursPage } from '@/features/superAdmin/UtilisateursPage'
-import { GaragesPage } from '@/features/superAdmin/GaragesPage'
 import { ZonesPage } from '@/features/superAdmin/ZonesPage'
 import { StatistiquesPage } from '@/features/superAdmin/StatistiquesPage'
 import { ConfigConsommationPage } from '@/features/superAdmin/ConfigConsommationPage'
@@ -76,7 +75,6 @@ import { WithdrawalsPage } from '@/features/superAdmin/WithdrawalsPage'
 import { AssistancesPage } from '@/features/superAdmin/AssistancesPage'
 import { ExpensesPage } from '@/features/superAdmin/ExpensesPage'
 import { IdentityVerificationsPage } from '@/features/superAdmin/IdentityVerificationsPage'
-import { GarageDriversPage } from '@/features/superAdmin/GarageDriversPage'
 import { NotificationsScreen } from '@/features/shared/NotificationsScreen'
 import { GarageDashboard } from '@/features/garageAdmin/GarageDashboard'
 import { GarageColisPage } from '@/features/garageAdmin/GarageColisPage'
@@ -167,8 +165,7 @@ const SUPER_NAV: NavSection[] = [
   {
     heading: 'Gestion',
     items: [
-      { label: 'Zones (garages)', icon: 'garage', to: '/admin/garages' },
-      { label: 'Zones géographiques', icon: 'map', to: '/admin/zones' },
+      { label: 'Zones', icon: 'map', to: '/admin/zones' },
       { label: 'Support', icon: 'support_agent', to: '/admin/support' },
       { label: 'Assistances', icon: 'contact_support', to: '/admin/assistances' },
       { label: 'Vérifications identité', icon: 'verified_user', to: '/admin/verifications' },
@@ -338,7 +335,7 @@ export const router = createBrowserRouter([
           actions={
             <>
               <NotifButton />
-              <NavButton to="/admin/garages?new=1" icon="add">
+              <NavButton to="/admin/zones?new=1" icon="add">
                  Nouvelle zone
               </NavButton>
             </>
@@ -351,7 +348,6 @@ export const router = createBrowserRouter([
       { path: 'colis', element: <ColisPage /> },
       { path: 'chauffeurs', element: <ChauffeursPage /> },
       { path: 'users', element: <UtilisateursPage /> },
-      { path: 'garages', element: <GaragesPage /> },
       { path: 'zones', element: <ZonesPage /> },
       { path: 'stats', element: <StatistiquesPage /> },
       { path: 'parametres', element: <Navigate to="/admin/finance/configuration" replace /> },
@@ -375,7 +371,6 @@ export const router = createBrowserRouter([
       { path: 'paydunya', element: <PaydunyaConfigScreen /> },
       { path: 'broadcasts', element: <BroadcastsPage /> },
       { path: 'chauffeurs/:userId', element: <DriverDetailPage /> },
-      { path: 'garages/:garageId/drivers', element: <GarageDriversPage /> },
       { path: 'support', element: <AdminSupportScreen /> },
       { path: 'profil', element: <StaffProfilScreen /> },
       { path: 'notifications', element: <NotificationsScreen /> },

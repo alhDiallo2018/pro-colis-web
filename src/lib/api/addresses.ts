@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { Garage } from './types'
+import type { Zone } from './types'
 
 /** Carnet d'adresses de l'utilisateur connecté (GET/POST/PUT/DELETE /addresses). */
 export interface Address {
@@ -49,16 +49,16 @@ export async function setDefaultAddress(addressId: string): Promise<void> {
   await api.patch(`/addresses/${addressId}/default`)
 }
 
-/** Zones favorites de l'utilisateur (GET/POST/DELETE /favorites/garages). */
-export async function favoriteGarages(): Promise<Garage[]> {
-  const { data } = await api.get('/favorites/garages')
-  return (data.garages ?? data.data?.garages ?? []) as Garage[]
+/** Zones favorites de l'utilisateur (GET/POST/DELETE /favorites/zones). */
+export async function favoriteZones(): Promise<Zone[]> {
+  const { data } = await api.get('/favorites/zones')
+  return (data.zones ?? data.data?.zones ?? []) as Zone[]
 }
 
-export async function addFavoriteGarage(garageId: string): Promise<void> {
-  await api.post(`/favorites/garages/${garageId}`)
+export async function addFavoriteZone(zoneId: string): Promise<void> {
+  await api.post(`/favorites/zones/${zoneId}`)
 }
 
-export async function removeFavoriteGarage(garageId: string): Promise<void> {
-  await api.delete(`/favorites/garages/${garageId}`)
+export async function removeFavoriteZone(zoneId: string): Promise<void> {
+  await api.delete(`/favorites/zones/${zoneId}`)
 }

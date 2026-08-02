@@ -78,7 +78,7 @@ export function ClientDashboard() {
                   <div>
                     <div style={{ fontSize: 11, opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Départ</div>
                     <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18 }}>
-                      {tracked.departureCity ?? tracked.departureGarageName ?? '—'}
+                      {tracked.departureCity ?? tracked.departureZoneName ?? '—'}
                     </div>
                   </div>
                   <div style={{ flex: 1, position: 'relative', height: 2, background: 'rgba(255,255,255,0.4)' }}>
@@ -87,7 +87,7 @@ export function ClientDashboard() {
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: 11, opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Arrivée</div>
                     <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18 }}>
-                      {tracked.arrivalCity ?? tracked.arrivalGarageName ?? '—'}
+                      {tracked.arrivalCity ?? tracked.arrivalZoneName ?? '—'}
                     </div>
                   </div>
                 </div>

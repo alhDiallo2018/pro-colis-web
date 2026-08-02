@@ -28,13 +28,13 @@ export function SuperAdminDashboard() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const parcels = useQuery({ queryKey: ['admin', 'parcels'], queryFn: () => roles.adminParcels() })
-  const garages = useQuery({ queryKey: ['admin', 'garages'], queryFn: () => roles.adminGarages() })
+  const zones = useQuery({ queryKey: ['admin', 'zones'], queryFn: () => roles.adminZones() })
   const drivers = useQuery({ queryKey: ['admin', 'drivers'], queryFn: () => roles.searchDrivers() })
   const statsQ = usePlatformStats()
 
   const stats = statsQ.data
   const allParcels = parcels.data?.parcels ?? []
-  const garageList = garages.data ?? []
+  const zoneList = zones.data ?? []
   const driverList = drivers.data ?? []
   const availableDrivers = driverList.filter((d) => d.driverStatus === 'available').length
 
@@ -67,7 +67,7 @@ export function SuperAdminDashboard() {
             Bonjour {user?.fullName?.split(' ')[0] ?? ''} — plateforme
           </div>
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22 }}>
-            {stats ? `${stats.totalUsers} comptes · ${stats.totalGarages} zones` : 'Chargement…'}
+            {stats ? `${stats.totalUsers} comptes · ${stats.totalZones} zones` : 'Chargement…'}
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -114,7 +114,7 @@ export function SuperAdminDashboard() {
             <div style={{ display: 'grid', gap: 12 }}>
               <AccountRow icon="person" label="Clients" value={stats?.totalClients ?? '—'} />
               <AccountRow icon="local_shipping" label="Chauffeurs" value={stats?.totalDrivers ?? '—'} />
-              <AccountRow icon="garage" label="Zones" value={stats?.totalGarages ?? garageList.length} />
+              <AccountRow icon="garage" label="Zones" value={stats?.totalZones ?? zoneList.length} />
               <AccountRow icon="directions_car" label="Véhicules" value={stats?.totalVehicles ?? '—'} />
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
@@ -147,7 +147,7 @@ export function SuperAdminDashboard() {
                       {d.fullName}
                     </div>
                     <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
-                      {d.city ?? d.garageName ?? '—'} · {d.rating ?? '—'} ★
+                      {d.city ?? d.zoneName ?? '—'} · {d.rating ?? '—'} ★
                     </div>
                   </div>
                 </div>
@@ -159,24 +159,24 @@ export function SuperAdminDashboard() {
             title="Zones"
             flush
             action={
-              <Button size="sm" variant="ghost" iconTrailing="chevron_right" onClick={() => navigate('/admin/garages')}>
+              <Button size="sm" variant="ghost" iconTrailing="chevron_right" onClick={() => navigate('/admin/zones')}>
                 Tout voir
               </Button>
             }
           >
-            {garageList.length === 0 ? (
+            {zoneList.length === 0 ? (
               <div style={{ padding: 18, fontSize: 13.5, color: 'var(--text-muted)' }}>Aucune zone.</div>
             ) : (
-              garageList.slice(0, 5).map((g) => (
-                <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid var(--slate-100)' }}>
+              zoneList.slice(0, 5).map((z) => (
+                <div key={z.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid var(--slate-100)' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', color: 'var(--text-muted)', flex: 'none' }}>
                     <Icon name="garage" size={20} fill />
                   </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)' }}>{g.name}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{g.city ?? '—'}</div>
+                  <div>
+                    <div style={{ fontWeight: 700, color: 'var(--text-strong)' }}>{z.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{z.city ?? '—'}</div>
                   </div>
-                  {g.isActive === false && <Badge tone="neutral">Inactive</Badge>}
+                  {z.isActive === false && <Badge tone="neutral">Inactive</Badge>}
                 </div>
               ))
             )}

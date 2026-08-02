@@ -6,7 +6,7 @@ export interface Vehicle {
   model: string
   type: string
   capacity: number
-  garageId?: string | null
+  zoneId?: string | null
   driverId?: string | null
   isAvailable?: boolean
   createdAt?: string

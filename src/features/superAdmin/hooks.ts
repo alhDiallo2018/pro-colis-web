@@ -3,7 +3,6 @@ import * as roles from '@/lib/api/roles'
 import type { ListParams } from '@/lib/api/types'
 import * as adminFinance from '@/lib/api/admin-finance'
 import * as adminReputation from '@/lib/api/admin-reputation'
-import * as garagesApi from '@/lib/api/garages'
 import * as zonesApi from '@/lib/api/zones'
 import * as withdrawalsApi from '@/lib/api/withdrawals'
 import * as assistancesApi from '@/lib/api/assistances'
@@ -20,37 +19,6 @@ export function useDeleteAdminParcel() {
   return useMutation({
     mutationFn: (parcelId: string) => roles.adminDeleteParcel(parcelId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'parcels'] }),
-  })
-}
-
-export function useAdminGarages() {
-  return useQuery({ queryKey: ['admin', 'garages'], queryFn: () => roles.adminGarages() })
-}
-
-function invalidateGarages() {
-  queryClient.invalidateQueries({ queryKey: ['admin', 'garages'] })
-  queryClient.invalidateQueries({ queryKey: ['garages', 'public'] })
-}
-
-export function useCreateGarage() {
-  return useMutation({
-    mutationFn: (payload: garagesApi.GaragePayload) => garagesApi.createGarage(payload),
-    onSuccess: invalidateGarages,
-  })
-}
-
-export function useUpdateGarage() {
-  return useMutation({
-    mutationFn: ({ garageId, payload }: { garageId: string; payload: Partial<garagesApi.GaragePayload> }) =>
-      garagesApi.updateGarage(garageId, payload),
-    onSuccess: invalidateGarages,
-  })
-}
-
-export function useDeleteGarage() {
-  return useMutation({
-    mutationFn: (garageId: string) => garagesApi.deleteGarage(garageId),
-    onSuccess: invalidateGarages,
   })
 }
 
@@ -138,12 +106,6 @@ export function useRemoveDriverFromZone() {
   })
 }
 
-export function useMigrateGaragesToZones() {
-  return useMutation({
-    mutationFn: () => zonesApi.migrateGaragesToZones(),
-    onSuccess: invalidateZones,
-  })
-}
 
 export function useAdminDrivers() {
   return useQuery({ queryKey: ['admin', 'drivers'], queryFn: () => roles.searchDrivers() })

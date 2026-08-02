@@ -133,7 +133,7 @@ export function DriverDashboard() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
                   <div>
                     <div style={{ fontSize: 11, opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Départ</div>
-                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 19 }}>{active.departureCity ?? active.departureGarageName ?? '—'}</div>
+                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 19 }}>{active.departureCity ?? active.departureZoneName ?? '—'}</div>
                   </div>
                   <div style={{ flex: 1, position: 'relative', height: 2, background: 'rgba(255,255,255,0.4)' }}>
                     <span className="material-symbols-rounded" style={{ position: 'absolute', left: '52%', top: -12, fontSize: 24, color: '#fff' }}>
@@ -142,7 +142,7 @@ export function DriverDashboard() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: 11, opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Arrivée</div>
-                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 19 }}>{active.arrivalCity ?? active.arrivalGarageName ?? '—'}</div>
+                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 19 }}>{active.arrivalCity ?? active.arrivalZoneName ?? '—'}</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
@@ -191,11 +191,11 @@ export function DriverDashboard() {
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14.5, color: 'var(--text-strong)' }}>
-                      {p.departureCity ?? p.departureGarageName ?? '—'}
+                      {p.departureCity ?? p.departureZoneName ?? '—'}
                       <span className="material-symbols-rounded" style={{ fontSize: 16, color: 'var(--text-faint)' }}>
                         arrow_right_alt
                       </span>
-                      {p.arrivalCity ?? p.arrivalGarageName ?? '—'}
+                      {p.arrivalCity ?? p.arrivalZoneName ?? '—'}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1 }}>
                       <span style={{ fontFamily: 'var(--font-mono)' }}>{p.trackingNumber}</span>

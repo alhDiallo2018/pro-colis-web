@@ -46,9 +46,9 @@ function AssignRow({ parcel, drivers }: { parcel: Parcel; drivers: User[] }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
       <div style={{ flex: '1 1 220px', minWidth: 0 }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14.5, color: 'var(--text-strong)' }}>
-          {parcel.departureCity ?? parcel.departureGarageName ?? '—'}
+          {parcel.departureCity ?? parcel.departureZoneName ?? '—'}
           <span className="material-symbols-rounded" style={{ fontSize: 16, color: 'var(--text-faint)' }}>arrow_right_alt</span>
-          {parcel.arrivalCity ?? parcel.arrivalGarageName ?? '—'}
+          {parcel.arrivalCity ?? parcel.arrivalZoneName ?? '—'}
         </div>
         <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
           <span style={{ fontFamily: 'var(--font-mono)' }}>{parcel.trackingNumber}</span>

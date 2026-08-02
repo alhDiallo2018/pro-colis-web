@@ -121,8 +121,8 @@ export function ParcelDetailDialog({ parcel, onClose }: ParcelDetailDialogProps)
           {parcel.isInsured && <Tag tone="primary" icon="verified_user">Assuré</Tag>}
         </div>
 
-        <Row label="Départ" value={parcel.departureCity ?? parcel.departureGarageName ?? '—'} />
-        <Row label="Arrivée" value={parcel.arrivalCity ?? parcel.arrivalGarageName ?? '—'} />
+        <Row label="Départ" value={parcel.departureCity ?? parcel.departureZoneName ?? '—'} />
+        <Row label="Arrivée" value={parcel.arrivalCity ?? parcel.arrivalZoneName ?? '—'} />
         <Row label="Poids" value={parcel.weight != null ? formatWeight(parcel.weight) : '—'} />
         {parcel.price != null && <Row label="Prix" value={formatFcfa(parcel.price)} />}
 

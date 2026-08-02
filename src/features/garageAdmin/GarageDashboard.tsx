@@ -69,7 +69,7 @@ export function GarageDashboard() {
             Bonjour {user?.fullName?.split(' ')[0] ?? ''} — zone gérée
           </div>
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22 }}>
-            {user?.garageName ?? 'Zone non rattachée'}
+            {user?.zoneName ?? 'Zone non rattachée'}
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -172,7 +172,7 @@ export function GarageDashboard() {
           <Panel title="Mon compte">
             <div style={{ display: 'grid', gap: 12 }}>
               <AccountRow icon="badge" label="Rôle" value="Admin zone" />
-              <AccountRow icon="garage" label="Zone" value={user?.garageName ?? '—'} />
+              <AccountRow icon="garage" label="Zone" value={user?.zoneName ?? '—'} />
               <AccountRow icon="notifications" label="Notifications non lues" value={myStats.data?.unreadNotifications ?? '—'} />
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>

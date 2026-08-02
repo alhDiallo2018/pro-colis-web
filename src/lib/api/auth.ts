@@ -16,7 +16,7 @@ export interface RegisterPayload {
   address?: string | null
   city?: string | null
   region?: string | null
-  garageId?: string | null
+  zoneId?: string | null
 }
 
 /** Connexion par identifiant (email/téléphone) + code PIN. */

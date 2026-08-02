@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import * as parcelsApi from '@/lib/api/parcels'
 import * as bidsApi from '@/lib/api/bids'
-import * as garagesApi from '@/lib/api/garages'
+import * as zonesApi from '@/lib/api/zones'
 import * as rolesApi from '@/lib/api/roles'
 import * as usersApi from '@/lib/api/users'
 import * as adsApi from '@/lib/api/advertisements'
@@ -104,8 +104,8 @@ export function useCreateAnnonceOffer(advertisementId: string) {
   })
 }
 
-export function useGarages() {
-  return useQuery({ queryKey: ['garages', 'public'], queryFn: () => garagesApi.listPublic(), staleTime: 5 * 60_000 })
+export function useZones() {
+  return useQuery({ queryKey: ['zones', 'public'], queryFn: () => zonesApi.listPublic(), staleTime: 5 * 60_000 })
 }
 
 export function useDrivers() {

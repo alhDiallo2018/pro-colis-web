@@ -64,8 +64,8 @@ export function ParcelDetailScreen() {
                 {parcel.type && <Tag icon="category">{parcel.type}</Tag>}
                 {parcel.isInsured && <Tag tone="primary" icon="verified_user">Assuré</Tag>}
               </div>
-              <Row label="Départ" value={parcel.departureCity ?? parcel.departureGarageName ?? '—'} />
-              <Row label="Arrivée" value={parcel.arrivalCity ?? parcel.arrivalGarageName ?? '—'} />
+              <Row label="Départ" value={parcel.departureCity ?? parcel.departureZoneName ?? '—'} />
+              <Row label="Arrivée" value={parcel.arrivalCity ?? parcel.arrivalZoneName ?? '—'} />
               <Row label="Destinataire" value={parcel.receiverName} />
               <Row label="Poids" value={parcel.weight != null ? formatWeight(parcel.weight) : '—'} />
               <Row label="Prix" value={formatFcfa(parcel.price)} />

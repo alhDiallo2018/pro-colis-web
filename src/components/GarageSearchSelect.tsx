@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Icon } from '@/ds'
-import type { Garage } from '@/lib/api/types'
+import type { Zone } from '@/lib/api/types'
 import type { ResolvedZone } from '@/lib/api/zones'
 import { ZonePickerDialog } from './ZonePickerDialog'
 
@@ -9,14 +9,14 @@ export interface GarageSearchSelectProps {
   label?: ReactNode
   icon?: string
   placeholder?: string
-  garages: Garage[]
+  zones: Zone[]
   value?: string
-  onChange: (garageId: string) => void
+  onChange: (zoneId: string) => void
   /**
-   * Zone ajoutée à la volée. Le `Garage` reçu est le garage miroir renvoyé par
-   * l'API : son id est celui attendu par `departureGarageId` / `arrivalGarageId`.
+   * Zone ajoutée à la volée. Le `Zone` reçu est celui renvoyé par
+   * l'API : son id est celui attendu par `departureZoneId` / `arrivalZoneId`.
    */
-  onAddNew?: (garage: Garage) => void
+  onAddNew?: (zone: Zone) => void
   error?: string
   disabled?: boolean
   required?: boolean
@@ -27,7 +27,7 @@ export function GarageSearchSelect({
   label,
   icon = 'garage',
   placeholder = 'Rechercher une zone...',
-  garages,
+  zones,
   value = '',
   onChange,
   onAddNew,
@@ -59,26 +59,26 @@ export function GarageSearchSelect({
     if (!open) setQuery('')
   }, [open])
 
-  const selected = useMemo(() => garages.find((g) => g.id === value), [garages, value])
+  const selected = useMemo(() => zones.find((z) => z.id === value), [zones, value])
 
   const filtered = useMemo(() => {
-    if (!query) return garages
+    if (!query) return zones
     const q = query.toLowerCase()
-    return garages.filter(
-      (g) =>
-        g.name.toLowerCase().includes(q) ||
-        (g.city ?? '').toLowerCase().includes(q) ||
-        (g.region ?? '').toLowerCase().includes(q) ||
-        (g.address ?? '').toLowerCase().includes(q),
+    return zones.filter(
+      (z) =>
+        z.name.toLowerCase().includes(q) ||
+        (z.city ?? '').toLowerCase().includes(q) ||
+        (z.region ?? '').toLowerCase().includes(q) ||
+        (z.address ?? '').toLowerCase().includes(q),
     )
-  }, [garages, query])
+  }, [zones, query])
 
   const grouped = useMemo(() => {
-    const map = new Map<string, Garage[]>()
-    for (const g of filtered) {
-      const city = g.city || 'Autre'
+    const map = new Map<string, Zone[]>()
+    for (const z of filtered) {
+      const city = z.city || 'Autre'
       const list = map.get(city) || []
-      list.push(g)
+      list.push(z)
       map.set(city, list)
     }
     return Array.from(map.entries())
@@ -90,8 +90,8 @@ export function GarageSearchSelect({
       ? 'var(--border-focus)'
       : 'var(--border-default)'
 
-  const handleSelect = (garageId: string) => {
-    onChange(garageId)
+  const handleSelect = (zoneId: string) => {
+    onChange(zoneId)
     setOpen(false)
     setQuery('')
     setNotice(null)
@@ -102,15 +102,15 @@ export function GarageSearchSelect({
     setOpen(false)
   }
 
-  const handleResolved = (garage: Garage, result: ResolvedZone) => {
-    onAddNew?.(garage)
-    onChange(garage.id)
+  const handleResolved = (zone: Zone, result: ResolvedZone) => {
+    onAddNew?.(zone)
+    onChange(zone.id)
     setPickerOpen(false)
     setQuery('')
     setNotice(
       result.created
-        ? `« ${garage.name} » a été ajoutée et sera validée par l’équipe.`
-        : `« ${garage.name} » existait déjà : elle a été sélectionnée.`,
+        ? `« ${zone.name} » a été ajoutée et sera validée par l'équipe.`
+        : `« ${zone.name} » existait déjà : elle a été sélectionnée.`,
     )
   }
 
@@ -251,14 +251,14 @@ export function GarageSearchSelect({
           ) : (
             <>
               {grouped.length === 1
-                ? filtered.map((g) => <GarageRow key={g.id} garage={g} selected={g.id === value} onSelect={handleSelect} />)
+                ? filtered.map((z) => <ZoneRow key={z.id} zone={z} selected={z.id === value} onSelect={handleSelect} />)
                 : grouped.map(([city, list]) => (
                     <div key={city}>
                       <div style={{ padding: '8px 16px', fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--color-primary)', background: 'var(--surface-sunken)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                         {city}
                       </div>
-                      {list.map((g) => (
-                        <GarageRow key={g.id} garage={g} selected={g.id === value} onSelect={handleSelect} indented />
+                      {list.map((z) => (
+                        <ZoneRow key={z.id} zone={z} selected={z.id === value} onSelect={handleSelect} indented />
                       ))}
                     </div>
                   ))}
@@ -280,22 +280,22 @@ export function GarageSearchSelect({
   )
 }
 
-function GarageRow({
-  garage,
+function ZoneRow({
+  zone,
   selected,
   onSelect,
   indented = false,
 }: {
-  garage: Garage
+  zone: Zone
   selected: boolean
   onSelect: (id: string) => void
   indented?: boolean
 }) {
-  const subtitle = [garage.city, garage.region].filter(Boolean).join(', ')
+  const subtitle = [zone.city, zone.region].filter(Boolean).join(', ')
   return (
     <button
       type="button"
-      onClick={() => onSelect(garage.id)}
+      onClick={() => onSelect(zone.id)}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -313,11 +313,11 @@ function GarageRow({
     >
       <Icon name="garage" size={18} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--text-strong)' }}>{garage.name}</div>
-        {(subtitle || garage.address) && (
+        <div style={{ fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--text-strong)' }}>{zone.name}</div>
+        {(subtitle || zone.address) && (
           <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
             {subtitle}
-            {garage.address ? `${subtitle ? ' · ' : ''}${garage.address}` : ''}
+            {zone.address ? `${subtitle ? ' · ' : ''}${zone.address}` : ''}
           </div>
         )}
       </div>

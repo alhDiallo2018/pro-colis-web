@@ -66,8 +66,8 @@ map.fitBounds([[${fLat},${fLng}],[${tLat},${tLng}]], { padding: [40, 40] });
 export function ItineraireDialog({ parcel, open, onClose }: ItineraireDialogProps) {
   if (!open || !parcel) return null
 
-  const from = parcel.departureCity ?? parcel.departureGarageName ?? 'Depart'
-  const to = parcel.arrivalCity ?? parcel.arrivalGarageName ?? 'Arrivee'
+  const from = parcel.departureCity ?? parcel.departureZoneName ?? 'Depart'
+  const to = parcel.arrivalCity ?? parcel.arrivalZoneName ?? 'Arrivee'
   const fromCoord = GARAGE_COORDS[from]
   const toCoord = GARAGE_COORDS[to]
   const estimates = ROUTE_ESTIMATES[from]?.[to] ?? { distance: '—', duration: '—' }

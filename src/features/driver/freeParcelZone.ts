@@ -2,7 +2,7 @@ import type { Parcel, User } from '@/lib/api/types'
 
 type UserZoneFields = Pick<
   User,
-  'primaryZoneId' | 'primaryZoneName' | 'garageId' | 'garageName' | 'city'
+  'primaryZoneId' | 'primaryZoneName' | 'zoneId' | 'zoneName' | 'city'
 >
 
 export interface DriverHomeZone {
@@ -29,10 +29,10 @@ export function getDriverHomeZone(user: UserZoneFields | null | undefined): Driv
     }
   }
 
-  if (user.garageId || user.garageName) {
+  if (user.zoneId || user.zoneName) {
     return {
-      id: user.garageId ?? null,
-      name: user.garageName?.trim() || null,
+      id: user.zoneId ?? null,
+      name: user.zoneName?.trim() || null,
     }
   }
 
@@ -49,12 +49,12 @@ export function isParcelInDriverHomeZone(
 ): boolean {
   const zone = getDriverHomeZone(user)
   const matchesZoneId =
-    !!zone.id && (parcel.zoneId === zone.id || parcel.departureGarageId === zone.id)
+    !!zone.id && (parcel.zoneId === zone.id || parcel.departureZoneId === zone.id)
 
   const normalizedZoneName = normalizeZoneName(zone.name)
   const matchesZoneName =
     !!normalizedZoneName &&
-    [parcel.departureGarageName, parcel.departureCity].some(
+    [parcel.departureZoneName, parcel.departureCity].some(
       (value) => normalizeZoneName(value) === normalizedZoneName,
     )
 

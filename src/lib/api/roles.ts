@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { Bid, Garage, ListParams, Pagination, Parcel, User } from './types'
+import type { Bid, ListParams, Pagination, Parcel, User, Zone } from './types'
 
 interface ParcelList {
   parcels: Parcel[]
@@ -63,8 +63,8 @@ export async function garageDeleteParcel(parcelId: string): Promise<void> {
 }
 
 /** Drivers of a given garage (public endpoint) — used by "Mon garage". */
-export async function garageColleagues(garageId: string): Promise<User[]> {
-  const { data } = await api.get(`/public/drivers/garage/${garageId}`)
+export async function garageColleagues(zoneId: string): Promise<User[]> {
+  const { data } = await api.get(`/public/drivers/zone/${zoneId}`)
   return data.drivers ?? data.data ?? []
 }
 
@@ -78,9 +78,9 @@ export async function adminDeleteParcel(parcelId: string): Promise<void> {
   await api.delete(`/super-admin/parcels/${parcelId}`)
 }
 
-export async function adminGarages(): Promise<Garage[]> {
-  const { data } = await api.get('/super-admin/garages')
-  return data.garages ?? data.data ?? []
+export async function adminZones(): Promise<Zone[]> {
+  const { data } = await api.get('/super-admin/zones')
+  return data.zones ?? data.data ?? []
 }
 
 export async function searchDrivers(): Promise<User[]> {

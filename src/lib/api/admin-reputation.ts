@@ -7,7 +7,7 @@ export interface ScoreEntry {
   userId: string
   driverName?: string
   fullName?: string
-  garageName?: string | null
+  zoneName?: string | null
   region?: string | null
   points: number
   totalEarned: number
@@ -43,7 +43,7 @@ export interface DriverRanking {
   userId: string
   fullName: string
   profilePhoto?: string | null
-  garageName?: string | null
+  zoneName?: string | null
   region?: string | null
   points: number
   level: string
@@ -70,7 +70,7 @@ export interface DriverDetail {
     phone: string
     email?: string | null
     profilePhoto?: string | null
-    garageName?: string | null
+    zoneName?: string | null
     region?: string | null
     rating?: number | null
     totalDeliveries?: number
@@ -152,7 +152,7 @@ export async function getScore(userId: string): Promise<ScoreDetail> {
     userId: user.id ?? userId,
     driverName: user.fullName,
     fullName: user.fullName,
-    garageName: user.garageName ?? user.garage?.name ?? null,
+    zoneName: user.zoneName ?? user.zone?.name ?? null,
     region: user.region ?? null,
     rating: user.rating ?? null,
     totalDeliveries: user.totalDeliveries,

@@ -8,10 +8,10 @@ import { IdentityCard } from '@/features/shared/profile/IdentityCard'
 import { SecurityCard } from '@/features/shared/profile/SecurityCard'
 import { AddressBookCard } from '@/features/shared/profile/AddressBookCard'
 import {
-  useFavoriteGarages,
+  useFavoriteZones,
   useMyBidStats,
   useMyStats,
-  useRemoveFavoriteGarage,
+  useRemoveFavoriteZone,
 } from '@/features/shared/profile/hooks'
 import { formatPoints } from '@/lib/format'
 import { useMyParcels } from './hooks'
@@ -21,8 +21,8 @@ export function ProfilScreen() {
   const navigate = useNavigate()
   const stats = useMyStats()
   const bidStats = useMyBidStats()
-  const favorites = useFavoriteGarages()
-  const removeFavorite = useRemoveFavoriteGarage()
+  const favorites = useFavoriteZones()
+  const removeFavorite = useRemoveFavoriteZone()
   const parcelsQ = useMyParcels({ limit: 200 })
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
 
@@ -89,14 +89,14 @@ export function ProfilScreen() {
             Mes zones favorites
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {favorites.data.map((g) => (
-              <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderTop: '1px solid var(--border-subtle)' }}>
+            {favorites.data.map((z) => (
+              <div key={z.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderTop: '1px solid var(--border-subtle)' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)' }}>{g.name}</div>
-                  <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{g.city ?? g.region ?? '—'}</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)' }}>{z.name}</div>
+                  <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{z.city ?? z.region ?? '—'}</div>
                 </div>
-                {g.isActive === false && <Badge tone="neutral">Inactive</Badge>}
-                <Button size="sm" variant="ghost" icon="heart_minus" onClick={() => removeFavorite.mutate(g.id)}>
+                {z.isActive === false && <Badge tone="neutral">Inactive</Badge>}
+                <Button size="sm" variant="ghost" icon="heart_minus" onClick={() => removeFavorite.mutate(z.id)}>
                   Retirer
                 </Button>
               </div>

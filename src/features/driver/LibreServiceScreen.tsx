@@ -69,11 +69,11 @@ export function LibreServiceScreen() {
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, color: 'var(--text-strong)' }}>
-                    {p.departureCity ?? p.departureGarageName ?? '—'}
+                    {p.departureCity ?? p.departureZoneName ?? '—'}
                     <span className="material-symbols-rounded" style={{ fontSize: 16, color: 'var(--text-faint)' }}>
                       arrow_right_alt
                     </span>
-                    {p.arrivalCity ?? p.arrivalGarageName ?? '—'}
+                    {p.arrivalCity ?? p.arrivalZoneName ?? '—'}
                     {p.isUrgent && (
                       <span style={{ color: 'var(--red-400)', fontWeight: 800, letterSpacing: '-1px' }}>»</span>
                     )}

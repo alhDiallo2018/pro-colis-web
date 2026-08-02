@@ -4,7 +4,7 @@ import { LocationInput, type PlaceDetails, type PlaceResult } from './LocationIn
 import { MapPicker } from './MapPicker'
 import { resolveZone, type ResolvedZone } from '@/lib/api/zones'
 import { ApiError } from '@/lib/api/client'
-import type { Garage } from '@/lib/api/types'
+import type { Zone } from '@/lib/api/types'
 
 export interface ZonePickerDialogProps {
   open: boolean
@@ -12,10 +12,10 @@ export interface ZonePickerDialogProps {
   initialQuery?: string
   onClose: () => void
   /**
-   * Zone retenue. `garage` est le garage miroir : c'est lui qu'il faut poser
-   * dans `departureGarageId` / `arrivalGarageId`, jamais l'id de la zone.
+   * Zone retenue. `zone` est la zone : c'est elle qu'il faut poser
+   * dans `departureZoneId` / `arrivalZoneId`.
    */
-  onResolved: (garage: Garage, result: ResolvedZone) => void
+  onResolved: (zone: Zone, result: ResolvedZone) => void
 }
 
 interface Picked {
@@ -94,13 +94,12 @@ export function ZonePickerDialog({ open, initialQuery = '', onClose, onResolved 
         country: picked.country,
       })
 
-      // Sans garage miroir la zone est inutilisable comme départ / arrivée :
-      // mieux vaut le dire que laisser la création du colis échouer plus tard.
-      if (!result.garage || !result.garageId) {
+      // La zone créée est utilisable directement comme départ / arrivée.
+      if (!result.zone || !result.zone.id) {
         setError("Cette zone n'a pas pu être rattachée à un point de départ. Contactez le support.")
         return
       }
-      onResolved(result.garage, result)
+      onResolved(result.zone, result)
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Impossible d'ajouter cette zone.")
     } finally {

@@ -21,8 +21,8 @@ export interface CreateParcelPayload {
   description?: string | null
   weight?: number | null
   type?: string | null
-  departureGarageId?: string | null
-  arrivalGarageId?: string | null
+  departureZoneId?: string | null
+  arrivalZoneId?: string | null
   driverId?: string | null
   price?: number | null
   isUrgent?: boolean

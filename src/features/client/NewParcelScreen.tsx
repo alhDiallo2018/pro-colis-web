@@ -4,12 +4,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate } from 'react-router-dom'
 import { Avatar, Button, Card, Icon, IconButton, Input, Select, Switch, Textarea, Toast } from '@/ds'
-import { useCreateParcel, useDrivers, useGarages } from './hooks'
+import { useCreateParcel, useDrivers, useZones } from './hooks'
 import { ApiError } from '@/lib/api/client'
 import { uploadParcelAudio, uploadParcelPhoto, uploadParcelVideo } from '@/lib/api/uploads'
 import { useAuthStore } from '@/store/auth'
 import { formatFcfa, formatWeight } from '@/lib/format'
-import type { User, Garage } from '@/lib/api/types'
+import type { User, Zone } from '@/lib/api/types'
 import { GarageSearchSelect } from '@/components/GarageSearchSelect'
 import { LocationInput } from '@/components/LocationInput'
 import { ALL_COUNTRIES } from '@/components/CountryCodePicker'
@@ -46,8 +46,8 @@ const schema = z.object({
   receiverPhone: z.string().min(8, 'Téléphone requis'),
   receiverEmail: z.string().email('Email invalide').optional().or(z.literal('')),
   receiverAddress: z.string().optional(),
-  departureGarageId: z.string().min(1, `Zone de départ requise`),
-  arrivalGarageId: z.string().min(1, `Zone d'arrivée requise`),
+  departureZoneId: z.string().min(1, `Zone de départ requise`),
+  arrivalZoneId: z.string().min(1, `Zone d'arrivée requise`),
   driverId: z.string().optional(),
   description: z.string().min(1, 'Description requise'),
   type: z.string().optional(),
@@ -80,7 +80,7 @@ const required = (label: string): ReactNode => (
 export function NewParcelScreen() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const garages = useGarages()
+  const zones = useZones()
   const drivers = useDrivers()
   const createParcel = useCreateParcel()
 
@@ -118,15 +118,15 @@ export function NewParcelScreen() {
 
   // Zones résolues à la volée depuis Google Places (créées en "pending" côté API),
   // ajoutées à la liste pour être immédiatement sélectionnables par le créateur.
-  const [extraZones, setExtraZones] = useState<Garage[]>([])
-  const garageList = [...(garages.data ?? []), ...extraZones]
-  const garageLabel = (id?: string) => {
-    const g = garageList.find((x) => x.id === id)
-    return g ? (g.city ?? g.name) : '—'
+  const [extraZones, setExtraZones] = useState<Zone[]>([])
+  const zoneList = [...(zones.data ?? []), ...extraZones]
+  const zoneLabel = (id?: string) => {
+    const z = zoneList.find((x) => x.id === id)
+    return z ? (z.city ?? z.name) : '—'
   }
 
-  const addResolvedZone = (g: Garage) =>
-    setExtraZones((prev) => [...prev.filter((x) => x.id !== g.id), g])
+  const addResolvedZone = (z: Zone) =>
+    setExtraZones((prev) => [...prev.filter((x) => x.id !== z.id), z])
   const selectedDriver = (drivers.data ?? []).find((d) => d.id === watch('driverId'))
   const accountDialCode = inferDialCode(
     user?.phone,
@@ -171,7 +171,7 @@ export function NewParcelScreen() {
   const validateStep = async (s: number) => {
     if (s === 0) return trigger(['receiverName', 'receiverPhone', 'receiverEmail'])
     if (s === 1) {
-      const ok = await trigger(['departureGarageId', 'arrivalGarageId'])
+      const ok = await trigger(['departureZoneId', 'arrivalZoneId'])
       if (mode === 'driver' && !watch('driverId')) {
         setDriverError('Choisissez un chauffeur ou publiez une annonce.')
         return false
@@ -364,26 +364,26 @@ export function NewParcelScreen() {
               <GarageSearchSelect
                 label={required('Zone de départ')}
                 icon="garage"
-                placeholder={garages.isLoading ? 'Chargement…' : 'Rechercher une zone...'}
-                garages={garageList}
-                value={watch('departureGarageId') ?? ''}
-                onChange={(id) => setValue('departureGarageId', id, { shouldValidate: true })}
-                onAddNew={(g) => { addResolvedZone(g); setValue('departureGarageId', g.id, { shouldValidate: true }) }}
-                error={errors.departureGarageId?.message}
+                placeholder={zones.isLoading ? 'Chargement…' : 'Rechercher une zone...'}
+                zones={zoneList}
+                value={watch('departureZoneId') ?? ''}
+                onChange={(id) => setValue('departureZoneId', id, { shouldValidate: true })}
+                onAddNew={(z) => { addResolvedZone(z); setValue('departureZoneId', z.id, { shouldValidate: true }) }}
+                error={errors.departureZoneId?.message}
               />
               <GarageSearchSelect
                 label={required(`Zone d'arrivée`)}
                 icon="pin_drop"
-                placeholder={garages.isLoading ? 'Chargement…' : 'Rechercher une zone...'}
-                garages={garageList}
-                value={watch('arrivalGarageId') ?? ''}
-                onChange={(id) => setValue('arrivalGarageId', id, { shouldValidate: true })}
-                onAddNew={(g) => { addResolvedZone(g); setValue('arrivalGarageId', g.id, { shouldValidate: true }) }}
-                error={errors.arrivalGarageId?.message}
+                placeholder={zones.isLoading ? 'Chargement…' : 'Rechercher une zone...'}
+                zones={zoneList}
+                value={watch('arrivalZoneId') ?? ''}
+                onChange={(id) => setValue('arrivalZoneId', id, { shouldValidate: true })}
+                onAddNew={(z) => { addResolvedZone(z); setValue('arrivalZoneId', z.id, { shouldValidate: true }) }}
+                error={errors.arrivalZoneId?.message}
               />
 
-              {watch('departureGarageId') && watch('arrivalGarageId') && (
-                <RoutePill from={garageLabel(watch('departureGarageId'))} to={garageLabel(watch('arrivalGarageId'))} />
+              {watch('departureZoneId') && watch('arrivalZoneId') && (
+                <RoutePill from={zoneLabel(watch('departureZoneId'))} to={zoneLabel(watch('arrivalZoneId'))} />
               )}
 
               <div style={{ marginTop: 4 }}>
@@ -473,7 +473,7 @@ export function NewParcelScreen() {
               </RecapSection>
 
               <RecapSection icon="local_shipping" title="Livraison" onEdit={() => goTo(1)}>
-                <RecapRow label="Trajet" value={`${garageLabel(watch('departureGarageId'))} → ${garageLabel(watch('arrivalGarageId'))}`} />
+                <RecapRow label="Trajet" value={`${zoneLabel(watch('departureZoneId'))} → ${zoneLabel(watch('arrivalZoneId'))}`} />
                 <RecapRow
                   label="Mode"
                   value={mode === 'driver' ? `Chauffeur · ${selectedDriver?.fullName ?? '—'}` : 'Annonce (ouverte aux offres)'}
@@ -775,7 +775,7 @@ function DriverPicker({ drivers, value, onChange }: { drivers: User[]; value: st
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 700, color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{driver.fullName}</div>
                   <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {driver.garageName ?? driver.city ?? 'Indépendant'}
+                    {driver.zoneName ?? driver.city ?? 'Indépendant'}
                   </div>
                 </div>
               </div>

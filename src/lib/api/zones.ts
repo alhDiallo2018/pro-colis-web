@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { Garage, Zone, ZoneDriver } from './types'
+import type { Zone, ZoneDriver } from './types'
 
 export interface ZonePayload {
   name: string
@@ -50,13 +50,6 @@ export interface ResolveZonePayload {
 
 export interface ResolvedZone {
   zone: Zone
-  /**
-   * Garage miroir de la zone. Colis et annonces référencent `garages.id` (clé
-   * étrangère), jamais `zones.id` : c'est **cet** identifiant qu'il faut poser
-   * dans `departureGarageId` / `arrivalGarageId`.
-   */
-  garage: Garage | null
-  garageId: string | null
   created: boolean
   pending?: boolean
   matchedBy?: 'placeId' | 'proximity' | 'created' | string
@@ -65,12 +58,8 @@ export interface ResolvedZone {
 /** Résout un lieu Google Places en zone (la crée en "pending" si nécessaire). */
 export async function resolveZone(payload: ResolveZonePayload): Promise<ResolvedZone> {
   const { data } = await api.post('/zones/resolve', payload)
-  const zone: Zone = data.data
-  const garage: Garage | null = data.garage ?? null
   return {
-    zone,
-    garage,
-    garageId: data.garageId ?? garage?.id ?? null,
+    zone: data.data,
     created: data.created ?? false,
     pending: data.pending,
     matchedBy: data.matchedBy,
@@ -122,9 +111,4 @@ export async function bulkAssignDrivers(zoneId: string, driverIds: string[], isP
 
 export async function removeDriver(zoneId: string, driverId: string): Promise<void> {
   await api.delete(`/super-admin/zones/${zoneId}/drivers`, { data: { driverId } })
-}
-
-export async function migrateGaragesToZones(): Promise<{ created: number; skipped: number; total: number }> {
-  const { data } = await api.post('/super-admin/zones/migrate')
-  return data.data
 }

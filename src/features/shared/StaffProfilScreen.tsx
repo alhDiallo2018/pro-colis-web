@@ -50,7 +50,7 @@ export function StaffProfilScreen() {
         onPhotoChange={setPhotoDataUrl}
         meta={[
           ...(isGarageAdmin
-            ? [{ icon: 'garage', label: 'Zone gérée', value: user.garageName ?? '—' }]
+            ? [{ icon: 'garage', label: 'Zone gérée', value: user.zoneName ?? '—' }]
             : []),
           { icon: 'notifications', label: 'Notifications non lues', value: myStats.data?.unreadNotifications ?? '—' },
         ]}
@@ -60,7 +60,7 @@ export function StaffProfilScreen() {
       {isGarageAdmin && (garageStats.isSuccess || garageStats.isLoading) && (
         <Card padding="lg">
           <h3 style={{ margin: '0 0 4px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
-            Ma zone {user.garageName ? `· ${user.garageName}` : ''}
+            Ma zone {user.zoneName ? `· ${user.zoneName}` : ''}
           </h3>
           <p style={{ margin: '0 0 14px', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
             Activité de la zone dont vous avez la charge.

@@ -88,7 +88,7 @@ function AnnonceCard({ ad, onClick }: { ad: Advertisement; onClick: () => void }
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {driverName}
           </div>
-          <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>{ad.driver?.garageName ?? ad.driver?.city ?? 'Indépendant'}</div>
+          <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>{ad.driver?.zoneName ?? ad.driver?.city ?? 'Indépendant'}</div>
         </div>
         {(ad.offers?.length ?? 0) > 0 && (
           <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>{ad.offers!.length} offre{ad.offers!.length > 1 ? 's' : ''}</span>

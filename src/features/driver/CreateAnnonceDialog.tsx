@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Button, Dialog, Input, Textarea, Toast } from '@/ds'
 import { useCreateAdvertisement } from './hooks'
-import * as garagesApi from '@/lib/api/garages'
+import * as zonesApi from '@/lib/api/zones'
 import { ApiError } from '@/lib/api/client'
 import { GarageSearchSelect } from '@/components/GarageSearchSelect'
 import { VoiceRecorder } from '@/components/VoiceRecorder'
-import type { Garage } from '@/lib/api/types'
+import type { Zone } from '@/lib/api/types'
 
 interface Props {
   open: boolean
@@ -16,24 +16,24 @@ interface Props {
 /** Modal for a driver to publish a trip advertisement (annonce de trajet). */
 export function CreateAnnonceDialog({ open, onClose }: Props) {
   const createAd = useCreateAdvertisement()
-  const garagesQ = useQuery({ queryKey: ['garages', 'public'], queryFn: () => garagesApi.listPublic(), staleTime: 5 * 60_000 })
-  const garages = garagesQ.data ?? []
+  const zonesQ = useQuery({ queryKey: ['zones', 'public'], queryFn: () => zonesApi.listPublic(), staleTime: 5 * 60_000 })
+  const zones = zonesQ.data ?? []
 
-  const [departureGarageId, setDeparture] = useState('')
-  const [arrivalGarageId, setArrival] = useState('')
+  const [departureZoneId, setDeparture] = useState('')
+  const [arrivalZoneId, setArrival] = useState('')
   const [departureAt, setDepartureAt] = useState('')
   const [weight, setWeight] = useState('')
   const [price, setPrice] = useState('')
   const [description, setDescription] = useState('')
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
 
-  const [extraZones, setExtraZones] = useState<Garage[]>([])
-  const garageList = [...garages, ...extraZones]
+  const [extraZones, setExtraZones] = useState<Zone[]>([])
+  const zoneList = [...zones, ...extraZones]
 
   if (!open) return null
 
-  const cityOf = (id: string) => garageList.find((g) => g.id === id)?.city ?? undefined
-  const valid = !!departureGarageId && !!arrivalGarageId && departureGarageId !== arrivalGarageId
+  const cityOf = (id: string) => zoneList.find((z) => z.id === id)?.city ?? undefined
+  const valid = !!departureZoneId && !!arrivalZoneId && departureZoneId !== arrivalZoneId
 
   const reset = () => {
     setDeparture('')
@@ -48,10 +48,10 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
   const submit = () => {
     createAd.mutate(
       {
-        departureGarageId,
-        arrivalGarageId,
-        departureCity: cityOf(departureGarageId),
-        arrivalCity: cityOf(arrivalGarageId),
+        departureZoneId,
+        arrivalZoneId,
+        departureCity: cityOf(departureZoneId),
+        arrivalCity: cityOf(arrivalZoneId),
         departureAt: departureAt ? new Date(departureAt).toISOString() : null,
         availableWeight: weight ? Number(weight) : null,
         proposedPrice: price ? Number(price) : null,
@@ -69,8 +69,8 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
 
   const error = createAd.error instanceof ApiError ? createAd.error.message : null
 
-  const addResolvedZone = (g: Garage) =>
-    setExtraZones((prev) => [...prev.filter((x) => x.id !== g.id), g])
+  const addResolvedZone = (z: Zone) =>
+    setExtraZones((prev) => [...prev.filter((x) => x.id !== z.id), z])
 
   return (
     <Dialog
@@ -96,18 +96,18 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
           <GarageSearchSelect
             label="Départ"
             icon="garage"
-            placeholder={garagesQ.isLoading ? 'Chargement…' : 'Rechercher une zone...'}
-            garages={garageList}
-            value={departureGarageId}
+            placeholder={zonesQ.isLoading ? 'Chargement…' : 'Rechercher une zone...'}
+            zones={zoneList}
+            value={departureZoneId}
             onChange={setDeparture}
             onAddNew={addResolvedZone}
           />
           <GarageSearchSelect
             label="Arrivée"
             icon="pin_drop"
-            placeholder={garagesQ.isLoading ? 'Chargement…' : 'Rechercher une zone...'}
-            garages={garageList}
-            value={arrivalGarageId}
+            placeholder={zonesQ.isLoading ? 'Chargement…' : 'Rechercher une zone...'}
+            zones={zoneList}
+            value={arrivalZoneId}
             onChange={setArrival}
             onAddNew={addResolvedZone}
           />
@@ -128,7 +128,7 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, color: 'var(--text-body)' }}>Note vocale (optionnel)</div>
           <VoiceRecorder onUploaded={setAudioUrl} existingUrl={audioUrl} />
         </div>
-        {departureGarageId && departureGarageId === arrivalGarageId && (
+        {departureZoneId && departureZoneId === arrivalZoneId && (
           <Toast tone="warning" message="Le départ et l’arrivée doivent être différents." />
         )}
         {error && <Toast tone="error" message={error} />}

@@ -77,7 +77,7 @@ export function ClassementPage() {
                     <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 15, color: 'var(--text-strong)', marginBottom: 2 }}>
                       {d.fullName}
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>{d.garageName ?? '—'}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>{d.zoneName ?? '—'}</div>
                     <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 8 }}>
                       <Badge tone={LEVEL_TONE[d.level] ?? 'neutral'}>{LEVEL_LABEL[d.level] ?? d.level}</Badge>
                     </div>
@@ -106,7 +106,7 @@ export function ClassementPage() {
                       <Badge tone={LEVEL_TONE[d.level] ?? 'neutral'}>{LEVEL_LABEL[d.level] ?? d.level}</Badge>
                     </div>
                     <MobileField label="Zone">
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.garageName ?? '—'}</span>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.zoneName ?? '—'}</span>
                     </MobileField>
                     <MobileField label="Région">{d.region ?? '—'}</MobileField>
                     <MobileField label="Score">
@@ -181,7 +181,7 @@ export function ClassementPage() {
                         {d.fullName}
                       </span>
                       <span style={{ ...cell, fontSize: 12.5, color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                        {d.garageName ?? '—'}
+                        {d.zoneName ?? '—'}
                       </span>
                       <span style={{ ...cell, fontSize: 12.5, color: 'var(--text-body)' }}>{d.region ?? '—'}</span>
                       <span style={{ ...cell, fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13, color: 'var(--color-primary)', justifyContent: 'flex-end' }}>
