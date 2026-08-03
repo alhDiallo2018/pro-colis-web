@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { Button, Dialog, Input, SegmentedControl } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
+import { DetailList, DetailRow, DetailSection } from '@/components/DetailList'
 import { useWithdrawals, useApproveWithdrawal, useRejectWithdrawal, useCompleteWithdrawal } from '@/features/superAdmin/hooks'
 import { formatDateTime, formatFcfa } from '@/lib/format'
-import type { WithdrawalStatus } from '@/lib/api/withdrawals'
+import { useIsMobile } from '@/lib/useMediaQuery'
+import type { Withdrawal, WithdrawalStatus } from '@/lib/api/withdrawals'
 
 const STATUS_LABELS: Record<WithdrawalStatus, { label: string; color: string }> = {
   PENDING: { label: 'En attente', color: 'var(--amber-600)' },
@@ -23,9 +25,12 @@ const METHOD_LABELS: Record<string, string> = {
   paydunya: 'PayDunya',
 }
 
-const COL_GRID = `32px 1.2fr 100px 130px 80px 110px 160px`
+const COL_GRID = `32px 1.2fr 100px 130px 90px 110px 210px`
+/** Fixed tracks + a workable minimum for the chauffeur column. */
+const TABLE_MIN_WIDTH = 940
 
 export function WithdrawalsPage() {
+  const isMobile = useIsMobile()
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
   const limit = 20
@@ -38,6 +43,7 @@ export function WithdrawalsPage() {
 
   const [rejectDialog, setRejectDialog] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [detail, setDetail] = useState<Withdrawal | null>(null)
 
   const items = withdrawals.data?.withdrawals ?? []
   const pagination = withdrawals.data?.pagination
@@ -45,7 +51,7 @@ export function WithdrawalsPage() {
   return (
     <Panel title="Retraits chauffeurs">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="pc-filters">
           <SegmentedControl
             options={[
               { value: '', label: 'Tous' },
@@ -68,7 +74,43 @@ export function WithdrawalsPage() {
           emptyMessage="Aucun retrait trouvé."
           onRetry={() => withdrawals.refetch()}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {items.map((w) => {
+                const s = STATUS_LABELS[w.status] ?? { label: w.status, color: 'var(--text-muted)' }
+                return (
+                  <div key={w.id} onClick={() => setDetail(w)} style={mobileCardStyle}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                      <span style={{ fontWeight: 600, fontSize: 13, overflowWrap: 'anywhere' }}>{w.driver?.fullName ?? '—'}</span>
+                      <span style={{ flex: 'none', color: s.color, fontWeight: 700, fontSize: 12 }}>{s.label}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 15 }}>{formatFcfa(w.amount)}</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                        {METHOD_LABELS[w.method] ?? w.method}
+                        {w.phoneNumber ? ` · ${w.phoneNumber}` : ''}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{formatDateTime(w.requestedAt ?? w.createdAt)}</div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, flexWrap: 'wrap' }} onClick={(ev) => ev.stopPropagation()}>
+                      <Button icon="visibility" size="sm" variant="ghost" onClick={() => setDetail(w)}>Détails</Button>
+                      {w.status === 'PENDING' && (
+                        <>
+                          <Button icon="check" size="sm" onClick={() => approve.mutate(w.id)} loading={approve.isPending}>Approuver</Button>
+                          <Button icon="close" size="sm" onClick={() => { setRejectDialog(w.id); setRejectReason('') }}>Rejeter</Button>
+                        </>
+                      )}
+                      {w.status === 'PROCESSING' && (
+                        <Button icon="check" size="sm" onClick={() => complete.mutate(w.id)} loading={complete.isPending}>Compléter</Button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+          <div className="pc-table-scroll">
+          <div style={{ minWidth: TABLE_MIN_WIDTH, display: 'flex', flexDirection: 'column', gap: 2 }}>
             <div
               style={{
                 display: 'grid',
@@ -97,6 +139,7 @@ export function WithdrawalsPage() {
               return (
                 <div
                   key={w.id}
+                  onClick={() => setDetail(w)}
                   style={{
                     display: 'grid',
                     gridTemplateColumns: COL_GRID,
@@ -104,30 +147,32 @@ export function WithdrawalsPage() {
                     padding: '10px 12px',
                     alignItems: 'center',
                     borderBottom: '1px solid var(--border-subtle)',
+                    cursor: 'pointer',
                   }}
                 >
                   <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--gray-200)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>
                     {w.driver?.fullName?.charAt(0)?.toUpperCase() ?? '?'}
                   </div>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{w.driver?.fullName ?? '—'}</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{w.driver?.fullName ?? '—'}</div>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{w.driver?.phone ?? ''}</div>
                   </div>
                   <div style={{ fontWeight: 600, fontFamily: 'monospace' }}>{formatFcfa(w.amount)}</div>
-                  <div style={{ fontSize: 12 }}>
+                  <div style={{ fontSize: 12, minWidth: 0 }}>
                     <div>{METHOD_LABELS[w.method] ?? w.method}</div>
                     {w.phoneNumber ? <div style={{ color: 'var(--text-muted)', fontSize: 11 }}>{w.phoneNumber}</div> : null}
                   </div>
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <span style={{ color: s.color, fontWeight: 600, fontSize: 12 }}>{s.label}</span>
                     {w.failureReason ? (
-                      <div style={{ fontSize: 10, color: 'var(--text-muted)', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={w.failureReason}>
+                      <div style={{ fontSize: 10, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={w.failureReason}>
                         {w.failureReason}
                       </div>
                     ) : null}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{formatDateTime(w.requestedAt ?? w.createdAt)}</div>
-                  <div style={{ display: 'flex', gap: 4 }}>
+                  <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }} onClick={(ev) => ev.stopPropagation()}>
+                    <Button icon="visibility" size="sm" variant="ghost" onClick={() => setDetail(w)} aria-label="Détails" title="Détails" />
                     {w.status === 'PENDING' && (
                       <>
                         <Button icon="check" size="sm" onClick={() => approve.mutate(w.id)} loading={approve.isPending}>
@@ -148,6 +193,8 @@ export function WithdrawalsPage() {
               )
             })}
           </div>
+          </div>
+          )}
 
           {pagination && pagination.totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12 }}>
@@ -157,6 +204,10 @@ export function WithdrawalsPage() {
             </div>
           )}
         </QueryState>
+
+        {detail && (
+          <WithdrawalDetailDialog withdrawal={detail} onClose={() => setDetail(null)} />
+        )}
 
         {rejectDialog && (
           <Dialog
@@ -180,7 +231,7 @@ export function WithdrawalsPage() {
               </>
             }
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 280 }}>
+            <div className="pc-form">
               <Input
                 label="Raison du rejet"
                 value={rejectReason}
@@ -195,5 +246,67 @@ export function WithdrawalsPage() {
         )}
       </div>
     </Panel>
+  )
+}
+
+const mobileCardStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 8,
+  minWidth: 0,
+  padding: 14,
+  background: 'var(--surface-card)',
+  border: '1px solid var(--border-subtle)',
+  borderRadius: 'var(--radius-md)',
+  cursor: 'pointer',
+}
+
+/** Fiche lecture seule d'un retrait — références provider, revue, motif d'échec. */
+function WithdrawalDetailDialog({ withdrawal, onClose }: { withdrawal: Withdrawal; onClose: () => void }) {
+  const w = withdrawal
+  const s = STATUS_LABELS[w.status] ?? { label: w.status, color: 'var(--text-muted)' }
+  return (
+    <Dialog
+      open
+      size="lg"
+      title="Détail du retrait"
+      onClose={onClose}
+      actions={<Button variant="ghost" onClick={onClose}>Fermer</Button>}
+    >
+      <div className="pc-form" style={{ gap: 18 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: 22, color: 'var(--text-strong)' }}>
+            {formatFcfa(w.amount)}
+          </span>
+          <span style={{ color: s.color, fontWeight: 700, fontSize: 13 }}>{s.label}</span>
+        </div>
+
+        <DetailSection title="Chauffeur">
+          <DetailList>
+            <DetailRow label="Nom" always>{w.driver?.fullName}</DetailRow>
+            <DetailRow label="Téléphone" mono>{w.driver?.phone}</DetailRow>
+          </DetailList>
+        </DetailSection>
+
+        <DetailSection title="Versement">
+          <DetailList>
+            <DetailRow label="Moyen" always>{METHOD_LABELS[w.method] ?? w.method}</DetailRow>
+            <DetailRow label="Numéro" mono>{w.phoneNumber ?? w.phone}</DetailRow>
+            <DetailRow label="Référence" mono>{w.reference}</DetailRow>
+            <DetailRow label="Réf. opérateur" mono>{w.providerRef}</DetailRow>
+          </DetailList>
+        </DetailSection>
+
+        <DetailSection title="Suivi">
+          <DetailList>
+            <DetailRow label="Demandé le" always>{formatDateTime(w.requestedAt ?? w.createdAt)}</DetailRow>
+            <DetailRow label="Revu le">{formatDateTime(w.reviewedAt)}</DetailRow>
+            <DetailRow label="Revu par">{w.reviewedBy}</DetailRow>
+            <DetailRow label="Complété le">{formatDateTime(w.completedAt)}</DetailRow>
+            <DetailRow label="Motif d'échec" valueStyle={{ color: 'var(--color-danger)' }}>{w.failureReason}</DetailRow>
+          </DetailList>
+        </DetailSection>
+      </div>
+    </Dialog>
   )
 }

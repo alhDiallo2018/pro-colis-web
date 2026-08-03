@@ -233,10 +233,26 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
           >
             <Icon name={open && !isMobile ? 'menu_open' : 'menu'} size={22} />
           </button>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: isMobile ? 17 : 20, color: 'var(--text-strong)', margin: 0 }}>
+          <h1
+            title={typeof title === 'string' ? title : undefined}
+            style={{
+              // Last line of defence: the title yields before the topbar can
+              // push the page into a horizontal scroll.
+              flex: '0 1 auto',
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              fontFamily: 'var(--font-display)',
+              fontWeight: 800,
+              fontSize: isMobile ? 17 : 20,
+              color: 'var(--text-strong)',
+              margin: 0,
+            }}
+          >
             {title}
           </h1>
-          {actions && <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>{actions}</div>}
+          {actions && <div style={{ flex: 'none', marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>{actions}</div>}
         </header>
 
         {banner}

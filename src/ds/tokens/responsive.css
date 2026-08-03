@@ -45,6 +45,65 @@
 @media (max-width: 560px) {
   .pc-field-pair { grid-template-columns: 1fr; }
 }
+/* Grid children default to min-width:auto, so a field whose content can't
+   shrink (a long placeholder, a nowrap suffix, a native date picker) widens
+   its track and the whole row overflows. Let every field shrink. */
+.pc-field-pair > * { min-width: 0; }
+
+/* Three fields on a row: 3 → 2 → 1 column. */
+.pc-field-trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+@media (max-width: 720px) {
+  .pc-field-trio { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .pc-field-trio { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Vertical form body — the standard wrapper for the contents of a Dialog.
+   It fills the dialog and never widens it: a hard `min-width` on this element
+   is what used to push fields under the dialog's clipped right edge. */
+.pc-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+}
+.pc-form > * { min-width: 0; }
+
+/* Filter bar above a list: segmented control + search + toggles. Wraps rather
+   than overflowing, and the search field drops its desktop floor on phones. */
+.pc-filters {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.pc-filters > * { min-width: 0; max-width: 100%; }
+@media (max-width: 560px) {
+  .pc-filters-search { flex: 1 1 100% !important; min-width: 0 !important; }
+}
+
+/* Read-only label/value rows (the "Détails" dialogs). Label and value sit
+   side-by-side on desktop and stack on phones, where a 140px label column
+   would leave a long reference or URL nowhere to go. */
+.pc-detail-list { display: flex; flex-direction: column; margin: 0; min-width: 0; }
+.pc-detail-row {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 2px var(--space-4);
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.pc-detail-row:last-child { border-bottom: none; }
+.pc-detail-row > dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 480px) {
+  .pc-detail-row { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* Horizontal-scroll shell for wide fixed-column data tables. Defeats the
    parent Panel's overflow:hidden so columns scroll instead of being clipped. */
@@ -152,16 +211,30 @@
   .pc-trip-detail-grid { grid-template-columns: 1fr; }
 }
 
+/* Dashboard topbar CTA ("Nouvelle zone", "Nouveau colis"…). Its label costs
+   ~120px, which the 375px topbar can't spare next to the burger, the page
+   title and the bell — so below 640px the button falls back to its icon. */
+@media (max-width: 640px) {
+  .pc-topbar-cta-label { display: none; }
+}
+
 /* Hide on screens smaller than 720px. */
 @media (max-width: 720px) {
   .pc-hide-sm { display: none !important; }
 }
 
-/* Dialog: full-width with reduced border-radius on small screens. */
+/* Dialog: full-width with reduced border-radius on small screens. The inner
+   sections give up their 24px side padding too — at 360px viewport that
+   padding alone eats a seventh of the usable field width. */
 @media (max-width: 560px) {
   .pc-dialog {
     max-width: calc(100vw - 16px) !important;
     max-height: 92vh !important;
     border-radius: var(--radius-md) !important;
   }
+  .pc-dialog-head { padding: var(--space-5) var(--space-4) 0 !important; }
+  .pc-dialog-body { padding-left: var(--space-4) !important; padding-right: var(--space-4) !important; }
+  .pc-dialog-actions { padding: var(--space-3) var(--space-4) var(--space-4) !important; }
+  /* Stacked/50-50 buttons instead of a row that wraps into a ragged column. */
+  .pc-dialog-actions > * { flex: 1 1 140px; }
 }

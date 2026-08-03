@@ -2,11 +2,14 @@ import { useState } from 'react'
 import { Button, Dialog, Input, SegmentedControl } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
+import { DetailList, DetailRow, DetailSection } from '@/components/DetailList'
 import {
   useIdentityVerifications,
   useApproveVerification,
   useRejectVerification,
 } from '@/features/superAdmin/hooks'
+import { formatDateTime } from '@/lib/format'
+import { useIsMobile } from '@/lib/useMediaQuery'
 import type { IdentityVerification, IdentityStatus } from '@/lib/api/identity'
 
 const STATUS_META: Record<IdentityStatus, { label: string; color: string; bg: string }> = {
@@ -15,9 +18,12 @@ const STATUS_META: Record<IdentityStatus, { label: string; color: string; bg: st
   rejected: { label: 'Rejeté', color: 'var(--red-600)', bg: 'var(--red-50)' },
 }
 
-const COL_GRID = '1.4fr 120px 130px 110px 170px'
+const COL_GRID = '1.4fr 120px 130px 110px 210px'
+/** Fixed tracks + a workable minimum for the chauffeur column. */
+const TABLE_MIN_WIDTH = 860
 
 export function IdentityVerificationsPage() {
+  const isMobile = useIsMobile()
   const [status, setStatus] = useState('pending')
   const [page, setPage] = useState(1)
   const limit = 20
@@ -29,6 +35,7 @@ export function IdentityVerificationsPage() {
 
   const [rejectDialog, setRejectDialog] = useState<IdentityVerification | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [detail, setDetail] = useState<IdentityVerification | null>(null)
 
   const items = query.data?.verifications ?? []
   const summary = query.data?.summary
@@ -65,7 +72,48 @@ export function IdentityVerificationsPage() {
           emptyMessage="Aucune vérification pour ce filtre."
           onRetry={() => query.refetch()}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {items.map((v) => {
+                const st = STATUS_META[v.status] ?? { label: v.status, color: 'var(--text-muted)', bg: 'var(--surface-sunken)' }
+                return (
+                  <div key={v.id} onClick={() => setDetail(v)} style={mobileCardStyle}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                      <span style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--text-strong)', overflowWrap: 'anywhere' }}>{v.user?.fullName ?? '—'}</span>
+                      <span style={{ flex: 'none', fontSize: 11.5, fontWeight: 700, color: st.color, background: st.bg, padding: '3px 10px', borderRadius: 'var(--radius-pill)' }}>{st.label}</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                      {v.user?.phone ?? ''}{v.documentType ? ` · ${v.documentType}` : ''}
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }} onClick={(ev) => ev.stopPropagation()}>
+                      {v.documentFrontUrl ? (
+                        <a href={v.documentFrontUrl} target="_blank" rel="noopener noreferrer">
+                          <img src={v.documentFrontUrl} alt="Recto" style={docThumb} />
+                        </a>
+                      ) : null}
+                      {v.documentBackUrl ? (
+                        <a href={v.documentBackUrl} target="_blank" rel="noopener noreferrer">
+                          <img src={v.documentBackUrl} alt="Verso" style={docThumb} />
+                        </a>
+                      ) : null}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, flexWrap: 'wrap' }} onClick={(ev) => ev.stopPropagation()}>
+                      <Button icon="visibility" size="sm" variant="ghost" onClick={() => setDetail(v)}>Détails</Button>
+                      {v.status !== 'approved' && (
+                        <Button size="sm" icon="check" onClick={() => approve.mutate(v.id)} loading={approve.isPending}>Approuver</Button>
+                      )}
+                      {v.status === 'pending' && (
+                        <Button size="sm" variant="ghost" tone="danger" icon="close"
+                          onClick={() => { setRejectDialog(v); setRejectReason('') }}>Rejeter</Button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+          <div className="pc-table-scroll">
+          <div style={{ minWidth: TABLE_MIN_WIDTH, display: 'flex', flexDirection: 'column', gap: 2 }}>
             <div style={headerRowStyle}>
               <span>Chauffeur</span>
               <span>Type</span>
@@ -77,13 +125,13 @@ export function IdentityVerificationsPage() {
             {items.map((v) => {
               const st = STATUS_META[v.status] ?? { label: v.status, color: 'var(--text-muted)', bg: 'var(--surface-sunken)' }
               return (
-                <div key={v.id} style={rowStyle}>
-                  <span style={{ fontSize: 13 }}>
+                <div key={v.id} style={rowStyle} onClick={() => setDetail(v)}>
+                  <span style={{ fontSize: 13, minWidth: 0 }}>
                     <div style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{v.user?.fullName ?? '—'}</div>
                     <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{v.user?.phone ?? ''}</div>
                   </span>
                   <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{v.documentType ?? '—'}</span>
-                  <span style={{ display: 'flex', gap: 6 }}>
+                  <span style={{ display: 'flex', gap: 6 }} onClick={(ev) => ev.stopPropagation()}>
                     {v.documentFrontUrl ? (
                       <a href={v.documentFrontUrl} target="_blank" rel="noopener noreferrer">
                         <img src={v.documentFrontUrl} alt="Recto" style={docThumb} />
@@ -95,13 +143,14 @@ export function IdentityVerificationsPage() {
                       </a>
                     )}
                   </span>
-                  <span>
+                  <span style={{ minWidth: 0 }}>
                     <span style={{ fontSize: 11.5, fontWeight: 700, color: st.color, background: st.bg, padding: '3px 10px', borderRadius: 'var(--radius-pill)' }}>{st.label}</span>
                     {v.status === 'rejected' && v.rejectionReason && (
-                      <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 2, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={v.rejectionReason}>{v.rejectionReason}</div>
+                      <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={v.rejectionReason}>{v.rejectionReason}</div>
                     )}
                   </span>
-                  <span style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                  <span style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }} onClick={(ev) => ev.stopPropagation()}>
+                    <Button size="sm" icon="visibility" variant="ghost" onClick={() => setDetail(v)} aria-label="Détails" title="Détails" />
                     {v.status !== 'approved' && (
                       <Button size="sm" icon="check" onClick={() => approve.mutate(v.id)} loading={approve.isPending}>
                         Approuver
@@ -118,6 +167,8 @@ export function IdentityVerificationsPage() {
               )
             })}
           </div>
+          </div>
+          )}
 
           {pagination && pagination.totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12 }}>
@@ -128,6 +179,15 @@ export function IdentityVerificationsPage() {
           )}
         </QueryState>
       </div>
+
+      {detail && (
+        <VerificationDetailDialog
+          verification={detail}
+          onClose={() => setDetail(null)}
+          onApprove={detail.status !== 'approved' ? () => approve.mutate(detail.id, { onSuccess: () => setDetail(null) }) : undefined}
+          onReject={detail.status === 'pending' ? () => { setRejectDialog(detail); setRejectReason(''); setDetail(null) } : undefined}
+        />
+      )}
 
       {rejectDialog && (
         <Dialog
@@ -144,7 +204,7 @@ export function IdentityVerificationsPage() {
             </>
           }
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 'min(360px, 80vw)' }}>
+          <div className="pc-form" style={{ gap: 10 }}>
             <Input
               label="Motif du refus"
               value={rejectReason}
@@ -158,6 +218,84 @@ export function IdentityVerificationsPage() {
         </Dialog>
       )}
     </Panel>
+  )
+}
+
+/** Fiche lecture seule — documents en grand, motif de refus complet, revue. */
+function VerificationDetailDialog({
+  verification,
+  onClose,
+  onApprove,
+  onReject,
+}: {
+  verification: IdentityVerification
+  onClose: () => void
+  onApprove?: () => void
+  onReject?: () => void
+}) {
+  const v = verification
+  const st = STATUS_META[v.status] ?? { label: v.status, color: 'var(--text-muted)', bg: 'var(--surface-sunken)' }
+  return (
+    <Dialog
+      open
+      size="lg"
+      title="Vérification d'identité"
+      onClose={onClose}
+      actions={
+        <>
+          <Button variant="ghost" onClick={onClose}>Fermer</Button>
+          {onReject && <Button variant="ghost" tone="danger" icon="close" onClick={onReject}>Rejeter</Button>}
+          {onApprove && <Button icon="check" onClick={onApprove}>Approuver</Button>}
+        </>
+      }
+    >
+      <div className="pc-form" style={{ gap: 18 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-strong)', overflowWrap: 'anywhere' }}>
+            {v.user?.fullName ?? '—'}
+          </span>
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: st.color, background: st.bg, padding: '3px 10px', borderRadius: 'var(--radius-pill)' }}>
+            {st.label}
+          </span>
+        </div>
+
+        <DetailList>
+          <DetailRow label="Téléphone" mono>{v.user?.phone}</DetailRow>
+          <DetailRow label="E-mail">{v.user?.email}</DetailRow>
+          <DetailRow label="Rôle">{v.user?.role}</DetailRow>
+          <DetailRow label="Compte vérifié" always>{v.user?.isVerified ? 'Oui' : 'Non'}</DetailRow>
+          <DetailRow label="Type de pièce" always>{v.documentType}</DetailRow>
+          <DetailRow label="Soumise le">{formatDateTime(v.createdAt)}</DetailRow>
+          <DetailRow label="Revue le">{formatDateTime(v.reviewedAt)}</DetailRow>
+          <DetailRow label="Revue par">{v.reviewedBy}</DetailRow>
+          <DetailRow label="Motif du refus" valueStyle={{ color: 'var(--color-danger)' }}>{v.rejectionReason}</DetailRow>
+        </DetailList>
+
+        <DetailSection title="Documents">
+          {v.documentFrontUrl || v.documentBackUrl ? (
+            <div className="pc-field-pair" style={{ gap: 12 }}>
+              {v.documentFrontUrl && <DocPreview label="Recto" url={v.documentFrontUrl} />}
+              {v.documentBackUrl && <DocPreview label="Verso" url={v.documentBackUrl} />}
+            </div>
+          ) : (
+            <span style={{ fontSize: 13, color: 'var(--text-faint)' }}>Aucun document téléversé.</span>
+          )}
+        </DetailSection>
+      </div>
+    </Dialog>
+  )
+}
+
+function DocPreview({ label, url }: { label: string; url: string }) {
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, textDecoration: 'none' }}>
+      <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-muted)' }}>{label}</span>
+      <img
+        src={url}
+        alt={label}
+        style={{ width: '100%', maxHeight: 220, objectFit: 'contain', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}
+      />
+    </a>
   )
 }
 
@@ -179,5 +317,17 @@ const headerRowStyle: React.CSSProperties = {
 }
 const rowStyle: React.CSSProperties = {
   display: 'grid', gridTemplateColumns: COL_GRID, gap: 8, padding: '10px 12px',
-  alignItems: 'center', borderBottom: '1px solid var(--border-subtle)',
+  alignItems: 'center', borderBottom: '1px solid var(--border-subtle)', cursor: 'pointer',
+}
+
+const mobileCardStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 8,
+  minWidth: 0,
+  padding: 14,
+  background: 'var(--surface-card)',
+  border: '1px solid var(--border-subtle)',
+  borderRadius: 'var(--radius-md)',
+  cursor: 'pointer',
 }

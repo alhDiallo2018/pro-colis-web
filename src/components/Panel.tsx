@@ -31,11 +31,15 @@ export function Panel({ title, action, children, flush = false, style }: PanelPr
             alignItems: 'center',
             justifyContent: 'space-between',
             flexShrink: 0,
+            // A long title next to an action button ("Nouvelle assistance")
+            // overflows a phone unless the pair is allowed to stack.
+            flexWrap: 'wrap',
+            gap: 10,
             padding: '16px 18px',
             borderBottom: '1px solid var(--border-subtle)',
           }}
         >
-          <h3 style={{ margin: 0, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15.5, color: 'var(--text-strong)' }}>
+          <h3 style={{ margin: 0, minWidth: 0, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15.5, color: 'var(--text-strong)' }}>
             {title}
           </h3>
           {action}

@@ -122,7 +122,7 @@ function SimulatorPanel() {
   return (
     <Panel title="Simulateur de commission">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <Input
             label="Montant de la livraison (FCFA)"
             type="number"

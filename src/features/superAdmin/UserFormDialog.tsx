@@ -122,7 +122,7 @@ export function UserFormDialog({ open, user, onClose }: UserFormDialogProps) {
           onChange={(e) => set({ fullName: e.target.value })}
           icon="person"
         />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div className="pc-field-pair" style={{ gap: 10 }}>
           <Input
             label="Téléphone"
             placeholder="+221 77 000 00 00"
@@ -154,7 +154,7 @@ export function UserFormDialog({ open, user, onClose }: UserFormDialogProps) {
             icon="pin"
           />
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div className="pc-field-pair" style={{ gap: 10 }}>
           <Input
             label="Ville (optionnel)"
             placeholder="Ex: Dakar"

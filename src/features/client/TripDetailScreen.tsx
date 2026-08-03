@@ -108,7 +108,7 @@ export function TripDetailScreen() {
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          <div className="pc-field-trio" style={{ gap: 12 }}>
             <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 12, padding: '14px 16px', textAlign: 'center' }}>
               <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: 20 }}>{price != null ? formatFcfa(price) : '—'}</div>
               <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>Prix</div>

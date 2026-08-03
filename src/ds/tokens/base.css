@@ -3,6 +3,13 @@
    ============================================================ */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Replaced controls carry an intrinsic width (a textarea defaults to ~20
+   `cols`, a select to its widest option) that ignores its container and
+   pushes forms past the viewport on phones. Cap them at their box. */
+input, select, textarea, button { max-width: 100%; }
+textarea { width: 100%; }
+img, video, canvas { max-width: 100%; }
+
 body {
   margin: 0;
   font-family: var(--font-body);

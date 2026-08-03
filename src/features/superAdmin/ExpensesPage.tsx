@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { Button, Dialog, Input, Select, Textarea, SegmentedControl } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
+import { DetailList, DetailRow, DetailSection, DetailText } from '@/components/DetailList'
 import {
   useExpenses,
   useCreateExpense,
@@ -9,7 +10,8 @@ import {
   useDeleteExpense,
 } from '@/features/superAdmin/hooks'
 import { uploadChatPhoto } from '@/lib/api/uploads'
-import { formatFcfa } from '@/lib/format'
+import { formatDate, formatDateTime, formatFcfa } from '@/lib/format'
+import { useIsMobile } from '@/lib/useMediaQuery'
 import type { Expense, ExpenseStatus, ExpensePayload } from '@/lib/api/expenses'
 
 const CATEGORIES = ['Loyer', 'Salaires', 'Marketing', 'Transport', 'Fournitures', 'Maintenance', 'Commissions', 'Autre']
@@ -19,7 +21,9 @@ const STATUS_META: Record<ExpenseStatus, { label: string; color: string; bg: str
   pending: { label: 'En attente', color: 'var(--amber-700)', bg: 'var(--amber-50)' },
 }
 
-const COL_GRID = '110px 1.4fr 110px 120px 100px 110px 70px 90px'
+const COL_GRID = '110px 1.4fr 110px 120px 100px 110px 70px 120px'
+/** Sum of the fixed tracks + a workable minimum for the `1.4fr` libellé. */
+const TABLE_MIN_WIDTH = 960
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10)
@@ -36,6 +40,7 @@ const EMPTY_FORM: ExpensePayload = {
 }
 
 export function ExpensesPage() {
+  const isMobile = useIsMobile()
   const [status, setStatus] = useState('')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
@@ -48,6 +53,7 @@ export function ExpensesPage() {
   const remove = useDeleteExpense()
 
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [detail, setDetail] = useState<Expense | null>(null)
   const [editing, setEditing] = useState<Expense | null>(null)
   const [form, setForm] = useState<ExpensePayload>(EMPTY_FORM)
   const [amountText, setAmountText] = useState('')
@@ -66,6 +72,7 @@ export function ExpensesPage() {
   }
 
   const openEdit = (e: Expense) => {
+    setDetail(null)
     setEditing(e)
     setForm({
       title: e.title,
@@ -119,7 +126,7 @@ export function ExpensesPage() {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="pc-filters">
           <SegmentedControl
             options={[
               { value: '', label: 'Toutes' },
@@ -130,6 +137,7 @@ export function ExpensesPage() {
             onChange={(s) => { setStatus(s); setPage(1) }}
           />
           <Input
+            className="pc-filters-search"
             icon="search"
             placeholder="Rechercher (référence, libellé…)"
             value={search}
@@ -146,7 +154,35 @@ export function ExpensesPage() {
           emptyMessage="Aucune dépense enregistrée."
           onRetry={() => expenses.refetch()}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {items.map((e) => {
+                const st = STATUS_META[e.status] ?? { label: e.status, color: 'var(--text-muted)', bg: 'var(--surface-sunken)' }
+                return (
+                  <div key={e.id} onClick={() => setDetail(e)} style={mobileCardStyle}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--color-primary)' }}>{e.reference}</span>
+                      <span style={{ flex: 'none', fontSize: 11.5, fontWeight: 700, color: st.color, background: st.bg, padding: '3px 10px', borderRadius: 'var(--radius-pill)' }}>{st.label}</span>
+                    </div>
+                    <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-strong)', overflowWrap: 'anywhere' }}>{e.title}</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 14, color: 'var(--text-strong)' }}>{formatFcfa(e.amount)}</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{e.category} · {formatDate(e.spentAt)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, flexWrap: 'wrap' }} onClick={(ev) => ev.stopPropagation()}>
+                      <Button icon="visibility" size="sm" variant="ghost" onClick={() => setDetail(e)}>Détails</Button>
+                      <Button icon="edit" size="sm" variant="ghost" onClick={() => openEdit(e)} aria-label="Modifier" />
+                      <Button icon="delete" size="sm" variant="ghost" tone="danger"
+                        onClick={() => { if (confirm(`Supprimer la dépense ${e.reference} ?`)) remove.mutate(e.id) }}
+                        aria-label="Supprimer" />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+          <div className="pc-table-scroll">
+          <div style={{ minWidth: TABLE_MIN_WIDTH, display: 'flex', flexDirection: 'column', gap: 2 }}>
             <div style={headerRowStyle}>
               <span>Réf.</span>
               <span>Libellé</span>
@@ -161,7 +197,7 @@ export function ExpensesPage() {
             {items.map((e) => {
               const st = STATUS_META[e.status] ?? { label: e.status, color: 'var(--text-muted)', bg: 'var(--surface-sunken)' }
               return (
-                <div key={e.id} style={rowStyle}>
+                <div key={e.id} style={rowStyle} onClick={() => setDetail(e)}>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--color-primary)' }}>{e.reference}</span>
                   <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={e.title}>{e.title}</span>
                   <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{e.category}</span>
@@ -170,7 +206,7 @@ export function ExpensesPage() {
                     <span style={{ fontSize: 11.5, fontWeight: 700, color: st.color, background: st.bg, padding: '3px 10px', borderRadius: 'var(--radius-pill)' }}>{st.label}</span>
                   </span>
                   <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{e.spentAt ? new Date(e.spentAt).toLocaleDateString('fr-FR') : ''}</span>
-                  <span>
+                  <span onClick={(ev) => ev.stopPropagation()}>
                     {e.proofUrl ? (
                       <a href={e.proofUrl} target="_blank" rel="noopener noreferrer" title="Voir le justificatif"
                         style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--color-primary)' }}>
@@ -180,16 +216,19 @@ export function ExpensesPage() {
                       <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>—</span>
                     )}
                   </span>
-                  <span style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                    <Button icon="edit" size="sm" variant="ghost" onClick={() => openEdit(e)} aria-label="Modifier" />
+                  <span style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }} onClick={(ev) => ev.stopPropagation()}>
+                    <Button icon="visibility" size="sm" variant="ghost" onClick={() => setDetail(e)} aria-label="Détails" title="Détails" />
+                    <Button icon="edit" size="sm" variant="ghost" onClick={() => openEdit(e)} aria-label="Modifier" title="Modifier" />
                     <Button icon="delete" size="sm" variant="ghost" tone="danger"
                       onClick={() => { if (confirm(`Supprimer la dépense ${e.reference} ?`)) remove.mutate(e.id) }}
-                      aria-label="Supprimer" />
+                      aria-label="Supprimer" title="Supprimer" />
                   </span>
                 </div>
               )
             })}
           </div>
+          </div>
+          )}
 
           {pagination && pagination.totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12 }}>
@@ -201,9 +240,18 @@ export function ExpensesPage() {
         </QueryState>
       </div>
 
+      {detail && (
+        <ExpenseDetailDialog
+          expense={detail}
+          onClose={() => setDetail(null)}
+          onEdit={() => openEdit(detail)}
+        />
+      )}
+
       {dialogOpen && (
         <Dialog
           open
+          size="lg"
           title={editing ? `Dépense ${editing.reference}` : 'Nouvelle dépense'}
           onClose={() => setDialogOpen(false)}
           actions={
@@ -216,7 +264,7 @@ export function ExpensesPage() {
             </>
           }
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 'min(440px, 80vw)' }}>
+          <div className="pc-form" style={{ gap: 14 }}>
             <Input
               label="Libellé"
               value={form.title}
@@ -288,6 +336,70 @@ export function ExpensesPage() {
   )
 }
 
+/** Fiche lecture seule d'une dépense — tout ce que la ligne du tableau tronque. */
+function ExpenseDetailDialog({ expense, onClose, onEdit }: { expense: Expense; onClose: () => void; onEdit: () => void }) {
+  const st = STATUS_META[expense.status] ?? { label: expense.status, color: 'var(--text-muted)', bg: 'var(--surface-sunken)' }
+  return (
+    <Dialog
+      open
+      size="lg"
+      title={`Dépense ${expense.reference}`}
+      onClose={onClose}
+      actions={
+        <>
+          <Button variant="ghost" onClick={onClose}>Fermer</Button>
+          <Button icon="edit" onClick={onEdit}>Modifier</Button>
+        </>
+      }
+    >
+      <div className="pc-form" style={{ gap: 18 }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-strong)', overflowWrap: 'anywhere' }}>{expense.title}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 6 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: 22, color: 'var(--text-strong)' }}>
+              {formatFcfa(expense.amount)}
+            </span>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: st.color, background: st.bg, padding: '3px 10px', borderRadius: 'var(--radius-pill)' }}>
+              {st.label}
+            </span>
+          </div>
+        </div>
+
+        <DetailList>
+          <DetailRow label="Référence" mono always>{expense.reference}</DetailRow>
+          <DetailRow label="Catégorie" always>{expense.category}</DetailRow>
+          <DetailRow label="Montant" mono always>{formatFcfa(expense.amount)}</DetailRow>
+          <DetailRow label="Devise">{expense.currency}</DetailRow>
+          <DetailRow label="Date de dépense" always>{formatDate(expense.spentAt)}</DetailRow>
+          <DetailRow label="Enregistrée par">{expense.createdBy?.fullName}</DetailRow>
+          <DetailRow label="Créée le">{formatDateTime(expense.createdAt)}</DetailRow>
+          <DetailRow label="Modifiée le">{formatDateTime(expense.updatedAt)}</DetailRow>
+        </DetailList>
+
+        {expense.description ? (
+          <DetailSection title="Description">
+            <DetailText>{expense.description}</DetailText>
+          </DetailSection>
+        ) : null}
+
+        <DetailSection title="Justificatif">
+          {expense.proofUrl ? (
+            <a href={expense.proofUrl} target="_blank" rel="noopener noreferrer" style={{ alignSelf: 'flex-start' }}>
+              <img
+                src={expense.proofUrl}
+                alt="Justificatif"
+                style={{ maxWidth: '100%', maxHeight: 320, objectFit: 'contain', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}
+              />
+            </a>
+          ) : (
+            <span style={{ fontSize: 13, color: 'var(--text-faint)' }}>Aucun justificatif joint.</span>
+          )}
+        </DetailSection>
+      </div>
+    </Dialog>
+  )
+}
+
 function SummaryTile({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div style={{ flex: '1 1 150px', minWidth: 150, background: 'var(--surface-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', padding: '12px 16px' }}>
@@ -317,4 +429,17 @@ const rowStyle: React.CSSProperties = {
   padding: '10px 12px',
   alignItems: 'center',
   borderBottom: '1px solid var(--border-subtle)',
+  cursor: 'pointer',
+}
+
+const mobileCardStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 8,
+  minWidth: 0,
+  padding: 14,
+  background: 'var(--surface-card)',
+  border: '1px solid var(--border-subtle)',
+  borderRadius: 'var(--radius-md)',
+  cursor: 'pointer',
 }

@@ -503,7 +503,7 @@ export function NewParcelScreen() {
         </Card>
 
         {/* Footer nav */}
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           {step > 0 && !createdId && (
             <Button type="button" variant="secondary" size="lg" icon="chevron_left" onClick={back}>
               Retour
@@ -549,6 +549,9 @@ function Stepper({ current, maxStep, onJump }: { current: number; maxStep: numbe
               onClick={() => reachable && onJump(i)}
               style={{
                 flex: 1,
+                // Nowrap labels would otherwise push the rail past a narrow
+                // phone instead of ellipsing inside their own step.
+                minWidth: 0,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -585,6 +588,9 @@ function Stepper({ current, maxStep, onJump }: { current: number; maxStep: numbe
                   fontFamily: 'var(--font-display)',
                   color: active ? 'var(--text-strong)' : done ? 'var(--text-body)' : 'var(--text-faint)',
                   whiteSpace: 'nowrap',
+                  maxWidth: '100%',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
                 }}
               >
                 {label}

@@ -375,7 +375,9 @@ export function CountryCodePicker({ value, onChange, placeholder = 'Rechercher u
             left: 0,
             zIndex: 200,
             marginTop: 4,
-            width: 280,
+            // Anchored at the left of a phone row, so a fixed 280px panel
+            // hangs off the right edge of a small phone.
+            width: 'min(280px, calc(100vw - 32px))',
             maxHeight: 360,
             background: 'var(--surface-card)',
             border: '1px solid var(--border-default)',

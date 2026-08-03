@@ -126,7 +126,7 @@ export function PayCommissionDialog({ parcel, onClose }: PayCommissionDialogProp
           Comment souhaitez-vous payer la commission ?
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div className="pc-field-pair" style={{ gap: 10 }}>
           <button
             type="button"
             onClick={() => setSource('wallet')}

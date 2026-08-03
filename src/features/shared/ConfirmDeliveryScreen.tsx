@@ -175,7 +175,7 @@ export function ConfirmDeliveryScreen() {
           )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginTop: 8 }}>
           {keys.map((k) => {
             if (!k) return <div key="empty" />
             return (

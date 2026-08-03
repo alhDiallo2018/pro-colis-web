@@ -128,7 +128,7 @@ export function BrevoConfigScreen() {
           Envoyez un email de test pour vérifier que la configuration fonctionne.
         </p>
 
-        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <Input
             label="Adresse email de test"
             placeholder="support-technic@sendprocolis.com"

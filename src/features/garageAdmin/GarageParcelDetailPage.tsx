@@ -99,7 +99,7 @@ export function GarageParcelDetailPage() {
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div className="pc-field-pair" style={{ gap: 8 }}>
           {parcel.senderName && <Row label="Expéditeur" value={parcel.senderName} />}
           {parcel.senderPhone && <Row label="Tél. expéditeur" value={parcel.senderPhone} />}
           {parcel.receiverName && <Row label="Destinataire" value={parcel.receiverName} />}

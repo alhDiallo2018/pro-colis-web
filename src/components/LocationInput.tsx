@@ -415,9 +415,9 @@ export function LocationInput({
             </button>
           ))}
           <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 130, height: 1, background: 'var(--border-subtle)' }} />
-            <img src="https://maps.gstatic.com/consumer/images/icons/2x/powered-by-google-on-white.png" alt="" style={{ height: 12 }} />
-            <span style={{ width: 130, height: 1, background: 'var(--border-subtle)' }} />
+            <span style={{ flex: 1, minWidth: 0, height: 1, background: 'var(--border-subtle)' }} />
+            <img src="https://maps.gstatic.com/consumer/images/icons/2x/powered-by-google-on-white.png" alt="" style={{ flex: 'none', height: 12 }} />
+            <span style={{ flex: 1, minWidth: 0, height: 1, background: 'var(--border-subtle)' }} />
           </div>
         </div>
       )}

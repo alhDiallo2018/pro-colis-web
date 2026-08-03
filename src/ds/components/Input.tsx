@@ -15,6 +15,8 @@ export interface InputProps
   disabled?: boolean
   mono?: boolean
   id?: string
+  /** Applied to the field wrapper (layout), not the `<input>` itself. */
+  className?: string
   style?: CSSProperties
 }
 
@@ -32,6 +34,7 @@ export function Input({
   disabled = false,
   mono = false,
   id,
+  className,
   style,
   ...rest
 }: InputProps) {
@@ -40,7 +43,9 @@ export function Input({
   const fid = id || autoId
   const borderColor = error ? 'var(--color-danger)' : focus ? 'var(--border-focus)' : 'var(--border-default)'
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, ...style }}>
+    // `minWidth: 0` keeps the field shrinkable inside a flex row or grid track:
+    // without it the label and suffix set a floor that overflows the parent.
+    <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, ...style }}>
       {label && (
         <label htmlFor={fid} style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, color: 'var(--text-body)' }}>
           {label}
@@ -51,6 +56,7 @@ export function Input({
           display: 'flex',
           alignItems: 'center',
           gap: 8,
+          minWidth: 0,
           height: 48,
           padding: '0 14px',
           background: disabled ? 'var(--surface-sunken)' : 'var(--surface-card)',
@@ -61,7 +67,7 @@ export function Input({
         }}
       >
         {icon && (
-          <span className="material-symbols-rounded" style={{ fontSize: 20, color: focus ? 'var(--color-primary)' : 'var(--text-faint)' }}>
+          <span className="material-symbols-rounded" style={{ flex: 'none', fontSize: 20, color: focus ? 'var(--color-primary)' : 'var(--text-faint)' }}>
             {icon}
           </span>
         )}
@@ -89,11 +95,11 @@ export function Input({
           {...rest}
         />
         {suffix && (
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{suffix}</span>
+          <span style={{ flex: 'none', fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{suffix}</span>
         )}
       </div>
       {(error || help) && (
-        <span style={{ fontSize: 12, color: error ? 'var(--color-danger)' : 'var(--text-muted)' }}>{error || help}</span>
+        <span style={{ fontSize: 12, color: error ? 'var(--color-danger)' : 'var(--text-muted)', overflowWrap: 'anywhere' }}>{error || help}</span>
       )}
     </div>
   )

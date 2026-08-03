@@ -3,6 +3,9 @@ import { Button, Checkbox, Dialog, Input, Select, Textarea, SegmentedControl } f
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { UserSearchSelect } from '@/components/UserSearchSelect'
+import { DetailList, DetailRow, DetailSection, DetailText } from '@/components/DetailList'
+import { formatDateTime } from '@/lib/format'
+import { useIsMobile } from '@/lib/useMediaQuery'
 import {
   useAssistances,
   useCreateAssistance,
@@ -31,7 +34,9 @@ const STATUS_META: Record<AssistanceStatus, { label: string; color: string; bg: 
   resolved: { label: 'Résolu', color: 'var(--green-700)', bg: 'var(--green-50)' },
 }
 
-const COL_GRID = '110px 90px 1.4fr 1fr 100px 120px 130px'
+const COL_GRID = '110px 90px 1.4fr 1fr 100px 120px 150px'
+/** Fixed tracks + a workable minimum for the motif / utilisateur columns. */
+const TABLE_MIN_WIDTH = 980
 
 const EMPTY_FORM: AssistancePayload = {
   channel: 'chat',
@@ -44,6 +49,7 @@ const EMPTY_FORM: AssistancePayload = {
 }
 
 export function AssistancesPage() {
+  const isMobile = useIsMobile()
   const role = useAuthStore((s) => s.user?.role)
   const isSupport = isSupportRole(role)
   // La suppression efface la trace d'une intervention : elle reste au super
@@ -70,6 +76,7 @@ export function AssistancesPage() {
   const remove = useDeleteAssistance()
 
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [detail, setDetail] = useState<Assistance | null>(null)
   const [editing, setEditing] = useState<Assistance | null>(null)
   const [form, setForm] = useState<AssistancePayload>(EMPTY_FORM)
   /** Personne assistée non inscrite : bascule sur la saisie libre. */
@@ -91,6 +98,7 @@ export function AssistancesPage() {
   }
 
   const openEdit = (a: Assistance) => {
+    setDetail(null)
     setEditing(a)
     setForm({
       channel: a.channel,
@@ -163,7 +171,7 @@ export function AssistancesPage() {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="pc-filters">
           <SegmentedControl
             options={[
               { value: '', label: 'Tous' },
@@ -175,6 +183,7 @@ export function AssistancesPage() {
             onChange={(s) => { setStatus(s); setPage(1) }}
           />
           <Input
+            className="pc-filters-search"
             icon="search"
             placeholder="Rechercher (code, motif, utilisateur…)"
             value={search}
@@ -196,7 +205,45 @@ export function AssistancesPage() {
           emptyMessage="Aucune assistance enregistrée."
           onRetry={() => assistances.refetch()}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {items.map((a) => {
+                const ch = CHANNEL_META[a.channel] ?? { label: a.channel, icon: 'help', color: 'var(--text-muted)' }
+                const st = STATUS_META[a.status] ?? { label: a.status, color: 'var(--text-muted)', bg: 'var(--surface-sunken)' }
+                const who = a.user?.fullName ?? a.contactName ?? '—'
+                return (
+                  <div key={a.id} onClick={() => setDetail(a)} style={mobileCardStyle}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--color-primary)' }}>{a.code}</span>
+                      <span style={{ flex: 'none', fontSize: 11.5, fontWeight: 700, color: st.color, background: st.bg, padding: '3px 10px', borderRadius: 'var(--radius-pill)' }}>{st.label}</span>
+                    </div>
+                    <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-strong)', overflowWrap: 'anywhere' }}>{a.subject}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 12, color: 'var(--text-muted)' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: ch.color, fontWeight: 600 }}>
+                        <span className="material-symbols-rounded" style={{ fontSize: 15 }}>{ch.icon}</span>
+                        {ch.label}
+                      </span>
+                      <span style={{ overflowWrap: 'anywhere' }}>{who}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, flexWrap: 'wrap' }} onClick={(ev) => ev.stopPropagation()}>
+                      <Button icon="visibility" size="sm" variant="ghost" onClick={() => setDetail(a)}>Détails</Button>
+                      {a.status !== 'resolved' && (
+                        <Button icon="task_alt" size="sm" variant="ghost" onClick={() => resolve(a)} aria-label="Marquer résolu" title="Marquer résolu" />
+                      )}
+                      <Button icon="edit" size="sm" variant="ghost" onClick={() => openEdit(a)} aria-label="Modifier" />
+                      {canDelete && (
+                        <Button icon="delete" size="sm" variant="ghost" tone="danger"
+                          onClick={() => { if (confirm(`Supprimer l'assistance ${a.code} ?`)) remove.mutate(a.id) }}
+                          aria-label="Supprimer" />
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+          <div className="pc-table-scroll">
+          <div style={{ minWidth: TABLE_MIN_WIDTH, display: 'flex', flexDirection: 'column', gap: 2 }}>
             <div style={headerRowStyle}>
               <span>Code</span>
               <span>Canal</span>
@@ -213,7 +260,7 @@ export function AssistancesPage() {
               const who = a.user?.fullName ?? a.contactName ?? '—'
               const contact = a.user?.phone ?? a.contactPhone ?? ''
               return (
-                <div key={a.id} style={rowStyle}>
+                <div key={a.id} style={rowStyle} onClick={() => setDetail(a)}>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--color-primary)' }}>{a.code}</span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: ch.color, fontWeight: 600 }}>
                     <span className="material-symbols-rounded" style={{ fontSize: 16 }}>{ch.icon}</span>
@@ -242,7 +289,8 @@ export function AssistancesPage() {
                     <div>{a.handledBy?.fullName ?? '—'}</div>
                     <div style={{ fontSize: 10.5 }}>{a.createdAt ? new Date(a.createdAt).toLocaleDateString('fr-FR') : ''}</div>
                   </span>
-                  <span style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                  <span style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }} onClick={(ev) => ev.stopPropagation()}>
+                    <Button icon="visibility" size="sm" variant="ghost" onClick={() => setDetail(a)} aria-label="Détails" title="Détails" />
                     {a.status !== 'resolved' && (
                       <Button
                         icon="task_alt"
@@ -253,17 +301,19 @@ export function AssistancesPage() {
                         title="Marquer résolu"
                       />
                     )}
-                    <Button icon="edit" size="sm" variant="ghost" onClick={() => openEdit(a)} aria-label="Modifier" />
+                    <Button icon="edit" size="sm" variant="ghost" onClick={() => openEdit(a)} aria-label="Modifier" title="Modifier" />
                     {canDelete && (
                       <Button icon="delete" size="sm" variant="ghost" tone="danger"
                         onClick={() => { if (confirm(`Supprimer l'assistance ${a.code} ?`)) remove.mutate(a.id) }}
-                        aria-label="Supprimer" />
+                        aria-label="Supprimer" title="Supprimer" />
                     )}
                   </span>
                 </div>
               )
             })}
           </div>
+          </div>
+          )}
 
           {pagination && pagination.totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12 }}>
@@ -275,9 +325,18 @@ export function AssistancesPage() {
         </QueryState>
       </div>
 
+      {detail && (
+        <AssistanceDetailDialog
+          assistance={detail}
+          onClose={() => setDetail(null)}
+          onEdit={() => openEdit(detail)}
+        />
+      )}
+
       {dialogOpen && (
         <Dialog
           open
+          size="lg"
           title={editing ? `Assistance ${editing.code}` : 'Nouvelle assistance'}
           onClose={() => setDialogOpen(false)}
           actions={
@@ -289,7 +348,7 @@ export function AssistancesPage() {
             </>
           }
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 'min(420px, 80vw)' }}>
+          <div className="pc-form" style={{ gap: 14 }}>
             <Select
               label="Canal"
               value={form.channel}
@@ -368,6 +427,69 @@ export function AssistancesPage() {
   )
 }
 
+/** Fiche lecture seule — les notes de l'échange n'étaient visibles qu'en édition. */
+function AssistanceDetailDialog({ assistance, onClose, onEdit }: { assistance: Assistance; onClose: () => void; onEdit: () => void }) {
+  const a = assistance
+  const ch = CHANNEL_META[a.channel] ?? { label: a.channel, icon: 'help', color: 'var(--text-muted)' }
+  const st = STATUS_META[a.status] ?? { label: a.status, color: 'var(--text-muted)', bg: 'var(--surface-sunken)' }
+  return (
+    <Dialog
+      open
+      size="lg"
+      title={`Assistance ${a.code}`}
+      onClose={onClose}
+      actions={
+        <>
+          <Button variant="ghost" onClick={onClose}>Fermer</Button>
+          <Button icon="edit" onClick={onEdit}>Modifier</Button>
+        </>
+      }
+    >
+      <div className="pc-form" style={{ gap: 18 }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-strong)', overflowWrap: 'anywhere' }}>{a.subject}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 600, color: ch.color }}>
+              <span className="material-symbols-rounded" style={{ fontSize: 16 }}>{ch.icon}</span>
+              {ch.label}
+            </span>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: st.color, background: st.bg, padding: '3px 10px', borderRadius: 'var(--radius-pill)' }}>
+              {st.label}
+            </span>
+          </div>
+        </div>
+
+        <DetailSection title="Personne assistée">
+          <DetailList>
+            <DetailRow label="Nom" always>{a.user?.fullName ?? a.contactName}</DetailRow>
+            <DetailRow label="Téléphone" mono>{a.user?.phone ?? a.contactPhone}</DetailRow>
+            <DetailRow label="E-mail">{a.user?.email}</DetailRow>
+            <DetailRow label="Compte" always>
+              {a.user ? `Inscrit · ${a.user.role}` : 'Non inscrit (saisie libre)'}
+            </DetailRow>
+          </DetailList>
+        </DetailSection>
+
+        <DetailSection title="Suivi">
+          <DetailList>
+            <DetailRow label="Code" mono always>{a.code}</DetailRow>
+            <DetailRow label="Traité par" always>{a.handledBy?.fullName}</DetailRow>
+            <DetailRow label="Ouverte le">{formatDateTime(a.createdAt)}</DetailRow>
+            <DetailRow label="Résolue le">{formatDateTime(a.resolvedAt)}</DetailRow>
+            <DetailRow label="Mise à jour">{formatDateTime(a.updatedAt)}</DetailRow>
+          </DetailList>
+        </DetailSection>
+
+        <DetailSection title="Notes">
+          {a.notes ? <DetailText>{a.notes}</DetailText> : (
+            <span style={{ fontSize: 13, color: 'var(--text-faint)' }}>Aucune note enregistrée.</span>
+          )}
+        </DetailSection>
+      </div>
+    </Dialog>
+  )
+}
+
 function SummaryTile({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div style={{ flex: '1 1 120px', minWidth: 120, background: 'var(--surface-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', padding: '12px 16px' }}>
@@ -413,4 +535,17 @@ const rowStyle: React.CSSProperties = {
   padding: '10px 12px',
   alignItems: 'center',
   borderBottom: '1px solid var(--border-subtle)',
+  cursor: 'pointer',
+}
+
+const mobileCardStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 8,
+  minWidth: 0,
+  padding: 14,
+  background: 'var(--surface-card)',
+  border: '1px solid var(--border-subtle)',
+  borderRadius: 'var(--radius-md)',
+  cursor: 'pointer',
 }

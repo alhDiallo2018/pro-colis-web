@@ -17,6 +17,8 @@ export interface SelectProps
   error?: ReactNode
   disabled?: boolean
   id?: string
+  /** Applied to the field wrapper (layout), not the `<select>` itself. */
+  className?: string
   style?: CSSProperties
 }
 
@@ -31,6 +33,7 @@ export function Select({
   error,
   disabled = false,
   id,
+  className,
   style,
   ...rest
 }: SelectProps) {
@@ -40,7 +43,9 @@ export function Select({
   const borderColor = error ? 'var(--color-danger)' : focus ? 'var(--border-focus)' : 'var(--border-default)'
   const norm: SelectOption[] = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o))
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, ...style }}>
+    // `minWidth: 0` — a native select is as wide as its widest option unless
+    // its container is allowed to shrink, which blows out narrow form rows.
+    <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, ...style }}>
       {label && (
         <label htmlFor={fid} style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, color: 'var(--text-body)' }}>
           {label}
@@ -52,6 +57,7 @@ export function Select({
           display: 'flex',
           alignItems: 'center',
           gap: 8,
+          minWidth: 0,
           height: 48,
           padding: '0 14px',
           background: disabled ? 'var(--surface-sunken)' : 'var(--surface-card)',
@@ -62,7 +68,7 @@ export function Select({
         }}
       >
         {icon && (
-          <span className="material-symbols-rounded" style={{ fontSize: 20, color: focus ? 'var(--color-primary)' : 'var(--text-faint)' }}>
+          <span className="material-symbols-rounded" style={{ flex: 'none', fontSize: 20, color: focus ? 'var(--color-primary)' : 'var(--text-faint)' }}>
             {icon}
           </span>
         )}
@@ -86,6 +92,7 @@ export function Select({
             fontSize: 15,
             color: value ? 'var(--text-strong)' : 'var(--text-faint)',
             cursor: disabled ? 'not-allowed' : 'pointer',
+            textOverflow: 'ellipsis',
           }}
           {...rest}
         >
@@ -100,11 +107,11 @@ export function Select({
             </option>
           ))}
         </select>
-        <span className="material-symbols-rounded" style={{ fontSize: 22, color: 'var(--text-muted)', pointerEvents: 'none' }}>
+        <span className="material-symbols-rounded" style={{ flex: 'none', fontSize: 22, color: 'var(--text-muted)', pointerEvents: 'none' }}>
           expand_more
         </span>
       </div>
-      {error && <span style={{ fontSize: 12, color: 'var(--color-danger)' }}>{error}</span>}
+      {error && <span style={{ fontSize: 12, color: 'var(--color-danger)', overflowWrap: 'anywhere' }}>{error}</span>}
     </div>
   )
 }

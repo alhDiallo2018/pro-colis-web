@@ -13,6 +13,8 @@ export interface TextareaProps
   maxLength?: number
   disabled?: boolean
   id?: string
+  /** Applied to the field wrapper (layout), not the `<textarea>` itself. */
+  className?: string
   style?: CSSProperties
 }
 
@@ -28,6 +30,7 @@ export function Textarea({
   maxLength,
   disabled = false,
   id,
+  className,
   style,
   ...rest
 }: TextareaProps) {
@@ -36,7 +39,9 @@ export function Textarea({
   const fid = id || autoId
   const borderColor = error ? 'var(--color-danger)' : focus ? 'var(--border-focus)' : 'var(--border-default)'
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, ...style }}>
+    // A textarea's intrinsic width comes from `cols` (~20 chars), so both the
+    // wrapper and the control must be told to follow the container instead.
+    <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, ...style }}>
       {label && (
         <label htmlFor={fid} style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, color: 'var(--text-body)' }}>
           {label}
@@ -54,6 +59,9 @@ export function Textarea({
         onBlur={() => setFocus(false)}
         style={{
           resize: 'vertical',
+          width: '100%',
+          minWidth: 0,
+          maxWidth: '100%',
           padding: '12px 14px',
           background: disabled ? 'var(--surface-sunken)' : 'var(--surface-card)',
           border: `1px solid ${borderColor}`,
@@ -69,10 +77,10 @@ export function Textarea({
         }}
         {...rest}
       />
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 12, color: error ? 'var(--color-danger)' : 'var(--text-muted)' }}>{error || help || ''}</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+        <span style={{ fontSize: 12, color: error ? 'var(--color-danger)' : 'var(--text-muted)', minWidth: 0, overflowWrap: 'anywhere' }}>{error || help || ''}</span>
         {maxLength != null && (
-          <span style={{ fontSize: 12, color: 'var(--text-faint)', fontFamily: 'var(--font-mono)' }}>
+          <span style={{ flex: 'none', fontSize: 12, color: 'var(--text-faint)', fontFamily: 'var(--font-mono)' }}>
             {(value || '').length}/{maxLength}
           </span>
         )}

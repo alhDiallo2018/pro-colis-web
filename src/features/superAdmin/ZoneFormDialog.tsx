@@ -164,12 +164,12 @@ export function ZoneFormDialog({ open, zone, onClose }: Props) {
           icon="label"
         />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div className="pc-field-pair" style={{ gap: 10 }}>
           <Input label="Ville" value={form.city} onChange={(e) => set({ city: e.target.value })} />
           <Input label="Pays" value={form.country} onChange={(e) => set({ country: e.target.value })} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div className="pc-field-pair" style={{ gap: 10 }}>
           <Input label="Latitude" value={form.latitude} onChange={(e) => set({ latitude: e.target.value })} disabled />
           <Input label="Longitude" value={form.longitude} onChange={(e) => set({ longitude: e.target.value })} disabled />
         </div>

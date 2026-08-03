@@ -290,7 +290,7 @@ function BroadcastForm({
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div className="pc-field-pair" style={{ gap: 14 }}>
         <Input label="Du" type="date" value={b.startsAt} onChange={(e) => set('startsAt', e.target.value)} />
         <Input label="Au" type="date" value={b.endsAt} onChange={(e) => set('endsAt', e.target.value)} />
       </div>

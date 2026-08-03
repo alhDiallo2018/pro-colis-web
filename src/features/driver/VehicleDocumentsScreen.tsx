@@ -264,7 +264,7 @@ export function VehicleDocumentsScreen() {
                 </span>
                 {isDocComplete(doc.type) && <Badge tone="green">Complet</Badge>}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="pc-field-pair" style={{ gap: 10 }}>
                 {(['front', 'back'] as const).map((side) => {
                   const slotKey = `${doc.type}_${side}`
                   const url = docUrls[slotKey]

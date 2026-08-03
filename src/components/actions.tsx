@@ -7,12 +7,13 @@ import type { AppNotification } from '@/lib/api/notifications'
 import { useAuthStore } from '@/store/auth'
 import { notificationsPathForRole } from '@/lib/notification-links'
 
-/** Topbar primary button that navigates to a route. */
+/** Topbar primary button that navigates to a route. Icon-only on phones. */
 export function NavButton({ to, icon, children }: { to: string; icon?: string; children: React.ReactNode }) {
   const navigate = useNavigate()
+  const label = typeof children === 'string' ? children.trim() : undefined
   return (
-    <Button icon={icon} onClick={() => navigate(to)}>
-      {children}
+    <Button icon={icon} onClick={() => navigate(to)} aria-label={label} title={label}>
+      <span className="pc-topbar-cta-label">{children}</span>
     </Button>
   )
 }

@@ -2,11 +2,19 @@ import type { CSSProperties, ReactNode } from 'react'
 
 export type DialogIconTone = 'primary' | 'danger' | 'green' | 'amber'
 
+/** Width steps. Anything wider than the viewport is clamped by `.pc-dialog`. */
+export type DialogSize = 'sm' | 'md' | 'lg' | 'xl'
+
+const SIZES: Record<DialogSize, number> = { sm: 360, md: 420, lg: 560, xl: 720 }
+
 export interface DialogProps {
   open?: boolean
   title?: ReactNode
   icon?: string
   iconTone?: DialogIconTone
+  /** Max width step. Prefer this over a hard `min-width` on the body, which
+   *  overflows the dialog instead of widening it. */
+  size?: DialogSize
   children?: ReactNode
   actions?: ReactNode
   onClose?: () => void
@@ -16,7 +24,7 @@ export interface DialogProps {
 const KEYFRAMES =
   '@keyframes pc-fade{from{opacity:0}to{opacity:1}}@keyframes pc-pop{from{opacity:0;transform:translateY(8px) scale(0.97)}to{opacity:1;transform:none}}'
 
-export function Dialog({ open = true, title, icon, iconTone = 'primary', children, actions, onClose, style }: DialogProps) {
+export function Dialog({ open = true, title, icon, iconTone = 'primary', size = 'md', children, actions, onClose, style }: DialogProps) {
   if (!open) return null
 
   const tones: Record<DialogIconTone, [string, string]> = {
@@ -27,6 +35,10 @@ export function Dialog({ open = true, title, icon, iconTone = 'primary', childre
   }
   const [bg, fg] = tones[iconTone] || tones.primary
   const hasHeader = Boolean(icon || title)
+  const maxWidth = SIZES[size] ?? SIZES.md
+  // Roomier dialogs get a taller cap too — a 720px form squeezed into 560px of
+  // height scrolls for no reason on a desktop screen.
+  const maxHeight = maxWidth > SIZES.md ? 'min(88vh, 760px)' : 'min(85vh, 560px)'
 
   return (
     <div
@@ -51,8 +63,8 @@ export function Dialog({ open = true, title, icon, iconTone = 'primary', childre
         className="pc-dialog"
         style={{
           width: '100%',
-          maxWidth: 420,
-          maxHeight: 'min(85vh, 560px)',
+          maxWidth,
+          maxHeight,
           background: 'var(--surface-card)',
           borderRadius: 'var(--radius-lg)',
           boxShadow: 'var(--shadow-lg)',
@@ -65,6 +77,7 @@ export function Dialog({ open = true, title, icon, iconTone = 'primary', childre
       >
         {hasHeader && (
           <div
+            className="pc-dialog-head"
             style={{
               flexShrink: 0,
               padding: 'var(--space-6) var(--space-6) 0',
@@ -112,8 +125,10 @@ export function Dialog({ open = true, title, icon, iconTone = 'primary', childre
 
         {children && (
           <div
+            className="pc-dialog-body"
             style={{
               flex: '1 1 auto',
+              minWidth: 0,
               minHeight: 0,
               overflowY: 'auto',
               overscrollBehavior: 'contain',
@@ -126,6 +141,7 @@ export function Dialog({ open = true, title, icon, iconTone = 'primary', childre
 
         {actions && (
           <div
+            className="pc-dialog-actions"
             style={{
               flexShrink: 0,
               display: 'flex',
