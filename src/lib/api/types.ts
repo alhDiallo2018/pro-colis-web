@@ -75,6 +75,9 @@ export interface Zone {
   displayName?: string | null
   placeId?: string | null
   country?: string | null
+  /** Sérialisé par l'API (colonne `zones.region`) — l'ancien type Garage l'avait
+   *  aussi, d'où les écrans qui l'affichent depuis la migration garage → zone. */
+  region?: string | null
   city?: string | null
   latitude: number
   longitude: number

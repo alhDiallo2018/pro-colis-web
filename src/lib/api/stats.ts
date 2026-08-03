@@ -120,7 +120,9 @@ export async function globalStats(): Promise<GlobalStats> {
     totalUsers: num('totalUsers'),
     totalDrivers: num('totalDrivers'),
     totalClients: num('totalClients'),
-    totalZones: num('totalGarages'),
+    // `totalGarages` comptait la table héritée : repli seulement pour une API
+    // antérieure à l'ajout de `totalZones`.
+    totalZones: s.totalZones != null ? num('totalZones') : num('totalGarages'),
     totalVehicles: num('totalVehicles'),
     totalParcels: num('totalParcels'),
     parcelsInTransit: num('parcelsInTransit'),

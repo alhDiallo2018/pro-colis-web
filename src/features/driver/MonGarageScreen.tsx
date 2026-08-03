@@ -44,9 +44,10 @@ export function MonGarageScreen() {
             <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--fs-h2)', color: 'var(--text-strong)' }}>
               {zone?.name ?? user?.zoneName ?? 'Ma zone'}
             </div>
+            {/* Une zone n'a pas de téléphone : l'ancien garage en portait un,
+                le point de contact est désormais l'administrateur. */}
             <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', marginTop: 2 }}>
               {[zone?.city, zone?.region].filter(Boolean).join(', ') || '—'}
-              {zone?.phone && ` · ${zone.phone}`}
             </div>
           </div>
         </div>

@@ -111,7 +111,7 @@ export function StaffProfilScreen() {
             <StatBox icon="group" tone="primary" value={platform?.totalUsers ?? '—'} label="Utilisateurs" />
             <StatBox icon="local_shipping" tone="teal" value={platform?.totalDrivers ?? '—'} label="Chauffeurs" />
             <StatBox icon="person" tone="neutral" value={platform?.totalClients ?? '—'} label="Clients" />
-            <StatBox icon="garage" tone="amber" value={platform?.totalGarages ?? '—'} label="Zones" />
+            <StatBox icon="garage" tone="amber" value={platform?.totalZones ?? '—'} label="Zones" />
             <StatBox icon="package_2" tone="primary" value={platform?.totalParcels ?? '—'} label="Colis" />
             <StatBox icon="task_alt" tone="green" value={platform?.parcelsDeliveredToday ?? '—'} label="Livrés aujourd'hui" />
           </div>

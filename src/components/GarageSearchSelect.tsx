@@ -64,12 +64,15 @@ export function GarageSearchSelect({
   const filtered = useMemo(() => {
     if (!query) return zones
     const q = query.toLowerCase()
+    // Une zone n'a pas d'adresse postale (contrairement à l'ancien garage) :
+    // `displayName` porte le libellé Google Places, c'est le champ le plus large
+    // sur lequel chercher.
     return zones.filter(
       (z) =>
         z.name.toLowerCase().includes(q) ||
         (z.city ?? '').toLowerCase().includes(q) ||
         (z.region ?? '').toLowerCase().includes(q) ||
-        (z.address ?? '').toLowerCase().includes(q),
+        (z.displayName ?? '').toLowerCase().includes(q),
     )
   }, [zones, query])
 
@@ -292,6 +295,9 @@ function ZoneRow({
   indented?: boolean
 }) {
   const subtitle = [zone.city, zone.region].filter(Boolean).join(', ')
+  // L'API retombe sur `displayName: name` à la création : ne l'afficher que
+  // lorsqu'il apporte réellement quelque chose au-delà du nom déjà en titre.
+  const detail = zone.displayName && zone.displayName !== zone.name ? zone.displayName : null
   return (
     <button
       type="button"
@@ -314,10 +320,10 @@ function ZoneRow({
       <Icon name="garage" size={18} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--text-strong)' }}>{zone.name}</div>
-        {(subtitle || zone.address) && (
+        {(subtitle || detail) && (
           <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
             {subtitle}
-            {zone.address ? `${subtitle ? ' · ' : ''}${zone.address}` : ''}
+            {detail ? `${subtitle ? ' · ' : ''}${detail}` : ''}
           </div>
         )}
       </div>
