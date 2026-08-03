@@ -36,6 +36,16 @@ export async function markAllRead(): Promise<void> {
   await api.post('/notifications/read-all')
 }
 
+/** Retire une notification de la boîte de l'utilisateur (définitif). */
+export async function remove(id: string): Promise<void> {
+  await api.delete(`/notifications/${id}`)
+}
+
+/** Vide entièrement la boîte de l'utilisateur. */
+export async function removeAll(): Promise<void> {
+  await api.delete('/notifications/all')
+}
+
 export async function getPreferences(): Promise<NotificationPreference[]> {
   const { data } = await api.get('/notifications/preferences')
   return (data.preferences ?? []) as NotificationPreference[]

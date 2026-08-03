@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { RequireAuth, RequireRole } from './guards'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RegisterPage } from '@/features/auth/RegisterPage'
+import { ForgotPinPage } from '@/features/auth/ForgotPinPage'
 import { LandingPage } from '@/features/marketing/LandingPage'
 import { AProposPage } from '@/features/marketing/AProposPage'
 import { ContactPage } from '@/features/marketing/ContactPage'
@@ -47,7 +48,14 @@ import { AdminSupportScreen } from '@/features/shared/AdminSupportScreen'
 import { SupportDashboard } from '@/features/shared/SupportDashboard'
 import { SupportConversationsScreen } from '@/features/shared/SupportConversationsScreen'
 import { StaffProfilScreen } from '@/features/shared/StaffProfilScreen'
+import { LogsScreen } from '@/features/shared/observability/LogsScreen'
+import { AuditLogsScreen } from '@/features/shared/observability/AuditLogsScreen'
+import { IncidentsScreen } from '@/features/shared/observability/IncidentsScreen'
+import { TicketsScreen } from '@/features/shared/supportRoles/TicketsScreen'
+import { LeadsScreen } from '@/features/shared/supportRoles/LeadsScreen'
+import { CoverageScreen } from '@/features/shared/supportRoles/CoverageScreen'
 import { RoleHomeRedirect } from './RoleHomeRedirect'
+import { SupportShell } from './SupportShell'
 import { AvailabilityToggle } from '@/features/driver/AvailabilityToggle'
 import { SuperAdminDashboard } from '@/features/superAdmin/SuperAdminDashboard'
 import { ColisPage } from '@/features/superAdmin/ColisPage'
@@ -55,6 +63,8 @@ import { ChauffeursPage } from '@/features/superAdmin/ChauffeursPage'
 import { UtilisateursPage } from '@/features/superAdmin/UtilisateursPage'
 import { ZonesPage } from '@/features/superAdmin/ZonesPage'
 import { StatistiquesPage } from '@/features/superAdmin/StatistiquesPage'
+import { RapportsPage } from '@/features/superAdmin/RapportsPage'
+import { SystemePage } from '@/features/superAdmin/SystemePage'
 import { ConfigConsommationPage } from '@/features/superAdmin/ConfigConsommationPage'
 import { FinanceDashboardPage } from '@/features/superAdmin/FinanceDashboardPage'
 import { WalletsPage } from '@/features/superAdmin/WalletsPage'
@@ -170,8 +180,18 @@ const SUPER_NAV: NavSection[] = [
       { label: 'Assistances', icon: 'contact_support', to: '/admin/assistances' },
       { label: 'Vérifications identité', icon: 'verified_user', to: '/admin/verifications' },
       { label: 'Statistiques', icon: 'monitoring', to: '/admin/stats' },
+      { label: 'Rapports', icon: 'summarize', to: '/admin/rapports' },
       { label: 'Notifications Brevo', icon: 'mail', to: '/admin/notifications-brevo' },
       { label: 'Bandeaux', icon: 'campaign', to: '/admin/broadcasts' },
+    ],
+  },
+  {
+    heading: 'Supervision',
+    items: [
+      { label: 'Journaux techniques', icon: 'terminal', to: '/admin/logs' },
+      { label: 'Incidents', icon: 'bolt', to: '/admin/incidents' },
+      { label: "Journal d'audit", icon: 'history', to: '/admin/audit' },
+      { label: 'Système & webhooks', icon: 'dns', to: '/admin/systeme' },
     ],
   },
   {
@@ -180,24 +200,11 @@ const SUPER_NAV: NavSection[] = [
   },
 ]
 
-const SUPPORT_NAV: NavSection[] = [
-  {
-    items: [
-      { label: 'Tableau de bord', icon: 'dashboard', to: '/support-admin', end: true },
-      { label: 'Support', icon: 'support_agent', to: '/support-admin/conversations' },
-      { label: 'Assistances', icon: 'contact_support', to: '/support-admin/assistances' },
-      { label: 'Colis', icon: 'package_2', to: '/support-admin/colis' },
-      { label: 'Chauffeurs', icon: 'local_shipping', to: '/support-admin/chauffeurs' },
-      { label: 'Utilisateurs', icon: 'group', to: '/support-admin/users' },
-      { label: 'Profil', icon: 'person', to: '/support-admin/profil' },
-    ],
-  },
-]
-
 export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
+  { path: '/pin-oublie', element: <ForgotPinPage /> },
   { path: '/help', element: <HelpScreen /> },
   {
     path: '/support',
@@ -371,6 +378,11 @@ export const router = createBrowserRouter([
       { path: 'paydunya', element: <PaydunyaConfigScreen /> },
       { path: 'broadcasts', element: <BroadcastsPage /> },
       { path: 'chauffeurs/:userId', element: <DriverDetailPage /> },
+      { path: 'logs', element: <LogsScreen /> },
+      { path: 'audit', element: <AuditLogsScreen /> },
+      { path: 'incidents', element: <IncidentsScreen /> },
+      { path: 'rapports', element: <RapportsPage /> },
+      { path: 'systeme', element: <SystemePage /> },
       { path: 'support', element: <AdminSupportScreen /> },
       { path: 'profil', element: <StaffProfilScreen /> },
       { path: 'notifications', element: <NotificationsScreen /> },
@@ -382,13 +394,7 @@ export const router = createBrowserRouter([
     path: '/support-admin',
     element: (
       <RequireRole roles={['super_admin', 'support', 'support_technique', 'support_commercial']}>
-        <DashboardLayout
-          nav={SUPPORT_NAV}
-          roleLabel="Support"
-          greetOnIndex
-          banner={<BroadcastBanner />}
-          actions={<NotifButton />}
-        />
+        <SupportShell />
       </RequireRole>
     ),
     children: [
@@ -398,6 +404,59 @@ export const router = createBrowserRouter([
       { path: 'colis', element: <ColisPage /> },
       { path: 'chauffeurs', element: <ChauffeursPage /> },
       { path: 'users', element: <UtilisateursPage /> },
+      // Les tickets, les journaux techniques et les incidents suivent le
+      // périmètre du backend : mandat technique uniquement, le support
+      // commercial est exclu.
+      {
+        path: 'tickets',
+        element: (
+          <RequireRole roles={['super_admin', 'support_technique']}>
+            <TicketsScreen />
+          </RequireRole>
+        ),
+      },
+      // Symétriquement, le pipeline et la couverture réseau sont réservés au
+      // mandat commercial.
+      {
+        path: 'prospects',
+        element: (
+          <RequireRole roles={['super_admin', 'support_commercial']}>
+            <LeadsScreen />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'couverture',
+        element: (
+          <RequireRole roles={['super_admin', 'support_commercial']}>
+            <CoverageScreen />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'logs',
+        element: (
+          <RequireRole roles={['super_admin', 'support_technique']}>
+            <LogsScreen />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'incidents',
+        element: (
+          <RequireRole roles={['super_admin', 'support_technique']}>
+            <IncidentsScreen />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'audit',
+        element: (
+          <RequireRole roles={['super_admin', 'support', 'support_technique']}>
+            <AuditLogsScreen />
+          </RequireRole>
+        ),
+      },
       { path: 'profil', element: <StaffProfilScreen /> },
       { path: 'notifications', element: <NotificationsScreen /> },
     ],

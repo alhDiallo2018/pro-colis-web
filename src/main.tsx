@@ -2,6 +2,11 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@/ds'
 import App from './App.tsx'
+import { initErrorReporting } from '@/lib/observability/faro'
+
+// Avant le rendu : une exception levée pendant le montage de l'application doit
+// déjà être remontée aux journaux techniques.
+initErrorReporting()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

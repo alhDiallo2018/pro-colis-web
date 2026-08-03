@@ -4,7 +4,7 @@ import { Button, Dialog, Icon } from '@/ds'
 import * as messagesApi from '@/lib/api/messages'
 import * as bidsApi from '@/lib/api/bids'
 import * as adsApi from '@/lib/api/advertisements'
-import type { ChatMessage } from '@/lib/api/messages'
+import { isMessageEditable, type ChatMessage } from '@/lib/api/messages'
 import { uploadChatAudio, uploadChatPhoto, uploadChatVideo } from '@/lib/api/uploads'
 import { useAuthStore } from '@/store/auth'
 
@@ -76,6 +76,24 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
     },
   })
 
+  // Édition / suppression logique d'un message déjà envoyé. Les deux invalident
+  // aussi la liste des conversations, dont l'aperçu affiche ce même texte.
+  const invalidateThread = () => {
+    qc.invalidateQueries({ queryKey: key })
+    qc.invalidateQueries({ queryKey: ['messages', 'conversations'] })
+  }
+
+  const editMessage = useMutation({
+    mutationFn: ({ messageId, body }: { messageId: string; body: string }) =>
+      messagesApi.update(messageId, body),
+    onSuccess: invalidateThread,
+  })
+
+  const deleteMessage = useMutation({
+    mutationFn: (messageId: string) => messagesApi.remove(messageId),
+    onSuccess: invalidateThread,
+  })
+
   const negotiate = useMutation({
     mutationFn: (payload: { price: number; message?: string }) => {
       if (offerId && advertisementId) {
@@ -110,6 +128,7 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
   })
 
   const [text, setText] = useState('')
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null)
   const [showPrice, setShowPrice] = useState(false)
   const [priceVal, setPriceVal] = useState('')
   const [showParcelDetail, setShowParcelDetail] = useState(false)
@@ -368,6 +387,9 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
                 isLastNonMinePrice={m.id === lastNonMinePriceId}
                 onAcceptPrice={(amount) => handleAcceptPrice(amount)}
                 onCounterPrice={(amount) => handleCounterPrice(amount)}
+                onEdit={(body) => editMessage.mutate({ messageId: m.id, body })}
+                onDelete={() => setPendingDelete(m.id)}
+                busy={editMessage.isPending || deleteMessage.isPending}
               />
             ))
           })()
@@ -497,6 +519,36 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
         )}
       </div>
 
+      {/* Suppression d'un message : irréversible côté fil, donc confirmée. */}
+      {pendingDelete && (
+        <Dialog
+          open
+          onClose={() => setPendingDelete(null)}
+          icon="delete" iconTone="danger"
+          title="Supprimer ce message ?"
+          style={{ maxWidth: 400 }}
+          actions={
+            <>
+              <Button variant="secondary" block onClick={() => setPendingDelete(null)}>Annuler</Button>
+              <Button
+                variant="danger"
+                block
+                loading={deleteMessage.isPending}
+                onClick={() =>
+                  deleteMessage.mutate(pendingDelete, { onSuccess: () => setPendingDelete(null) })
+                }
+              >
+                Supprimer
+              </Button>
+            </>
+          }
+        >
+          <p style={{ margin: 0, fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
+            Il disparaîtra de la conversation pour vous comme pour {peerName}.
+          </p>
+        </Dialog>
+      )}
+
       {/* Parcel detail modal */}
       {showParcelDetail && parcelInfo && (
         <Dialog
@@ -559,6 +611,9 @@ interface BubbleProps {
   isLastNonMinePrice?: boolean
   onAcceptPrice?: (amount: number) => void
   onCounterPrice?: (amount: number) => void
+  onEdit?: (body: string) => void
+  onDelete?: () => void
+  busy?: boolean
 }
 
 function parsePriceProposal(body: string): { isPrice: boolean; amount: number; message: string } | null {
@@ -569,8 +624,15 @@ function parsePriceProposal(body: string): { isPrice: boolean; amount: number; m
   return { isPrice: true, amount, message: parts.slice(1).join(':').trim() }
 }
 
-function MessageBubble({ message, mine, isOwner = false, isLastNonMinePrice = false, onAcceptPrice, onCounterPrice }: BubbleProps) {
+function MessageBubble({ message, mine, isOwner = false, isLastNonMinePrice = false, onAcceptPrice, onCounterPrice, onEdit, onDelete, busy = false }: BubbleProps) {
   const priceData = parsePriceProposal(message.body)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(message.body ?? '')
+
+  // La fenêtre d'édition s'écoule pendant que le fil reste ouvert : on la
+  // réévalue à l'ouverture du menu plutôt qu'une fois pour toutes au montage.
+  const canEdit = Boolean(mine && onEdit && isMessageEditable(message))
+  const canDelete = Boolean(mine && onDelete && !priceData)
 
   if (priceData) {
     return (
@@ -614,7 +676,48 @@ function MessageBubble({ message, mine, isOwner = false, isLastNonMinePrice = fa
         background: mine ? 'var(--teal-500)' : 'var(--surface-card)', color: mine ? '#fff' : 'var(--text-body)',
         border: mine ? 'none' : '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-xs)',
       }}>
-        {message.body && <div style={{ fontSize: 'var(--fs-sm)', whiteSpace: 'pre-wrap' }}>{message.body}</div>}
+        {editing ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 200 }}>
+            <textarea
+              value={draft}
+              autoFocus
+              rows={Math.min(5, Math.max(2, draft.split('\n').length))}
+              onChange={(e) => setDraft(e.target.value.slice(0, 4000))}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setEditing(false)
+                  setDraft(message.body ?? '')
+                }
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  const next = draft.trim()
+                  if (next && next !== message.body) onEdit?.(next)
+                  setEditing(false)
+                }
+              }}
+              style={{
+                width: '100%', resize: 'vertical', borderRadius: 8, padding: '6px 8px',
+                border: '1px solid var(--border-default)', background: 'var(--surface-card)',
+                color: 'var(--text-strong)', fontFamily: 'var(--font-body)', fontSize: 'var(--fs-sm)',
+              }}
+            />
+            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+              <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setDraft(message.body ?? '') }}>
+                Annuler
+              </Button>
+              <Button
+                size="sm"
+                loading={busy}
+                disabled={!draft.trim() || draft.trim() === message.body}
+                onClick={() => { onEdit?.(draft.trim()); setEditing(false) }}
+              >
+                Enregistrer
+              </Button>
+            </div>
+          </div>
+        ) : (
+          message.body && <div style={{ fontSize: 'var(--fs-sm)', whiteSpace: 'pre-wrap' }}>{message.body}</div>
+        )}
         {message.audioUrl && (
           <audio controls src={message.audioUrl} style={{ height: 36, maxWidth: 220, display: 'block', marginTop: message.body ? 6 : 0 }} />
         )}
@@ -629,12 +732,52 @@ function MessageBubble({ message, mine, isOwner = false, isLastNonMinePrice = fa
         {message.videoUrl && (
           <video controls src={message.videoUrl} style={{ display: 'block', maxWidth: 220, maxHeight: 260, borderRadius: 8, marginTop: message.body ? 6 : 0 }} />
         )}
-        <div style={{ fontSize: 10, textAlign: 'right', marginTop: 3, color: mine ? 'rgba(255,255,255,0.7)' : 'var(--text-faint)' }}>
-          {fmtTime(message.createdAt)}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', marginTop: 3 }}>
+          {!editing && (canEdit || canDelete) && (
+            <>
+              {canEdit && (
+                <button
+                  type="button"
+                  aria-label="Modifier le message"
+                  title="Modifier"
+                  onClick={() => { setDraft(message.body ?? ''); setEditing(true) }}
+                  style={bubbleActionBtn(mine)}
+                >
+                  <Icon name="edit" size={13} />
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  type="button"
+                  aria-label="Supprimer le message"
+                  title="Supprimer"
+                  onClick={() => onDelete?.()}
+                  style={bubbleActionBtn(mine)}
+                >
+                  <Icon name="delete" size={13} />
+                </button>
+              )}
+            </>
+          )}
+          {message.isEdited && (
+            <span style={{ fontSize: 10, color: mine ? 'rgba(255,255,255,0.7)' : 'var(--text-faint)' }}>modifié</span>
+          )}
+          <span style={{ fontSize: 10, color: mine ? 'rgba(255,255,255,0.7)' : 'var(--text-faint)' }}>
+            {fmtTime(message.createdAt)}
+          </span>
         </div>
       </div>
     </div>
   )
+}
+
+/** Petite action discrète posée dans le pied de bulle (édition / suppression). */
+function bubbleActionBtn(mine: boolean) {
+  return {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    width: 20, height: 20, padding: 0, borderRadius: '50%', border: 'none', cursor: 'pointer',
+    background: 'transparent', color: mine ? 'rgba(255,255,255,0.75)' : 'var(--text-faint)',
+  } as const
 }
 
 function iconBtn(bg: string, color: string) {

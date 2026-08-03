@@ -50,6 +50,37 @@ function normalizeDeclaration(raw: CashDeclaration & { amount: number | string }
   return { ...raw, amount: Number(raw.amount), parcel }
 }
 
+export interface DeclareCashPayload {
+  amount: number
+  collectionPoint: CashCollectionPoint
+  note?: string
+  proofUrl?: string
+}
+
+/**
+ * Déclaration d'encaissement par le chauffeur : sur une course en espèces la
+ * plateforme n'encaisse rien, l'argent passe de main en main. La déclaration
+ * crée un paiement `cash` en `processing` qu'un admin valide ensuite.
+ */
+export async function declareCashCollection(
+  parcelId: string,
+  payload: DeclareCashPayload,
+): Promise<CashDeclaration> {
+  const { data } = await api.post(`/driver/parcels/${parcelId}/declare-cash`, payload)
+  return normalizeDeclaration(data.payment ?? data.data?.payment)
+}
+
+/** Encaissements déclarés par le chauffeur connecté, tous statuts confondus. */
+export async function driverCashDeclarations(params: {
+  page?: number
+  limit?: number
+  status?: CashDeclarationStatus
+} = {}): Promise<CashDeclarationList> {
+  const { data } = await api.get('/driver/cash-declarations', { params })
+  const declarations = (data.declarations ?? []).map(normalizeDeclaration)
+  return { declarations, pagination: data.pagination }
+}
+
 export async function listCashDeclarations(params: {
   page?: number
   limit?: number

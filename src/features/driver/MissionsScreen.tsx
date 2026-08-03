@@ -5,6 +5,8 @@ import { QueryState } from '@/components/QueryState'
 import { ParcelMedia } from '@/components/ParcelMedia'
 import { ParcelDetailDialog } from '@/components/ParcelDetailDialog'
 import { PayCommissionDialog } from './PayCommissionDialog'
+import { DeclareCashDialog } from './DeclareCashDialog'
+import { needsCashDeclaration } from './cashDeclaration'
 import { useAdvanceParcel, useDeliverParcel, useDriverParcels } from './hooks'
 import { ApiError } from '@/lib/api/client'
 import { formatFcfa, toStatusKey } from '@/lib/format'
@@ -27,6 +29,7 @@ export function MissionsScreen() {
   const [deliverTarget, setDeliverTarget] = useState<Parcel | null>(null)
   const [detailTarget, setDetailTarget] = useState<Parcel | null>(null)
   const [commissionTarget, setCommissionTarget] = useState<Parcel | null>(null)
+  const [cashTarget, setCashTarget] = useState<Parcel | null>(null)
   const parcels = (query.data?.parcels ?? []).filter((p) => p.status !== 'cancelled')
 
   return (
@@ -61,6 +64,22 @@ export function MissionsScreen() {
                   </div>
                 </div>
                 <StatusBadge status={toStatusKey(p.status)} size="sm" />
+                {/* Le jalon d'encaissement peut être franchi bien avant la fin
+                    de la course (expéditeur payeur) : le rappel reste visible
+                    tant que la déclaration n'est pas faite. */}
+                {needsCashDeclaration(p) && (
+                  <Button
+                    size="sm"
+                    variant="amber"
+                    icon="payments"
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation()
+                      setCashTarget(p)
+                    }}
+                  >
+                    Déclarer l’encaissement
+                  </Button>
+                )}
                 {next ? (
                   <Button
                     size="sm"
@@ -96,12 +115,21 @@ export function MissionsScreen() {
         onClose={() => setDeliverTarget(null)}
         onDelivered={(p) => {
           setDeliverTarget(null)
-          if (p.paymentMethod === 'cash' && p.price && p.price > 0) {
-            setCommissionTarget(p)
-          }
+          // Sur une course en espèces, l'encaissement se déclare avant de
+          // parler commission : c'est l'argent reçu qui la rend exigible.
+          if (needsCashDeclaration(p)) setCashTarget(p)
+          else if (p.paymentMethod === 'cash' && p.price && p.price > 0) setCommissionTarget(p)
         }}
       />
       <ParcelDetailDialog parcel={detailTarget} onClose={() => setDetailTarget(null)} />
+      <DeclareCashDialog
+        parcel={cashTarget}
+        onClose={() => setCashTarget(null)}
+        onDeclared={(p) => {
+          setCashTarget(null)
+          setCommissionTarget(p)
+        }}
+      />
       <PayCommissionDialog parcel={commissionTarget} onClose={() => setCommissionTarget(null)} />
     </div>
   )

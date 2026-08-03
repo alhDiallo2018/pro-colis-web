@@ -19,9 +19,13 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_BASE_URL: https://${DOMAIN}/api/v1
+        VITE_APP_RELEASE: ${APP_RELEASE:-dev}
+        VITE_FARO_ENABLED: ${FARO_ENABLED:-true}
     image: sendprocolis-web:latest
     container_name: sendprocolis-caddy
     restart: unless-stopped
+    # Le port 2019 (admin + /metrics) n'est volontairement PAS publié : il n'est
+    # joignable que depuis le réseau Docker d'observabilité.
     ports:
       - "80:80"
       - "443:443"
@@ -31,6 +35,11 @@ services:
     volumes:
       - caddy-data:/data      # certificats Let's Encrypt (à persister !)
       - caddy-config:/config
+    networks:
+      - default
+      # Donne accès au receiver Faro (alloy:12347) et permet à Prometheus de
+      # venir scraper Caddy. Réseau créé par la stack d'observabilité de l'API.
+      - observability
     depends_on:
       - api
 
@@ -66,6 +75,11 @@ services:
       BREVO_SMS_SENDER: ${BREVO_SMS_SENDER}
     volumes:
       - api-uploads:/app/uploads
+    networks:
+      - default
+      # Prometheus scrape api:8080/internal/metrics depuis ce réseau ; la route
+      # reste protégée par son propre bearer token et n'est pas exposée par Caddy.
+      - observability
     depends_on:
       postgres:
         condition: service_healthy
@@ -81,11 +95,25 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    networks:
+      - default
+      # postgres-exporter (stack d'observabilité) se connecte ici avec un rôle
+      # de lecture seule dédié.
+      - observability
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sendprocolis -d sendprocolis"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+networks:
+  default:
+  # Réseau partagé avec la stack d'observabilité
+  # (ProColis-Api/deploy/observability/compose.yml, qui le déclare `external`).
+  # C'est ce Compose-ci qui le crée : le démarrer en premier, la stack
+  # d'observabilité ensuite.
+  observability:
+    name: ${PROCOLIS_DOCKER_NETWORK:-procolis-observability-shared}
 
 volumes:
   caddy-data:

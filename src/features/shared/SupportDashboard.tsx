@@ -6,6 +6,7 @@ import * as messagesApi from '@/lib/api/messages'
 import * as assistancesApi from '@/lib/api/assistances'
 import { useAuthStore } from '@/store/auth'
 import { usePlatformStats, useMyStats } from './profile/hooks'
+import { SupportRoleSummary } from './supportRoles/SupportRoleSummary'
 import { formatDateTime } from '@/lib/format'
 import type { SupportConversation } from '@/lib/api/messages'
 
@@ -108,6 +109,9 @@ export function SupportDashboard() {
         <StatBox icon="pending_actions" tone="amber" value={summary?.inProgress ?? '—'} label="En cours" />
         <StatBox icon="task_alt" tone="green" value={summary?.resolved ?? '—'} label="Résolues" />
       </div>
+
+      {/* Bloc métier propre au mandat de l'agent (tickets ou pipeline). */}
+      <SupportRoleSummary />
 
       <div className="pc-split">
         <Panel

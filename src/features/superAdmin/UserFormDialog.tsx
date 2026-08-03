@@ -90,7 +90,7 @@ export function UserFormDialog({ open, user, onClose }: UserFormDialogProps) {
     setLocalError(null)
     try {
       if (isEdit && user) {
-        await updateMutation.mutateAsync({ userId: user.id, payload })
+        await updateMutation.mutateAsync({ userId: user.id, payload, previousRole: user.role })
       } else {
         await createMutation.mutateAsync({ ...payload, pin: form.pin || '123456' })
       }

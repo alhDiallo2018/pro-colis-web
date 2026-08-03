@@ -3,6 +3,7 @@ import * as roles from '@/lib/api/roles'
 import * as parcelsApi from '@/lib/api/parcels'
 import * as bidsApi from '@/lib/api/bids'
 import * as paymentsApi from '@/lib/api/payments'
+import * as cashApi from '@/lib/api/cash-payments'
 import * as adsApi from '@/lib/api/advertisements'
 import * as vehiclesApi from '@/lib/api/vehicles'
 import * as usersApi from '@/lib/api/users'
@@ -72,6 +73,18 @@ export function useMyRatings(driverId: string | undefined) {
 
 export function useDriverPayments() {
   return useQuery({ queryKey: ['driver', 'payments'], queryFn: () => paymentsApi.history() })
+}
+
+/**
+ * Encaissements espèces déclarés par le chauffeur. Ceux encore en `processing`
+ * attendent la validation d'un admin : c'est de l'argent en main qui n'est pas
+ * encore réconcilié, il mérite son propre rappel dans les revenus.
+ */
+export function useDriverCashDeclarations() {
+  return useQuery({
+    queryKey: ['driver', 'cash-declarations'],
+    queryFn: () => cashApi.driverCashDeclarations({ limit: 50 }),
+  })
 }
 
 export function useMyAdvertisements() {

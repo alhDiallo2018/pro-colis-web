@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import * as roles from '@/lib/api/roles'
+import * as parcelsApi from '@/lib/api/parcels'
 import type { ListParams } from '@/lib/api/types'
 import * as adminFinance from '@/lib/api/admin-finance'
 import * as adminReputation from '@/lib/api/admin-reputation'
@@ -13,6 +14,18 @@ import { queryClient } from '@/lib/queryClient'
 
 export function useAdminParcels(params: ListParams = {}) {
   return useQuery({ queryKey: ['admin', 'parcels', params], queryFn: () => roles.adminParcels(params) })
+}
+
+/** Recherche transverse sur les colis (numéro de suivi, expéditeur, destinataire). */
+export function useSearchParcels(term: string, status?: string, enabled = true) {
+  return useQuery({
+    queryKey: ['admin', 'parcels', 'search', term, status ?? ''],
+    queryFn: () => parcelsApi.search({ q: term, status: status || undefined }),
+    enabled: enabled && term.length >= 2,
+    // La liste ne change pas d'un caractère à l'autre : on garde le résultat
+    // précédent affiché pendant la frappe plutôt que de vider le tableau.
+    placeholderData: (previous) => previous,
+  })
 }
 
 export function useDeleteAdminParcel() {
@@ -134,8 +147,24 @@ export function useCreateUser() {
 
 export function useUpdateUser() {
   return useMutation({
-    mutationFn: ({ userId, payload }: { userId: string; payload: Partial<roles.AdminUserPayload> }) =>
-      roles.adminUpdateUser(userId, payload),
+    mutationFn: async ({
+      userId,
+      payload,
+      previousRole,
+    }: {
+      userId: string
+      payload: Partial<roles.AdminUserPayload>
+      /** Rôle affiché avant édition, pour ne toucher au rôle que s'il change. */
+      previousRole?: string
+    }) => {
+      const user = await roles.adminUpdateUser(userId, payload)
+      // Le rôle n'est pas pris par `PUT /super-admin/users/:id` : sans ce
+      // second appel, le changement fait dans le formulaire serait perdu.
+      if (payload.role && previousRole && payload.role !== previousRole) {
+        return roles.adminUpdateUserRole(userId, payload.role)
+      }
+      return user
+    },
     onSuccess: invalidateUsers,
   })
 }

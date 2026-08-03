@@ -82,6 +82,41 @@ export async function create(payload: CreateParcelPayload): Promise<Parcel> {
   return data.parcel
 }
 
+/**
+ * Champs qu'un client peut corriger tant que le colis n'est pas engagé.
+ * Miroir de `PARCEL_EDITABLE_*_FIELDS` côté API : tout autre champ est ignoré
+ * par le serveur.
+ */
+export interface UpdateParcelPayload {
+  receiverName?: string
+  receiverPhone?: string
+  receiverEmail?: string | null
+  receiverAddress?: string | null
+  description?: string
+  notes?: string | null
+  weight?: number | null
+  type?: string | null
+  price?: number | null
+  proposedPrice?: number | null
+  isUrgent?: boolean
+  isInsured?: boolean
+  departureZoneId?: string | null
+  arrivalZoneId?: string | null
+  paymentMethod?: string | null
+  paymentChannel?: string | null
+  cashCollectionPoint?: string | null
+}
+
+/**
+ * Modifier un colis. L'API refuse (409) dès qu'un chauffeur est assigné, qu'une
+ * offre est acceptée ou qu'un paiement est engagé : côté web, `isParcelEditable`
+ * masque l'action en amont, mais l'erreur reste possible en cas de course.
+ */
+export async function update(parcelId: string, payload: UpdateParcelPayload): Promise<Parcel> {
+  const { data } = await api.put(`/client/parcels/${parcelId}`, payload)
+  return data.parcel ?? data.data
+}
+
 export async function cancel(parcelId: string, reason?: string): Promise<Parcel> {
   const { data } = await api.post(`/client/parcels/${parcelId}/cancel`, { reason })
   return data.parcel
@@ -100,6 +135,16 @@ export async function listFree(params: ListParams = {}): Promise<ParcelList> {
 export async function track(trackingNumber: string): Promise<Parcel> {
   const { data } = await api.get(`/public/parcels/track/${trackingNumber}`)
   return data.parcel ?? data.data
+}
+
+/**
+ * Recherche transverse (GET /search/parcels) sur le numéro de suivi, le nom de
+ * l'expéditeur et celui du destinataire. Le périmètre est appliqué par l'API
+ * selon le rôle : un client ne voit que ses envois, un chauffeur ses missions.
+ */
+export async function search(params: { q?: string; status?: string }): Promise<Parcel[]> {
+  const { data } = await api.get('/search/parcels', { params })
+  return (data.parcels ?? data.data ?? []) as Parcel[]
 }
 
 export async function timeline(parcelId: string): Promise<ParcelEvent[]> {

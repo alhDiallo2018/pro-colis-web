@@ -130,6 +130,16 @@ export async function adminUpdateUser(userId: string, payload: Partial<AdminUser
   return data.user ?? data.data
 }
 
+/**
+ * Le rôle a son propre endpoint : `PUT /super-admin/users/:id` ignore le champ
+ * `role` côté API (liste blanche), un changement passé par le formulaire
+ * d'édition serait silencieusement perdu.
+ */
+export async function adminUpdateUserRole(userId: string, role: string): Promise<User> {
+  const { data } = await api.patch(`/super-admin/users/${userId}/role`, { role })
+  return data.user ?? data.data
+}
+
 export async function adminDeleteUser(userId: string): Promise<void> {
   await api.delete(`/super-admin/users/${userId}`)
 }

@@ -73,6 +73,13 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    // `hidden` produit les .map sans les référencer dans les bundles servis :
+    // les stacks restent symbolisables par Alloy à partir des source maps
+    // copiées côté observabilité, sans jamais exposer le code au navigateur.
+    // Ces fichiers ne doivent pas être servis par Caddy (voir Caddyfile).
+    sourcemap: 'hidden',
+  },
   test: {
     environment: 'jsdom',
     globals: true,

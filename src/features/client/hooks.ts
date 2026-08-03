@@ -119,6 +119,17 @@ export function useCreateParcel() {
   })
 }
 
+export function useUpdateParcel() {
+  return useMutation({
+    mutationFn: ({ parcelId, payload }: { parcelId: string; payload: parcelsApi.UpdateParcelPayload }) =>
+      parcelsApi.update(parcelId, payload),
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: ['client', 'parcels'] })
+      queryClient.invalidateQueries({ queryKey: ['client', 'parcel', updated.id] })
+    },
+  })
+}
+
 export function useAcceptBid(parcelId: string) {
   return useMutation({
     mutationFn: (bidId: string) => bidsApi.accept(parcelId, bidId),

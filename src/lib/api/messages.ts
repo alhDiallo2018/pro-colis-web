@@ -11,6 +11,21 @@ export interface ChatMessage {
   videoUrl?: string | null
   isRead: boolean
   createdAt?: string
+  /** Date de la dernière réécriture par l'auteur (null si jamais modifié). */
+  editedAt?: string | null
+  isEdited?: boolean
+}
+
+/** Fenêtre d'édition côté API (`MESSAGE_EDIT_WINDOW_MS`), rejouée ici pour ne
+ *  proposer « Modifier » que tant que le serveur l'acceptera. */
+export const MESSAGE_EDIT_WINDOW_MS = 15 * 60 * 1000
+
+export function isMessageEditable(message: ChatMessage): boolean {
+  if (!message.createdAt) return false
+  // Une proposition de prix engage la négociation : l'API la refuse.
+  if (message.body?.startsWith('__PRIX__')) return false
+  if (!message.body?.trim()) return false
+  return Date.now() - new Date(message.createdAt).getTime() < MESSAGE_EDIT_WINDOW_MS
 }
 
 /** From GET /messages/conversations */
@@ -65,6 +80,17 @@ export async function send(payload: {
 }): Promise<ChatMessage> {
   const { data } = await api.post('/messages', payload)
   return (data.message ?? data.data) as ChatMessage
+}
+
+/** Réécrit un message que l'on a envoyé (PATCH /messages/:id). */
+export async function update(messageId: string, body: string): Promise<ChatMessage> {
+  const { data } = await api.patch(`/messages/${messageId}`, { body })
+  return (data.message ?? data.data) as ChatMessage
+}
+
+/** Suppression logique : le message disparaît des fils, l'historique reste en base. */
+export async function remove(messageId: string): Promise<void> {
+  await api.delete(`/messages/${messageId}`)
 }
 
 /** Recent messages for the current user (used to build conversation list). */

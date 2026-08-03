@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Avatar, Button, Dialog, IconButton, SegmentedControl, StatusBadge } from '@/ds'
+import { Avatar, Button, Dialog, IconButton, Input, SegmentedControl, StatusBadge } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { ParcelDetailDialog } from '@/components/ParcelDetailDialog'
-import { useAdminParcels, useDeleteAdminParcel } from './hooks'
+import { useAdminParcels, useDeleteAdminParcel, useSearchParcels } from './hooks'
 import { formatFcfa, toStatusKey } from '@/lib/format'
 import { useIsMobile } from '@/lib/useMediaQuery'
+import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import type { Parcel } from '@/lib/api/types'
 
 const FILTERS = [
@@ -32,11 +33,19 @@ function MobileField({ label, children }: { label: string; children: React.React
 export function ColisPage() {
   const isMobile = useIsMobile()
   const [status, setStatus] = useState('')
+  const [search, setSearch] = useState('')
   const [detailTarget, setDetailTarget] = useState<Parcel | null>(null)
   const [deleting, setDeleting] = useState<Parcel | null>(null)
-  const query = useAdminParcels(status ? { status } : {})
+  // `GET /super-admin/parcels` ne filtre que par statut et pagine : passé la
+  // première page, retrouver un colis par son numéro exige la recherche
+  // dédiée, qui interroge toute la base.
+  const term = useDebouncedValue(search.trim(), 300)
+  const searching = term.length >= 2
+  const listQuery = useAdminParcels(status ? { status } : {})
+  const searchQuery = useSearchParcels(term, status, searching)
+  const query = searching ? searchQuery : listQuery
   const deleteMutation = useDeleteAdminParcel()
-  const parcels = query.data?.parcels ?? []
+  const parcels = searching ? (searchQuery.data ?? []) : (listQuery.data?.parcels ?? [])
 
   const handleDelete = async () => {
     if (!deleting) return
@@ -53,7 +62,9 @@ export function ColisPage() {
     error: query.error,
     isEmpty: parcels.length === 0,
     emptyTitle: 'Aucun colis',
-    emptyMessage: 'Aucun colis ne correspond à ce filtre.',
+    emptyMessage: searching
+      ? `Aucun colis ne correspond à « ${term} ».`
+      : 'Aucun colis ne correspond à ce filtre.',
     onRetry: () => query.refetch(),
   }
 
@@ -69,9 +80,26 @@ export function ColisPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <SegmentedControl size="sm" options={FILTERS} value={status} onChange={setStatus} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <SegmentedControl size="sm" options={FILTERS} value={status} onChange={setStatus} />
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <Input
+            icon="search"
+            placeholder="Rechercher (n° de suivi, expéditeur, destinataire…)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
 
-      <Panel title={`Colis${query.data?.pagination ? ` · ${query.data.pagination.total}` : ''}`} flush>
+      <Panel
+        title={
+          searching
+            ? `Résultats · ${parcels.length}`
+            : `Colis${listQuery.data?.pagination ? ` · ${listQuery.data.pagination.total}` : ''}`
+        }
+        flush
+      >
         {isMobile ? (
           <QueryState {...queryStateProps}>
             {parcels.map((p) => (

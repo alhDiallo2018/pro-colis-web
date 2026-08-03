@@ -6,11 +6,25 @@ import * as zonesApi from '@/lib/api/zones'
 import { ApiError } from '@/lib/api/client'
 import { GarageSearchSelect } from '@/components/GarageSearchSelect'
 import { VoiceRecorder } from '@/components/VoiceRecorder'
+import { DraftRestoreBanner } from '@/components/DraftRestoreBanner'
+import { useFormDraft } from '@/lib/useFormDraft'
 import type { Zone } from '@/lib/api/types'
 
 interface Props {
   open: boolean
   onClose: () => void
+}
+
+/** Saisie conservée d'une annonce non publiée. */
+interface DraftPayload {
+  departureZoneId: string
+  arrivalZoneId: string
+  departureAt: string
+  weight: string
+  price: string
+  description: string
+  audioUrl: string | null
+  extraZones: Zone[]
 }
 
 /** Modal for a driver to publish a trip advertisement (annonce de trajet). */
@@ -30,7 +44,30 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
   const [extraZones, setExtraZones] = useState<Zone[]>([])
   const zoneList = [...zones, ...extraZones]
 
+  // Brouillon automatique de l'annonce : fermer la modale par mégarde ne doit
+  // pas coûter la saisie. La note vocale est déjà téléversée à ce stade, son
+  // URL se conserve donc sans surcoût.
+  const draft = useFormDraft<DraftPayload>({
+    slot: 'annonce',
+    values: { departureZoneId, arrivalZoneId, departureAt, weight, price, description, audioUrl, extraZones },
+    hasContent: Boolean(departureZoneId || arrivalZoneId || departureAt || weight || price || description || audioUrl),
+    paused: !open,
+  })
+
   if (!open) return null
+
+  const restoreDraft = () => {
+    const saved = draft.restore()
+    if (!saved) return
+    setDeparture(saved.departureZoneId)
+    setArrival(saved.arrivalZoneId)
+    setDepartureAt(saved.departureAt)
+    setWeight(saved.weight)
+    setPrice(saved.price)
+    setDescription(saved.description)
+    setAudioUrl(saved.audioUrl)
+    setExtraZones(saved.extraZones ?? [])
+  }
 
   const cityOf = (id: string) => zoneList.find((z) => z.id === id)?.city ?? undefined
   const valid = !!departureZoneId && !!arrivalZoneId && departureZoneId !== arrivalZoneId
@@ -61,6 +98,8 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
       {
         onSuccess: () => {
           reset()
+          // L'annonce est publiée : plus rien à reprendre.
+          draft.clear()
           onClose()
         },
       },
@@ -92,6 +131,9 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
       }
     >
       <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {draft.pending && (
+          <DraftRestoreBanner savedAt={draft.pending.savedAt} onRestore={restoreDraft} onDiscard={draft.discard} />
+        )}
         <div className="pc-field-pair" style={{ gap: 12 }}>
           <GarageSearchSelect
             label="Départ"

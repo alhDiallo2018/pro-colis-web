@@ -6,6 +6,9 @@ import { Panel } from '@/components/Panel'
 import * as roles from '@/lib/api/roles'
 import { queryClient } from '@/lib/queryClient'
 import { useAuthStore } from '@/store/auth'
+import { DeclareCashDialog } from '@/features/driver/DeclareCashDialog'
+import { needsCashDeclaration } from '@/features/driver/cashDeclaration'
+import type { Parcel } from '@/lib/api/types'
 
 export function ConfirmDeliveryScreen() {
   const { parcelId } = useParams<{ parcelId: string }>()
@@ -15,15 +18,23 @@ export function ConfirmDeliveryScreen() {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [delivered, setDelivered] = useState<Parcel | null>(null)
+  const [cashOpen, setCashOpen] = useState(false)
 
   const deliver = useMutation({
     mutationFn: (otp: string) => roles.driverDeliver(parcelId!, { otp }),
-    onSuccess: () => {
+    onSuccess: (parcel) => {
       setSuccess(true)
+      setDelivered(parcel)
+      // Course en espèces : l'argent vient de changer de main, la déclaration
+      // s'enchaîne sur la confirmation plutôt que d'attendre un retour manuel.
+      if (user?.role === 'driver' && needsCashDeclaration(parcel)) setCashOpen(true)
       queryClient.invalidateQueries({ queryKey: ['driver', 'parcels'] })
       queryClient.invalidateQueries({ queryKey: ['parcels', 'my'] })
     },
   })
+
+  const cashPending = Boolean(delivered && user?.role === 'driver' && needsCashDeclaration(delivered))
 
   const submitPin = useCallback((entered: string) => {
     setSubmitting(true)
@@ -105,11 +116,28 @@ export function ConfirmDeliveryScreen() {
         >
           +150 pts crédités
         </div>
-        <div>
-          <Button onClick={() => navigate(user?.role === 'driver' ? '/driver/missions' : '/client/colis')}>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+          {cashPending && (
+            <Button variant="amber" icon="payments" onClick={() => setCashOpen(true)}>
+              Déclarer l’encaissement
+            </Button>
+          )}
+          <Button
+            variant={cashPending ? 'secondary' : 'primary'}
+            onClick={() => navigate(user?.role === 'driver' ? '/driver/missions' : '/client/colis')}
+          >
             Retour aux colis
           </Button>
         </div>
+
+        <DeclareCashDialog
+          parcel={cashOpen ? delivered : null}
+          onClose={() => setCashOpen(false)}
+          onDeclared={() => {
+            setCashOpen(false)
+            setDelivered(null)
+          }}
+        />
       </div>
     )
   }

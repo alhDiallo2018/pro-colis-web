@@ -4,6 +4,7 @@ import { useUpdateDriverStatus } from './hooks'
 import type { DriverStatus } from '@/lib/api/types'
 import { NotificationPreferencesSheet } from '@/components/NotificationPreferences'
 import { SecurityCard } from '@/features/shared/profile/SecurityCard'
+import { DangerZoneCard } from '@/features/shared/profile/DangerZoneCard'
 
 const STATUS_OPTIONS = [
   { value: 'available', label: 'Disponible', icon: 'check_circle' },
@@ -39,6 +40,7 @@ export function DriverParametresScreen() {
 
       <NotificationPreferencesSheet userEmail={user.email} userPhone={user.phone} />
 
+      <DangerZoneCard />
     </div>
   )
 }

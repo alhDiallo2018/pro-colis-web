@@ -11,6 +11,8 @@ import { useAuthStore } from '@/store/auth'
 import { formatFcfa, formatWeight } from '@/lib/format'
 import type { User, Zone } from '@/lib/api/types'
 import { GarageSearchSelect } from '@/components/GarageSearchSelect'
+import { DraftRestoreBanner } from '@/components/DraftRestoreBanner'
+import { useFormDraft } from '@/lib/useFormDraft'
 import { LocationInput } from '@/components/LocationInput'
 import { ALL_COUNTRIES } from '@/components/CountryCodePicker'
 import {
@@ -59,6 +61,15 @@ const schema = z.object({
 
 type FormInput = z.input<typeof schema>
 type FormOutput = z.output<typeof schema>
+
+/** Ce qu'on conserve d'une saisie interrompue — texte et progression, pas les médias. */
+interface DraftPayload {
+  values: FormInput
+  mode: Mode
+  step: number
+  maxStep: number
+  extraZones: Zone[]
+}
 
 // Must match the API's Prisma `ParcelType` enum, else create 500s.
 const TYPES = [
@@ -120,6 +131,38 @@ export function NewParcelScreen() {
   // ajoutées à la liste pour être immédiatement sélectionnables par le créateur.
   const [extraZones, setExtraZones] = useState<Zone[]>([])
   const zoneList = [...(zones.data ?? []), ...extraZones]
+
+  // Brouillon automatique : une sortie par inadvertance ne doit pas coûter
+  // toute la saisie. Seul le texte est conservé — les pièces jointes vivent en
+  // data-URL et satureraient le stockage local (voir `lib/formDraft.ts`).
+  const formValues = watch()
+  const draft = useFormDraft<DraftPayload>({
+    slot: 'colis',
+    values: { values: formValues, mode, step, maxStep, extraZones },
+    hasContent: Boolean(
+      formValues.receiverName ||
+        formValues.receiverPhone ||
+        formValues.description ||
+        formValues.departureZoneId ||
+        formValues.arrivalZoneId,
+    ),
+    paused: Boolean(createdId),
+  })
+
+  const restoreDraft = () => {
+    const saved = draft.restore()
+    if (!saved) return
+    // `setValue` champ par champ : `reset` écraserait aussi les champs que le
+    // brouillon ne porte pas (défauts du schéma).
+    for (const [key, value] of Object.entries(saved.values)) {
+      if (value === undefined) continue
+      setValue(key as keyof FormInput, value as never)
+    }
+    setExtraZones(saved.extraZones ?? [])
+    setMode(saved.mode)
+    setMaxStep(saved.maxStep)
+    setStep(saved.step)
+  }
   const zoneLabel = (id?: string) => {
     const z = zoneList.find((x) => x.id === id)
     return z ? (z.city ?? z.name) : '—'
@@ -248,6 +291,8 @@ export function NewParcelScreen() {
       price: values.price ?? null,
     })
     setCreatedId(parcel.id)
+    // Le colis existe : le brouillon n'a plus de raison d'être proposé.
+    draft.clear()
 
     let failed = 0
     if (photos.length || voice) {
@@ -295,6 +340,15 @@ export function NewParcelScreen() {
           </p>
         </div>
       </div>
+
+      {draft.pending && (
+        <DraftRestoreBanner
+          savedAt={draft.pending.savedAt}
+          onRestore={restoreDraft}
+          onDiscard={draft.discard}
+          note="Les photos et notes vocales sont à rattacher de nouveau."
+        />
+      )}
 
       <Stepper current={step} maxStep={maxStep} onJump={goTo} />
 

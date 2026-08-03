@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AuthSession, User } from '@/lib/api/types'
+import { clearAllFormDrafts } from '@/lib/formDraft'
 
 interface AuthState {
   user: User | null
@@ -24,7 +25,12 @@ export const useAuthStore = create<AuthState>()(
       setSession: ({ user, accessToken, refreshToken }) => set({ user, accessToken, refreshToken }),
       setTokens: ({ accessToken, refreshToken }) => set({ accessToken, refreshToken }),
       setUser: (user) => set({ user }),
-      clearSession: () => set({ user: null, accessToken: null, refreshToken: null }),
+      clearSession: () => {
+        // Les brouillons de formulaires sont des données personnelles : on ne
+        // les laisse pas derrière soi sur un poste partagé.
+        clearAllFormDrafts()
+        set({ user: null, accessToken: null, refreshToken: null })
+      },
     }),
     {
       name: 'sendprocolis-auth',

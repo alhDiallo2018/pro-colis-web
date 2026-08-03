@@ -104,6 +104,12 @@ export function LoginPage() {
         </Button>
       </form>
 
+      <p style={{ textAlign: 'center', fontSize: 14, margin: '20px 0 0' }}>
+        <span style={{ color: 'var(--text-link)', fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/pin-oublie')}>
+          Code PIN oublié ?
+        </span>
+      </p>
+
       <p style={{ textAlign: 'center', fontSize: 14, color: 'var(--text-muted)', margin: '28px 0 0' }}>
         Pas encore de compte ?{' '}
         <span style={{ color: 'var(--text-link)', fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/register')}>

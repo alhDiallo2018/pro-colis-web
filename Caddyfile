@@ -3,6 +3,15 @@
 
 {
 	email {$TLS_EMAIL}
+
+	# Endpoint d'administration Caddy, qui sert aussi /metrics à Prometheus.
+	# Écoute sur 0.0.0.0 pour être joignable depuis le réseau Docker
+	# d'observabilité, mais le port 2019 n'est JAMAIS publié (voir
+	# docker-compose.yml : aucune entrée `ports` pour lui).
+	admin 0.0.0.0:2019
+	servers {
+		metrics
+	}
 }
 
 # www → apex : nécessite que le DNS de www.{$DOMAIN} pointe vers CE serveur.
@@ -33,6 +42,29 @@ www.{$DOMAIN} {
 	handle @paydunyaIpn {
 		rewrite * /api/v1/payments/paydunya/ipn
 		reverse_proxy api:8080
+	}
+
+	# Collecte des erreurs du navigateur → receiver Faro de Grafana Alloy.
+	# Seul ce chemin est proxifié : l'interface Alloy elle-même reste privée.
+	# Le receiver expose son endpoint sur /collect, d'où la réécriture.
+	@faro {
+		path /collect/faro
+		method POST
+	}
+	handle @faro {
+		request_body {
+			max_size 256KiB
+		}
+		rewrite * /collect
+		reverse_proxy alloy:12347
+	}
+
+	# Les source maps sont générées en mode `hidden` (vite.config.ts) et copiées
+	# côté observabilité pour symboliser les stacks. Elles ne doivent jamais
+	# être servies : une 404 explicite vaut mieux qu'un oubli de packaging.
+	@sourcemaps path *.map
+	handle @sourcemaps {
+		respond 404
 	}
 
 	# SPA React : sert les fichiers statiques, fallback index.html pour le routing client.

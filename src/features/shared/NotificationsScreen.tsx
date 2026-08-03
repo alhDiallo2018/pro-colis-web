@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Badge, Button, Card, Icon } from '@/ds'
+import { Badge, Button, Card, Dialog, Icon } from '@/ds'
 import { QueryState } from '@/components/QueryState'
 import * as notificationsApi from '@/lib/api/notifications'
 import type { AppNotification } from '@/lib/api/notifications'
@@ -76,6 +77,7 @@ export function NotificationsScreen() {
   const navigate = useNavigate()
   const role = useAuthStore((state) => state.user?.role)
   const [searchParams, setSearchParams] = useSearchParams()
+  const [confirmClear, setConfirmClear] = useState(false)
   const selectedId = searchParams.get('notification')
   const query = useQuery({
     queryKey: ['notifications', 'all'],
@@ -111,6 +113,31 @@ export function NotificationsScreen() {
     },
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => notificationsApi.remove(id),
+    onSuccess: (_data, id) => {
+      // La notification ouverte disparaît : on referme le détail pour ne pas
+      // laisser un paramètre d'URL qui ne désigne plus rien.
+      if (selectedId === id) {
+        const next = new URLSearchParams(searchParams)
+        next.delete('notification')
+        setSearchParams(next, { replace: true })
+      }
+      qc.invalidateQueries({ queryKey: ['notifications'] })
+    },
+  })
+
+  const clearAllMutation = useMutation({
+    mutationFn: () => notificationsApi.removeAll(),
+    onSuccess: () => {
+      const next = new URLSearchParams(searchParams)
+      next.delete('notification')
+      setSearchParams(next, { replace: true })
+      setConfirmClear(false)
+      qc.invalidateQueries({ queryKey: ['notifications'] })
+    },
+  })
+
   const notifications = query.data ?? []
 
   const openNotification = (notification: AppNotification) => {
@@ -127,17 +154,30 @@ export function NotificationsScreen() {
         <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h2)', color: 'var(--text-strong)' }}>
           Notifications
         </h2>
-        {notifications.some((n) => !n.isRead) && (
-          <Button
-            variant="secondary"
-            size="sm"
-            icon="done_all"
-            loading={markAllMutation.isPending}
-            onClick={() => markAllMutation.mutate()}
-          >
-            Tout marquer comme lu
-          </Button>
-        )}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {notifications.some((n) => !n.isRead) && (
+            <Button
+              variant="secondary"
+              size="sm"
+              icon="done_all"
+              loading={markAllMutation.isPending}
+              onClick={() => markAllMutation.mutate()}
+            >
+              Tout marquer comme lu
+            </Button>
+          )}
+          {notifications.length > 0 && (
+            <Button
+              variant="ghost"
+              tone="danger"
+              size="sm"
+              icon="delete_sweep"
+              onClick={() => setConfirmClear(true)}
+            >
+              Tout effacer
+            </Button>
+          )}
+        </div>
       </div>
 
       <QueryState
@@ -275,15 +315,27 @@ export function NotificationsScreen() {
                       <Icon name="done" size={16} />
                       Notification lue
                     </span>
-                    {action && (
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <Button
                         size="sm"
-                        iconTrailing="arrow_forward"
-                        onClick={() => navigate(action.to)}
+                        variant="ghost"
+                        tone="danger"
+                        icon="delete"
+                        loading={deleteMutation.isPending && deleteMutation.variables === n.id}
+                        onClick={() => deleteMutation.mutate(n.id)}
                       >
-                        {action.label}
+                        Supprimer
                       </Button>
-                    )}
+                      {action && (
+                        <Button
+                          size="sm"
+                          iconTrailing="arrow_forward"
+                          onClick={() => navigate(action.to)}
+                        >
+                          {action.label}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -291,6 +343,30 @@ export function NotificationsScreen() {
           )
         })}
       </QueryState>
+
+      {confirmClear && (
+        <Dialog
+          open
+          onClose={() => setConfirmClear(false)}
+          icon="delete_sweep"
+          iconTone="danger"
+          title="Effacer toutes les notifications ?"
+          style={{ maxWidth: 420 }}
+          actions={
+            <>
+              <Button variant="secondary" block onClick={() => setConfirmClear(false)}>Annuler</Button>
+              <Button variant="danger" block loading={clearAllMutation.isPending} onClick={() => clearAllMutation.mutate()}>
+                Tout effacer
+              </Button>
+            </>
+          }
+        >
+          <p style={{ margin: 0, fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
+            Les {notifications.length} notifications de votre boîte seront supprimées définitivement.
+            Vos colis et vos messages ne sont pas affectés.
+          </p>
+        </Dialog>
+      )}
     </div>
   )
 }

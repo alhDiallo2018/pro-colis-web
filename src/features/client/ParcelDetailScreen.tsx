@@ -5,6 +5,8 @@ import { QueryState } from '@/components/QueryState'
 import { ParcelMedia } from '@/components/ParcelMedia'
 import { QrCode } from '@/components/QrCode'
 import { useCreateRating, useDeliveryCode, useParcel } from './hooks'
+import { EditParcelDialog } from './EditParcelDialog'
+import { isParcelEditable } from './parcelEditable'
 import { createPaydunyaPayment } from '@/lib/api/paydunya'
 import { estimate } from '@/lib/api/commission'
 import { buildSteps } from './parcelSteps'
@@ -31,6 +33,7 @@ export function ParcelDetailScreen() {
   const parcel = query.data
   const showCode = !!parcel && IN_TRANSIT_STATUSES.includes(parcel.status)
   const deliveryCode = useDeliveryCode(parcelId, showCode)
+  const [editing, setEditing] = useState(false)
 
   // Refetch after returning from PayDunya payment
   useEffect(() => {
@@ -47,7 +50,16 @@ export function ParcelDetailScreen() {
         <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
           Suivi du colis
         </h1>
+        {/* Corriger reste possible tant qu'aucun chauffeur ni paiement
+            n'engage la course — au-delà, l'API refuse et l'action disparaît. */}
+        {parcel && isParcelEditable(parcel) && (
+          <Button size="sm" variant="secondary" icon="edit" style={{ marginLeft: 'auto' }} onClick={() => setEditing(true)}>
+            Modifier
+          </Button>
+        )}
       </div>
+
+      <EditParcelDialog parcel={editing ? (parcel ?? null) : null} onClose={() => setEditing(false)} />
 
       <QueryState isLoading={query.isLoading} isError={query.isError} error={query.error} onRetry={() => query.refetch()}>
         {parcel && (

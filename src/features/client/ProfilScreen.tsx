@@ -6,6 +6,7 @@ import { NotificationPreferencesSheet } from '@/components/NotificationPreferenc
 import { ProfileHeader } from '@/features/shared/profile/ProfileHeader'
 import { IdentityCard } from '@/features/shared/profile/IdentityCard'
 import { SecurityCard } from '@/features/shared/profile/SecurityCard'
+import { DangerZoneCard } from '@/features/shared/profile/DangerZoneCard'
 import { AddressBookCard } from '@/features/shared/profile/AddressBookCard'
 import {
   useFavoriteZones,
@@ -108,6 +109,8 @@ export function ProfilScreen() {
       <NotificationPreferencesSheet userEmail={user.email} userPhone={user.phone} />
 
       <SecurityCard />
+
+      <DangerZoneCard />
     </div>
   )
 }
