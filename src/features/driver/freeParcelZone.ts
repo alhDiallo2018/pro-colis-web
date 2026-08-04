@@ -1,3 +1,7 @@
+// ============================================================
+// FILE: lib/screens/driver/freeParcelZone.ts
+// ============================================================
+
 import type { Parcel, User } from '@/lib/api/types'
 
 type UserZoneFields = Pick<
@@ -22,6 +26,7 @@ function normalizeZoneName(value: string | null | undefined): string {
 export function getDriverHomeZone(user: UserZoneFields | null | undefined): DriverHomeZone {
   if (!user) return { id: null, name: null }
 
+  // 1. Zone principale
   if (user.primaryZoneId || user.primaryZoneName) {
     return {
       id: user.primaryZoneId ?? null,
@@ -29,6 +34,7 @@ export function getDriverHomeZone(user: UserZoneFields | null | undefined): Driv
     }
   }
 
+  // 2. Zone secondaire
   if (user.zoneId || user.zoneName) {
     return {
       id: user.zoneId ?? null,
@@ -36,34 +42,69 @@ export function getDriverHomeZone(user: UserZoneFields | null | undefined): Driv
     }
   }
 
+  // 3. Ville par défaut (fallback)
   return { id: null, name: user.city?.trim() || null }
 }
 
 /**
- * Un colis correspond quand son identifiant de départ ou son nom de départ est
- * exactement celui de la zone du chauffeur. La comparaison des noms ignore la casse.
+ * Vérifie si un colis correspond à la zone du chauffeur.
+ * Compare par ID ou par nom (zone ou ville).
  */
 export function isParcelInDriverHomeZone(
   parcel: Parcel,
   user: UserZoneFields | null | undefined,
 ): boolean {
   const zone = getDriverHomeZone(user)
-  const matchesZoneId =
-    !!zone.id && (parcel.zoneId === zone.id || parcel.departureZoneId === zone.id)
 
+  // ✅ Si le chauffeur n'a PAS de zone → AFFICHER TOUS LES COLIS
+  if (!zone.id && !zone.name) {
+    return true
+  }
+
+  // ✅ Vérification par ID (priorité)
+  const matchesZoneId =
+    !!zone.id && 
+    (parcel.zoneId === zone.id || 
+     parcel.departureZoneId === zone.id ||
+     parcel.arrivalZoneId === zone.id)
+
+  // ✅ Vérification par nom
   const normalizedZoneName = normalizeZoneName(zone.name)
   const matchesZoneName =
     !!normalizedZoneName &&
-    [parcel.departureZoneName, parcel.departureCity].some(
-      (value) => normalizeZoneName(value) === normalizedZoneName,
-    )
+    [
+      parcel.departureZoneName, 
+      parcel.departureCity,
+      parcel.arrivalZoneName,
+      parcel.arrivalCity
+    ].some((value) => normalizeZoneName(value) === normalizedZoneName)
 
+  // ✅ Si le colis correspond par ID ou par nom → dans la zone
   return matchesZoneId || matchesZoneName
 }
 
+/**
+ * Filtre les colis free selon la zone du chauffeur.
+ * 
+ * ✅ Règle :
+ * - Si le chauffeur a une zone → filtre les colis de sa zone
+ * - Si le chauffeur n'a pas de zone → retourne TOUS les colis
+ */
 export function filterFreeParcelsByDriverZone(
   parcels: Parcel[],
   user: UserZoneFields | null | undefined,
 ): Parcel[] {
-  return parcels.filter((parcel) => isParcelInDriverHomeZone(parcel, user))
+  const zone = getDriverHomeZone(user)
+  
+  // ✅ Si le chauffeur n'a PAS de zone → retourner TOUS les colis
+  if (!zone.id && !zone.name) {
+    console.log('🔍 [freeParcelZone] Pas de zone → affiche TOUS les colis:', parcels.length)
+    return parcels
+  }
+
+  // ✅ Si le chauffeur a une zone → filtrer
+  console.log('🔍 [freeParcelZone] Zone du chauffeur:', zone.name)
+  const filtered = parcels.filter((parcel) => isParcelInDriverHomeZone(parcel, user))
+  console.log('🔍 [freeParcelZone] Colis dans la zone:', filtered.length)
+  return filtered
 }

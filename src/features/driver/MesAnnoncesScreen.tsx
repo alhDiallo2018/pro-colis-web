@@ -1,18 +1,24 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
-import { Avatar, Badge, Button, Dialog } from '@/ds'
+// ============================================================
+// FILE: lib/screens/driver/MesAnnoncesScreen.tsx
+// ============================================================
+
+import { NegotiationChat } from '@/components/NegotiationChat'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
-import { NegotiationChat } from '@/components/NegotiationChat'
-import { useMyAdvertisements } from './hooks'
-import * as adsApi from '@/lib/api/advertisements'
-import { queryClient } from '@/lib/queryClient'
-import { formatFcfa, formatDate, formatWeight } from '@/lib/format'
+import { Avatar, Badge, Button, Dialog, Icon } from '@/ds'
 import type { Advertisement, AdvertisementOffer } from '@/lib/api/advertisements'
+import * as adsApi from '@/lib/api/advertisements'
+import { formatDate, formatFcfa, formatWeight } from '@/lib/format'
+import { queryClient } from '@/lib/queryClient'
+import { useAuthStore } from '@/store/auth'
+import { useMutation } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useMyAdvertisements } from './hooks'
 
 const STATUS_META: Record<string, { label: string; tone: 'amber' | 'green' | 'red' | 'neutral' }> = {
   pending: { label: 'En attente', tone: 'amber' },
+  countered: { label: 'Contre-offre', tone: 'amber' },
   accepted: { label: 'Acceptee', tone: 'green' },
   rejected: { label: 'Refusee', tone: 'red' },
 }
@@ -196,9 +202,22 @@ function OfferRow({
   rejecting: boolean
   onChat: () => void
 }) {
+  const currentUser = useAuthStore((state) => state.user)
   const status = STATUS_META[offer.status] ?? STATUS_META.pending
-  const isPending = offer.status === 'pending'
   const [showParcel, setShowParcel] = useState(false)
+
+  // ✅ Vérifier si l'offre vient du client (pas du chauffeur connecté)
+  const isFromClient = offer.clientId !== currentUser?.id
+
+  // ✅ Le chauffeur peut accepter si :
+  // 1. L'offre est en attente (pending) et vient du client
+  // 2. OU c'est une contre-offre du client (status === 'countered' et c'est le client qui a fait la dernière offre)
+  const canAccept = 
+    (offer.status === 'pending' && isFromClient) ||
+    (offer.status === 'countered' && isFromClient)
+
+  // ✅ Le chauffeur a envoyé une contre-offre
+  const isMyCounter = offer.status === 'countered' && !isFromClient
 
   return (
     <>
@@ -224,12 +243,32 @@ function OfferRow({
             {offer.responseMessage ?? offer.message}
           </div>
         )}
+        {/* ✅ Afficher qui a fait la dernière offre */}
+        {offer.status === 'countered' && (
+          <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--primary)', fontWeight: 600 }}>
+            {isFromClient ? '📩 Nouvelle contre-offre du client' : '📤 Contre-offre envoyée'}
+          </div>
+        )}
       </div>
       <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 'var(--fs-sm)', color: 'var(--teal-600)', whiteSpace: 'nowrap' }}>
         {formatFcfa(offer.price)}
       </span>
       <Badge tone={status.tone}>{status.label}</Badge>
-      {isPending && (
+
+      {/* ✅ Gestion des actions selon le statut et l'expéditeur */}
+      {offer.status === 'accepted' ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--green-700)', fontWeight: 600, fontSize: 'var(--fs-sm)' }}>
+          <Icon name="check_circle" size={16} /> Acceptée
+        </div>
+      ) : offer.status === 'rejected' ? (
+        <div style={{ color: 'var(--text-faint)', fontStyle: 'italic', fontSize: 'var(--fs-xs)' }}>Refusée</div>
+      ) : isMyCounter ? (
+        // ✅ Chauffeur a envoyé une contre-offre → attend la réponse du client
+        <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+          ⏳ En attente réponse client
+        </div>
+      ) : canAccept ? (
+        // ✅ Le chauffeur peut accepter l'offre du client
         <div style={{ display: 'flex', gap: 4 }}>
           <Button size="sm" variant="secondary" icon="forum" onClick={onChat}>
             Chat
@@ -241,7 +280,17 @@ function OfferRow({
             Accepter
           </Button>
         </div>
-      )}
+      ) : offer.status === 'pending' && !isFromClient ? (
+        // ✅ Le chauffeur ne peut pas accepter sa propre offre
+        <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-faint)', fontStyle: 'italic' }}>
+          Votre offre
+        </div>
+      ) : offer.status === 'countered' && !isFromClient ? (
+        // ✅ Le chauffeur attend la réponse du client
+        <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+          ⏳ En attente réponse client
+        </div>
+      ) : null}
     </div>
 
     {showParcel && offer.parcel && (

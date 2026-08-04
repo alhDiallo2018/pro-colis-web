@@ -1,26 +1,35 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
-import * as roles from '@/lib/api/roles'
-import * as parcelsApi from '@/lib/api/parcels'
-import * as bidsApi from '@/lib/api/bids'
-import * as paymentsApi from '@/lib/api/payments'
-import * as cashApi from '@/lib/api/cash-payments'
+// ============================================================
+// FILE: lib/screens/driver/hooks.ts
+// ============================================================
+
 import * as adsApi from '@/lib/api/advertisements'
-import * as vehiclesApi from '@/lib/api/vehicles'
-import * as usersApi from '@/lib/api/users'
-import * as scoreApi from '@/lib/api/score'
-import * as withdrawalsApi from '@/lib/api/withdrawals'
+import * as bidsApi from '@/lib/api/bids'
+import * as cashApi from '@/lib/api/cash-payments'
+import * as parcelsApi from '@/lib/api/parcels'
+import * as paymentsApi from '@/lib/api/payments'
 import * as ratingsApi from '@/lib/api/ratings'
+import * as roles from '@/lib/api/roles'
+import * as scoreApi from '@/lib/api/score'
 import type { ListParams } from '@/lib/api/types'
-import { useAuthStore } from '@/store/auth'
+import * as usersApi from '@/lib/api/users'
+import * as vehiclesApi from '@/lib/api/vehicles'
+import * as withdrawalsApi from '@/lib/api/withdrawals'
 import { queryClient } from '@/lib/queryClient'
-import { filterFreeParcelsByDriverZone } from './freeParcelZone'
+import { useAuthStore } from '@/store/auth'
+import { useMutation, useQuery } from '@tanstack/react-query'
 
 export function useScoreBalance() {
-  return useQuery({ queryKey: ['score', 'balance'], queryFn: () => scoreApi.getBalance() })
+  return useQuery({ 
+    queryKey: ['score', 'balance'], 
+    queryFn: () => scoreApi.getBalance() 
+  })
 }
 
 export function useScoreHistory() {
-  return useQuery({ queryKey: ['score', 'history'], queryFn: () => scoreApi.history() })
+  return useQuery({ 
+    queryKey: ['score', 'history'], 
+    queryFn: () => scoreApi.history() 
+  })
 }
 
 export function usePurchaseScore() {
@@ -34,7 +43,10 @@ export function usePurchaseScore() {
 }
 
 export function useDriverWallet() {
-  return useQuery({ queryKey: ['driver', 'wallet'], queryFn: () => scoreApi.getWallet() })
+  return useQuery({ 
+    queryKey: ['driver', 'wallet'], 
+    queryFn: () => scoreApi.getWallet() 
+  })
 }
 
 export function useWithdrawWallet() {
@@ -48,7 +60,10 @@ export function useWithdrawWallet() {
 }
 
 export function useMyWithdrawals() {
-  return useQuery({ queryKey: ['driver', 'withdrawals'], queryFn: () => withdrawalsApi.myWithdrawals() })
+  return useQuery({ 
+    queryKey: ['driver', 'withdrawals'], 
+    queryFn: () => withdrawalsApi.myWithdrawals() 
+  })
 }
 
 export function useCancelWithdrawal() {
@@ -72,7 +87,10 @@ export function useMyRatings(driverId: string | undefined) {
 }
 
 export function useDriverPayments() {
-  return useQuery({ queryKey: ['driver', 'payments'], queryFn: () => paymentsApi.history() })
+  return useQuery({ 
+    queryKey: ['driver', 'payments'], 
+    queryFn: () => paymentsApi.history() 
+  })
 }
 
 /**
@@ -88,7 +106,10 @@ export function useDriverCashDeclarations() {
 }
 
 export function useMyAdvertisements() {
-  return useQuery({ queryKey: ['driver', 'advertisements'], queryFn: () => adsApi.listMine() })
+  return useQuery({ 
+    queryKey: ['driver', 'advertisements'], 
+    queryFn: () => adsApi.listMine() 
+  })
 }
 
 export function useCreateAdvertisement() {
@@ -99,7 +120,10 @@ export function useCreateAdvertisement() {
 }
 
 export function useDriverVehicle() {
-  return useQuery({ queryKey: ['driver', 'vehicle'], queryFn: () => vehiclesApi.getMine() })
+  return useQuery({ 
+    queryKey: ['driver', 'vehicle'], 
+    queryFn: () => vehiclesApi.getMine() 
+  })
 }
 
 export function useUpsertVehicle() {
@@ -110,7 +134,9 @@ export function useUpsertVehicle() {
 }
 
 export function useChangePin() {
-  return useMutation({ mutationFn: (p: { currentPin: string; newPin: string }) => usersApi.changePin(p) })
+  return useMutation({ 
+    mutationFn: (p: { currentPin: string; newPin: string }) => usersApi.changePin(p) 
+  })
 }
 
 export function useUpdateDriverStatus() {
@@ -133,20 +159,19 @@ export function useUpdateDriverProfile() {
 }
 
 export function useDriverParcels(params: ListParams = {}) {
-  return useQuery({ queryKey: ['driver', 'parcels', params], queryFn: () => roles.driverParcels(params) })
+  return useQuery({ 
+    queryKey: ['driver', 'parcels', params], 
+    queryFn: () => roles.driverParcels(params) 
+  })
 }
 
+// ✅ useDriverFreeParcels - Le filtrage par zone est fait dans le composant
 export function useDriverFreeParcels(params: ListParams = {}) {
-  const user = useAuthStore((state) => state.user)
-
   return useQuery({
     queryKey: ['parcels', 'free', params],
     queryFn: () => parcelsApi.listFree(params),
-    // Le même filtre alimente le tableau de bord et la page « Colis à prendre ».
-    select: (data) => ({
-      ...data,
-      parcels: filterFreeParcelsByDriverZone(data.parcels, user),
-    }),
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    retry: 2,
   })
 }
 
@@ -154,7 +179,8 @@ export function useDriverBidsSent() {
   return useQuery({
     queryKey: ['driver', 'bids', 'sent'],
     queryFn: () => roles.driverBidsSent(),
-    refetchInterval: 15_000,
+    refetchInterval: 15000,
+    staleTime: 10000,
   })
 }
 
