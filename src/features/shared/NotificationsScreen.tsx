@@ -27,6 +27,7 @@ function getIconInfo(type: string) {
 
 const STATUS_LABELS: Record<string, string> = {
   pending: 'En attente',
+  negotiating: 'En négociation',
   confirmed: 'Confirmé',
   picked_up: 'Ramassé',
   in_transit: 'En transit',

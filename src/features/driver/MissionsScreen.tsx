@@ -4,12 +4,14 @@ import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { ParcelMedia } from '@/components/ParcelMedia'
 import { ParcelDetailDialog } from '@/components/ParcelDetailDialog'
+import { NegotiationChat } from '@/components/NegotiationChat'
 import { PayCommissionDialog } from './PayCommissionDialog'
 import { DeclareCashDialog } from './DeclareCashDialog'
 import { needsCashDeclaration } from './cashDeclaration'
-import { useAdvanceParcel, useDeliverParcel, useDriverParcels } from './hooks'
+import { useAdvanceParcel, useDeliverParcel, useDriverParcels, useRespondToBid } from './hooks'
 import { ApiError } from '@/lib/api/client'
 import { formatFcfa, toStatusKey } from '@/lib/format'
+import { useAuthStore } from '@/store/auth'
 import type { ApiParcelStatus, Parcel } from '@/lib/api/types'
 import type { DriverStep } from '@/lib/api/roles'
 
@@ -26,10 +28,14 @@ const NEXT_STEP: Partial<Record<ApiParcelStatus, { step: DriverStep; label: stri
 export function MissionsScreen() {
   const query = useDriverParcels()
   const advance = useAdvanceParcel()
+  const respondToBid = useRespondToBid()
+  const user = useAuthStore((s) => s.user)
+  const driverId = user?.id
   const [deliverTarget, setDeliverTarget] = useState<Parcel | null>(null)
   const [detailTarget, setDetailTarget] = useState<Parcel | null>(null)
   const [commissionTarget, setCommissionTarget] = useState<Parcel | null>(null)
   const [cashTarget, setCashTarget] = useState<Parcel | null>(null)
+  const [negotiateTarget, setNegotiateTarget] = useState<{ parcel: Parcel; bidId: string } | null>(null)
   const parcels = (query.data?.parcels ?? []).filter((p) => p.status !== 'cancelled')
 
   return (
@@ -47,6 +53,8 @@ export function MissionsScreen() {
           {parcels.map((p) => {
             const next = NEXT_STEP[p.status]
             const hasMedia = Boolean(p.photoUrls?.length || p.videoUrls?.length || p.audioUrls?.length)
+            const activeBid = p.bids?.find((b) => b.driverId === driverId && (b.status === 'pending' || b.status === 'negotiating' || b.status === 'countered'))
+            const hasActiveBid = !p.driverId && activeBid
             return (
               <div key={p.id} style={{ padding: '14px 18px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }} onClick={() => setDetailTarget(p)}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -80,7 +88,45 @@ export function MissionsScreen() {
                     Déclarer l’encaissement
                   </Button>
                 )}
-                {next ? (
+                {hasActiveBid && activeBid ? (
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <Button
+                      size="sm"
+                      icon="close"
+                      variant="danger"
+                      loading={respondToBid.isPending && respondToBid.variables?.action === 'reject' && respondToBid.variables?.bidId === activeBid.id}
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation()
+                        respondToBid.mutate({ bidId: activeBid.id, action: 'reject' })
+                      }}
+                    >
+                      Refuser
+                    </Button>
+                    <Button
+                      size="sm"
+                      icon="forum"
+                      variant="amber"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation()
+                        setNegotiateTarget({ parcel: p, bidId: activeBid.id })
+                      }}
+                    >
+                      Négocier
+                    </Button>
+                    <Button
+                      size="sm"
+                      icon="check"
+                      variant="teal"
+                      loading={respondToBid.isPending && respondToBid.variables?.action === 'accept' && respondToBid.variables?.bidId === activeBid.id}
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation()
+                        respondToBid.mutate({ bidId: activeBid.id, action: 'accept' })
+                      }}
+                    >
+                      Accepter
+                    </Button>
+                  </div>
+                ) : next ? (
                   <Button
                     size="sm"
                     icon={next.icon}
@@ -131,6 +177,40 @@ export function MissionsScreen() {
         }}
       />
       <PayCommissionDialog parcel={commissionTarget} onClose={() => setCommissionTarget(null)} />
+      {cashTarget && (
+        <DeclareCashDialog
+          parcel={cashTarget}
+          open={true}
+          onClose={() => setCashTarget(null)}
+        />
+      )}
+
+      {negotiateTarget && (
+        <Dialog
+          open
+          onClose={() => setNegotiateTarget(null)}
+          title={`Négociation - ${negotiateTarget.parcel.trackingNumber}`}
+          style={{ maxWidth: 520, height: 520, display: 'flex', flexDirection: 'column' }}
+        >
+          <NegotiationChat
+            peerId={negotiateTarget.parcel.senderId ?? ''}
+            peerName={negotiateTarget.parcel.senderName ?? 'Client'}
+            parcelId={negotiateTarget.parcel.id}
+            bidId={negotiateTarget.bidId}
+            parcelInfo={{
+              trackingNumber: negotiateTarget.parcel.trackingNumber,
+              departureCity: negotiateTarget.parcel.departureCity,
+              arrivalCity: negotiateTarget.parcel.arrivalCity,
+              description: negotiateTarget.parcel.description,
+              receiverName: negotiateTarget.parcel.receiverName,
+              receiverPhone: negotiateTarget.parcel.receiverPhone,
+              weight: negotiateTarget.parcel.weight?.toString(),
+              type: negotiateTarget.parcel.type,
+              status: negotiateTarget.parcel.status,
+            }}
+          />
+        </Dialog>
+      )}
     </div>
   )
 }

@@ -73,6 +73,7 @@ function emailShell(title: string, bodyContent: string): string {
 const STATUS_LABEL: Record<string, string> = {
   pending: 'En attente',
   free: 'Disponible aux enchères',
+  negotiating: 'En négociation',
   confirmed: 'Confirmé',
   picked_up: 'Ramassé',
   in_transit: 'En transit',

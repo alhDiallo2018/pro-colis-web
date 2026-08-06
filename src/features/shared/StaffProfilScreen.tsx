@@ -12,6 +12,7 @@ import { isSupportRole } from '@/lib/api/types'
 const PARCEL_STATUS_LABEL: Record<string, string> = {
   pending: 'En attente',
   free: 'Libre service',
+  negotiating: 'En négociation',
   confirmed: 'Confirmés',
   picked_up: 'Ramassés',
   in_transit: 'En transit',

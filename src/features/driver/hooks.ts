@@ -196,7 +196,7 @@ export function useCreateBid() {
 
 export function useRespondToBid() {
   return useMutation({
-    mutationFn: ({ bidId, action, price, message }: { bidId: string; action: 'accept' | 'counter'; price?: number; message?: string }) =>
+    mutationFn: ({ bidId, action, price, message }: { bidId: string; action: 'accept' | 'counter' | 'reject'; price?: number; message?: string }) =>
       bidsApi.driverRespond(bidId, { action, price, message }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['parcels', 'free'] })

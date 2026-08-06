@@ -49,10 +49,12 @@ services:
     image: sendprocolis-api:latest
     container_name: sendprocolis-api
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       NODE_ENV: production
       PORT: 8080
-      DATABASE_URL: postgresql://sendprocolis:${POSTGRES_PASSWORD}@postgres:5432/sendprocolis?schema=public
+      DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:5432/sendprocolis?schema=public
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       JWT_ACCESS_EXPIRES_IN: 15m
@@ -80,31 +82,26 @@ services:
       # Prometheus scrape api:8080/internal/metrics depuis ce réseau ; la route
       # reste protégée par son propre bearer token et n'est pas exposée par Caddy.
       - observability
-    depends_on:
-      postgres:
-        condition: service_healthy
     # Aucun `ports:` → l'API n'est joignable que par Caddy sur le réseau interne.
 
-  postgres:
-    image: postgres:16-alpine
-    container_name: sendprocolis-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: sendprocolis
-      POSTGRES_USER: sendprocolis
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - default
-      # postgres-exporter (stack d'observabilité) se connecte ici avec un rôle
-      # de lecture seule dédié.
-      - observability
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sendprocolis -d sendprocolis"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # postgres:  # Utilise la base locale (host.docker.internal) — décommenter pour utiliser un conteneur Docker
+  #   image: postgres:16-alpine
+  #   container_name: sendprocolis-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: sendprocolis
+  #     POSTGRES_USER: sendprocolis
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   networks:
+  #     - default
+  #     - observability
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U sendprocolis -d sendprocolis"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
 networks:
   default:

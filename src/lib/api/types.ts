@@ -27,6 +27,7 @@ export type CashCollectionPoint = 'sender_pickup' | 'receiver_delivery'
 export type ApiParcelStatus =
   | 'pending'
   | 'free'
+  | 'negotiating'
   | 'confirmed'
   | 'picked_up'
   | 'in_transit'

@@ -8,6 +8,26 @@ export interface CreateBidPayload {
   audioUrl?: string
 }
 
+export interface BidNegotiation {
+  id: string
+  bidId: string
+  authorId: string
+  authorRole: string
+  authorName?: string
+  price: number
+  message?: string
+  type: string
+  createdAt: string
+}
+
+export interface AcceptBidResponse {
+  success: boolean
+  finalized: boolean
+  bid?: Bid
+  parcel?: any
+  message?: string
+}
+
 /** Chauffeur : faire une offre sur une annonce. */
 export async function create(payload: CreateBidPayload): Promise<Bid> {
   const { data } = await api.post('/driver/bids', payload)
@@ -25,8 +45,9 @@ export async function listForParcel(parcelId: string): Promise<Bid[]> {
   return data.bids ?? data.data ?? []
 }
 
-export async function accept(parcelId: string, bidId: string): Promise<void> {
-  await api.post(`/client/parcels/${parcelId}/bids/${bidId}/accept`)
+export async function accept(parcelId: string, bidId: string): Promise<AcceptBidResponse> {
+  const { data } = await api.post(`/client/parcels/${parcelId}/bids/${bidId}/accept`)
+  return data
 }
 
 export async function reject(parcelId: string, bidId: string): Promise<void> {
@@ -39,8 +60,14 @@ export async function negotiate(bidId: string, payload: { price: number; message
   return data.bid ?? data.data
 }
 
-/** Driver responds to a counter-offer: accept or counter. */
-export async function driverRespond(bidId: string, payload: { action: 'accept' | 'counter'; price?: number; message?: string }): Promise<{ bid?: Bid; parcel?: any }> {
+/** Driver responds to a counter-offer: accept, counter, or reject. */
+export async function driverRespond(bidId: string, payload: { action: 'accept' | 'counter' | 'reject'; price?: number; message?: string }): Promise<{ bid?: Bid; parcel?: any; finalized?: boolean }> {
   const { data } = await api.post(`/driver/bids/${bidId}/respond`, payload)
   return data
+}
+
+/** Get negotiation history for a bid. */
+export async function getNegotiations(bidId: string): Promise<BidNegotiation[]> {
+  const { data } = await api.get(`/bids/${bidId}/negotiations`)
+  return data.negotiations ?? []
 }

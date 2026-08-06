@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react'
 export type ParcelStatus =
   | 'pending'
   | 'free'
+  | 'negotiating'
   | 'confirmed'
   | 'pickup'
   | 'transit'
@@ -23,6 +24,7 @@ export interface ParcelStatusMeta {
 export const PARCEL_STATUS: Record<ParcelStatus, ParcelStatusMeta> = {
   pending: { label: 'En attente', icon: 'schedule', key: 'pending' },
   free: { label: 'Annonce', icon: 'sell', key: 'free' },
+  negotiating: { label: 'En négociation', icon: 'handshake', key: 'negotiating' },
   confirmed: { label: 'Confirmé', icon: 'check_circle', key: 'confirmed' },
   pickup: { label: 'Ramassé', icon: 'package_2', key: 'pickup' },
   transit: { label: 'En transit', icon: 'local_shipping', key: 'transit' },

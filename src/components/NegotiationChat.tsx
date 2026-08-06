@@ -111,7 +111,10 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
   const acceptPrice = useMutation({
     mutationFn: async (payload: { amount: number; message?: string }) => {
       if (offerId && advertisementId) {
-        return adsApi.acceptOffer(advertisementId, offerId)
+        if (role === 'driver') {
+          return adsApi.acceptOffer(advertisementId, offerId)
+        }
+        return adsApi.clientAcceptOffer(advertisementId, offerId)
       }
       if (!bidId || !parcelId) return Promise.resolve()
       if (role === 'driver') {
@@ -119,11 +122,12 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
       }
       return bidsApi.accept(parcelId, bidId)
     },
-    onSuccess: () => {
+    onSuccess: (result: any) => {
       qc.invalidateQueries({ queryKey: ['client', 'bids'] })
       qc.invalidateQueries({ queryKey: ['driver', 'bids'] })
       qc.invalidateQueries({ queryKey: ['client', 'parcels'] })
       qc.invalidateQueries({ queryKey: ['parcels', 'free'] })
+      return result
     },
   })
 

@@ -10,10 +10,11 @@ import { formatFcfa } from '@/lib/format'
 
 const AVATAR_STATUS: Record<string, AvatarStatus> = { available: 'online', busy: 'busy', offline: 'offline' }
 
-const STATUS_ORDER = ['pending', 'free', 'confirmed', 'picked_up', 'in_transit', 'arrived', 'out_for_delivery', 'delivered', 'cancelled']
+const STATUS_ORDER = ['pending', 'free', 'negotiating', 'confirmed', 'picked_up', 'in_transit', 'arrived', 'out_for_delivery', 'delivered', 'cancelled']
 const STATUS_SHORT: Record<string, string> = {
   pending: 'Att.',
   free: 'Libre',
+  negotiating: 'Nég.',
   confirmed: 'Conf.',
   picked_up: 'Ram.',
   in_transit: 'Tran.',
