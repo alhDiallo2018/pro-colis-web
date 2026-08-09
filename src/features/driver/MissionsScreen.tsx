@@ -5,6 +5,8 @@ import { QueryState } from '@/components/QueryState'
 import { ParcelMedia } from '@/components/ParcelMedia'
 import { ParcelDetailDialog } from '@/components/ParcelDetailDialog'
 import { NegotiationChat } from '@/components/NegotiationChat'
+import { NegotiationTurn } from '@/components/NegotiationTurn'
+import { ProposalsPanel } from './ProposalsPanel'
 import { PayCommissionDialog } from './PayCommissionDialog'
 import { DeclareCashDialog } from './DeclareCashDialog'
 import { needsCashDeclaration } from './cashDeclaration'
@@ -35,11 +37,14 @@ export function MissionsScreen() {
   const [detailTarget, setDetailTarget] = useState<Parcel | null>(null)
   const [commissionTarget, setCommissionTarget] = useState<Parcel | null>(null)
   const [cashTarget, setCashTarget] = useState<Parcel | null>(null)
-  const [negotiateTarget, setNegotiateTarget] = useState<{ parcel: Parcel; bidId: string } | null>(null)
+  const [negotiateTarget, setNegotiateTarget] = useState<{ parcel: Parcel; bidId: string; canAccept: boolean } | null>(null)
   const parcels = (query.data?.parcels ?? []).filter((p) => p.status !== 'cancelled')
 
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto' }}>
+    <div style={{ maxWidth: 920, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 'var(--gap-card)' }}>
+      {/* Les propositions directes précèdent les missions : elles demandent une
+          réponse, alors que les missions ne demandent qu'un avancement. */}
+      <ProposalsPanel />
       <Panel title="Mes missions" flush>
         <QueryState
           isLoading={query.isLoading}
@@ -68,7 +73,7 @@ export function MissionsScreen() {
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                     <span style={{ fontFamily: 'var(--font-mono)' }}>{p.trackingNumber}</span> · {p.receiverName}
-                    {p.price != null && ` · ${formatFcfa(p.price)}`}
+                    {(activeBid?.lastPrice ?? p.price) != null && ` · ${formatFcfa(activeBid?.lastPrice ?? p.price)}`}
                   </div>
                 </div>
                 <StatusBadge status={toStatusKey(p.status)} size="sm" />
@@ -108,23 +113,34 @@ export function MissionsScreen() {
                       variant="amber"
                       onClick={(e: React.MouseEvent) => {
                         e.stopPropagation()
-                        setNegotiateTarget({ parcel: p, bidId: activeBid.id })
+                        setNegotiateTarget({
+                          parcel: p,
+                          bidId: activeBid.id,
+                          canAccept: activeBid.canDriverAccept ?? activeBid.lastOfferBy === 'client',
+                        })
                       }}
                     >
                       Négocier
                     </Button>
-                    <Button
-                      size="sm"
-                      icon="check"
-                      variant="teal"
-                      loading={respondToBid.isPending && respondToBid.variables?.action === 'accept' && respondToBid.variables?.bidId === activeBid.id}
-                      onClick={(e: React.MouseEvent) => {
-                        e.stopPropagation()
-                        respondToBid.mutate({ bidId: activeBid.id, action: 'accept' })
-                      }}
-                    >
-                      Accepter
-                    </Button>
+                    {/* Accepter n'a de sens que si le dernier prix vient du
+                        client : sinon le chauffeur validerait sa propre offre
+                        (l'API renvoie 409). */}
+                    {(activeBid.canDriverAccept ?? activeBid.lastOfferBy === 'client') ? (
+                      <Button
+                        size="sm"
+                        icon="check"
+                        variant="primary"
+                        loading={respondToBid.isPending && respondToBid.variables?.action === 'accept' && respondToBid.variables?.bidId === activeBid.id}
+                        onClick={(e: React.MouseEvent) => {
+                          e.stopPropagation()
+                          respondToBid.mutate({ bidId: activeBid.id, action: 'accept' })
+                        }}
+                      >
+                        Accepter
+                      </Button>
+                    ) : (
+                      <NegotiationTurn waitingFor="client" />
+                    )}
                   </div>
                 ) : next ? (
                   <Button
@@ -177,13 +193,6 @@ export function MissionsScreen() {
         }}
       />
       <PayCommissionDialog parcel={commissionTarget} onClose={() => setCommissionTarget(null)} />
-      {cashTarget && (
-        <DeclareCashDialog
-          parcel={cashTarget}
-          open={true}
-          onClose={() => setCashTarget(null)}
-        />
-      )}
 
       {negotiateTarget && (
         <Dialog
@@ -197,6 +206,7 @@ export function MissionsScreen() {
             peerName={negotiateTarget.parcel.senderName ?? 'Client'}
             parcelId={negotiateTarget.parcel.id}
             bidId={negotiateTarget.bidId}
+            canAccept={negotiateTarget.canAccept}
             parcelInfo={{
               trackingNumber: negotiateTarget.parcel.trackingNumber,
               departureCity: negotiateTarget.parcel.departureCity,
@@ -205,7 +215,7 @@ export function MissionsScreen() {
               receiverName: negotiateTarget.parcel.receiverName,
               receiverPhone: negotiateTarget.parcel.receiverPhone,
               weight: negotiateTarget.parcel.weight?.toString(),
-              type: negotiateTarget.parcel.type,
+              type: negotiateTarget.parcel.type ?? undefined,
               status: negotiateTarget.parcel.status,
             }}
           />

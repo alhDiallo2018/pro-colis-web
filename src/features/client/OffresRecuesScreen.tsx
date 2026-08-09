@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Avatar, Badge, Button, Card, Dialog, Icon, Toast } from '@/ds'
 import { QueryState } from '@/components/QueryState'
 import { NegotiationChat } from '@/components/NegotiationChat'
+import { NegotiationTurn } from '@/components/NegotiationTurn'
 import { useAcceptBid, useReceivedBids } from './hooks'
 import { ApiError } from '@/lib/api/client'
 import { formatFcfa } from '@/lib/format'
@@ -82,6 +83,7 @@ function ChatDialog({ bid, onClose }: { bid: Bid | null; onClose: () => void }) 
           }
           onAcceptBid={handleAccept}
           isOwner
+          canAccept={bid.canClientAccept ?? bid.lastOfferBy !== 'client'}
         />
       </div>
     </Dialog>
@@ -118,6 +120,13 @@ function BidRow({ bid, onNegotiate }: { bid: Bid; onNegotiate: () => void }) {
   const isActive = bid.status === 'pending' || bid.status === 'countered'
   const error = accept.error instanceof ApiError ? accept.error.message : null
 
+  // Le camp qui vient de poser un prix ne peut pas l'accepter lui-même :
+  // l'API renvoie 409, on masque donc le bouton côté client dans ce cas.
+  const lastOfferBy = bid.lastOfferBy ?? 'driver'
+  const lastPrice = bid.lastPrice ?? bid.price
+  const lastMessage = bid.lastMessage ?? bid.responseMessage ?? bid.message
+  const canAccept = bid.canClientAccept ?? lastOfferBy === 'driver'
+
   return (
     <Card>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -135,15 +144,21 @@ function BidRow({ bid, onNegotiate }: { bid: Bid; onNegotiate: () => void }) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 12 }}>
-        <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>Proposition</span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 20, color: 'var(--teal-600)' }}>{formatFcfa(bid.price)}</span>
+        <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
+          {bid.status === 'countered' ? 'Dernier prix' : 'Proposition'}
+        </span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 20, color: 'var(--teal-600)' }}>{formatFcfa(lastPrice)}</span>
       </div>
 
-      {(bid.message || bid.responseMessage) && (
+      {/* Le dernier commentaire accompagne le dernier prix : c'est le couple
+          qu'on relit au moment d'accepter, sans rouvrir le fil. */}
+      {lastMessage && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
-          {bid.responseMessage
-            ? <Bubble side="right" who="Vous (contre-proposition)" text={bid.responseMessage} />
-            : (bid.message && <Bubble side="left" who={bid.driverName ?? 'Chauffeur'} text={bid.message} />)}
+          <Bubble
+            side={lastOfferBy === 'client' ? 'right' : 'left'}
+            who={lastOfferBy === 'client' ? 'Vous (contre-proposition)' : (bid.driverName ?? 'Chauffeur')}
+            text={lastMessage}
+          />
         </div>
       )}
 
@@ -156,13 +171,17 @@ function BidRow({ bid, onNegotiate }: { bid: Bid; onNegotiate: () => void }) {
       )}
 
       {isActive ? (
-        <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 14, alignItems: 'center', flexWrap: 'wrap' }}>
           <Button variant="secondary" size="sm" icon="forum" onClick={onNegotiate}>
             Négocier
           </Button>
-          <Button block size="sm" icon="check" loading={accept.isPending} onClick={() => accept.mutate(bid.id)}>
-            Accepter l’offre
-          </Button>
+          {canAccept ? (
+            <Button block size="sm" icon="check" loading={accept.isPending} onClick={() => accept.mutate(bid.id)}>
+              Accepter {formatFcfa(lastPrice)}
+            </Button>
+          ) : (
+            <NegotiationTurn waitingFor="driver" />
+          )}
         </div>
       ) : bid.status === 'accepted' ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 14, color: 'var(--green-700)', fontWeight: 600, fontSize: 'var(--fs-sm)' }}>

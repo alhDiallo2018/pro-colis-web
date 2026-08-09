@@ -49,6 +49,7 @@ export function formatDateTime(iso: string | null | undefined): string {
 const STATUS_MAP: Record<ApiParcelStatus, ParcelStatus> = {
   pending: 'pending',
   free: 'free',
+  proposal_sent: 'proposal',
   negotiating: 'negotiating',
   confirmed: 'confirmed',
   picked_up: 'pickup',

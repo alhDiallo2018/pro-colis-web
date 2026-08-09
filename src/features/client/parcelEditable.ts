@@ -6,8 +6,11 @@ import type { Parcel } from '@/lib/api/types'
  * amorcé ferment l'édition.
  */
 export function isParcelEditable(parcel: Parcel): boolean {
-  if (parcel.status !== 'pending' && parcel.status !== 'free') return false
-  if (parcel.driverId) return false
+  // `proposal_sent` et `negotiating` restent modifiables côté API : le colis
+  // est proposé mais aucun chauffeur ne l'a encore pris en charge.
+  const EDITABLE_STATUSES = ['pending', 'free', 'proposal_sent', 'negotiating']
+  if (!EDITABLE_STATUSES.includes(parcel.status)) return false
+  if (parcel.assignedDriverId ?? parcel.driverId) return false
   if (parcel.selectedBidId || parcel.negotiatedPrice) return false
   if (parcel.bids?.some((bid) => bid.status === 'accepted')) return false
   return parcel.paymentStatus !== 'processing' && parcel.paymentStatus !== 'completed'

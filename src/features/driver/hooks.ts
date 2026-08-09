@@ -6,6 +6,7 @@ import * as adsApi from '@/lib/api/advertisements'
 import * as bidsApi from '@/lib/api/bids'
 import * as cashApi from '@/lib/api/cash-payments'
 import * as parcelsApi from '@/lib/api/parcels'
+import * as proposalsApi from '@/lib/api/proposals'
 import * as paymentsApi from '@/lib/api/payments'
 import * as ratingsApi from '@/lib/api/ratings'
 import * as roles from '@/lib/api/roles'
@@ -218,5 +219,39 @@ export function useDeliverParcel() {
     mutationFn: ({ parcelId, ...payload }: { parcelId: string } & roles.DeliverPayload) =>
       roles.driverDeliver(parcelId, payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['driver', 'parcels'] }),
+  })
+}
+/**
+ * Propositions directes reçues : un client a choisi ce chauffeur, mais le colis
+ * ne lui est pas assigné tant qu'il n'a pas répondu. Elles n'apparaissent donc
+ * pas dans `useDriverParcels`, qui ne liste que les colis déjà pris en charge.
+ */
+export function useDriverProposals() {
+  return useQuery({
+    queryKey: ['driver', 'proposals'],
+    queryFn: () => proposalsApi.listForDriver(),
+    refetchInterval: 15000,
+    staleTime: 10000,
+  })
+}
+
+export function useRespondToProposal() {
+  return useMutation({
+    mutationFn: ({
+      parcelId,
+      action,
+      price,
+      message,
+    }: {
+      parcelId: string
+      action: proposalsApi.DriverProposalAction
+      price?: number
+      message?: string
+    }) => proposalsApi.driverRespond(parcelId, action, { price, message }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['driver', 'proposals'] })
+      queryClient.invalidateQueries({ queryKey: ['driver', 'parcels'] })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
   })
 }

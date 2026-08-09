@@ -455,7 +455,7 @@ export function NewParcelScreen() {
                     onClick={() => chooseMode('driver')}
                     icon="local_shipping"
                     title="Confier à un chauffeur"
-                    desc="Choisissez un chauffeur ; il devra confirmer la prise en charge."
+                    desc="Choisissez un chauffeur : il pourra accepter, refuser ou négocier votre prix."
                   />
                 </div>
               </div>
@@ -497,7 +497,7 @@ export function NewParcelScreen() {
               <div className="pc-field-pair" style={{ gap: 12 }}>
                 <Input label={required('Poids (kg)')} type="number" inputMode="decimal" mono error={errors.weight?.message} {...register('weight')} />
                 <Input
-                  label={mode === 'driver' ? 'Prix convenu (FCFA)' : 'Prix proposé (FCFA)'}
+                  label="Prix proposé (FCFA)"
                   type="number"
                   inputMode="numeric"
                   mono

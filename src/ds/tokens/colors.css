@@ -123,6 +123,7 @@
      ============================================================ */
   --status-pending-fg:    #9A5B00;  --status-pending-bg:    var(--amber-50);   --status-pending-dot:    var(--amber-400);
   --status-free-fg:       #1D4FB8;  --status-free-bg:       #E7EEFC;           --status-free-dot:       #2563EB;
+  --status-proposal-fg:   #6D28D9;  --status-proposal-bg:   #F1EBFD;           --status-proposal-dot:   #8B5CF6;
   --status-negotiating-fg:#C24A00;  --status-negotiating-bg:#FFF3E0;           --status-negotiating-dot:var(--deep-orange-500, #FF5722);
   --status-confirmed-fg:  var(--teal-600); --status-confirmed-bg: var(--teal-50); --status-confirmed-dot: var(--teal-500);
   --status-pickup-fg:     #5B27B0;  --status-pickup-bg:     #EFE7FB;           --status-pickup-dot:     #7C3AED;

@@ -20,6 +20,24 @@ export interface BidNegotiation {
   createdAt: string
 }
 
+export interface BidNegotiationDetail {
+  id: string
+  price: number
+  status: string
+  canNegotiate: boolean
+  /** Camp qui a posé le dernier prix : l'autre seul peut accepter. */
+  lastOfferBy: 'client' | 'driver'
+  lastPrice: number
+  lastMessage?: string | null
+  canAccept: boolean
+  canClientAccept: boolean
+  canDriverAccept: boolean
+  viewerRole: 'client' | 'driver'
+  negotiationHistory: BidNegotiation[]
+  driver?: { id: string; fullName: string; profilePhoto?: string | null; phone?: string; rating?: number }
+  parcel?: { id: string; trackingNumber?: string; status?: string; description?: string | null }
+}
+
 export interface AcceptBidResponse {
   success: boolean
   finalized: boolean
@@ -68,6 +86,13 @@ export async function driverRespond(bidId: string, payload: { action: 'accept' |
 
 /** Get negotiation history for a bid. */
 export async function getNegotiations(bidId: string): Promise<BidNegotiation[]> {
-  const { data } = await api.get(`/bids/${bidId}/negotiations`)
-  return data.negotiations ?? []
+  // La route de l'API est au singulier et renvoie le fil dans `bid`.
+  const { data } = await api.get(`/bids/${bidId}/negotiation`)
+  return data.bid?.negotiationHistory ?? []
+}
+
+/** Détail de négociation : dernier prix, dernier commentaire, tour de parole. */
+export async function getNegotiation(bidId: string): Promise<BidNegotiationDetail> {
+  const { data } = await api.get(`/bids/${bidId}/negotiation`)
+  return data.bid
 }

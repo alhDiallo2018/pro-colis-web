@@ -24,7 +24,9 @@ export function buildSteps(parcel: Parcel): StepperStep[] {
   if (current === 'cancelled') {
     return [{ label: 'Annulé', icon: 'cancel', status: 'current' }]
   }
-  const idx = LIFECYCLE.indexOf(current)
+  // La proposition directe n'est pas une étape de la course : tant qu'elle
+  // n'est pas acceptée, le suivi reste au premier jalon.
+  const idx = LIFECYCLE.indexOf(current === 'proposal' || current === 'negotiating' ? 'pending' : current)
   return LIFECYCLE.map((k, i) => ({
     label: PARCEL_STATUS[k].label,
     icon: PARCEL_STATUS[k].icon,

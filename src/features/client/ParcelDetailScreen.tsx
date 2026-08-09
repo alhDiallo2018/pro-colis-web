@@ -6,6 +6,7 @@ import { ParcelMedia } from '@/components/ParcelMedia'
 import { QrCode } from '@/components/QrCode'
 import { useCreateRating, useDeliveryCode, useParcel } from './hooks'
 import { EditParcelDialog } from './EditParcelDialog'
+import { ProposalStatusCard } from './ProposalStatusCard'
 import { isParcelEditable } from './parcelEditable'
 import { createPaydunyaPayment } from '@/lib/api/paydunya'
 import { estimate } from '@/lib/api/commission'
@@ -133,6 +134,11 @@ export function ParcelDetailScreen() {
                 )}
               </Card>
             )}
+
+            {/* Une proposition en cours prime sur la carte « Chauffeur » : le
+                colis n'est pas encore pris en charge, il est en attente de
+                réponse ou en négociation. */}
+            {parcel.proposal && <ProposalStatusCard parcel={parcel} />}
 
             {(parcel.driverName || parcel.driver) && (
               <>

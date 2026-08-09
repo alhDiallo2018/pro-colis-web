@@ -47,11 +47,20 @@ interface Props {
     audioUrls?: string[]
   }
   isOwner?: boolean
+  /**
+   * Autorise l'acceptation d'un prix reçu. Le camp qui vient de proposer ne
+   * peut pas accepter son propre montant : le parent le calcule depuis l'état
+   * de la négociation (`canClientAccept` / `canDriverAccept`).
+   */
+  canAccept?: boolean
   onCreateBid?: (price: number, message?: string) => void
   onAcceptBid?: (price: number, message?: string) => void
 }
 
-export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertisementId, offerId, parcelInfo, isOwner: _isOwner = false, onCreateBid, onAcceptBid }: Props) {
+export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertisementId, offerId, parcelInfo, isOwner: _isOwner = false, canAccept, onCreateBid, onAcceptBid }: Props) {
+  // Sans indication du parent, on retombe sur l'ancien comportement : seul le
+  // propriétaire du colis pouvait accepter un prix.
+  const acceptAllowed = canAccept ?? _isOwner
   const user = useAuthStore((s) => s.user)
   const userId = user?.id
   const role = user?.role
@@ -387,7 +396,7 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
                 key={m.id}
                 message={m}
                 mine={m.senderId === userId}
-                isOwner={_isOwner}
+                isOwner={acceptAllowed}
                 isLastNonMinePrice={m.id === lastNonMinePriceId}
                 onAcceptPrice={(amount) => handleAcceptPrice(amount)}
                 onCounterPrice={(amount) => handleCounterPrice(amount)}

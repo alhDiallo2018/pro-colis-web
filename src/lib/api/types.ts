@@ -27,6 +27,8 @@ export type CashCollectionPoint = 'sender_pickup' | 'receiver_delivery'
 export type ApiParcelStatus =
   | 'pending'
   | 'free'
+  /** Proposition directe envoyée à un chauffeur, en attente de sa réponse. */
+  | 'proposal_sent'
   | 'negotiating'
   | 'confirmed'
   | 'picked_up'
@@ -115,6 +117,34 @@ export interface ZoneDriver {
 
 export type BidStatus = 'pending' | 'countered' | 'accepted' | 'rejected' | string
 
+/** Camp qui a posé le dernier prix : seul l'autre peut accepter. */
+export type NegotiationSide = 'client' | 'driver'
+
+export type ProposalStatus = 'pending' | 'accepted' | 'rejected' | 'countered' | 'expired'
+
+/** Proposition directe : le client a choisi son chauffeur, qui doit répondre. */
+export interface ParcelProposal {
+  status: ProposalStatus
+  driverId?: string | null
+  driverName?: string | null
+  price?: number | null
+  lastCounterPrice?: number | null
+  lastMessage?: string | null
+  lastMessageAt?: string | null
+  lastOfferBy: NegotiationSide
+  negotiationCount: number
+  canClientAccept: boolean
+  canDriverAccept: boolean
+  history?: {
+    id: string
+    fromUserId: string
+    fromUserRole: NegotiationSide
+    price: number
+    message?: string | null
+    createdAt: string
+  }[]
+}
+
 export interface Bid {
   id: string
   parcelId: string
@@ -129,6 +159,13 @@ export interface Bid {
   respondedAt?: string | null
   createdAt?: string
   updatedAt?: string
+  /** Dernier prix échangé et le commentaire qui l'accompagne. */
+  lastOfferBy?: NegotiationSide
+  lastPrice?: number | null
+  lastMessage?: string | null
+  lastMessageAt?: string | null
+  canClientAccept?: boolean
+  canDriverAccept?: boolean
   parcel?: { id: string; trackingNumber?: string; status?: string; receiverName?: string } | null
 }
 
@@ -175,6 +212,13 @@ export interface Parcel {
   driverName?: string | null
   driverPhone?: string | null
   driver?: User | null
+  /** Chauffeur retenu (null tant que la proposition n'est pas acceptée). */
+  assignedDriverId?: string | null
+  assignedDriver?: User | null
+  proposedDriverId?: string | null
+  proposedDriverName?: string | null
+  proposedDriver?: User | null
+  proposal?: ParcelProposal | null
   price?: number | null
   proposedPrice?: number | null
   negotiatedPrice?: number | null

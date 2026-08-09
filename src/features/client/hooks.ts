@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import * as parcelsApi from '@/lib/api/parcels'
 import * as bidsApi from '@/lib/api/bids'
+import * as proposalsApi from '@/lib/api/proposals'
 import * as zonesApi from '@/lib/api/zones'
 import * as rolesApi from '@/lib/api/roles'
 import * as usersApi from '@/lib/api/users'
@@ -172,5 +173,32 @@ export function useDriverRatings(driverId: string | undefined) {
     queryKey: ['ratings', 'driver', driverId],
     queryFn: () => ratingsApi.getDriverRatings(driverId!),
     enabled: !!driverId,
+  })
+}
+
+/**
+ * Réponse du client à la contre-offre d'un chauffeur sur une proposition
+ * directe. Le client ne peut accepter que si le dernier prix vient du
+ * chauffeur : l'API renvoie 409 sinon, et `proposal.canClientAccept` porte la
+ * même information pour l'affichage.
+ */
+export function useRespondToProposal() {
+  return useMutation({
+    mutationFn: ({
+      parcelId,
+      action,
+      price,
+      message,
+    }: {
+      parcelId: string
+      action: proposalsApi.ClientProposalAction
+      price?: number
+      message?: string
+    }) => proposalsApi.clientRespond(parcelId, action, { price, message }),
+    onSuccess: (_parcel, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['client', 'parcels'] })
+      queryClient.invalidateQueries({ queryKey: ['client', 'parcel', variables.parcelId] })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
   })
 }
