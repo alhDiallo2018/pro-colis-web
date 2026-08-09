@@ -4,39 +4,29 @@
 
 import { Panel } from '@/components/Panel'
 import { ParcelDetailDialog } from '@/components/ParcelDetailDialog'
+import { ZoneFilter } from '@/components/ZoneFilter'
+import { useZoneFilter } from '@/lib/useZoneFilter'
 import { Badge, Button } from '@/ds'
 import type { Parcel } from '@/lib/api/types'
 import { formatFcfa, formatWeight } from '@/lib/format'
-import { useAuthStore } from '@/store/auth'
 import { useMemo, useState } from 'react'
 import { OfferDialog } from './OfferDialog'
-import { filterFreeParcelsByDriverZone, getDriverHomeZone } from './freeParcelZone'
 import { useDriverBidsSent, useDriverFreeParcels } from './hooks'
 
 export function LibreServiceScreen() {
-  const user = useAuthStore((state) => state.user)
   const query = useDriverFreeParcels()
   const bidsQuery = useDriverBidsSent()
   const [offerTarget, setOfferTarget] = useState<Parcel | null>(null)
   const [detailTarget, setDetailTarget] = useState<Parcel | null>(null)
   
-  // ✅ État du filtre : 'all' ou 'zone'
-  const [filterMode, setFilterMode] = useState<'all' | 'zone'>('all')
-
-  const allParcels = query.data?.parcels ?? []
-  const homeZone = getDriverHomeZone(user)
-  const hasZone = !!(homeZone.id || homeZone.name)
-
-  // ✅ Filtrer selon le mode sélectionné
-  const parcels = useMemo(() => {
-    // ✅ Si mode 'all' → afficher tous les colis
-    if (filterMode === 'all') {
-      return allParcels
-    }
-    
-    // ✅ Si mode 'zone' → filtrer par zone
-    return filterFreeParcelsByDriverZone(allParcels, user, homeZone)
-  }, [allParcels, user, homeZone, filterMode])
+  const allParcels = useMemo(() => query.data?.parcels ?? [], [query.data])
+  const {
+    items: parcels,
+    mode: filterMode,
+    setMode: setFilterMode,
+    hasZone,
+    zone: homeZone,
+  } = useZoneFilter(allParcels)
 
   const bidMap = useMemo(() => {
     const map = new Map<string, string>()
@@ -70,49 +60,12 @@ export function LibreServiceScreen() {
         flush
         action={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {/* ✅ Sélecteur de filtre */}
-            <div style={{ 
-              display: 'flex', 
-              background: 'var(--slate-100)', 
-              borderRadius: 'var(--radius-md)', 
-              padding: 3,
-              gap: 2
-            }}>
-              <button
-                onClick={() => setFilterMode('all')}
-                style={{
-                  padding: '4px 12px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: 'none',
-                  background: filterMode === 'all' ? 'var(--surface-card)' : 'transparent',
-                  color: filterMode === 'all' ? 'var(--text-strong)' : 'var(--text-muted)',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  boxShadow: filterMode === 'all' ? 'var(--shadow-xs)' : 'none',
-                }}
-              >
-                🌍 Toutes
-              </button>
-              {hasZone && (
-                <button
-                  onClick={() => setFilterMode('zone')}
-                  style={{
-                    padding: '4px 12px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: 'none',
-                    background: filterMode === 'zone' ? 'var(--surface-card)' : 'transparent',
-                    color: filterMode === 'zone' ? 'var(--text-strong)' : 'var(--text-muted)',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    boxShadow: filterMode === 'zone' ? 'var(--shadow-xs)' : 'none',
-                  }}
-                >
-                  📍 {homeZone.name}
-                </button>
-              )}
-            </div>
+            <ZoneFilter
+              mode={filterMode}
+              onChange={setFilterMode}
+              zoneName={homeZone.name}
+              hasZone={hasZone}
+            />
             <Badge tone="primary">{parcels.length}</Badge>
           </div>
         }

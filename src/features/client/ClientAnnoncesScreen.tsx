@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Avatar, Icon, Input } from '@/ds'
 import { QueryState } from '@/components/QueryState'
+import { ZoneFilter } from '@/components/ZoneFilter'
+import { useZoneFilter } from '@/lib/useZoneFilter'
 import { useDriverAnnonces } from './hooks'
 import { formatDate, formatFcfa, formatWeight } from '@/lib/format'
 import type { Advertisement } from '@/lib/api/advertisements'
@@ -12,16 +14,23 @@ export function ClientAnnoncesScreen() {
   const query = useDriverAnnonces()
   const all = useMemo(() => query.data ?? [], [query.data])
   const [search, setSearch] = useState('')
+  const {
+    items: inZone,
+    mode: zoneMode,
+    setMode: setZoneMode,
+    hasZone,
+    zone: homeZone,
+  } = useZoneFilter(all)
 
   const annonces = useMemo(() => {
     const q = search.trim().toLowerCase()
-    if (!q) return all
-    return all.filter((a) =>
+    if (!q) return inZone
+    return inZone.filter((a) =>
       [a.departureCity, a.arrivalCity, a.driver?.fullName, a.driverName, a.description].some(
         (v) => v && String(v).toLowerCase().includes(q),
       ),
     )
-  }, [all, search])
+  }, [inZone, search])
 
   const hasAny = all.length > 0
   const filteredEmpty = hasAny && annonces.length === 0
@@ -33,8 +42,11 @@ export function ClientAnnoncesScreen() {
       </p>
 
       {hasAny && (
-        <div style={{ maxWidth: 420 }}>
-          <Input icon="search" placeholder="Rechercher (ville, chauffeur…)" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 260px', maxWidth: 420 }}>
+            <Input icon="search" placeholder="Rechercher (ville, chauffeur…)" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <ZoneFilter mode={zoneMode} onChange={setZoneMode} zoneName={homeZone.name} hasZone={hasZone} />
         </div>
       )}
 
@@ -46,7 +58,9 @@ export function ClientAnnoncesScreen() {
         emptyTitle={filteredEmpty ? 'Aucun résultat' : 'Aucune annonce'}
         emptyMessage={
           filteredEmpty
-            ? 'Aucune annonce ne correspond à votre recherche.'
+            ? zoneMode === 'zone' && !search.trim()
+              ? `Aucun trajet au départ ou à l’arrivée de ${homeZone.name}.`
+              : 'Aucune annonce ne correspond à votre recherche.'
             : 'Aucun chauffeur n’a publié de trajet pour le moment.'
         }
         onRetry={() => query.refetch()}

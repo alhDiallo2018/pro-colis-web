@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest'
 import type { Parcel, User } from '@/lib/api/types'
 import { filterFreeParcelsByDriverZone, getDriverHomeZone } from './freeParcelZone'
 
-function parcel(id: string, departureCity: string, departureZoneName?: string): Parcel {
+function parcel(
+  id: string,
+  departureCity: string,
+  departureZoneName?: string,
+  extra: Partial<Parcel> = {},
+): Parcel {
   return {
     id,
     trackingNumber: `PC-${id}`,
@@ -13,6 +18,7 @@ function parcel(id: string, departureCity: string, departureZoneName?: string): 
     status: 'free',
     departureCity,
     departureZoneName,
+    ...extra,
   }
 }
 
@@ -52,7 +58,19 @@ describe('filterFreeParcelsByDriverZone', () => {
     expect(filterFreeParcelsByDriverZone([matching], user)).toEqual([matching])
   })
 
+  it('retient aussi les colis qui arrivent dans la zone du chauffeur', () => {
+    // Un chauffeur de Dakar voit les retours vers Dakar, même partis d'ailleurs.
+    const retour = parcel('1', 'Thiès', undefined, { arrivalCity: 'dakar' })
+    const ailleurs = parcel('2', 'Thiès', undefined, { arrivalCity: 'Saint-Louis' })
+
+    expect(filterFreeParcelsByDriverZone([retour, ailleurs], driver({ city: 'Dakar' }))).toEqual([
+      retour,
+    ])
+  })
+
   it('ne montre aucun colis lorsque la zone du chauffeur est inconnue', () => {
+    // Sans zone, on n'ouvre pas la vanne sur tout le pays : la liste vide
+    // pousse le chauffeur à renseigner sa zone (l'onglet « Tous » reste là).
     expect(filterFreeParcelsByDriverZone([parcel('1', 'Dakar')], driver({}))).toEqual([])
   })
 })
