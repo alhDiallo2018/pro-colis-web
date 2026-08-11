@@ -8,7 +8,7 @@ import { queryClient } from '@/lib/queryClient'
 
 const STATUS_GROUPS = [
   { value: '', label: 'Tous', match: [] as string[] },
-  { value: 'pending', label: 'En attente', match: ['pending', 'free', 'confirmed'] },
+  { value: 'pending', label: 'En attente', match: ['pending', 'free', 'confirmed', 'negotiating', 'proposal_sent'] },
   { value: 'transit', label: 'En transit', match: ['picked_up', 'in_transit', 'arrived', 'out_for_delivery'] },
   { value: 'delivered', label: 'Livrés', match: ['delivered'] },
   { value: 'cancelled', label: 'Annulés', match: ['cancelled'] },

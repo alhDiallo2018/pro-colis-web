@@ -12,6 +12,7 @@ import type { Parcel } from '@/lib/api/types'
 const FILTERS = [
   { value: '', label: 'Tous' },
   { value: 'pending', label: 'En attente' },
+  { value: 'negotiating', label: 'En négociation' },
   { value: 'free', label: 'Annonces' },
   { value: 'in_transit', label: 'En transit' },
   { value: 'delivered', label: 'Livrés' },
