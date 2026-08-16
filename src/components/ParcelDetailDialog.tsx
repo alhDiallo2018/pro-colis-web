@@ -5,7 +5,7 @@ import * as parcelsApi from '@/lib/api/parcels'
 import { estimate } from '@/lib/api/commission'
 import { payCashCommission } from '@/lib/api/commission'
 import { buildSteps } from '@/features/client/parcelSteps'
-import { formatFcfa, formatWeight, toStatusKey } from '@/lib/format'
+import { formatDate, formatFcfa, formatWeight, toStatusKey } from '@/lib/format'
 import type { Parcel } from '@/lib/api/types'
 
 interface ParcelDetailDialogProps {
@@ -39,6 +39,10 @@ export function ParcelDetailDialog({ parcel, onClose }: ParcelDetailDialogProps)
   const hasMedia = Boolean(parcel.photoUrls?.length || parcel.videoUrls?.length || parcel.audioUrls?.length)
   const driverName = parcel.driverName ?? parcel.driver?.fullName
   const showCashButton = parcel.price && parcel.price > 0 && parcel.paymentStatus !== 'completed'
+
+  const dims = [parcel.length, parcel.width, parcel.height].filter((v): v is number => v != null && v > 0)
+  const hasDimensions = dims.length > 0
+  const dimensionsLabel = hasDimensions ? `${dims.map((v) => `${v} cm`).join(' × ')}` : ''
 
   const handleCashConfirm = async () => {
     setCashLoading(true)
@@ -119,12 +123,25 @@ export function ParcelDetailDialog({ parcel, onClose }: ParcelDetailDialogProps)
           {parcel.isUrgent && <Tag express />}
           {parcel.type && <Tag icon="category">{parcel.type}</Tag>}
           {parcel.isInsured && <Tag tone="primary" icon="verified_user">Assuré</Tag>}
+          {parcel.isFreeForBidding && <Tag tone="primary" icon="sell">Libre service</Tag>}
         </div>
 
         <Row label="Départ" value={parcel.departureCity ?? parcel.departureZoneName ?? '—'} />
         <Row label="Arrivée" value={parcel.arrivalCity ?? parcel.arrivalZoneName ?? '—'} />
         <Row label="Poids" value={parcel.weight != null ? formatWeight(parcel.weight) : '—'} />
+        {hasDimensions && <Row label="Dimensions" value={dimensionsLabel} />}
         {parcel.price != null && <Row label="Prix" value={formatFcfa(parcel.price)} />}
+        {parcel.proposedPrice != null && parcel.proposedPrice !== parcel.price && (
+          <Row label="Prix proposé" value={formatFcfa(parcel.proposedPrice)} />
+        )}
+        {parcel.negotiatedPrice != null && parcel.negotiatedPrice > 0 && (
+          <Row label="Prix négocié" value={formatFcfa(parcel.negotiatedPrice)} />
+        )}
+        {parcel.estimatedDeliveryDate && (
+          <Row label="Livraison estimée" value={formatDate(parcel.estimatedDeliveryDate)} />
+        )}
+        {parcel.pickupDate && <Row label="Ramassage" value={formatDate(parcel.pickupDate)} />}
+        {parcel.deliveryDate && <Row label="Livré le" value={formatDate(parcel.deliveryDate)} />}
 
         <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 8 }}>
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>
@@ -154,6 +171,15 @@ export function ParcelDetailDialog({ parcel, onClose }: ParcelDetailDialogProps)
         {parcel.description && (
           <div style={{ background: 'var(--slate-50)', padding: '10px 14px', borderRadius: 'var(--radius-md)', fontSize: 'var(--fs-sm)', color: 'var(--text-body)', whiteSpace: 'pre-wrap' }}>
             {parcel.description}
+          </div>
+        )}
+
+        {parcel.notes && (
+          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 8 }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>
+              Informations complémentaires
+            </div>
+            <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-body)', whiteSpace: 'pre-wrap' }}>{parcel.notes}</div>
           </div>
         )}
 
