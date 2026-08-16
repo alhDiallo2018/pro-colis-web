@@ -12,6 +12,8 @@ const BASE_ITEMS = [
   { label: 'Utilisateurs', icon: 'group', to: '/support-admin/users' },
 ]
 
+const MODERATION_ROLES = ['super_admin', 'admin', 'support_technique', 'support_commercial']
+
 // Journaux techniques, tickets et incidents relèvent du mandat technique :
 // l'API les ferme au support commercial, la navigation ne doit donc pas les
 // proposer.
@@ -47,6 +49,12 @@ const ACCOUNT_SECTION: NavSection = {
 
 function navForRole(role: string | undefined): NavSection[] {
   const sections: NavSection[] = [{ items: BASE_ITEMS }]
+  if (role && MODERATION_ROLES.includes(role)) {
+    sections.push({
+      heading: 'Modération',
+      items: [{ label: 'Modération', icon: 'shield', to: '/support-admin/moderation' }],
+    })
+  }
   if (role === 'support_technique' || role === 'super_admin') sections.push(TECHNIQUE_SECTION)
   else if (role === 'support') sections.push(AUDIT_ONLY_SECTION)
   if (role === 'support_commercial' || role === 'super_admin') sections.push(COMMERCIAL_SECTION)

@@ -1,4 +1,5 @@
 import { api } from './client'
+import type { Pagination } from './types'
 
 export interface ChatMessage {
   id: string
@@ -180,4 +181,110 @@ export async function adminSupportReply(payload: {
 }): Promise<ChatMessage> {
   const { data } = await api.post('/messages/admin/support/reply', payload)
   return (data.data ?? data.message) as ChatMessage
+}
+
+// ============================================================
+// Modération des échanges (admin / support technique / commercial)
+// ============================================================
+
+export interface ModerationParticipant {
+  id: string
+  fullName: string
+  profilePhoto?: string | null
+  role: string
+}
+
+export interface ModerationConversation {
+  id: string
+  parcelId?: string | null
+  trackingNumber?: string | null
+  body: string
+  createdAt: string
+  messageCount: number
+  userA: ModerationParticipant
+  userB: ModerationParticipant
+}
+
+export interface ModerationMessage {
+  id: string
+  senderId: string
+  receiverId: string
+  parcelId?: string | null
+  body: string
+  audioUrl?: string | null
+  photoUrl?: string | null
+  videoUrl?: string | null
+  isRead: boolean
+  createdAt: string
+  deletedAt?: string | null
+  deletedBy?: string | null
+  deletedReason?: string | null
+  isDeleted?: boolean
+  sender: { id: string; fullName: string; profilePhoto: string | null; role: string }
+  receiver: { id: string; fullName: string; profilePhoto: string | null; role: string }
+}
+
+/** Forme brute renvoyée par l'API : les deux tiers sont groupés dans
+ *  `participants`, la dernière activité sous `lastMessageAt`/`lastMessage`. */
+interface RawModerationConversation {
+  id: string
+  parcelId?: string | null
+  trackingNumber?: string | null
+  participants: ModerationParticipant[]
+  messageCount: number
+  lastMessageAt?: string | null
+  lastMessage?: ModerationMessage | null
+}
+
+function toModerationConversation(raw: RawModerationConversation): ModerationConversation {
+  const [userA, userB] = raw.participants ?? []
+  return {
+    id: raw.id,
+    parcelId: raw.parcelId,
+    trackingNumber: raw.trackingNumber,
+    body: raw.lastMessage?.body ?? '',
+    createdAt: raw.lastMessageAt ?? raw.lastMessage?.createdAt ?? '',
+    messageCount: raw.messageCount,
+    userA,
+    userB,
+  }
+}
+
+/** Vue globale des conversations, pour repérer les échanges à modérer. */
+export async function adminModerationConversations(params?: {
+  page?: number
+  limit?: number
+  search?: string
+}): Promise<{ conversations: ModerationConversation[]; pagination?: Pagination }> {
+  const { data } = await api.get('/messages/admin/conversations', { params })
+  const raw = (data.conversations ?? []) as RawModerationConversation[]
+  return {
+    conversations: raw.map(toModerationConversation),
+    pagination: data.pagination as Pagination | undefined,
+  }
+}
+
+/** Fil complet entre deux utilisateurs (les messages masqués restent visibles). */
+export async function adminModerationThread(
+  userA: string,
+  userB: string,
+  parcelId?: string,
+): Promise<ModerationMessage[]> {
+  const { data } = await api.get('/messages/admin/thread', {
+    params: { userId: userA, peerId: userB, parcelId },
+  })
+  const payload = data.data ?? data
+  if (Array.isArray(payload.messages)) return payload.messages as ModerationMessage[]
+  if (Array.isArray(payload)) return payload as ModerationMessage[]
+  return []
+}
+
+/** Masque un message (soft-delete) avec un motif facultatif. */
+export async function moderateMessage(messageId: string, reason?: string): Promise<void> {
+  await api.delete(`/messages/admin/messages/${messageId}`, { data: { reason } })
+}
+
+/** Restaure un message précédemment masqué. */
+export async function restoreMessage(messageId: string, reason?: string): Promise<void> {
+  await api.post(`/messages/admin/messages/${messageId}/restore`, { reason })
 }

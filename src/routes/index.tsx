@@ -47,6 +47,7 @@ import { SupportChatWrapper } from '@/features/shared/SupportChatWrapper'
 import { AdminSupportScreen } from '@/features/shared/AdminSupportScreen'
 import { SupportDashboard } from '@/features/shared/SupportDashboard'
 import { SupportConversationsScreen } from '@/features/shared/SupportConversationsScreen'
+import { ModerationScreen } from '@/features/shared/ModerationScreen'
 import { StaffProfilScreen } from '@/features/shared/StaffProfilScreen'
 import { LogsScreen } from '@/features/shared/observability/LogsScreen'
 import { AuditLogsScreen } from '@/features/shared/observability/AuditLogsScreen'
@@ -177,6 +178,7 @@ const SUPER_NAV: NavSection[] = [
     items: [
       { label: 'Zones', icon: 'map', to: '/admin/zones' },
       { label: 'Support', icon: 'support_agent', to: '/admin/support' },
+      { label: 'Modération', icon: 'shield', to: '/admin/moderation' },
       { label: 'Assistances', icon: 'contact_support', to: '/admin/assistances' },
       { label: 'Vérifications identité', icon: 'verified_user', to: '/admin/verifications' },
       { label: 'Statistiques', icon: 'monitoring', to: '/admin/stats' },
@@ -384,6 +386,7 @@ export const router = createBrowserRouter([
       { path: 'rapports', element: <RapportsPage /> },
       { path: 'systeme', element: <SystemePage /> },
       { path: 'support', element: <AdminSupportScreen /> },
+      { path: 'moderation', element: <ModerationScreen /> },
       { path: 'profil', element: <StaffProfilScreen /> },
       { path: 'notifications', element: <NotificationsScreen /> },
     ],
@@ -400,6 +403,14 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <SupportDashboard /> },
       { path: 'conversations', element: <SupportConversationsScreen /> },
+      {
+        path: 'moderation',
+        element: (
+          <RequireRole roles={['super_admin', 'admin', 'support_technique', 'support_commercial']}>
+            <ModerationScreen />
+          </RequireRole>
+        ),
+      },
       { path: 'assistances', element: <AssistancesPage /> },
       { path: 'colis', element: <ColisPage /> },
       { path: 'chauffeurs', element: <ChauffeursPage /> },
