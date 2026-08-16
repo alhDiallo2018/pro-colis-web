@@ -31,6 +31,7 @@ export function AppBar({ title, subtitle, leading, actions, variant = 'default',
     >
       {onBack ? (
         <button
+          type="button"
           onClick={onBack}
           aria-label="Retour"
           style={{

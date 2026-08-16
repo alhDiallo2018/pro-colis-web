@@ -60,6 +60,7 @@ export function Toast({ tone = 'success', title, message, onClose, style }: Toas
       </div>
       {onClose && (
         <button
+          type="button"
           onClick={onClose}
           aria-label="Fermer"
           style={{

@@ -28,6 +28,7 @@ export function Checkbox({ checked = false, onChange, label, disabled = false, i
     >
       <button
         id={fid}
+        type="button"
         role="checkbox"
         aria-checked={checked}
         disabled={disabled}

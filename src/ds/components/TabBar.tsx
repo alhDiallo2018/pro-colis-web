@@ -34,6 +34,7 @@ export function TabBar({ items = [], value, onChange, style }: TabBarProps) {
         return (
           <button
             key={it.key}
+            type="button"
             onClick={() => onChange && onChange(it.key)}
             style={{
               flex: 1,

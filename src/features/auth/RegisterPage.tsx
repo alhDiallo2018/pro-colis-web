@@ -26,18 +26,35 @@ export function RegisterPage() {
   const [role, setRole] = useState<Role>('client')
   const [fullName, setFullName] = useState('')
   const [city, setCity] = useState('')
+  const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [countryCode, setCountryCode] = useState('+221')
   const [pin, setPin] = useState('')
   const [accepted, setAccepted] = useState(false)
 
   const pinValid = /^\d{6}$/.test(pin)
-  const canSubmit = fullName.trim().length >= 2 && phone.trim().length >= 8 && pinValid && accepted
+  // L'email reste facultatif : un champ vide est valide, seule une saisie
+  // malformee bloque l'envoi. Sans ce garde-fou l'API repond 422 sur un
+  // `email` non conforme au lieu de creer le compte.
+  const emailTrimmed = email.trim()
+  const emailValid = emailTrimmed === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)
+  const canSubmit = fullName.trim().length >= 2 && phone.trim().length >= 8 && pinValid && emailValid && accepted
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    // Le bouton desactive ne suffit pas : n'importe quel autre bouton du
+    // formulaire peut declencher un submit. La garde est donc ici, pas
+    // seulement sur `disabled`.
+    if (!canSubmit) return
     registerMut.mutate(
-      { role, fullName: fullName.trim(), city: city.trim() || null, phone: `${countryCode}${phone.trim()}`, pin },
+      {
+        role,
+        fullName: fullName.trim(),
+        city: city.trim() || null,
+        email: emailTrimmed || null,
+        phone: `${countryCode}${phone.trim()}`,
+        pin,
+      },
       { onSuccess: (session) => navigate(homeForRole(session.user.role), { replace: true }) },
     )
   }
@@ -91,6 +108,18 @@ export function RegisterPage() {
             onChange={setCity}
           />
         </div>
+
+        <Input
+          label="Email (facultatif)"
+          icon="mail"
+          type="email"
+          autoComplete="email"
+          placeholder="aicha@exemple.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          error={emailValid ? undefined : 'Adresse email invalide'}
+          help="Permet aussi de vous connecter et de récupérer votre compte si vous oubliez votre code PIN."
+        />
 
         <div className="pc-field-pair" style={{ gap: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>

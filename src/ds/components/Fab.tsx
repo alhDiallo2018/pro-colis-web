@@ -23,6 +23,7 @@ export function Fab({ icon = 'add', label, onClick, tone = 'primary', style }: F
   const extended = !!label
   return (
     <button
+      type="button"
       onClick={onClick}
       aria-label={label || 'Action'}
       onMouseEnter={() => setHover(true)}

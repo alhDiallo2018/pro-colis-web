@@ -29,6 +29,7 @@ export function Switch({ checked = false, onChange, label, description, disabled
     >
       <button
         id={fid}
+        type="button"
         role="switch"
         aria-checked={checked}
         disabled={disabled}

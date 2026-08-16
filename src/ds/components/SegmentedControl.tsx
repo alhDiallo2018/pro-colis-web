@@ -44,6 +44,7 @@ export function SegmentedControl({ options = [], value, onChange, size = 'md', b
         return (
           <button
             key={o.value}
+            type="button"
             onClick={() => onChange && onChange(o.value)}
             style={{
               flex: block ? 1 : 'none',

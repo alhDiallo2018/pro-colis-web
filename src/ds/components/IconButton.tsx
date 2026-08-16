@@ -40,6 +40,7 @@ export function IconButton({
   const [hover, setHover] = useState(false)
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       onMouseEnter={() => setHover(true)}

@@ -23,6 +23,7 @@ export function Tabs({ items = [], value, onChange, style }: TabsProps) {
         return (
           <button
             key={it.value}
+            type="button"
             onClick={() => onChange && onChange(it.value)}
             style={{
               display: 'inline-flex',
