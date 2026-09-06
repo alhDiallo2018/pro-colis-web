@@ -16,13 +16,14 @@ const marqueeKeyframes = `
 `
 
 function MarqueeText({ text, fg }: { text: string; fg: string }) {
+  const duration = Math.max(24, Math.round(text.length * 0.25))
   return (
     <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', position: 'relative' }}>
       <div
         style={{
           display: 'inline-block',
           whiteSpace: 'nowrap',
-          animation: 'bcast-scroll 18s linear infinite',
+          animation: `bcast-scroll ${duration}s linear infinite`,
           fontWeight: 600,
           color: fg,
         }}

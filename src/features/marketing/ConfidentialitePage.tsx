@@ -1,136 +1,481 @@
 import { MarketingHeader } from './MarketingHeader'
 
+const CONTACT_INFO = {
+    email: 'support-commercial@sendprocolis.com',
+    address: 'Dakar, Sénégal'
+}
+
 export function ConfidentialitePage() {
-  return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-body)', color: 'var(--text-body)', lineHeight: 1.7 }}>
-      <MarketingHeader />
-      <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, color: 'var(--text-strong)', marginBottom: 24 }}>POLITIQUE DE CONFIDENTIALITÉ — SENDPROCOLIS</h1>
+    return (
+        <div style={{
+            maxWidth: 900,
+            margin: '0 auto',
+            padding: '40px 20px 60px',
+            fontFamily: 'var(--font-body)',
+            color: 'var(--text-body)',
+            lineHeight: 1.7
+        }}>
+            <MarketingHeader />
 
-      <p>
-        SendProColis accorde une importance primordiale à la protection de vos données personnelles. La présente
-        politique de confidentialité décrit les données que nous collectons, comment nous les utilisons et les
-        droits dont vous disposez.
-      </p>
+            {/* En-tête */}
+            <div style={{
+                textAlign: 'center',
+                marginBottom: 48,
+                paddingBottom: 32,
+                borderBottom: '2px solid var(--border-subtle)'
+            }}>
+                <h1 style={{
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 800,
+                    fontSize: 'clamp(28px, 4vw, 36px)',
+                    color: 'var(--text-strong)',
+                    marginBottom: 8
+                }}>
+                    POLITIQUE DE CONFIDENTIALITÉ
+                </h1>
+                <p style={{
+                    fontSize: 16,
+                    color: 'var(--text-muted)',
+                    margin: 0
+                }}>
+                    SendProColis — Protection de vos données personnelles
+                </p>
+                <p style={{
+                    fontSize: 13,
+                    color: 'var(--text-muted)',
+                    marginTop: 8,
+                    fontWeight: 500
+                }}>
+                    Dernière mise à jour : 17 juillet 2026
+                </p>
+            </div>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>1. Données collectées</h2>
-      <p>Dans le cadre de l'utilisation de la plateforme, nous collectons les données suivantes :</p>
-      <ul style={{ paddingLeft: 24 }}>
-        <li><strong>Données d'identification :</strong> nom, prénom, numéro de téléphone, adresse email ;</li>
-        <li><strong>Données de profil :</strong> photo de profil, adresse postale, ville de résidence ;</li>
-        <li><strong>Données de localisation :</strong> position géographique pour le suivi des colis et la mise en relation ;</li>
-        <li><strong>Données relatives aux colis :</strong> nature, poids, dimensions, valeur déclarée, adresses de départ et d'arrivée ;</li>
-        <li><strong>Données de transaction :</strong> historique des expéditions, montants payés, moyens de paiement utilisés ;</li>
-        <li><strong>Données techniques :</strong> adresse IP, type d'appareil, système d'exploitation, journaux de connexion.</li>
-      </ul>
+            {/* Introduction */}
+            <div style={{
+                padding: 24,
+                background: 'var(--surface-page)',
+                borderRadius: 16,
+                marginBottom: 40,
+                border: '1px solid var(--border-subtle)'
+            }}>
+                <p style={{ margin: 0, fontSize: 15 }}>
+                    SendProColis accorde une importance primordiale à la protection de vos données personnelles. La présente
+                    politique de confidentialité décrit les données que nous collectons, comment nous les utilisons et les
+                    droits dont vous disposez.
+                </p>
+            </div>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>2. Finalités du traitement</h2>
-      <p>Vos données sont collectées et traitées pour les finalités suivantes :</p>
-      <ul style={{ paddingLeft: 24 }}>
-        <li>création et gestion de votre compte utilisateur ;</li>
-        <li>traitement et suivi de vos expéditions de colis ;</li>
-        <li>mise en relation entre expéditeurs et chauffeurs transporteurs ;</li>
-        <li>traitement des paiements et des commissions ;</li>
-        <li>sécurisation de la plateforme et lutte contre la fraude ;</li>
-        <li>amélioration continue du service et de l'expérience utilisateur ;</li>
-        <li>communication avec les utilisateurs (notifications, confirmations, support).</li>
-      </ul>
+            {/* Section 1 : Données collectées */}
+            <Section title="1. Données collectées">
+                <p>Dans le cadre de l'utilisation de la plateforme, nous collectons les données suivantes :</p>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gap: 12,
+                    marginTop: 16
+                }}>
+                    {[
+                        { icon: '🪪', label: 'Données d\'identification', desc: 'nom, prénom, téléphone, email' },
+                        { icon: '👤', label: 'Données de profil', desc: 'photo, adresse, ville de résidence' },
+                        { icon: '📍', label: 'Données de localisation', desc: 'position pour le suivi des colis' },
+                        { icon: '📦', label: 'Données relatives aux colis', desc: 'nature, poids, dimensions, valeur' },
+                        { icon: '💳', label: 'Données de transaction', desc: 'historique, montants, moyens de paiement' },
+                        { icon: '💻', label: 'Données techniques', desc: 'IP, appareil, OS, journaux de connexion' }
+                    ].map((item, index) => (
+                        <div key={index} style={{
+                            padding: 14,
+                            background: 'var(--surface-page)',
+                            borderRadius: 12,
+                            border: '1px solid var(--border-subtle)'
+                        }}>
+                            <div style={{ fontSize: 24, marginBottom: 4 }}>{item.icon}</div>
+                            <div style={{
+                                fontWeight: 700,
+                                fontSize: 14,
+                                color: 'var(--text-strong)'
+                            }}>{item.label}</div>
+                            <div style={{
+                                fontSize: 12.5,
+                                color: 'var(--text-muted)',
+                                marginTop: 2
+                            }}>{item.desc}</div>
+                        </div>
+                    ))}
+                </div>
+            </Section>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>3. Base légale</h2>
-      <p>
-        Le traitement de vos données repose sur les bases légales suivantes :
-      </p>
-      <ul style={{ paddingLeft: 24 }}>
-        <li><strong>L'exécution du contrat :</strong> le traitement est nécessaire à la fourniture de nos services ;</li>
-        <li><strong>Votre consentement :</strong> pour certains traitements spécifiques (localisation précise, communications marketing) ;</li>
-        <li><strong>L'obligation légale :</strong> conservation des données de transaction pour les obligations comptables et fiscales ;</li>
-        <li><strong>L'intérêt légitime :</strong> amélioration du service, sécurité de la plateforme, prévention de la fraude.</li>
-      </ul>
+            {/* Section 2 : Finalités */}
+            <Section title="2. Finalités du traitement">
+                <p>Vos données sont collectées et traitées pour les finalités suivantes :</p>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gap: 12,
+                    marginTop: 16
+                }}>
+                    {[
+                        { icon: '👤', label: 'Gestion de compte', desc: 'création et gestion de votre compte utilisateur' },
+                        { icon: '📦', label: 'Suivi des expéditions', desc: 'traitement et suivi de vos colis' },
+                        { icon: '🤝', label: 'Mise en relation', desc: 'entre expéditeurs et chauffeurs' },
+                        { icon: '💳', label: 'Paiements', desc: 'traitement des paiements et des commissions' },
+                        { icon: '🔒', label: 'Sécurité', desc: 'sécurisation de la plateforme et lutte contre la fraude' },
+                        { icon: '📈', label: 'Amélioration', desc: 'amélioration continue du service' },
+                        { icon: '💬', label: 'Communication', desc: 'notifications, confirmations, support' }
+                    ].map((item, index) => (
+                        <div key={index} style={{
+                            padding: 14,
+                            background: 'var(--surface-page)',
+                            borderRadius: 12,
+                            border: '1px solid var(--border-subtle)'
+                        }}>
+                            <div style={{ fontSize: 24, marginBottom: 4 }}>{item.icon}</div>
+                            <div style={{
+                                fontWeight: 700,
+                                fontSize: 14,
+                                color: 'var(--text-strong)'
+                            }}>{item.label}</div>
+                            <div style={{
+                                fontSize: 12.5,
+                                color: 'var(--text-muted)',
+                                marginTop: 2
+                            }}>{item.desc}</div>
+                        </div>
+                    ))}
+                </div>
+            </Section>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>4. Conservation des données</h2>
-      <p>
-        Vos données personnelles sont conservées pour une durée limitée, strictement nécessaire aux finalités
-        pour lesquelles elles ont été collectées :
-      </p>
-      <ul style={{ paddingLeft: 24 }}>
-        <li><strong>Données de compte :</strong> pendant toute la durée de votre compte et jusqu'à 3 ans après sa suppression ;</li>
-        <li><strong>Données de transaction :</strong> 10 ans conformément aux obligations comptables sénégalaises ;</li>
-        <li><strong>Données de localisation :</strong> 6 mois après la fin de chaque expédition ;</li>
-        <li><strong>Données de connexion :</strong> 12 mois maximum.</li>
-      </ul>
+            {/* Section 3 : Base légale */}
+            <Section title="3. Base légale">
+                <p>Le traitement de vos données repose sur les bases légales suivantes :</p>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gap: 12,
+                    marginTop: 16
+                }}>
+                    {[
+                        { icon: '📄', label: 'Exécution du contrat', desc: 'nécessaire à la fourniture de nos services' },
+                        { icon: '✅', label: 'Votre consentement', desc: 'pour certains traitements spécifiques' },
+                        { icon: '⚖️', label: 'Obligation légale', desc: 'conservation des données comptables et fiscales' },
+                        { icon: '🎯', label: 'Intérêt légitime', desc: 'amélioration du service, sécurité, prévention de la fraude' }
+                    ].map((item, index) => (
+                        <div key={index} style={{
+                            padding: 14,
+                            background: 'var(--surface-page)',
+                            borderRadius: 12,
+                            border: '1px solid var(--border-subtle)'
+                        }}>
+                            <div style={{ fontSize: 24, marginBottom: 4 }}>{item.icon}</div>
+                            <div style={{
+                                fontWeight: 700,
+                                fontSize: 14,
+                                color: 'var(--text-strong)'
+                            }}>{item.label}</div>
+                            <div style={{
+                                fontSize: 12.5,
+                                color: 'var(--text-muted)',
+                                marginTop: 2
+                            }}>{item.desc}</div>
+                        </div>
+                    ))}
+                </div>
+            </Section>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>5. Destinataires des données</h2>
-      <p>
-        Vos données sont accessibles uniquement aux destinataires suivants :
-      </p>
-      <ul style={{ paddingLeft: 24 }}>
-        <li>les équipes habilitées de SendProColis ;</li>
-        <li>les chauffeurs transporteurs, dans la mesure nécessaire à la réalisation de l'expédition ;</li>
-        <li>les prestataires techniques et de paiement (PayDunya, OVHcloud) liés par contrat ;</li>
-        <li>les autorités compétentes sur demande légale.</li>
-      </ul>
-      <p>
-        SendProColis ne vend ni ne partage vos données personnelles à des tiers à des fins commerciales.
-      </p>
+            {/* Section 4 : Conservation */}
+            <Section title="4. Conservation des données">
+                <p>Vos données personnelles sont conservées pour une durée limitée :</p>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gap: 12,
+                    marginTop: 16
+                }}>
+                    {[
+                        { icon: '👤', label: 'Données de compte', desc: 'pendant toute la durée du compte + 3 ans' },
+                        { icon: '📊', label: 'Données de transaction', desc: '10 ans (obligations comptables)' },
+                        { icon: '📍', label: 'Données de localisation', desc: '6 mois après chaque expédition' },
+                        { icon: '💻', label: 'Données de connexion', desc: '12 mois maximum' }
+                    ].map((item, index) => (
+                        <div key={index} style={{
+                            padding: 14,
+                            background: 'var(--surface-page)',
+                            borderRadius: 12,
+                            border: '1px solid var(--border-subtle)'
+                        }}>
+                            <div style={{ fontSize: 24, marginBottom: 4 }}>{item.icon}</div>
+                            <div style={{
+                                fontWeight: 700,
+                                fontSize: 14,
+                                color: 'var(--text-strong)'
+                            }}>{item.label}</div>
+                            <div style={{
+                                fontSize: 12.5,
+                                color: 'var(--text-muted)',
+                                marginTop: 2
+                            }}>{item.desc}</div>
+                        </div>
+                    ))}
+                </div>
+            </Section>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>6. Sécurité des données</h2>
-      <p>
-        Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos
-        données contre tout accès non autorisé, perte, altération ou divulgation :
-      </p>
-      <ul style={{ paddingLeft: 24 }}>
-        <li>chiffrement des données en transit (HTTPS/TLS) ;</li>
-        <li>chiffrement des données sensibles au repos ;</li>
-        <li>authentification forte des utilisateurs ;</li>
-        <li>contrôle d'accès strict aux données par les équipes ;</li>
-        <li>surveillance continue de la sécurité de la plateforme.</li>
-      </ul>
+            {/* Section 5 : Destinataires */}
+            <Section title="5. Destinataires des données">
+                <p>Vos données sont accessibles uniquement aux destinataires suivants :</p>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gap: 12,
+                    marginTop: 16
+                }}>
+                    {[
+                        { icon: '🏢', label: 'Équipes SendProColis', desc: 'personnel habilité' },
+                        { icon: '🚚', label: 'Chauffeurs transporteurs', desc: 'nécessaire à l\'expédition' },
+                        { icon: '🔧', label: 'Prestataires techniques', desc: 'PayDunya, OVHcloud, liés par contrat' },
+                        { icon: '⚖️', label: 'Autorités compétentes', desc: 'sur demande légale' }
+                    ].map((item, index) => (
+                        <div key={index} style={{
+                            padding: 14,
+                            background: 'var(--surface-page)',
+                            borderRadius: 12,
+                            border: '1px solid var(--border-subtle)'
+                        }}>
+                            <div style={{ fontSize: 24, marginBottom: 4 }}>{item.icon}</div>
+                            <div style={{
+                                fontWeight: 700,
+                                fontSize: 14,
+                                color: 'var(--text-strong)'
+                            }}>{item.label}</div>
+                            <div style={{
+                                fontSize: 12.5,
+                                color: 'var(--text-muted)',
+                                marginTop: 2
+                            }}>{item.desc}</div>
+                        </div>
+                    ))}
+                </div>
+                <p style={{ marginTop: 16, padding: 12, background: 'var(--teal-50)', borderRadius: 8, border: '1px solid var(--teal-100)' }}>
+                    <strong>📌 Engagements :</strong> SendProColis ne vend ni ne partage vos données personnelles à des tiers à des fins commerciales.
+                </p>
+            </Section>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>7. Vos droits</h2>
-      <p>
-        Conformément à la réglementation applicable en matière de protection des données, vous disposez
-        des droits suivants :
-      </p>
-      <ul style={{ paddingLeft: 24 }}>
-        <li><strong>Droit d'accès :</strong> obtenir la confirmation que vos données sont traitées et en recevoir une copie ;</li>
-        <li><strong>Droit de rectification :</strong> faire corriger les données inexactes vous concernant ;</li>
-        <li><strong>Droit d'opposition :</strong> vous opposer au traitement de vos données pour des motifs légitimes ;</li>
-        <li><strong>Droit à la portabilité :</strong> recevoir vos données dans un format structuré et les transmettre à un autre responsable ;</li>
-        <li><strong>Droit à l'effacement :</strong> demander la suppression de vos données dans les conditions prévues par la loi.</li>
-      </ul>
-      <p>
-        Pour exercer vos droits, contactez-nous à{' '}
-        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>support-commercial@sendprocolis.com</a>.
-      </p>
+            {/* Section 6 : Sécurité */}
+            <Section title="6. Sécurité des données">
+                <p>Nous mettons en œuvre des mesures techniques et organisationnelles appropriées :</p>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: 12,
+                    marginTop: 16
+                }}>
+                    {[
+                        { icon: '🔐', label: 'Chiffrement en transit', desc: 'HTTPS/TLS' },
+                        { icon: '🔒', label: 'Chiffrement au repos', desc: 'données sensibles' },
+                        { icon: '🛡️', label: 'Authentification forte', desc: 'double facteur' },
+                        { icon: '🔑', label: 'Contrôle d\'accès', desc: 'strict par les équipes' },
+                        { icon: '📊', label: 'Surveillance continue', desc: 'de la sécurité' }
+                    ].map((item, index) => (
+                        <div key={index} style={{
+                            padding: 14,
+                            background: 'var(--surface-page)',
+                            borderRadius: 12,
+                            border: '1px solid var(--border-subtle)'
+                        }}>
+                            <div style={{ fontSize: 24, marginBottom: 4 }}>{item.icon}</div>
+                            <div style={{
+                                fontWeight: 700,
+                                fontSize: 14,
+                                color: 'var(--text-strong)'
+                            }}>{item.label}</div>
+                            <div style={{
+                                fontSize: 12.5,
+                                color: 'var(--text-muted)',
+                                marginTop: 2
+                            }}>{item.desc}</div>
+                        </div>
+                    ))}
+                </div>
+            </Section>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>8. Délégué à la protection des données (DPO)</h2>
-      <p>
-        Pour toute question relative à la protection de vos données personnelles, vous pouvez contacter
-        notre DPO à l'adresse :{' '}
-        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>support-commercial@sendprocolis.com</a>.
-      </p>
+            {/* Section 7 : Vos droits */}
+            <Section title="7. Vos droits">
+                <p>Conformément à la réglementation applicable, vous disposez des droits suivants :</p>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: 12,
+                    marginTop: 16
+                }}>
+                    {[
+                        { icon: '👁️', label: 'Droit d\'accès', desc: 'obtenir une copie de vos données' },
+                        { icon: '✏️', label: 'Droit de rectification', desc: 'corriger vos données inexactes' },
+                        { icon: '🚫', label: 'Droit d\'opposition', desc: 'pour des motifs légitimes' },
+                        { icon: '📤', label: 'Droit à la portabilité', desc: 'recevoir vos données dans un format structuré' },
+                        { icon: '🗑️', label: 'Droit à l\'effacement', desc: 'dans les conditions prévues par la loi' }
+                    ].map((item, index) => (
+                        <div key={index} style={{
+                            padding: 14,
+                            background: 'var(--surface-page)',
+                            borderRadius: 12,
+                            border: '1px solid var(--border-subtle)'
+                        }}>
+                            <div style={{ fontSize: 24, marginBottom: 4 }}>{item.icon}</div>
+                            <div style={{
+                                fontWeight: 700,
+                                fontSize: 14,
+                                color: 'var(--text-strong)'
+                            }}>{item.label}</div>
+                            <div style={{
+                                fontSize: 12.5,
+                                color: 'var(--text-muted)',
+                                marginTop: 2
+                            }}>{item.desc}</div>
+                        </div>
+                    ))}
+                </div>
+                <div style={{
+                    marginTop: 16,
+                    padding: 16,
+                    background: 'var(--surface-page)',
+                    borderRadius: 12,
+                    border: '1px solid var(--border-subtle)',
+                    textAlign: 'center'
+                }}>
+                    <p style={{ margin: 0 }}>
+                        Pour exercer vos droits, contactez-nous à{' '}
+                        <a href={`mailto:${CONTACT_INFO.email}`} style={{ color: 'var(--color-primary)' }}>
+                            {CONTACT_INFO.email}
+                        </a>
+                    </p>
+                </div>
+            </Section>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>9. Cookies</h2>
-      <p>
-        La plateforme SendProColis utilise des cookies strictement nécessaires à son fonctionnement :
-        cookies de session pour l'authentification, cookies de sécurité et cookies de préférences
-        d'affichage.
-      </p>
-      <p>
-        Aucun cookie publicitaire ou de suivi tiers n'est utilisé sur la plateforme. Vous pouvez configurer
-        votre navigateur pour bloquer les cookies, mais certaines fonctionnalités pourraient ne plus être
-        accessibles.
-      </p>
+            {/* Section 8 : DPO */}
+            <Section title="8. Délégué à la protection des données (DPO)">
+                <div style={{
+                    padding: 16,
+                    background: 'var(--surface-page)',
+                    borderRadius: 12,
+                    border: '1px solid var(--border-subtle)'
+                }}>
+                    <p style={{ margin: 0 }}>
+                        Pour toute question relative à la protection de vos données personnelles, contactez notre DPO :{' '}
+                        <a href={`mailto:${CONTACT_INFO.email}`} style={{ color: 'var(--color-primary)' }}>
+                            {CONTACT_INFO.email}
+                        </a>
+                    </p>
+                </div>
+            </Section>
 
-      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--text-strong)', marginTop: 32, marginBottom: 12 }}>10. Modifications de la politique de confidentialité</h2>
-      <p>
-        SendProColis se réserve le droit de modifier la présente politique à tout moment. En cas de
-        modification substantielle, les utilisateurs seront informés par email ou via une notification
-        sur la plateforme au moins 15 jours avant l'entrée en vigueur des modifications.
-      </p>
-      <p>
-        Nous vous invitons à consulter régulièrement cette page pour prendre connaissance de toute mise
-        à jour.
-      </p>
-    </div>
-  )
+            {/* Section 9 : Cookies */}
+            <Section title="9. Cookies">
+                <p>
+                    La plateforme SendProColis utilise des cookies strictement nécessaires à son fonctionnement :
+                </p>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                    marginTop: 12
+                }}>
+                    {[
+                        { icon: '🔑', label: 'Cookies de session', desc: 'pour l\'authentification' },
+                        { icon: '🛡️', label: 'Cookies de sécurité', desc: 'pour la protection de votre compte' },
+                        { icon: '⚙️', label: 'Cookies de préférences', desc: 'pour l\'affichage' }
+                    ].map((item, index) => (
+                        <div key={index} style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 12,
+                            padding: 10,
+                            background: 'var(--surface-page)',
+                            borderRadius: 8,
+                            border: '1px solid var(--border-subtle)'
+                        }}>
+                            <span style={{ fontSize: 24 }}>{item.icon}</span>
+                            <div>
+                                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-strong)' }}>
+                                    {item.label}
+                                </div>
+                                <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
+                                    {item.desc}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <p style={{ marginTop: 12 }}>
+                    Aucun cookie publicitaire ou de suivi tiers n'est utilisé sur la plateforme. Vous pouvez configurer
+                    votre navigateur pour bloquer les cookies, mais certaines fonctionnalités pourraient ne plus être
+                    accessibles.
+                </p>
+            </Section>
+
+            {/* Section 10 : Modifications */}
+            <Section title="10. Modifications de la politique de confidentialité">
+                <p>
+                    SendProColis se réserve le droit de modifier la présente politique à tout moment. En cas de
+                    modification substantielle, les utilisateurs seront informés par email ou via une notification
+                    sur la plateforme au moins 15 jours avant l'entrée en vigueur des modifications.
+                </p>
+                <div style={{
+                    marginTop: 12,
+                    padding: 16,
+                    background: 'var(--amber-50)',
+                    borderRadius: 12,
+                    border: '1px solid var(--amber-200)'
+                }}>
+                    <p style={{ margin: 0, fontSize: 13, color: 'var(--amber-700)' }}>
+                        📌 Nous vous invitons à consulter régulièrement cette page pour prendre connaissance de toute mise à jour.
+                    </p>
+                </div>
+            </Section>
+
+            {/* Footer */}
+            <FooterSection />
+        </div>
+    )
+}
+
+// ==================== COMPOSANTS ====================
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+    return (
+        <div style={{ marginTop: 32 }}>
+            <h2 style={{
+                fontFamily: 'var(--font-display)',
+                fontWeight: 700,
+                fontSize: 'clamp(18px, 2vw, 21px)',
+                color: 'var(--text-strong)',
+                margin: '0 0 12px 0',
+                paddingBottom: 8,
+                borderBottom: '2px solid var(--color-primary-soft)'
+            }}>
+                {title}
+            </h2>
+            {children}
+        </div>
+    )
+}
+
+function FooterSection() {
+    return (
+        <div style={{
+            marginTop: 48,
+            paddingTop: 24,
+            borderTop: '1px solid var(--border-subtle)',
+            textAlign: 'center',
+            fontSize: 13,
+            color: 'var(--text-muted)'
+        }}>
+            <p style={{ margin: 0 }}>
+                © {new Date().getFullYear()} SendProColis SARL — Tous droits réservés
+            </p>
+            <p style={{ margin: '4px 0 0' }}>
+                Dakar, Sénégal ·{' '}
+                <a href={`mailto:${CONTACT_INFO.email}`} style={{ color: 'var(--color-primary)' }}>
+                    {CONTACT_INFO.email}
+                </a>
+            </p>
+        </div>
+    )
 }
