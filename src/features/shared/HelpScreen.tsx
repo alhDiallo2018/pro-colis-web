@@ -51,20 +51,31 @@ const FAQS: FaqItem[] = [
 ]
 
 const TOPICS = [
-    { icon: '📦', title: 'Créer et envoyer un colis', color: '#0D9488' },
-    { icon: '💰', title: 'Libre service et offres', color: '#2563EB' },
-    { icon: '📍', title: 'Suivi et livraison', color: '#7C3AED' },
-    { icon: '💳', title: 'Points et paiements', color: '#059669' },
-    { icon: '🛡️', title: 'Sécurité et litiges', color: '#DC2626' },
-    { icon: '👤', title: 'Mon compte', color: '#D97706' },
+    { icon: '📦', title: 'Créer et envoyer un colis' },
+    { icon: '💰', title: 'Libre service et offres' },
+    { icon: '📍', title: 'Suivi et livraison' },
+    { icon: '💳', title: 'Points et paiements' },
+    { icon: '🛡️', title: 'Sécurité et litiges' },
+    { icon: '👤', title: 'Mon compte' },
 ]
+
+const topicColors: Record<string, string> = {
+    'Créer et envoyer un colis': 'var(--teal-50)',
+    'Libre service et offres': 'var(--blue-50)',
+    'Suivi et livraison': 'var(--purple-50)',
+    'Points et paiements': 'var(--green-50)',
+    'Sécurité et litiges': 'var(--red-50)',
+    'Mon compte': 'var(--amber-50)',
+}
 
 function FaqTile({ item, index }: { item: FaqItem; index: number }) {
     const [open, setOpen] = useState(false)
     return (
-        <div style={{
-            borderBottom: index < FAQS.length - 1 ? '1px solid var(--border-subtle)' : 'none'
-        }}>
+        <div
+            style={{
+                borderBottom: index < FAQS.length - 1 ? '1px solid var(--border-subtle)' : 'none'
+            }}
+        >
             <button
                 type="button"
                 onClick={() => setOpen((o) => !o)}
@@ -87,16 +98,16 @@ function FaqTile({ item, index }: { item: FaqItem; index: number }) {
                     if (!open) e.currentTarget.style.background = 'transparent'
                 }}
             >
-        <span style={{
-            flex: 1,
-            fontFamily: 'var(--font-display)',
-            fontWeight: 700,
-            fontSize: 14,
-            color: 'var(--text-strong)',
-            lineHeight: 1.4
-        }}>
-          {item.question}
-        </span>
+                <span style={{
+                    flex: 1,
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 700,
+                    fontSize: 14,
+                    color: 'var(--text-strong)',
+                    lineHeight: 1.4
+                }}>
+                    {item.question}
+                </span>
                 <span
                     className="material-symbols-rounded"
                     style={{
@@ -108,8 +119,8 @@ function FaqTile({ item, index }: { item: FaqItem; index: number }) {
                         marginLeft: 12,
                     }}
                 >
-          expand_more
-        </span>
+                    expand_more
+                </span>
             </button>
             {open && (
                 <div style={{
@@ -184,16 +195,10 @@ export function HelpScreen() {
                 margin: '0 auto 32px',
                 transition: 'border-color 0.2s ease',
             }}
-                 onFocus={(e) => {
-                     e.currentTarget.style.borderColor = 'var(--color-primary)'
-                 }}
-                 onBlur={(e) => {
-                     e.currentTarget.style.borderColor = 'var(--border-subtle)'
-                 }}
             >
-        <span className="material-symbols-rounded" style={{ fontSize: 22, color: 'var(--text-faint)' }}>
-          search
-        </span>
+                <span className="material-symbols-rounded" style={{ fontSize: 22, color: 'var(--text-faint)' }}>
+                    search
+                </span>
                 <input
                     placeholder="Rechercher une question..."
                     value={query}
@@ -220,9 +225,9 @@ export function HelpScreen() {
                             color: 'var(--text-muted)',
                         }}
                     >
-            <span className="material-symbols-rounded" style={{ fontSize: 18 }}>
-              close
-            </span>
+                        <span className="material-symbols-rounded" style={{ fontSize: 18 }}>
+                            close
+                        </span>
                     </button>
                 )}
             </div>
@@ -243,45 +248,35 @@ export function HelpScreen() {
                 gap: 12,
                 marginBottom: 32
             }}>
-                {TOPICS.map((t) => (
-                    <Card key={t.title} padding="md" style={{
-                        cursor: 'pointer',
-                        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-                    }}
-                          onMouseEnter={(e) => {
-                              e.currentTarget.style.transform = 'translateY(-2px)'
-                              e.currentTarget.style.boxShadow = 'var(--shadow-md)'
-                          }}
-                          onMouseLeave={(e) => {
-                              e.currentTarget.style.transform = 'translateY(0)'
-                              e.currentTarget.style.boxShadow = 'none'
-                          }}
-                    >
-                        <div
-                            style={{
-                                width: 44,
-                                height: 44,
-                                borderRadius: 'var(--radius-sm)',
-                                background: `var(--${t.color === '#0D9488' ? 'teal' : t.color === '#2563EB' ? 'blue' : t.color === '#7C3AED' ? 'purple' : t.color === '#059669' ? 'green' : t.color === '#DC2626' ? 'red' : 'amber'}-50)`,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginBottom: 10,
-                                fontSize: 22,
-                            }}
-                        >
-                            {t.icon}
-                        </div>
-                        <div style={{
-                            fontFamily: 'var(--font-display)',
-                            fontWeight: 700,
-                            fontSize: 13.5,
-                            color: 'var(--text-strong)',
-                            lineHeight: 1.25
-                        }}>
-                            {t.title}
-                        </div>
-                    </Card>
+                {TOPICS.map((t, index) => (
+                    <div key={`topic-${index}`} style={{ cursor: 'pointer' }}>
+                        <Card padding="md">
+                            <div
+                                style={{
+                                    width: 44,
+                                    height: 44,
+                                    borderRadius: 'var(--radius-sm)',
+                                    background: topicColors[t.title] || 'var(--teal-50)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginBottom: 10,
+                                    fontSize: 22,
+                                }}
+                            >
+                                {t.icon}
+                            </div>
+                            <div style={{
+                                fontFamily: 'var(--font-display)',
+                                fontWeight: 700,
+                                fontSize: 13.5,
+                                color: 'var(--text-strong)',
+                                lineHeight: 1.25
+                            }}>
+                                {t.title}
+                            </div>
+                        </Card>
+                    </div>
                 ))}
             </div>
 
@@ -295,11 +290,14 @@ export function HelpScreen() {
             }}>
                 {query ? 'Résultats de recherche' : 'Questions fréquentes'}
             </h3>
-            <Card padding="none" style={{
-                overflow: 'hidden',
-                borderRadius: 'var(--radius-lg)',
-                border: '1px solid var(--border-subtle)',
-            }}>
+            <Card
+                padding="none"
+                style={{
+                    overflow: 'hidden',
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1px solid var(--border-subtle)',
+                }}
+            >
                 {visibleFaqs.length === 0 ? (
                     <div style={{
                         padding: 32,
@@ -313,9 +311,13 @@ export function HelpScreen() {
                         <span style={{ fontSize: 13 }}>Essayez d'autres mots-clés ou contactez notre support.</span>
                     </div>
                 ) : (
-                    visibleFaqs.map((f, i) => (
-                        <FaqTile key={f.question} item={f} index={i} />
-                    ))
+                    <>
+                        {visibleFaqs.map((f, index) => (
+                            <div key={`faq-${index}`}>
+                                <FaqTile item={f} index={index} />
+                            </div>
+                        ))}
+                    </>
                 )}
             </Card>
 
@@ -347,9 +349,9 @@ export function HelpScreen() {
                             flexShrink: 0,
                         }}
                     >
-            <span className="material-symbols-rounded" style={{ fontSize: 30, color: 'var(--color-primary)' }}>
-              support_agent
-            </span>
+                        <span className="material-symbols-rounded" style={{ fontSize: 30, color: 'var(--color-primary)' }}>
+                            support_agent
+                        </span>
                     </div>
                     <div style={{ flex: 1, minWidth: 180 }}>
                         <div style={{
@@ -387,15 +389,6 @@ export function HelpScreen() {
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 6,
-                                transition: 'all 0.15s ease',
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.background = 'var(--teal-700)'
-                                e.currentTarget.style.transform = 'scale(1.02)'
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.background = 'var(--color-primary)'
-                                e.currentTarget.style.transform = 'scale(1)'
                             }}
                         >
                             <span className="material-symbols-rounded" style={{ fontSize: 18 }}>chat</span>
@@ -416,15 +409,6 @@ export function HelpScreen() {
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 6,
-                                transition: 'all 0.15s ease',
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.background = 'var(--teal-50)'
-                                e.currentTarget.style.transform = 'scale(1.02)'
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.background = '#fff'
-                                e.currentTarget.style.transform = 'scale(1)'
                             }}
                         >
                             <span className="material-symbols-rounded" style={{ fontSize: 18 }}>mail</span>
