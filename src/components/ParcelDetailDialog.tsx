@@ -6,6 +6,8 @@ import { estimate } from '@/lib/api/commission'
 import { payCashCommission } from '@/lib/api/commission'
 import { buildSteps } from '@/features/client/parcelSteps'
 import { formatDate, formatFcfa, formatWeight, toStatusKey } from '@/lib/format'
+import { refundStatusLabel, responsibilityLabel } from '@/lib/cancellation'
+import { useAuthStore } from '@/store/auth'
 import type { Parcel } from '@/lib/api/types'
 
 interface ParcelDetailDialogProps {
@@ -23,6 +25,13 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export function ParcelDetailDialog({ parcel, onClose }: ParcelDetailDialogProps) {
+  const role = useAuthStore((s) => s.user?.role)
+  // Confidentialité : le chauffeur ne voit jamais les montants payés/remboursés
+  // du client, et le client ne voit jamais les soldes privés du chauffeur.
+  // Seuls les rôles staff (admin/support) ont la vue complète. On ne se contente
+  // pas de la redaction backend : l'affichage est explicitement borné au rôle.
+  const canViewClientFinancials = role !== 'driver'
+  const canViewDriverFinancials = role !== 'client'
   const [cashLoading, setCashLoading] = useState(false)
   const [cashError, setCashError] = useState<string | null>(null)
   const [commissionSource, setCommissionSource] = useState<'wallet' | 'score'>('wallet')
@@ -208,6 +217,45 @@ export function ParcelDetailDialog({ parcel, onClose }: ParcelDetailDialogProps)
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {parcel.cancellation && (
+          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 8 }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>
+              Annulation
+            </div>
+            <Row label="Responsabilité" value={responsibilityLabel(parcel.cancellation.responsibleParty)} />
+            {canViewClientFinancials && parcel.cancellation.refund?.initialAmount != null && <Row label="Montant payé" value={formatFcfa(parcel.cancellation.refund.initialAmount)} />}
+            {canViewClientFinancials && parcel.cancellation.refund?.fees != null && <Row label="Frais" value={formatFcfa(parcel.cancellation.refund.fees)} />}
+            {canViewClientFinancials && parcel.cancellation.refund?.paydunyaFee != null && <Row label="Frais PayDunya" value={formatFcfa(parcel.cancellation.refund.paydunyaFee)} />}
+            {(parcel.cancellation.penalty.amount ?? 0) > 0 && (
+              <Row label="Pénalité" value={`- ${formatFcfa(parcel.cancellation.penalty.amount)}`} />
+            )}
+            {canViewClientFinancials && parcel.cancellation.refund?.refundedAmount != null && <Row label="Remboursement" value={formatFcfa(parcel.cancellation.refund.refundedAmount)} />}
+            {canViewClientFinancials && parcel.cancellation.refund?.status != null && (
+              <Row label="Statut remboursement" value={refundStatusLabel(parcel.cancellation.refund.status)} />
+            )}
+
+            {/* Part client : exposée uniquement par l'API quand elle est autorisée. */}
+            {canViewClientFinancials && (parcel.cancellation.penalty.clientShare ?? 0) > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-faint)', marginBottom: 2 }}>Part client</div>
+                <Row label="Pénalité" value={`- ${formatFcfa(parcel.cancellation.penalty.clientShare)}`} />
+                {parcel.cancellation.refund?.refundedAmount != null && <Row label="Remboursement" value={formatFcfa(parcel.cancellation.refund.refundedAmount)} />}
+              </div>
+            )}
+
+            {/* Part chauffeur : wallet, points et dette, uniquement si l'API les expose. */}
+            {canViewDriverFinancials && (parcel.cancellation.penalty.driverShare ?? 0) > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-faint)', marginBottom: 2 }}>Part chauffeur</div>
+                <Row label="Pénalité" value={`- ${formatFcfa(parcel.cancellation.penalty.driverShare)}`} />
+                {(parcel.cancellation.wallet.deduction ?? 0) > 0 && <Row label="Prélèvement wallet" value={`- ${formatFcfa(parcel.cancellation.wallet.deduction)}`} />}
+                {(parcel.cancellation.points.deduction ?? 0) > 0 && <Row label="Prélèvement points" value={`- ${parcel.cancellation.points.deduction} pts`} />}
+                {(parcel.cancellation.debt.created ?? 0) > 0 && <Row label="Dette créée" value={formatFcfa(parcel.cancellation.debt.created)} />}
+              </div>
+            )}
           </div>
         )}
 

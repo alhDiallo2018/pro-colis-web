@@ -26,6 +26,7 @@ import { NewParcelScreen } from '@/features/client/NewParcelScreen'
 import { OffresRecuesScreen } from '@/features/client/OffresRecuesScreen'
 import { ClientAnnoncesScreen } from '@/features/client/ClientAnnoncesScreen'
 import { AnnonceDetailScreen } from '@/features/client/AnnonceDetailScreen'
+import { DriverProfileScreen } from '@/features/client/DriverProfileScreen'
 import { SuiviScreen } from '@/features/client/SuiviScreen'
 import { ProfilScreen } from '@/features/client/ProfilScreen'
 import { TripDetailScreen } from '@/features/client/TripDetailScreen'
@@ -260,6 +261,7 @@ export const router = createBrowserRouter([
       { path: 'offres', element: <OffresRecuesScreen /> },
       { path: 'annonces', element: <ClientAnnoncesScreen /> },
       { path: 'annonces/:advertisementId', element: <AnnonceDetailScreen /> },
+      { path: 'chauffeurs/:driverId', element: <DriverProfileScreen /> },
       { path: 'trip/:advertisementId', element: <TripDetailScreen /> },
       { path: 'colis/:parcelId/confirm', element: <ConfirmDeliveryScreen /> },
       { path: 'suivi', element: <SuiviScreen /> },

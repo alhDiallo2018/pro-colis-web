@@ -9,7 +9,8 @@ import { OfferDialog } from './OfferDialog'
 import { CreateAnnonceDialog } from './CreateAnnonceDialog'
 import { RechargeDialog } from './RechargeDialog'
 import { ItineraireDialog } from './ItineraireDialog'
-import { useDriverBidsSent, useDriverFreeParcels, useDriverParcels, useMyAdvertisements, useScoreBalance } from './hooks'
+import { useDriverBidsSent, useDriverFinancialState, useDriverFreeParcels, useDriverParcels, useDriverWallet, useMyAdvertisements, useScoreBalance } from './hooks'
+import { CommissionDebtNotice } from './CommissionDebtNotice'
 import { useMyDriverStats } from '@/features/shared/profile/hooks'
 import { formatDate, formatFcfa, formatPoints, formatWeight } from '@/lib/format'
 import type { Parcel } from '@/lib/api/types'
@@ -37,6 +38,8 @@ export function DriverDashboard() {
   const sent = useDriverBidsSent()
   const ads = useMyAdvertisements()
   const balance = useScoreBalance()
+  const wallet = useDriverWallet()
+  const fin = useDriverFinancialState()
   const [offerTarget, setOfferTarget] = useState<Parcel | null>(null)
   const [detailTarget, setDetailTarget] = useState<Parcel | null>(null)
   const [searchParams] = useSearchParams()
@@ -111,7 +114,9 @@ export function DriverDashboard() {
         <StatBox icon="gavel" tone="amber" value={stats.data?.pendingBids ?? sent.data?.length ?? 0} label="Offres en attente" />
         <StatBox icon="task_alt" tone="neutral" value={stats.data?.completedDeliveries ?? delivered} label="Colis livrés" />
         <StatBox icon="star" tone="amber" value={stats.data?.rating ? stats.data.rating.toFixed(1) : '—'} label="Note moyenne" />
-        <StatBox icon="account_balance_wallet" tone="teal" value={balance.data ?? stats.data?.scoreBalance ?? '—'} label="Points" />
+        <StatBox icon="account_balance_wallet" tone="teal" value={wallet.data ? formatFcfa(wallet.data.balance) : '—'} label="Wallet" />
+        <StatBox icon="error_outline" tone={fin.hasDebt ? 'red' : 'green'} value={fin.isLoading ? '—' : formatFcfa(fin.commissionDebt)} label="Dette de commission" />
+        <StatBox icon="stars" tone="amber" value={balance.data ?? stats.data?.scoreBalance ?? '—'} label="Points" />
       </div>
 
       <div className="pc-split">
@@ -236,6 +241,10 @@ export function DriverDashboard() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Dette de commission : bloquante pour les nouvelles acceptations,
+              visible sans transformer le dashboard en écran d'erreur. */}
+          <CommissionDebtNotice showClearState={!fin.isLoading} />
+
           {/* Points card */}
           <div style={{ background: 'var(--gradient-brand)', borderRadius: 'var(--radius-lg)', padding: 20, color: '#fff', boxShadow: 'var(--shadow-brand)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

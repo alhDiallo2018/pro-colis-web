@@ -9,9 +9,12 @@ import { NegotiationTurn } from '@/components/NegotiationTurn'
 import { ProposalsPanel } from './ProposalsPanel'
 import { PayCommissionDialog } from './PayCommissionDialog'
 import { DeclareCashDialog } from './DeclareCashDialog'
+import { DriverCancelDialog } from './DriverCancelDialog'
 import { needsCashDeclaration } from './cashDeclaration'
-import { useAdvanceParcel, useDeliverParcel, useDriverParcels, useRespondToBid } from './hooks'
+import { useAdvanceParcel, useDeliverParcel, useDriverFinancialState, useDriverParcels, useRespondToBid } from './hooks'
+import { CommissionDebtNotice } from './CommissionDebtNotice'
 import { ApiError } from '@/lib/api/client'
+import { commissionDebtMessage } from '@/lib/commissionDebt'
 import { formatFcfa, toStatusKey } from '@/lib/format'
 import { useAuthStore } from '@/store/auth'
 import type { ApiParcelStatus, Parcel } from '@/lib/api/types'
@@ -31,12 +34,14 @@ export function MissionsScreen() {
   const query = useDriverParcels()
   const advance = useAdvanceParcel()
   const respondToBid = useRespondToBid()
+  const fin = useDriverFinancialState()
   const user = useAuthStore((s) => s.user)
   const driverId = user?.id
   const [deliverTarget, setDeliverTarget] = useState<Parcel | null>(null)
   const [detailTarget, setDetailTarget] = useState<Parcel | null>(null)
   const [commissionTarget, setCommissionTarget] = useState<Parcel | null>(null)
   const [cashTarget, setCashTarget] = useState<Parcel | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<Parcel | null>(null)
   const [negotiateTarget, setNegotiateTarget] = useState<{ parcel: Parcel; bidId: string; canAccept: boolean } | null>(null)
   const parcels = (query.data?.parcels ?? []).filter((p) => p.status !== 'cancelled')
 
@@ -44,6 +49,10 @@ export function MissionsScreen() {
     <div style={{ maxWidth: 920, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 'var(--gap-card)' }}>
       {/* Les propositions directes précèdent les missions : elles demandent une
           réponse, alors que les missions ne demandent qu'un avancement. */}
+      <CommissionDebtNotice />
+      {respondToBid.error instanceof ApiError && (
+        <Toast tone="error" message={respondToBid.error.message} />
+      )}
       <ProposalsPanel />
       <Panel title="Mes missions" flush>
         <QueryState
@@ -77,6 +86,20 @@ export function MissionsScreen() {
                   </div>
                 </div>
                 <StatusBadge status={toStatusKey(p.status)} size="sm" />
+                {p.status !== 'delivered' && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    icon="cancel"
+                    title="Annuler la mission"
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation()
+                      setCancelTarget(p)
+                    }}
+                  >
+                    Annuler
+                  </Button>
+                )}
                 {/* Le jalon d'encaissement peut être franchi bien avant la fin
                     de la course (expéditeur payeur) : le rappel reste visible
                     tant que la déclaration n'est pas faite. */}
@@ -126,18 +149,30 @@ export function MissionsScreen() {
                         client : sinon le chauffeur validerait sa propre offre
                         (l'API renvoie 409). */}
                     {(activeBid.canDriverAccept ?? activeBid.lastOfferBy === 'client') ? (
-                      <Button
-                        size="sm"
-                        icon="check"
-                        variant="primary"
-                        loading={respondToBid.isPending && respondToBid.variables?.action === 'accept' && respondToBid.variables?.bidId === activeBid.id}
-                        onClick={(e: React.MouseEvent) => {
-                          e.stopPropagation()
-                          respondToBid.mutate({ bidId: activeBid.id, action: 'accept' })
-                        }}
-                      >
-                        Accepter
-                      </Button>
+                      fin.hasDebt || !fin.canAcceptNewDeliveries ? (
+                        <Button
+                          size="sm"
+                          icon="lock"
+                          variant="secondary"
+                          disabled
+                          title={fin.hasDebt ? commissionDebtMessage(fin.commissionDebt) : 'Chargement…'}
+                        >
+                          {fin.hasDebt ? 'Dette à régler' : 'Accepter'}
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          icon="check"
+                          variant="primary"
+                          loading={respondToBid.isPending && respondToBid.variables?.action === 'accept' && respondToBid.variables?.bidId === activeBid.id}
+                          onClick={(e: React.MouseEvent) => {
+                            e.stopPropagation()
+                            respondToBid.mutate({ bidId: activeBid.id, action: 'accept' })
+                          }}
+                        >
+                          Accepter
+                        </Button>
+                      )
                     ) : (
                       <NegotiationTurn waitingFor="client" />
                     )}
@@ -184,6 +219,7 @@ export function MissionsScreen() {
         }}
       />
       <ParcelDetailDialog parcel={detailTarget} onClose={() => setDetailTarget(null)} />
+      <DriverCancelDialog parcel={cancelTarget} onClose={() => setCancelTarget(null)} />
       <DeclareCashDialog
         parcel={cashTarget}
         onClose={() => setCashTarget(null)}
@@ -207,6 +243,8 @@ export function MissionsScreen() {
             parcelId={negotiateTarget.parcel.id}
             bidId={negotiateTarget.bidId}
             canAccept={negotiateTarget.canAccept}
+            acceptBlocked={fin.hasDebt || !fin.canAcceptNewDeliveries}
+            acceptBlockedLabel={fin.hasDebt ? 'Dette à régler' : 'Chargement…'}
             parcelInfo={{
               trackingNumber: negotiateTarget.parcel.trackingNumber,
               departureCity: negotiateTarget.parcel.departureCity,

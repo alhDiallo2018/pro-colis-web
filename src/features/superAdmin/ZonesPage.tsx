@@ -4,6 +4,8 @@ import { useSearchParams } from 'react-router-dom'
 import { Badge, Button, Dialog, IconButton, Input, Select, Switch, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
+import { DetailList, DetailRow, DetailSection } from '@/components/DetailList'
+import { formatDateTime } from '@/lib/format'
 import type { Zone } from '@/lib/api/types'
 import { ZoneFormDialog } from './ZoneFormDialog'
 import { useAdminZones, useDeleteZone, useUpdateZone, useSetZoneStatus } from './hooks'
@@ -28,6 +30,7 @@ export function ZonesPage() {
   const [zoneType, setZoneType] = useState('')
   const [status, setStatus] = useState('')
   const [editing, setEditing] = useState<Zone | null>(null)
+  const [viewing, setViewing] = useState<Zone | null>(null)
   const [deleting, setDeleting] = useState<Zone | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [, setDriversZoneId] = useState<string | null>(null)
@@ -243,6 +246,7 @@ export function ZonesPage() {
                     title="Voir les chauffeurs"
                     onClick={() => setDriversZoneId(z.id)}
                   />
+                  <IconButton icon="visibility" size="sm" title="Voir le détail" onClick={() => setViewing(z)} />
                   <IconButton icon="edit" size="sm" title="Modifier la zone" onClick={() => setEditing(z)} />
                   <IconButton icon="delete" size="sm" variant="danger" title="Supprimer la zone" onClick={() => setDeleting(z)} />
                 </div>
@@ -254,6 +258,8 @@ export function ZonesPage() {
 
       <ZoneFormDialog open={createOpen} onClose={closeCreate} />
       <ZoneFormDialog open={!!editing} zone={editing} onClose={() => setEditing(null)} />
+
+      <ZoneDetailDialog zone={viewing} onClose={() => setViewing(null)} />
 
       <Dialog
         open={!!deleting}
@@ -273,5 +279,55 @@ export function ZonesPage() {
         </div>
       </Dialog>
     </div>
+  )
+}
+
+/** Fiche lecture seule d'une zone — coordonnées, type, périmètre et rattachements
+ *  que la ligne de la liste ne montre pas. */
+function ZoneDetailDialog({ zone, onClose }: { zone: Zone | null; onClose: () => void }) {
+  if (!zone) return null
+  return (
+    <Dialog open size="lg" title={zone.displayName || zone.name} onClose={onClose} actions={<Button variant="ghost" onClick={onClose}>Fermer</Button>}>
+      <div className="pc-form" style={{ gap: 18 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Badge tone={zone.type === 'CIRCLE' ? 'teal' : 'neutral'}>{zone.type === 'CIRCLE' ? 'Cercle' : 'Polygone'}</Badge>
+          {zone.status === 'pending' && <Badge tone="amber">À valider</Badge>}
+          {zone.status === 'rejected' && <Badge tone="red">Rejetée</Badge>}
+          <Badge tone={zone.isActive === false ? 'neutral' : 'green'}>{zone.isActive === false ? 'Inactive' : 'Active'}</Badge>
+          {zone.source && <Badge tone="neutral">{zone.source}</Badge>}
+        </div>
+
+        <DetailSection title="Localisation">
+          <DetailList>
+            <DetailRow label="Nom" always>{zone.name}</DetailRow>
+            <DetailRow label="Nom affiché">{zone.displayName}</DetailRow>
+            <DetailRow label="Pays">{zone.country}</DetailRow>
+            <DetailRow label="Ville">{zone.city}</DetailRow>
+            <DetailRow label="Région">{zone.region}</DetailRow>
+            <DetailRow label="Latitude" mono>{zone.latitude != null ? String(zone.latitude) : undefined}</DetailRow>
+            <DetailRow label="Longitude" mono>{zone.longitude != null ? String(zone.longitude) : undefined}</DetailRow>
+            {zone.type === 'CIRCLE' && <DetailRow label="Rayon" mono>{zone.radius != null ? `${(zone.radius / 1000).toFixed(1)} km` : undefined}</DetailRow>}
+            <DetailRow label="Identifiant Places" mono>{zone.placeId}</DetailRow>
+          </DetailList>
+        </DetailSection>
+
+        <DetailSection title="Rattachements">
+          <DetailList>
+            <DetailRow label="Chauffeurs rattachés">{zone._count?.driverZones}</DetailRow>
+            <DetailRow label="Colis liés">{zone._count?.parcels}</DetailRow>
+            <DetailRow label="Zone parente">{zone.parent?.name}</DetailRow>
+            <DetailRow label="Sous-zones">{zone.children?.map((c) => c.name).join(', ')}</DetailRow>
+          </DetailList>
+        </DetailSection>
+
+        <DetailSection title="Historique">
+          <DetailList>
+            <DetailRow label="Créée le">{formatDateTime(zone.createdAt)}</DetailRow>
+            <DetailRow label="Mise à jour">{formatDateTime(zone.updatedAt)}</DetailRow>
+            <DetailRow label="Identifiant" mono>{zone.id}</DetailRow>
+          </DetailList>
+        </DetailSection>
+      </div>
+    </Dialog>
   )
 }

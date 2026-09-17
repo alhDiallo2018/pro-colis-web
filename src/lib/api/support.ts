@@ -1,7 +1,5 @@
 import { api } from './client'
 
-export const SUPPORT_EMAIL = 'support-commercial@sendprocolis.com'
-
 export interface SupportMessage {
   id: string
   userId?: string | null
@@ -23,11 +21,12 @@ export async function sendSupportMessage(payload: SendSupportMessagePayload): Pr
   return (data.supportMessage ?? data.data) as SupportMessage
 }
 
-/** Construit un recours sûr pour les visiteurs anonymes sans exposer de clé d'email dans le navigateur. */
-export function buildSupportMailto(payload: SendSupportMessagePayload): string {
+/** Construit un recours sûr pour les visiteurs anonymes sans exposer de clé d'email dans le navigateur.
+ *  L'adresse du support provient de la configuration publique (`/public/config`). */
+export function buildSupportMailto(payload: SendSupportMessagePayload, supportEmail: string): string {
   const identity = [payload.name, payload.email].filter(Boolean).join(' — ')
   const body = identity ? `${identity}\n\n${payload.message}` : payload.message
-  return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(payload.subject)}&body=${encodeURIComponent(body)}`
+  return `mailto:${supportEmail}?subject=${encodeURIComponent(payload.subject)}&body=${encodeURIComponent(body)}`
 }
 
 /* ------------------------------------------------------------------ */

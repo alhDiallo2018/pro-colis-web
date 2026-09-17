@@ -43,6 +43,25 @@ export function formatDateTime(iso: string | null | undefined): string {
 }
 
 /**
+ * Durée écoulée depuis `iso`, en français : « il y a 12 secondes »,
+ * « il y a 3 minutes », « il y a 2 heures », « il y a 1 jour ». Les valeurs
+ * dans le futur (horloge du client en avance) sont ramenées à l'instant.
+ */
+export function formatTimeAgo(iso: string | null | undefined, now: number = Date.now()): string {
+  if (!iso) return 'à l’instant'
+  const t = new Date(iso).getTime()
+  if (Number.isNaN(t)) return 'à l’instant'
+  const s = Math.max(0, Math.floor((now - t) / 1000))
+  if (s < 60) return `il y a ${s} seconde${s > 1 ? 's' : ''}`
+  const m = Math.floor(s / 60)
+  if (m < 60) return `il y a ${m} minute${m > 1 ? 's' : ''}`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `il y a ${h} heure${h > 1 ? 's' : ''}`
+  const d = Math.floor(h / 24)
+  return `il y a ${d} jour${d > 1 ? 's' : ''}`
+}
+
+/**
  * Map an API parcel status (Prisma enum) to the design-system status key.
  * The API uses snake_case lifecycle names; the DS uses shorter keys.
  */

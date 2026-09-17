@@ -6,6 +6,7 @@ import { confirmPaydunyaPayment } from '@/lib/api/paydunya'
 import { formatFcfa } from '@/lib/format'
 import { useAuthStore } from '@/store/auth'
 import { homeForRole } from '@/routes/paths'
+import { useSupportContact } from '@/lib/usePublicConfig'
 
 type UiState = 'success' | 'pending' | 'failed'
 
@@ -53,6 +54,7 @@ const UI: Record<UiState, { icon: string; color: string; bg: string; title: stri
 export function PaymentStatusPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
+  const support = useSupportContact()
   const user = useAuthStore((s) => s.user)
   const token = params.get('token') || params.get('invoice_token') || ''
 
@@ -158,8 +160,8 @@ export function PaymentStatusPage() {
 
       <p style={{ textAlign: 'center', fontSize: 12.5, color: 'var(--text-faint)', marginTop: 18 }}>
         Un doute sur ce paiement ? Écrivez-nous à{' '}
-        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>
-          support-commercial@sendprocolis.com
+        <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>
+          {support.email}
         </a>
       </p>
     </div>

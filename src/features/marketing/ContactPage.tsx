@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Button, Input, Textarea, Toast } from '@/ds'
 import type { ToastTone } from '@/ds'
 import { MarketingHeader } from './MarketingHeader'
-import { buildSupportMailto, sendSupportMessage, checkSupportRateLimit, recordSupportSend, formatWait, SUPPORT_EMAIL } from '@/lib/api/support'
+import { useSupportContact, useLegalConfig } from '@/lib/usePublicConfig'
+import { buildSupportMailto, sendSupportMessage, checkSupportRateLimit, recordSupportSend, formatWait } from '@/lib/api/support'
 import { useAuthStore } from '@/store/auth'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -14,16 +15,10 @@ interface ContactErrors {
   message?: string
 }
 
-const CONTACT_INFO = {
-  email: 'support-commercial@sendprocolis.com',
-  phone1: '+221 76 516 27 96',
-  phone2: '+221 76 590 17 79',
-  phone3: '+221 77 889 12 30',
-  address: 'Dakar, Sénégal'
-}
-
 export function ContactPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
+  const support = useSupportContact()
+  const legal = useLegalConfig()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [subject, setSubject] = useState('')
@@ -65,8 +60,8 @@ export function ContactPage() {
     const payload = { subject: fullSubject, message: fullMessage, name: name.trim(), email: email.trim() }
 
     if (!accessToken) {
-      window.location.href = buildSupportMailto(payload)
-      setFeedback({ tone: 'warning', message: `Votre application email va s'ouvrir pour envoyer le message à ${SUPPORT_EMAIL}.` })
+      window.location.href = buildSupportMailto(payload, support.email)
+      setFeedback({ tone: 'warning', message: `Votre application email va s'ouvrir pour envoyer le message à ${support.email}.` })
       setSending(false)
       return
     }
@@ -80,10 +75,10 @@ export function ContactPage() {
       setSubject('')
       setMessage('')
     } catch {
-      window.location.href = buildSupportMailto(payload)
+      window.location.href = buildSupportMailto(payload, support.email)
       setFeedback({
         tone: 'warning',
-        message: `L'API est indisponible : votre application email va s'ouvrir pour écrire à ${SUPPORT_EMAIL}.`,
+        message: `L'API est indisponible : votre application email va s'ouvrir pour écrire à ${support.email}.`,
       })
     } finally {
       setSending(false)
@@ -197,8 +192,8 @@ export function ContactPage() {
                 Email
               </div>
               <div style={{ fontSize: 13 }}>
-                <a href={`mailto:${CONTACT_INFO.email}`} style={{ color: 'var(--color-primary)' }}>
-                  {CONTACT_INFO.email}
+                <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>
+                  {support.email}
                 </a>
               </div>
             </div>
@@ -220,14 +215,11 @@ export function ContactPage() {
                 Téléphone / WhatsApp
               </div>
               <div style={{ fontSize: 13, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <a href={`tel:${CONTACT_INFO.phone1.replace(/\s/g, '')}`} style={{ color: 'var(--color-primary)' }}>
-                  {CONTACT_INFO.phone1}
+                <a href={`tel:${support.technicalPhone.replace(/\s/g, '')}`} style={{ color: 'var(--color-primary)' }}>
+                  {support.technicalPhone}
                 </a>
-                <a href={`tel:${CONTACT_INFO.phone2.replace(/\s/g, '')}`} style={{ color: 'var(--color-primary)' }}>
-                  {CONTACT_INFO.phone2}
-                </a>
-                <a href={`tel:${CONTACT_INFO.phone3.replace(/\s/g, '')}`} style={{ color: 'var(--color-primary)' }}>
-                  {CONTACT_INFO.phone3}
+                <a href={`tel:${support.phone.replace(/\s/g, '')}`} style={{ color: 'var(--color-primary)' }}>
+                  {support.phone}
                 </a>
               </div>
             </div>
@@ -249,7 +241,7 @@ export function ContactPage() {
                 Adresse
               </div>
               <div style={{ fontSize: 13 }}>
-                {CONTACT_INFO.address}
+                {legal.address || 'Dakar, Sénégal'}
               </div>
             </div>
           </div>
@@ -382,12 +374,12 @@ export function ContactPage() {
           color: 'var(--text-muted)'
         }}>
           <p style={{ margin: 0 }}>
-            © {new Date().getFullYear()} SendProColis SARL — Tous droits réservés
+            © {new Date().getFullYear()} SendProColis — Tous droits réservés
           </p>
           <p style={{ margin: '4px 0 0' }}>
             Dakar, Sénégal ·{' '}
-            <a href={`mailto:${CONTACT_INFO.email}`} style={{ color: 'var(--color-primary)' }}>
-              {CONTACT_INFO.email}
+            <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>
+              {support.email}
             </a>
           </p>
         </div>

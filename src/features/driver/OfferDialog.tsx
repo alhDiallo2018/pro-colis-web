@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Button, Dialog } from '@/ds'
-import { useCreateBid, useRespondToBid } from './hooks'
+import { Button, Dialog, Toast } from '@/ds'
+import { useCreateBid, useDriverFinancialState, useRespondToBid } from './hooks'
 import { NegotiationChat } from '@/components/NegotiationChat'
+import { ApiError } from '@/lib/api/client'
+import { commissionDebtMessage } from '@/lib/commissionDebt'
 import type { Parcel } from '@/lib/api/types'
 
 interface OfferDialogProps {
@@ -14,6 +16,7 @@ interface OfferDialogProps {
 export function OfferDialog({ parcel, onClose, onSuccess, existingBidId }: OfferDialogProps) {
   const createBid = useCreateBid()
   const respondToBid = useRespondToBid()
+  const fin = useDriverFinancialState()
   const [bidId, setBidId] = useState<string | null>(existingBidId ?? null)
   const [audioUrl] = useState<string | null>(null)
   const bidCreatedRef = useRef(false)
@@ -24,6 +27,12 @@ export function OfferDialog({ parcel, onClose, onSuccess, existingBidId }: Offer
   }, [existingBidId, parcel?.id])
 
   if (!parcel) return null
+
+  // Une dette de commission bloque l'acceptation d'un prix reçu, pas l'envoi
+  // d'une première offre. L'API reste seule juge ; ce drapeau n'est que l'UI.
+  const acceptBlocked = fin.hasDebt || !fin.canAcceptNewDeliveries
+  const acceptBlockedLabel = fin.hasDebt ? 'Dette à régler' : 'Chargement…'
+  const error = respondToBid.error instanceof ApiError ? respondToBid.error.message : null
 
   const handleFirstOffer = async (price: number, message?: string) => {
     if (bidId || bidCreatedRef.current) return
@@ -40,7 +49,7 @@ export function OfferDialog({ parcel, onClose, onSuccess, existingBidId }: Offer
   }
 
   const handleAcceptBid = (price: number, message?: string) => {
-    if (!bidId) return
+    if (!bidId || acceptBlocked) return
     respondToBid.mutate(
       { bidId, action: 'accept', price, message },
       { onSuccess: () => onSuccess?.() },
@@ -62,11 +71,24 @@ export function OfferDialog({ parcel, onClose, onSuccess, existingBidId }: Offer
       }
     >
       <div style={{ height: 'min(70vh, 520px)', display: 'flex', flexDirection: 'column' }}>
+        {error && (
+          <div style={{ paddingBottom: 8 }}>
+            <Toast tone="error" message={error} />
+          </div>
+        )}
+        {fin.hasDebt && (
+          <div style={{ paddingBottom: 8 }}>
+            <Toast tone="warning" message={commissionDebtMessage(fin.commissionDebt)} />
+          </div>
+        )}
         <NegotiationChat
         peerId={parcel.senderId ?? ''}
         peerName={parcel.senderName || 'Client'}
         parcelId={parcel.id}
         bidId={bidId ?? undefined}
+        canAccept
+        acceptBlocked={acceptBlocked}
+        acceptBlockedLabel={acceptBlockedLabel}
         parcelInfo={{
           trackingNumber: parcel.trackingNumber,
           departureCity: parcel.departureCity,

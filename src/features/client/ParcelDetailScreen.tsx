@@ -6,6 +6,7 @@ import { ParcelMedia } from '@/components/ParcelMedia'
 import { QrCode } from '@/components/QrCode'
 import { useCreateRating, useDeliveryCode, useParcel } from './hooks'
 import { EditParcelDialog } from './EditParcelDialog'
+import { CancellationDialog } from '@/components/CancellationDialog'
 import { ProposalStatusCard } from './ProposalStatusCard'
 import { isParcelEditable } from './parcelEditable'
 import { createPaydunyaPayment } from '@/lib/api/paydunya'
@@ -35,6 +36,8 @@ export function ParcelDetailScreen() {
   const showCode = !!parcel && IN_TRANSIT_STATUSES.includes(parcel.status)
   const deliveryCode = useDeliveryCode(parcelId, showCode)
   const [editing, setEditing] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const cancellable = !!parcel && parcel.status !== 'delivered' && parcel.status !== 'cancelled'
 
   // Refetch after returning from PayDunya payment
   useEffect(() => {
@@ -58,9 +61,15 @@ export function ParcelDetailScreen() {
             Modifier
           </Button>
         )}
+        {cancellable && (
+          <Button size="sm" variant="secondary" tone="danger" icon="cancel" style={{ marginLeft: isParcelEditable(parcel) ? 0 : 'auto' }} onClick={() => setCancelling(true)}>
+            Annuler le colis
+          </Button>
+        )}
       </div>
 
       <EditParcelDialog parcel={editing ? (parcel ?? null) : null} onClose={() => setEditing(false)} />
+      <CancellationDialog parcel={cancelling ? (parcel ?? null) : null} onClose={() => setCancelling(false)} />
 
       <QueryState isLoading={query.isLoading} isError={query.isError} error={query.error} onRetry={() => query.refetch()}>
         {parcel && (
@@ -242,10 +251,6 @@ function PaydunyaPayCard({ parcelId, amount, trackingNumber }: { parcelId: strin
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
             <span style={{ color: 'var(--text-muted)' }}>Commission plateforme ({commissionInfo.percentage}%)</span>
             <span style={{ fontWeight: 700, color: 'var(--red-600)' }}>- {formatFcfa(commissionInfo.commission)}</span>
-          </div>
-          <div style={{ borderTop: '1px solid var(--amber-200)', paddingTop: 4, marginTop: 2, display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Montant reversé au chauffeur</span>
-            <span style={{ fontWeight: 700, color: 'var(--green-700)' }}>{formatFcfa(commissionInfo.netAmount)}</span>
           </div>
         </div>
       )}

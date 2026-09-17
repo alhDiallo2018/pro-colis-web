@@ -24,13 +24,6 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: 'suspended', label: 'Suspendu' },
 ]
 
-const SOLDE_OPTIONS: { value: string; label: string }[] = [
-  { value: '', label: 'Tous' },
-  { value: 'low', label: 'Solde &lt;500' },
-  { value: 'zero', label: 'Solde nul' },
-  { value: 'above', label: 'Solde &gt;seuil' },
-]
-
 const TX_TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: '', label: 'Tous' },
   { value: 'recharge', label: 'Recharge' },
@@ -230,7 +223,6 @@ function WalletList() {
   const [garage, setGarage] = useState('')
   const [region, setRegion] = useState('')
   const [status, setStatus] = useState('')
-  const [soldeFilter, setSoldeFilter] = useState('')
   const [minBalance, setMinBalance] = useState('')
   const [maxBalance, setMaxBalance] = useState('')
 
@@ -239,7 +231,6 @@ function WalletList() {
   if (status) params.status = status
   if (garage) params.garage = garage
   if (region) params.region = region
-  if (soldeFilter) params.balance = soldeFilter
   if (minBalance) params.minBalance = Number(minBalance)
   if (maxBalance) params.maxBalance = Number(maxBalance)
 
@@ -248,7 +239,6 @@ function WalletList() {
 
   const totalWallets = wallets.length
   const totalSolde = wallets.reduce((s, w) => s + (w.balance ?? 0), 0)
-  const faibles = wallets.filter((w) => (w.balance ?? 0) < 500).length
   const inactifs = wallets.filter((w) => !w.lastActivityAt).length
 
   return (
@@ -269,7 +259,6 @@ function WalletList() {
       >
         <strong style={{ color: 'var(--text-strong)', fontSize: 14 }}>Total: {totalWallets}</strong>
         <span>Solde total: <strong style={{ color: 'var(--text-strong)' }}>{formatFcfa(totalSolde)}</strong></span>
-        <span>Faibles: <strong style={{ color: 'var(--red-500)' }}>{faibles}</strong></span>
         <span>Inactifs: <strong style={{ color: 'var(--text-strong)' }}>{inactifs}</strong></span>
       </div>
 
@@ -302,12 +291,6 @@ function WalletList() {
           onChange={(e: ChangeEvent<HTMLSelectElement>) => setStatus(e.target.value)}
           options={STATUS_OPTIONS}
           style={{ minWidth: 140 }}
-        />
-        <Select
-          value={soldeFilter}
-          onChange={(e: ChangeEvent<HTMLSelectElement>) => setSoldeFilter(e.target.value)}
-          options={SOLDE_OPTIONS}
-          style={{ minWidth: 150 }}
         />
         <Input
           type="number"

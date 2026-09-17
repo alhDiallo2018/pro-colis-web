@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import { Avatar, Badge, Button, Dialog, Input, StatBox, Tabs, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
+import { ScoreTransactionDetailDialog } from '@/components/ScoreTransactionDetailDialog'
+import { WalletTransactionDetailDialog } from '@/components/WalletTransactionDetailDialog'
 import {
   useDriverDetail,
   useScoreHistory,
@@ -14,6 +16,8 @@ import {
 import { formatFcfa, formatDate, formatDateTime } from '@/lib/format'
 import { useIsMobile } from '@/lib/useMediaQuery'
 import { ApiError } from '@/lib/api/client'
+import type { ScoreTransaction } from '@/lib/api/admin-reputation'
+import type { WalletTransaction } from '@/lib/api/admin-finance'
 
 const LEVEL_TONE: Record<string, 'primary' | 'amber' | 'green' | 'neutral'> = {
   ELITE: 'primary',
@@ -62,6 +66,8 @@ export function DriverDetailPage() {
   const [rechargeOpen, setRechargeOpen] = useState(false)
   const [debitOpen, setDebitOpen] = useState(false)
   const [errorToast, setErrorToast] = useState<string | null>(null)
+  const [detailScoreTx, setDetailScoreTx] = useState<ScoreTransaction | null>(null)
+  const [detailWalletTx, setDetailWalletTx] = useState<WalletTransaction | null>(null)
 
   const driverQuery = useDriverDetail(userId)
   const scoreHistoryQuery = useScoreHistory(userId)
@@ -160,7 +166,7 @@ export function DriverDetailPage() {
                       onRetry={() => scoreHistoryQuery.refetch()}
                     >
                       {scoreTxs.map((tx) => (
-                        <div key={tx.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)' }}>
+                        <div key={tx.id} onClick={() => setDetailScoreTx(tx)} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '15px 16px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                             <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-body)' }}>{formatDateTime(tx.createdAt)}</span>
                             <Badge tone={TX_TONE[tx.type] ?? 'neutral'}>{TX_LABEL[tx.type] ?? tx.type}</Badge>
@@ -210,7 +216,8 @@ export function DriverDetailPage() {
                         {scoreTxs.map((tx) => (
                           <div
                             key={tx.id}
-                            style={{ display: 'grid', gridTemplateColumns: '1fr 100px 120px 1fr', alignItems: 'center', padding: '11px 18px', borderBottom: '1px solid var(--slate-100)' }}
+                            onClick={() => setDetailScoreTx(tx)}
+                            style={{ display: 'grid', gridTemplateColumns: '1fr 100px 120px 1fr', alignItems: 'center', padding: '13px 18px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}
                           >
                             <span style={{ display: 'flex', alignItems: 'center', minWidth: 0, fontSize: 12.5, color: 'var(--text-body)' }}>
                               {formatDateTime(tx.createdAt)}
@@ -279,7 +286,7 @@ export function DriverDetailPage() {
                             onRetry={() => walletTxQuery.refetch()}
                           >
                             {walletTxs.map((tx) => (
-                              <div key={tx.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)' }}>
+                              <div key={tx.id} onClick={() => setDetailWalletTx(tx)} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '15px 16px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                                   <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-body)' }}>{formatDateTime(tx.createdAt)}</span>
                                   <Badge tone={tx.type === 'debit' ? 'red' : 'green'}>{WALLET_TX_LABEL[tx.type] ?? tx.type}</Badge>
@@ -333,7 +340,8 @@ export function DriverDetailPage() {
                               {walletTxs.map((tx) => (
                                 <div
                                   key={tx.id}
-                                  style={{ display: 'grid', gridTemplateColumns: '1fr 100px 120px 120px 1fr', alignItems: 'center', padding: '11px 18px', borderBottom: '1px solid var(--slate-100)' }}
+                                  onClick={() => setDetailWalletTx(tx)}
+                                  style={{ display: 'grid', gridTemplateColumns: '1fr 100px 120px 120px 1fr', alignItems: 'center', padding: '13px 18px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}
                                 >
                                   <span style={{ display: 'flex', alignItems: 'center', minWidth: 0, fontSize: 12.5, color: 'var(--text-body)' }}>
                                     {formatDateTime(tx.createdAt)}
@@ -390,6 +398,9 @@ export function DriverDetailPage() {
           mutation={debitMutation}
         />
       )}
+
+      <ScoreTransactionDetailDialog tx={detailScoreTx} onClose={() => setDetailScoreTx(null)} />
+      <WalletTransactionDetailDialog tx={detailWalletTx} onClose={() => setDetailWalletTx(null)} />
     </div>
   )
 }

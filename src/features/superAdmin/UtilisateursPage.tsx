@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { Avatar, Badge, Button, Dialog, IconButton, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
+import { DetailList, DetailRow, DetailSection } from '@/components/DetailList'
 import { UserFormDialog } from './UserFormDialog'
 import { useAdminUsers, useDeleteUser, useResetUserPin, useUpdateUserStatus } from './hooks'
 import { useIsMobile } from '@/lib/useMediaQuery'
+import { formatDateTime, formatFcfa } from '@/lib/format'
 import type { Role, User, UserStatus } from '@/lib/api/types'
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -26,6 +28,8 @@ const STATUS_TONE: Record<UserStatus, 'green' | 'red' | 'neutral'> = {
 const GRID = '1fr 110px 100px 210px'
 const cell: React.CSSProperties = { display: 'flex', alignItems: 'center', minWidth: 0 }
 
+const statusLabel = (u: User) => (u.status === 'active' ? 'Actif' : u.status === 'suspended' ? 'Suspendu' : 'Supprimé')
+
 export function UtilisateursPage() {
   const isMobile = useIsMobile()
   const query = useAdminUsers()
@@ -36,6 +40,7 @@ export function UtilisateursPage() {
 
   const [createOpen, setCreateOpen] = useState(false)
   const [editing, setEditing] = useState<User | null>(null)
+  const [viewing, setViewing] = useState<User | null>(null)
   const [deleting, setDeleting] = useState<User | null>(null)
   const [resetting, setResetting] = useState<User | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -77,13 +82,12 @@ export function UtilisateursPage() {
     onRetry: () => query.refetch(),
   }
 
-  const statusLabel = (u: User) => (u.status === 'active' ? 'Actif' : u.status === 'suspended' ? 'Suspendu' : 'Supprimé')
-
   const renderActions = (u: User) => {
     const suspended = u.status === 'suspended'
     const protectedUser = u.role === 'super_admin'
     return (
       <>
+        <IconButton icon="visibility" size="sm" title="Voir le détail" onClick={() => setViewing(u)} />
         <IconButton icon="edit" size="sm" title="Modifier" onClick={() => setEditing(u)} />
         <IconButton icon="lock_reset" size="sm" title="Réinitialiser le PIN" onClick={() => setResetting(u)} />
         {!protectedUser && (
@@ -190,6 +194,8 @@ export function UtilisateursPage() {
       <UserFormDialog open={createOpen} onClose={() => setCreateOpen(false)} />
       <UserFormDialog open={!!editing} user={editing} onClose={() => setEditing(null)} />
 
+      <UserDetailDialog user={viewing} onClose={() => setViewing(null)} />
+
       <Dialog
         open={!!deleting}
         title="Supprimer l'utilisateur"
@@ -231,5 +237,64 @@ export function UtilisateursPage() {
         </div>
       </Dialog>
     </div>
+  )
+}
+
+/** Fiche lecture seule d'un compte : toutes les informations d'identité,
+ *  de vérification et d'activité que la ligne du tableau ne montre pas. */
+function UserDetailDialog({ user, onClose }: { user: User | null; onClose: () => void }) {
+  if (!user) return null
+  const verified = user.isVerified || user.isEmailVerified || user.isPhoneVerified
+  return (
+    <Dialog open size="lg" title={user.fullName} onClose={onClose} actions={<Button variant="ghost" onClick={onClose}>Fermer</Button>}>
+      <div className="pc-form" style={{ gap: 18 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <Avatar name={user.fullName} src={user.profilePhoto ?? undefined} size="lg" />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 17, color: 'var(--text-strong)' }}>{user.fullName}</div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+              <Badge tone="neutral">{ROLE_LABEL[user.role]}</Badge>
+              <Badge tone={STATUS_TONE[user.status]}>{statusLabel(user)}</Badge>
+              {verified && <Badge tone="green">Vérifié</Badge>}
+            </div>
+          </div>
+        </div>
+
+        <DetailSection title="Coordonnées">
+          <DetailList>
+            <DetailRow label="E-mail">{user.email}</DetailRow>
+            <DetailRow label="Téléphone" mono>{user.phone}</DetailRow>
+            <DetailRow label="Adresse">{user.address}</DetailRow>
+            <DetailRow label="Ville">{user.city}</DetailRow>
+            <DetailRow label="Région">{user.region}</DetailRow>
+            <DetailRow label="Genre">{user.gender}</DetailRow>
+            <DetailRow label="Zone">{user.zoneName ?? user.primaryZoneName}</DetailRow>
+          </DetailList>
+        </DetailSection>
+
+        <DetailSection title="Activité">
+          <DetailList>
+            <DetailRow label="Statut chauffeur">{user.driverStatus}</DetailRow>
+            <DetailRow label="Note">{user.rating != null ? `${user.rating.toFixed(1)} / 5` : undefined}</DetailRow>
+            <DetailRow label="Livraisons terminées">{user.completedDeliveries}</DetailRow>
+            <DetailRow label="Total livraisons">{user.totalDeliveries}</DetailRow>
+            <DetailRow label="Solde portefeuille" mono>{user.walletBalance != null ? formatFcfa(user.walletBalance) : undefined}</DetailRow>
+            <DetailRow label="Véhicule">{user.vehicleModel ? `${user.vehicleModel}${user.vehiclePlate ? ` · ${user.vehiclePlate}` : ''}` : undefined}</DetailRow>
+            <DetailRow label="Dernière connexion">{formatDateTime(user.lastLogin ?? user.lastActiveAt)}</DetailRow>
+          </DetailList>
+        </DetailSection>
+
+        <DetailSection title="Compte">
+          <DetailList>
+            <DetailRow label="E-mail vérifié">{user.isEmailVerified ? 'Oui' : 'Non'}</DetailRow>
+            <DetailRow label="Téléphone vérifié">{user.isPhoneVerified ? 'Oui' : 'Non'}</DetailRow>
+            <DetailRow label="Profil complet">{user.isProfileComplete ? 'Oui' : 'Non'}</DetailRow>
+            <DetailRow label="Créé le">{formatDateTime(user.createdAt)}</DetailRow>
+            <DetailRow label="Mise à jour">{formatDateTime(user.updatedAt)}</DetailRow>
+            <DetailRow label="Identifiant" mono>{user.id}</DetailRow>
+          </DetailList>
+        </DetailSection>
+      </div>
+    </Dialog>
   )
 }

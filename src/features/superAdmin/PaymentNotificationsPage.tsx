@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Badge, Button, SegmentedControl, StatBox } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
+import { PaymentDetailDialog } from '@/components/PaymentDetailDialog'
 import { usePaymentFeed } from './hooks'
 import { formatFcfa, formatDateTime } from '@/lib/format'
 import type { AdminPayment } from '@/lib/api/admin-finance'
@@ -90,6 +91,7 @@ function isToday(p: AdminPayment): boolean {
 export function PaymentNotificationsPage() {
   const [status, setStatus] = useState('')
   const [lastSeen, setLastSeen] = useState<number>(readLastSeen)
+  const [detail, setDetail] = useState<AdminPayment | null>(null)
 
   const query = usePaymentFeed(status)
   const payments = useMemo(() => query.data?.payments ?? [], [query.data])
@@ -154,6 +156,7 @@ export function PaymentNotificationsPage() {
             return (
               <div
                 key={p.id}
+                onClick={() => setDetail(p)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -161,6 +164,7 @@ export function PaymentNotificationsPage() {
                   padding: '14px 18px',
                   borderBottom: '1px solid var(--slate-100)',
                   background: isNew ? 'var(--teal-50)' : 'transparent',
+                  cursor: 'pointer',
                 }}
               >
                 <span
@@ -208,6 +212,8 @@ export function PaymentNotificationsPage() {
           })}
         </QueryState>
       </Panel>
+
+      <PaymentDetailDialog payment={detail} onClose={() => setDetail(null)} />
     </div>
   )
 }

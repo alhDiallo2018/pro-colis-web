@@ -134,7 +134,19 @@ export async function listFree(params: ListParams = {}): Promise<ParcelList> {
 
 export async function track(trackingNumber: string): Promise<Parcel> {
   const { data } = await api.get(`/public/parcels/track/${trackingNumber}`)
-  return data.parcel ?? data.data
+
+  // Le backend renvoie la position du chauffeur comme champ « frère » du colis
+  // (`{ parcel, events, driverLocation }`), pas imbriqué dans `parcel`. On la
+  // fusionne pour que l'écran de suivi puisse la lire via `parcel.driverLocation`
+  // sans inventer de coordonnées : si l'API n'en fournit pas, elle reste absente.
+  const parcel = (data.parcel ?? data.data?.parcel ?? data.data) as Parcel | undefined
+  if (!parcel) return parcel as unknown as Parcel
+
+  const driverLocation = data.driverLocation ?? data.data?.driverLocation
+  if (driverLocation != null && !parcel.driverLocation) {
+    parcel.driverLocation = driverLocation
+  }
+  return parcel
 }
 
 /**

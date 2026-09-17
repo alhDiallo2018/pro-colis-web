@@ -1,11 +1,9 @@
 import { MarketingHeader } from './MarketingHeader'
-
-const CONTACT_INFO = {
-    email: 'support-commercial@sendprocolis.com',
-    address: 'Dakar, Sénégal'
-}
+import { useSupportContact, useLegalConfig } from '@/lib/usePublicConfig'
 
 export function ConfidentialitePage() {
+    const support = useSupportContact()
+    const legal = useLegalConfig()
     return (
         <div style={{
             maxWidth: 900,
@@ -230,7 +228,7 @@ export function ConfidentialitePage() {
                     {[
                         { icon: '🏢', label: 'Équipes SendProColis', desc: 'personnel habilité' },
                         { icon: '🚚', label: 'Chauffeurs transporteurs', desc: 'nécessaire à l\'expédition' },
-                        { icon: '🔧', label: 'Prestataires techniques', desc: 'PayDunya, OVHcloud, liés par contrat' },
+                        { icon: '🔧', label: 'Prestataires techniques', desc: legal.hostName ? `PayDunya, ${legal.hostName}, liés par contrat` : 'PayDunya, liés par contrat' },
                         { icon: '⚖️', label: 'Autorités compétentes', desc: 'sur demande légale' }
                     ].map((item, index) => (
                         <div key={index} style={{
@@ -342,8 +340,8 @@ export function ConfidentialitePage() {
                 }}>
                     <p style={{ margin: 0 }}>
                         Pour exercer vos droits, contactez-nous à{' '}
-                        <a href={`mailto:${CONTACT_INFO.email}`} style={{ color: 'var(--color-primary)' }}>
-                            {CONTACT_INFO.email}
+                        <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>
+                            {support.email}
                         </a>
                     </p>
                 </div>
@@ -359,8 +357,8 @@ export function ConfidentialitePage() {
                 }}>
                     <p style={{ margin: 0 }}>
                         Pour toute question relative à la protection de vos données personnelles, contactez notre DPO :{' '}
-                        <a href={`mailto:${CONTACT_INFO.email}`} style={{ color: 'var(--color-primary)' }}>
-                            {CONTACT_INFO.email}
+                        <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>
+                            {support.email}
                         </a>
                     </p>
                 </div>
@@ -458,6 +456,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function FooterSection() {
+    const support = useSupportContact()
+    const legal = useLegalConfig()
     return (
         <div style={{
             marginTop: 48,
@@ -468,12 +468,12 @@ function FooterSection() {
             color: 'var(--text-muted)'
         }}>
             <p style={{ margin: 0 }}>
-                © {new Date().getFullYear()} SendProColis SARL — Tous droits réservés
+                © {new Date().getFullYear()} SendProColis — Tous droits réservés
             </p>
             <p style={{ margin: '4px 0 0' }}>
-                Dakar, Sénégal ·{' '}
-                <a href={`mailto:${CONTACT_INFO.email}`} style={{ color: 'var(--color-primary)' }}>
-                    {CONTACT_INFO.email}
+                {legal.address || 'Dakar, Sénégal'} ·{' '}
+                <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>
+                    {support.email}
                 </a>
             </p>
         </div>

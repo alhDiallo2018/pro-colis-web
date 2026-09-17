@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button, Card, Dialog, Input, Toast } from '@/ds'
+import { ScoreTransactionDetailDialog } from '@/components/ScoreTransactionDetailDialog'
 import { useScore, useScoreHistory, useAddPoints, useRemovePoints } from '@/features/superAdmin/hooks'
+import type { ScoreTransaction } from '@/lib/api/admin-reputation'
 
 export function ScoreDetailPage() {
   const { userId } = useParams<{ userId: string }>()
@@ -13,6 +15,7 @@ export function ScoreDetailPage() {
   const [showRemove, setShowRemove] = useState(false)
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
+  const [detailTx, setDetailTx] = useState<ScoreTransaction | null>(null)
 
   const addPoints = useAddPoints(userId!)
   const removePoints = useRemovePoints(userId!)
@@ -157,19 +160,19 @@ export function ScoreDetailPage() {
             </div>
           </Card>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {history.map((tx) => {
               const isCredit = tx.type === 'earn' || tx.type === 'add' || tx.amount > 0
               return (
-                <Card key={tx.id} padding="md">
+                <Card key={tx.id} padding="md" interactive onClick={() => setDetailTx(tx)}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span className="material-symbols-rounded" style={{ fontSize: 18, color: isCredit ? 'var(--green-600)' : 'var(--red-400)' }}>
                       {isCredit ? 'arrow_downward' : 'arrow_upward'}
                     </span>
-                    <span style={{ flex: 1, fontSize: 13, color: 'var(--text-body)' }}>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 13, color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {tx.description ?? tx.type}
                     </span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 14, color: isCredit ? 'var(--green-600)' : 'var(--red-400)' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 14, color: isCredit ? 'var(--green-600)' : 'var(--red-400)', flex: 'none' }}>
                       {isCredit ? '+' : '-'}{Math.abs(tx.amount)} pts
                     </span>
                   </div>
@@ -253,6 +256,8 @@ export function ScoreDetailPage() {
           </div>
         </Dialog>
       )}
+
+      <ScoreTransactionDetailDialog tx={detailTx} onClose={() => setDetailTx(null)} />
     </div>
   )
 }

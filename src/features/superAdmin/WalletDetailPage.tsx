@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button, Card, Dialog, Input, Toast } from '@/ds'
+import { WalletTransactionDetailDialog } from '@/components/WalletTransactionDetailDialog'
 import { useWallet, useWalletTransactions, useRechargeWallet, useDebitWallet } from '@/features/superAdmin/hooks'
-import { formatFcfa } from '@/lib/format'
+import { formatFcfa, formatDateTime } from '@/lib/format'
+import type { WalletTransaction } from '@/lib/api/admin-finance'
 
 export function WalletDetailPage() {
   const { userId } = useParams<{ userId: string }>()
@@ -15,6 +17,7 @@ export function WalletDetailPage() {
   const [showDebit, setShowDebit] = useState(false)
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
+  const [detailTx, setDetailTx] = useState<WalletTransaction | null>(null)
 
   const recharge = useRechargeWallet(userId!)
   const debit = useDebitWallet(userId!)
@@ -120,11 +123,11 @@ export function WalletDetailPage() {
             </div>
           </Card>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {transactions.map((tx) => {
               const isCredit = tx.type === 'deposit' || tx.type === 'recharge' || tx.amount > 0
               return (
-                <Card key={tx.id} padding="md">
+                <Card key={tx.id} padding="md" interactive onClick={() => setDetailTx(tx)}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div
                       style={{
@@ -135,21 +138,25 @@ export function WalletDetailPage() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        flex: 'none',
                       }}
                     >
                       <span className="material-symbols-rounded" style={{ fontSize: 18, color: isCredit ? 'var(--green-600)' : 'var(--red-400)' }}>
                         {isCredit ? 'arrow_downward' : 'arrow_upward'}
                       </span>
                     </div>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: 'var(--text-strong)', textTransform: 'uppercase' }}>
                         {tx.type}
                       </div>
                       {tx.description && (
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{tx.description}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tx.description}</div>
+                      )}
+                      {tx.createdAt && (
+                        <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>{formatDateTime(tx.createdAt)}</div>
                       )}
                     </div>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 14, color: isCredit ? 'var(--green-600)' : 'var(--red-400)' }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 14, color: isCredit ? 'var(--green-600)' : 'var(--red-400)', flex: 'none' }}>
                       {formatFcfa(tx.amount)}
                     </div>
                   </div>
@@ -233,6 +240,8 @@ export function WalletDetailPage() {
           </div>
         </Dialog>
       )}
+
+      <WalletTransactionDetailDialog tx={detailTx} onClose={() => setDetailTx(null)} />
     </div>
   )
 }

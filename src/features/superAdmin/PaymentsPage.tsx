@@ -2,10 +2,12 @@ import { useState, type ChangeEvent } from 'react'
 import { Badge, SegmentedControl, Select } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
+import { PaymentDetailDialog } from '@/components/PaymentDetailDialog'
 import { useAdminPayments } from './hooks'
 import { formatFcfa, formatDate } from '@/lib/format'
 import { useIsMobile } from '@/lib/useMediaQuery'
 import type { ListParams } from '@/lib/api/types'
+import type { AdminPayment } from '@/lib/api/admin-finance'
 
 const STATUS_FILTERS = [
   { value: '', label: 'Tous' },
@@ -62,6 +64,7 @@ export function PaymentsPage() {
   const [status, setStatus] = useState('')
   const [method, setMethod] = useState('')
   const [page, setPage] = useState(1)
+  const [detail, setDetail] = useState<AdminPayment | null>(null)
 
   const params: ListParams = { page, limit: 20 }
   if (status) params.status = status
@@ -95,7 +98,7 @@ export function PaymentsPage() {
             onRetry={() => query.refetch()}
           >
             {payments.map((p) => (
-              <div key={p.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)' }}>
+              <div key={p.id} onClick={() => setDetail(p)} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                   <span style={{ minWidth: 0, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {p.user?.fullName ?? p.user?.phone ?? '—'}
@@ -160,12 +163,14 @@ export function PaymentsPage() {
               {payments.map((p) => (
                 <div
                   key={p.id}
+                  onClick={() => setDetail(p)}
                   style={{
                     display: 'grid',
                     gridTemplateColumns: GRID,
                     alignItems: 'center',
                     padding: '12px 18px',
                     borderBottom: '1px solid var(--slate-100)',
+                    cursor: 'pointer',
                   }}
                 >
                   <span style={{ ...cell, fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 11.5, color: 'var(--text-faint)' }}>
@@ -249,6 +254,8 @@ export function PaymentsPage() {
           </div>
         )}
       </Panel>
+
+      <PaymentDetailDialog payment={detail} onClose={() => setDetail(null)} />
     </div>
   )
 }

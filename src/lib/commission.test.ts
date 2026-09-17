@@ -1,27 +1,29 @@
 import { describe, expect, it } from 'vitest'
-import { calculateCommission, canPayCommission, splitCommissionPayment, requiresBothWalletAndPoints } from './commission'
+import { calculateCommission, canPayCommission, pointsCoverCommission, splitCommissionPayment, requiresBothWalletAndPoints } from './commission'
+
+const CONFIG = { percentage: 5, minAmount: 100, maxAmount: 500 }
 
 describe('calculateCommission', () => {
-  it('default config: 1000 FCFA → 100 FCFA (min)', () => {
-    const r = calculateCommission(1000)
+  it('config: 1000 FCFA → 100 FCFA (min)', () => {
+    const r = calculateCommission(1000, CONFIG)
     expect(r.commission).toBe(100)
     expect(r.netAmount).toBe(900)
   })
 
-  it('default config: 5000 FCFA → 250 FCFA', () => {
-    const r = calculateCommission(5000)
+  it('config: 5000 FCFA → 250 FCFA', () => {
+    const r = calculateCommission(5000, CONFIG)
     expect(r.commission).toBe(250)
     expect(r.netAmount).toBe(4750)
     expect(r.percentage).toBe(5)
   })
 
-  it('default config: 10000 FCFA → 500 FCFA (max)', () => {
-    const r = calculateCommission(10000)
+  it('config: 10000 FCFA → 500 FCFA (max)', () => {
+    const r = calculateCommission(10000, CONFIG)
     expect(r.commission).toBe(500)
   })
 
-  it('default config: 50000 FCFA → 500 FCFA (max)', () => {
-    const r = calculateCommission(50000)
+  it('config: 50000 FCFA → 500 FCFA (max)', () => {
+    const r = calculateCommission(50000, CONFIG)
     expect(r.commission).toBe(500)
   })
 
@@ -30,8 +32,8 @@ describe('calculateCommission', () => {
     expect(r.commission).toBe(300)
   })
 
-  it('returns 0 for 0 amount', () => {
-    const r = calculateCommission(0)
+  it('returns minimum for 0 amount', () => {
+    const r = calculateCommission(0, CONFIG)
     expect(r.commission).toBe(100)
     expect(r.netAmount).toBe(-100)
   })
@@ -52,6 +54,33 @@ describe('canPayCommission', () => {
 
   it('insufficient', () => {
     expect(canPayCommission(100, 200, 500)).toBe(false)
+  })
+})
+
+describe('pointsCoverCommission', () => {
+  it('cfaPerPoint = 1 : 500 pts couvrent 500 FCFA', () => {
+    expect(pointsCoverCommission(500, 1, 500)).toBe(true)
+  })
+
+  it('cfaPerPoint = 1 : 499 pts ne couvrent pas 500 FCFA', () => {
+    expect(pointsCoverCommission(499, 1, 500)).toBe(false)
+  })
+
+  it('cfaPerPoint = 2 : 250 pts couvrent 500 FCFA', () => {
+    expect(pointsCoverCommission(250, 2, 500)).toBe(true)
+  })
+
+  it('cfaPerPoint = 2 : 249 pts ne couvrent pas 500 FCFA', () => {
+    expect(pointsCoverCommission(249, 2, 500)).toBe(false)
+  })
+
+  it('arrondi supérieur : 151 FCFA à 2 FCFA/pt requiert 76 pts', () => {
+    expect(pointsCoverCommission(75, 2, 151)).toBe(false)
+    expect(pointsCoverCommission(76, 2, 151)).toBe(true)
+  })
+
+  it('commission nulle toujours couverte', () => {
+    expect(pointsCoverCommission(0, 1, 0)).toBe(true)
   })
 })
 

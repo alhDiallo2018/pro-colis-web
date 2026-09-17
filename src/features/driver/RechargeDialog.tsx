@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button, Dialog, Input, Select, Toast } from '@/ds'
 import { usePurchaseScore, useDriverWallet } from './hooks'
 import { createPaydunyaPayment } from '@/lib/api/paydunya'
 import { purchaseWithWallet } from '@/lib/api/score'
 import { ApiError } from '@/lib/api/client'
+import { queryClient } from '@/lib/queryClient'
 import { useAuthStore } from '@/store/auth'
+import { usePublicConfig } from '@/lib/usePublicConfig'
 import { formatFcfa } from '@/lib/format'
 
 interface RechargeDialogProps {
@@ -12,14 +14,6 @@ interface RechargeDialogProps {
   onClose: () => void
   onSuccess?: () => void
 }
-
-const PACKS = [
-  { label: '500 points — 500 FCFA', points: 500 },
-  { label: '1 000 points — 1 000 FCFA', points: 1000 },
-  { label: '3 000 points — 3 000 FCFA', points: 3000 },
-  { label: '5 000 points — 5 000 FCFA', points: 5000 },
-  { label: '10 000 points — 10 000 FCFA', points: 10000 },
-]
 
 const PAYMENT_METHODS = [
   { value: 'wallet', label: 'Portefeuille (solde disponible)' },
@@ -35,7 +29,17 @@ export function RechargeDialog({ open, onClose, onSuccess }: RechargeDialogProps
   const purchase = usePurchaseScore()
   const wallet = useDriverWallet()
   const userPhone = useAuthStore((s) => s.user?.phone ?? '')
-  const [pack, setPack] = useState(PACKS[0].points.toString())
+  // Forfaits issus de la configuration publique (`score.packs`) : aucune valeur
+  // en dur. Le prix affiché d'un forfait est dérivé du taux officiel
+  // `score.cfaPerPoint` fourni par le backend (aucun « 1 point = 1 FCFA » codé
+  // en dur ni aucun montant inventé).
+  const publicConfigQ = usePublicConfig()
+  const cfaPerPoint = Number(publicConfigQ.data?.points.cfaPerPoint ?? 1)
+  const packs = (publicConfigQ.data?.points.packs ?? []).map((p) => ({
+    label: `${p} points — ${formatFcfa(p * cfaPerPoint)}`,
+    points: p,
+  }))
+  const [pack, setPack] = useState('')
   const [customPoints, setCustomPoints] = useState('')
   const [method, setMethod] = useState('wallet')
   const [phoneNumber, setPhoneNumber] = useState(userPhone)
@@ -43,25 +47,44 @@ export function RechargeDialog({ open, onClose, onSuccess }: RechargeDialogProps
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
+  // Sélectionne le premier forfait dès que la configuration répond. On ne force
+  // le mode « montant personnalisé » que si la config est bien chargée et qu'aucun
+  // forfait n'est défini (tant qu'elle charge, on attend sans surprendre).
+  useEffect(() => {
+    if (packs.length === 0) {
+      if (publicConfigQ.isSuccess) setUseCustom(true)
+      return
+    }
+    if (!packs.some((p) => p.points.toString() === pack)) {
+      setPack(packs[0].points.toString())
+    }
+  }, [packs, pack, publicConfigQ.isSuccess])
+
   if (!open) return null
 
   const points = useCustom ? Number(customPoints) : Number(pack)
   const isWallet = method === 'wallet'
   const isPaydunya = method === 'paydunya'
   const walletBalance = Number(wallet.data?.balance ?? 0)
-  const valid = points >= 100
+  // Le backend exige uniquement un nombre de points positif ; le coût wallet
+  // réel est `points × cfaPerPoint`. Aucun seuil arbitraire côté frontend.
+  const pointsCost = points * cfaPerPoint
+  const valid = Number.isInteger(points) && points > 0
 
   const submit = async () => {
     setErrorMsg(null)
 
     if (isWallet) {
-      if (points > walletBalance) {
-        setErrorMsg(`Solde insuffisant. Votre portefeuille: ${formatFcfa(walletBalance)}`)
+      if (pointsCost > walletBalance) {
+        setErrorMsg(`Solde insuffisant. Votre portefeuille: ${formatFcfa(walletBalance)}, requis: ${formatFcfa(pointsCost)}`)
         return
       }
       setLoading(true)
       try {
         await purchaseWithWallet(points)
+        queryClient.invalidateQueries({ queryKey: ['driver', 'wallet'] })
+        queryClient.invalidateQueries({ queryKey: ['score', 'balance'] })
+        queryClient.invalidateQueries({ queryKey: ['score', 'history'] })
         onSuccess?.()
         onClose()
       } catch (e) {
@@ -151,7 +174,7 @@ export function RechargeDialog({ open, onClose, onSuccess }: RechargeDialogProps
             label="Forfait"
             value={pack}
             onChange={(e) => setPack(e.target.value)}
-            options={PACKS.map((p) => ({ value: p.points.toString(), label: p.label }))}
+            options={packs.map((p) => ({ value: p.points.toString(), label: p.label }))}
           />
         ) : (
           <Input
@@ -206,8 +229,8 @@ export function RechargeDialog({ open, onClose, onSuccess }: RechargeDialogProps
             lineHeight: 1.5,
           }}
         >
-          Les points vous permettent d&apos;accéder aux annonces de colis et de recevoir des missions. 1 point = 1
-          FCFA.
+          Les points vous permettent d&apos;accéder aux annonces de colis et de recevoir des missions. 1 point ={' '}
+          {formatFcfa(cfaPerPoint)}.
           {isWallet && (
             <span style={{ display: 'block', marginTop: 8, color: 'var(--teal-700)', fontWeight: 500 }}>
               Le montant sera débité de votre portefeuille immédiatement.

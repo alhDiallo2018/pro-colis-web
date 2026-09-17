@@ -153,6 +153,7 @@ export function DriverProfilScreen() {
           <StatBox icon="savings" tone="green" value={wallet?.totalEarned != null ? formatFcfa(wallet.totalEarned) : '—'} label="Total gagné" />
           <StatBox icon="receipt_long" tone="amber" value={wallet?.totalCommissionsPaid != null ? formatFcfa(wallet.totalCommissionsPaid) : '—'} label="Commissions payées" />
           <StatBox icon="payments" tone="neutral" value={wallet?.totalWithdrawn != null ? formatFcfa(wallet.totalWithdrawn) : '—'} label="Retraits" />
+          <StatBox icon="error_outline" tone="red" value={wallet?.commissionDebt != null ? formatFcfa(wallet.commissionDebt) : '—'} label="Dette de commission" />
           <StatBox icon="stars" tone="primary" value={pointsQ.data ?? stats?.scoreBalance ?? '—'} label="Points" />
         </div>
       </Card>

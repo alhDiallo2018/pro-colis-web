@@ -15,7 +15,11 @@ import type { ListParams } from '@/lib/api/types'
 import * as usersApi from '@/lib/api/users'
 import * as vehiclesApi from '@/lib/api/vehicles'
 import * as withdrawalsApi from '@/lib/api/withdrawals'
+import { isCommissionDebtError } from '@/lib/commissionDebt'
+import * as commissionApi from '@/lib/api/commission'
+import * as cancellationApi from '@/lib/api/cancellation'
 import { queryClient } from '@/lib/queryClient'
+import { usePublicConfig } from '@/lib/usePublicConfig'
 import { useAuthStore } from '@/store/auth'
 import { useMutation, useQuery } from '@tanstack/react-query'
 
@@ -39,6 +43,9 @@ export function usePurchaseScore() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['score', 'balance'] })
       queryClient.invalidateQueries({ queryKey: ['score', 'history'] })
+      // Un achat de points règle prioritairement la dette de commission : le
+      // portefeuille (commissionDebt / canAcceptNewDeliveries) doit suivre.
+      queryClient.invalidateQueries({ queryKey: ['driver', 'wallet'] })
     },
   })
 }
@@ -47,6 +54,46 @@ export function useDriverWallet() {
   return useQuery({ 
     queryKey: ['driver', 'wallet'], 
     queryFn: () => scoreApi.getWallet() 
+  })
+}
+
+/**
+ * État financier du chauffeur (dette de commission + droit d'accepter de
+ * nouvelles livraisons), issu exclusivement de l'API `/driver/wallet`.
+ * Tant que le portefeuille n'a pas répondu, `canAcceptNewDeliveries` vaut
+ * `false` : on n'affiche jamais une acceptation « autorisée » par défaut.
+ */
+export function useDriverFinancialState() {
+  const wallet = useDriverWallet()
+  const publicConfig = usePublicConfig()
+  const commissionDebt = Number(wallet.data?.commissionDebt ?? 0)
+  const canAcceptNewDeliveries = wallet.data
+    ? (wallet.data.canAcceptNewDeliveries ?? commissionDebt <= 0)
+    : false
+  return {
+    isLoading: wallet.isLoading,
+    isError: wallet.isError,
+    commissionDebt,
+    canAcceptNewDeliveries,
+    hasDebt: commissionDebt > 0,
+    debtLimit: Number(publicConfig.data?.debtLimit ?? 0),
+  }
+}
+
+/**
+ * Règle la dette de commission avec le solde wallet. Après un règlement (total
+ * ou partiel), l'état financier (commissionDebt / canAcceptNewDeliveries) doit
+ * être resynchronisé immédiatement pour réactiver les acceptations si la dette
+ * retombe à 0, sans fermer puis rouvrir la page.
+ */
+export function usePayWalletDebt() {
+  return useMutation({
+    mutationFn: (amount: number) => commissionApi.payWalletDebt(amount),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['driver', 'wallet'] })
+      queryClient.invalidateQueries({ queryKey: ['score', 'balance'] })
+      queryClient.invalidateQueries({ queryKey: ['score', 'history'] })
+    },
   })
 }
 
@@ -204,6 +251,13 @@ export function useRespondToBid() {
       queryClient.invalidateQueries({ queryKey: ['driver', 'bids'] })
       queryClient.invalidateQueries({ queryKey: ['driver', 'parcels'] })
     },
+    onError: (err) => {
+      // Refus « dette de commission » : on resynchronise l'état financier pour
+      // que le bouton Accepter reste bloqué partout sans rechargement manuel.
+      if (isCommissionDebtError(err)) {
+        queryClient.invalidateQueries({ queryKey: ['driver', 'wallet'] })
+      }
+    },
   })
 }
 
@@ -219,6 +273,22 @@ export function useDeliverParcel() {
     mutationFn: ({ parcelId, ...payload }: { parcelId: string } & roles.DeliverPayload) =>
       roles.driverDeliver(parcelId, payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['driver', 'parcels'] }),
+  })
+}
+
+/**
+ * Annulation d'une mission par le chauffeur. Le backend décide de la
+ * responsabilité et de l'éventuelle pénalité : le frontend ne transmet que le
+ * motif. Après succès, les missions et les notifications sont resynchronisées.
+ */
+export function useDriverCancelParcel(parcelId: string) {
+  return useMutation({
+    mutationFn: (payload: { reason?: string }) => cancellationApi.driverCancelParcel(parcelId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['driver', 'parcels'] })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      queryClient.invalidateQueries({ queryKey: ['driver', 'stats'] })
+    },
   })
 }
 /**
@@ -252,6 +322,11 @@ export function useRespondToProposal() {
       queryClient.invalidateQueries({ queryKey: ['driver', 'proposals'] })
       queryClient.invalidateQueries({ queryKey: ['driver', 'parcels'] })
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
+    onError: (err) => {
+      if (isCommissionDebtError(err)) {
+        queryClient.invalidateQueries({ queryKey: ['driver', 'wallet'] })
+      }
     },
   })
 }

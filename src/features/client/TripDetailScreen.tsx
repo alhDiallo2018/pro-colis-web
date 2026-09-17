@@ -180,8 +180,6 @@ export function TripDetailScreen() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             <Row label="Prix proposé" value={price != null ? formatFcfa(price) : 'À négocier'} mono />
             <Row label="Prix par kg" value={price != null && availableWeight != null && availableWeight > 0 ? formatFcfa(Math.round(price / availableWeight)) : '—'} mono />
-            <Row label="Commission plateforme" value="10%" />
-            <Row label="Net chauffeur" value={price != null ? formatFcfa(Math.round(price * 0.9)) : '—'} mono />
           </div>
         </Panel>
       </div>

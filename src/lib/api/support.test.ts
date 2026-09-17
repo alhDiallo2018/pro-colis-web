@@ -69,8 +69,8 @@ describe('sendSupportMessage delivery', () => {
   })
 
   it('builds a safe mailto fallback for anonymous visitors', () => {
-    const href = buildSupportMailto({ subject: '[Contact] Test', message: 'Bonjour', email: 'a@b.sn', name: 'Awa' })
-    expect(href).toContain('mailto:support-commercial@sendprocolis.com')
+    const href = buildSupportMailto({ subject: '[Contact] Test', message: 'Bonjour', email: 'a@b.sn', name: 'Awa' }, 'support@example.com')
+    expect(href).toContain('mailto:support@example.com')
     expect(decodeURIComponent(href)).toContain('Awa — a@b.sn')
     expect(decodeURIComponent(href)).toContain('Bonjour')
   })

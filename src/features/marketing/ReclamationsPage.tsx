@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Button, Input, Select, Textarea, Toast } from '@/ds'
 import type { ToastTone } from '@/ds'
 import { MarketingHeader } from './MarketingHeader'
-import { buildSupportMailto, sendSupportMessage, checkSupportRateLimit, recordSupportSend, formatWait, SUPPORT_EMAIL } from '@/lib/api/support'
+import { useSupportContact, useLegalConfig } from '@/lib/usePublicConfig'
+import { buildSupportMailto, sendSupportMessage, checkSupportRateLimit, recordSupportSend, formatWait } from '@/lib/api/support'
 import { useAuthStore } from '@/store/auth'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -23,14 +24,9 @@ interface ReclamationErrors {
   description?: string
 }
 
-const CONTACT_INFO = {
-  email: 'support-commercial@sendprocolis.com',
-  phone: '+221 76 516 27 96',
-  address: 'Dakar, Sénégal'
-}
-
 export function ReclamationsPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
+  const support = useSupportContact()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [tracking, setTracking] = useState('')
@@ -79,8 +75,8 @@ export function ReclamationsPage() {
     const payload = { subject: fullSubject, message: fullMessage, name: name.trim(), email: email.trim() }
 
     if (!accessToken) {
-      window.location.href = buildSupportMailto(payload)
-      setFeedback({ tone: 'warning', message: `Votre application email va s'ouvrir pour envoyer la réclamation à ${SUPPORT_EMAIL}.` })
+      window.location.href = buildSupportMailto(payload, support.email)
+      setFeedback({ tone: 'warning', message: `Votre application email va s'ouvrir pour envoyer la réclamation à ${support.email}.` })
       setSending(false)
       return
     }
@@ -95,10 +91,10 @@ export function ReclamationsPage() {
       setType('')
       setDescription('')
     } catch {
-      window.location.href = buildSupportMailto(payload)
+      window.location.href = buildSupportMailto(payload, support.email)
       setFeedback({
         tone: 'warning',
-        message: `L'API est indisponible : votre application email va s'ouvrir pour écrire à ${SUPPORT_EMAIL}.`,
+        message: `L'API est indisponible : votre application email va s'ouvrir pour écrire à ${support.email}.`,
       })
     } finally {
       setSending(false)
@@ -186,7 +182,7 @@ export function ReclamationsPage() {
         <Section title="1. Comment déposer une réclamation">
           <p>
             Vous pouvez déposer une réclamation via le formulaire ci-dessous ou en nous écrivant à l'adresse suivante :{' '}
-            <EmailLink email={CONTACT_INFO.email} />.
+            <EmailLink email={support.email} />.
           </p>
           <p style={{ marginTop: 8 }}>
             Nous vous recommandons de fournir le maximum d'informations pour nous permettre de traiter votre
@@ -457,6 +453,8 @@ function EmailLink({ email }: { email: string }) {
 }
 
 function FooterSection() {
+  const support = useSupportContact()
+  const legal = useLegalConfig()
   return (
       <div style={{
         marginTop: 48,
@@ -467,10 +465,10 @@ function FooterSection() {
         color: 'var(--text-muted)'
       }}>
         <p style={{ margin: 0 }}>
-          © {new Date().getFullYear()} SendProColis SARL — Tous droits réservés
+          © {new Date().getFullYear()} SendProColis — Tous droits réservés
         </p>
         <p style={{ margin: '4px 0 0' }}>
-          Dakar, Sénégal · <EmailLink email={CONTACT_INFO.email} />
+          {legal.address || 'Dakar, Sénégal'} · <EmailLink email={support.email} />
         </p>
       </div>
   )

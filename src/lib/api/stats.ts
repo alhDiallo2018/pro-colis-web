@@ -57,11 +57,16 @@ export interface DriverStats {
   scoreBalance: number
   pendingBids: number
   openAdvertisements: number
+  /** Dette de commission non réglée (FCFA). `0` = aucune dette. */
+  commissionDebt: number
+  /** État dérivé côté API : `false` tant qu'une dette de commission subsiste. */
+  canAcceptNewDeliveries: boolean
 }
 
 export async function driverStats(): Promise<DriverStats> {
   const { data } = await api.get('/driver/stats')
   const s = (data.stats ?? data.data?.stats ?? {}) as Partial<DriverStats>
+  const commissionDebt = Number(s.commissionDebt ?? 0)
   return {
     assignedParcels: s.assignedParcels ?? 0,
     activeParcels: s.activeParcels ?? 0,
@@ -70,6 +75,8 @@ export async function driverStats(): Promise<DriverStats> {
     scoreBalance: s.scoreBalance ?? 0,
     pendingBids: s.pendingBids ?? 0,
     openAdvertisements: s.openAdvertisements ?? 0,
+    commissionDebt,
+    canAcceptNewDeliveries: s.canAcceptNewDeliveries ?? commissionDebt <= 0,
   }
 }
 

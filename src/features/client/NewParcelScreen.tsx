@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Avatar, Button, Card, Icon, IconButton, Input, Select, Switch, Textarea, Toast } from '@/ds'
-import { useCreateParcel, useDrivers, useZones } from './hooks'
+import { useCreateParcel, useDrivers, usePublicDriver, useZones, useZoneDrivers } from './hooks'
+import { driverStatusColor, driverStatusKey, driverStatusLabel, isDriverSelectable, DRIVER_AVATAR_STATUS } from '@/lib/driverStatus'
 import { ApiError } from '@/lib/api/client'
 import { uploadParcelAudio, uploadParcelPhoto, uploadParcelVideo } from '@/lib/api/uploads'
 import { useAuthStore } from '@/store/auth'
@@ -90,10 +91,15 @@ const required = (label: string): ReactNode => (
 
 export function NewParcelScreen() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const user = useAuthStore((s) => s.user)
   const zones = useZones()
   const drivers = useDrivers()
   const createParcel = useCreateParcel()
+
+  // Préselection depuis la fiche chauffeur (`/client/nouveau?driver=<id>`).
+  const preselectedDriverId = searchParams.get('driver')
+  const preselectedDriverQ = usePublicDriver(preselectedDriverId ?? undefined)
 
   const [step, setStep] = useState(0)
   const [maxStep, setMaxStep] = useState(0)
@@ -126,6 +132,11 @@ export function NewParcelScreen() {
     resolver: zodResolver(schema),
     defaultValues: { isUrgent: false, isInsured: false },
   })
+
+  // Choix par localité : on charge les chauffeurs desservant la zone de départ
+  // (endpoint `/public/drivers/zone/:zoneId`) en plus du catalogue général.
+  const departureZoneId = watch('departureZoneId')
+  const zoneDriversQ = useZoneDrivers(departureZoneId)
 
   // Zones résolues à la volée depuis Google Places (créées en "pending" côté API),
   // ajoutées à la liste pour être immédiatement sélectionnables par le créateur.
@@ -170,7 +181,38 @@ export function NewParcelScreen() {
 
   const addResolvedZone = (z: Zone) =>
     setExtraZones((prev) => [...prev.filter((x) => x.id !== z.id), z])
-  const selectedDriver = (drivers.data ?? []).find((d) => d.id === watch('driverId'))
+
+  // Union dédoublonnée des chauffeurs de la zone de départ, du catalogue général
+  // et de l'éventuel chauffeur présélectionné depuis sa fiche.
+  const zoneDriverIds = useMemo(() => new Set((zoneDriversQ.data ?? []).map((d) => d.id)), [zoneDriversQ.data])
+  const allDrivers = useMemo(() => {
+    const seen = new Set<string>()
+    const list: User[] = []
+    const push = (d: User) => {
+      if (!d || seen.has(d.id)) return
+      seen.add(d.id)
+      list.push(d)
+    }
+    // Chauffeurs pertinents pour la zone de départ en premier.
+    ;(zoneDriversQ.data ?? []).forEach(push)
+    ;(drivers.data ?? []).forEach(push)
+    if (preselectedDriverQ.data) push(preselectedDriverQ.data)
+    return list
+  }, [zoneDriversQ.data, drivers.data, preselectedDriverQ.data])
+
+  const selectedDriver = allDrivers.find((d) => d.id === watch('driverId'))
+
+  // Arrivée depuis une fiche chauffeur : on pré-sélectionne le chauffeur et on
+  // place l'utilisateur sur l'étape du trajet.
+  useEffect(() => {
+    if (!preselectedDriverId) return
+    setMode('driver')
+    setValue('driverId', preselectedDriverId)
+    setStep(1)
+    setMaxStep((m) => Math.max(m, 1))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preselectedDriverId])
+
   const accountDialCode = inferDialCode(
     user?.phone,
     ALL_COUNTRIES.map((country) => country.dialCode),
@@ -463,18 +505,23 @@ export function NewParcelScreen() {
               {mode === 'driver' && (
                 <div>
                   <FieldLabel>{required('Chauffeur')}</FieldLabel>
-                  {drivers.isLoading ? (
+                  {drivers.isLoading && !zoneDriversQ.isLoading && allDrivers.length === 0 ? (
                     <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>Chargement des chauffeurs…</p>
-                  ) : (drivers.data ?? []).length === 0 ? (
-                    <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>Aucun chauffeur disponible pour le moment.</p>
+                  ) : allDrivers.length === 0 ? (
+                    <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>
+                      Aucun chauffeur disponible pour le moment.
+                    </p>
                   ) : (
                     <DriverPicker
-                      drivers={drivers.data ?? []}
+                      drivers={allDrivers}
                       value={watch('driverId') ?? ''}
+                      relevantIds={zoneDriverIds}
+                      relevantLabel={zoneLabel(departureZoneId)}
                       onChange={(id) => {
                         setValue('driverId', id)
                         setDriverError(null)
                       }}
+                      onOpenProfile={(id) => navigate(`/client/chauffeurs/${id}`)}
                     />
                   )}
                   {driverError && <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-sm)', color: 'var(--color-danger)' }}>{driverError}</p>}
@@ -806,66 +853,184 @@ function Chip({ icon, tone = 'neutral', children }: { icon: string; tone?: 'neut
 
 /* ---------- Driver picker ---------- */
 
-const AVATAR_STATUS = { available: 'online', busy: 'busy', offline: 'offline' } as const
+const STATUS_ORDER: Record<string, number> = { available: 0, busy: 1, offline: 2 }
 
-const STATUS_LABEL: Record<string, { label: string; color: string }> = {
-  available: { label: 'Disponible', color: 'var(--green-600)' },
-  busy: { label: 'Occupé', color: 'var(--amber-600)' },
-  offline: { label: 'Hors ligne', color: 'var(--slate-400)' },
-}
-
-function DriverPicker({ drivers, value, onChange }: { drivers: User[]; value: string; onChange: (id: string) => void }) {
+function DriverPicker({
+  drivers,
+  value,
+  onChange,
+  onOpenProfile,
+  relevantIds,
+  relevantLabel,
+}: {
+  drivers: User[]
+  value: string
+  onChange: (id: string) => void
+  onOpenProfile: (id: string) => void
+  relevantIds: Set<string>
+  relevantLabel?: string
+}) {
   const scroller = useRef<HTMLDivElement>(null)
+  const [query, setQuery] = useState('')
   const nudge = (dir: number) => scroller.current?.scrollBy({ left: dir * 220, behavior: 'smooth' })
 
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    const matches = (d: User) =>
+      !q ||
+      [d.fullName, d.city, d.region, d.vehicleModel, d.vehiclePlate].some((v) =>
+        (v ?? '').toLowerCase().includes(q),
+      )
+    return drivers.filter(matches).sort((a, b) => {
+      const aRelevant = relevantIds.has(a.id) ? 0 : 1
+      const bRelevant = relevantIds.has(b.id) ? 0 : 1
+      if (aRelevant !== bRelevant) return aRelevant - bRelevant
+      const aStatus = STATUS_ORDER[driverStatusKey(a.driverStatus)]
+      const bStatus = STATUS_ORDER[driverStatusKey(b.driverStatus)]
+      if (aStatus !== bStatus) return aStatus - bStatus
+      return Number(b.rating ?? 0) - Number(a.rating ?? 0)
+    })
+  }, [drivers, query, relevantIds])
+
   return (
-    <div style={{ position: 'relative' }}>
-      <div
-        ref={scroller}
-        style={{ display: 'flex', gap: 12, overflowX: 'auto', scrollSnapType: 'x mandatory', paddingBottom: 8, WebkitOverflowScrolling: 'touch' }}
-      >
-        {drivers.map((driver) => {
-          const selected = value === driver.id
-          const status = STATUS_LABEL[driver.driverStatus ?? 'offline'] ?? STATUS_LABEL.offline
-          const rating = Number(driver.rating ?? 0)
-          return (
-            <DriverCard key={driver.id} selected={selected} onClick={() => onChange(selected ? '' : driver.id)}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Avatar name={driver.fullName} src={driver.profilePhoto ?? undefined} size="md" status={AVATAR_STATUS[driver.driverStatus ?? 'offline']} />
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{driver.fullName}</div>
-                  <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {driver.zoneName ?? driver.city ?? 'Indépendant'}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <Input
+        icon="search"
+        placeholder="Rechercher un chauffeur (nom, ville…)"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+      {relevantIds.size > 0 && (
+        <p style={{ margin: 0, fontSize: 'var(--fs-xs)', color: 'var(--teal-700)', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <Icon name="pin_drop" size={14} />
+          {relevantIds.size} chauffeur(s) desservent {relevantLabel ? `« ${relevantLabel} »` : 'cette zone'}.
+        </p>
+      )}
+      {filtered.length === 0 ? (
+        <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>
+          Aucun chauffeur ne correspond à votre recherche.
+        </p>
+      ) : (
+        <div style={{ position: 'relative' }}>
+          <div
+            ref={scroller}
+            style={{ display: 'flex', gap: 12, overflowX: 'auto', scrollSnapType: 'x mandatory', paddingBottom: 8, WebkitOverflowScrolling: 'touch' }}
+          >
+            {filtered.map((driver) => {
+              const selected = value === driver.id
+              const selectable = isDriverSelectable(driver.driverStatus)
+              const status = driverStatusKey(driver.driverStatus)
+              const rating = Number(driver.rating ?? 0)
+              const relevant = relevantIds.has(driver.id)
+              return (
+                <DriverCard
+                  key={driver.id}
+                  selected={selected}
+                  disabled={!selectable}
+                  onClick={() => selectable && onChange(selected ? '' : driver.id)}
+                >
+                  {relevant && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: 8,
+                        left: 10,
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: 'var(--teal-700)',
+                        background: 'var(--teal-50)',
+                        padding: '2px 6px',
+                        borderRadius: 'var(--radius-pill)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 3,
+                      }}
+                    >
+                      <Icon name="pin_drop" size={12} /> Zone desservie
+                    </span>
+                  )}
+                  {selected && <Icon name="check_circle" size={20} style={{ position: 'absolute', top: 10, right: 10, color: 'var(--teal-500)' }} />}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Avatar name={driver.fullName} src={driver.profilePhoto ?? undefined} size="md" status={DRIVER_AVATAR_STATUS[status]} />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{driver.fullName}</div>
+                      <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {[driver.city, driver.region].filter(Boolean).join(', ') || 'Indépendant'}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--fs-sm)' }}>
-                  <Icon name="star" size={16} style={{ color: 'var(--amber-500)' }} />
-                  <span style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{rating.toFixed(1)}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>· {driver.completedDeliveries ?? 0} livr.</span>
-                </span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--fs-sm)', color: status.color }}>
-                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: status.color }} />
-                  {status.label}
-                </span>
-              </div>
-            </DriverCard>
-          )
-        })}
-      </div>
-      <ScrollChevron side="left" onClick={() => nudge(-1)} />
-      <ScrollChevron side="right" onClick={() => nudge(1)} />
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--fs-sm)' }}>
+                      <Icon name="star" size={16} style={{ color: 'var(--amber-500)' }} />
+                      <span style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{rating.toFixed(1)}</span>
+                      <span style={{ color: 'var(--text-muted)' }}>· {driver.completedDeliveries ?? 0} livr.</span>
+                    </span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--fs-sm)', color: driverStatusColor(driver.driverStatus) }}>
+                      <span style={{ width: 7, height: 7, borderRadius: '50%', background: driverStatusColor(driver.driverStatus) }} />
+                      {driverStatusLabel(driver.driverStatus)}
+                    </span>
+                  </div>
+                  <div style={{ marginTop: 10, display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onOpenProfile(driver.id)
+                      }}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        color: 'var(--text-link)',
+                        fontFamily: 'var(--font-display)',
+                        fontWeight: 600,
+                        fontSize: 'var(--fs-sm)',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 3,
+                        padding: 0,
+                      }}
+                    >
+                      Voir la fiche <Icon name="chevron_right" size={14} />
+                    </button>
+                  </div>
+                </DriverCard>
+              )
+            })}
+          </div>
+          <ScrollChevron side="left" onClick={() => nudge(-1)} />
+          <ScrollChevron side="right" onClick={() => nudge(1)} />
+        </div>
+      )}
     </div>
   )
 }
 
-function DriverCard({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: ReactNode }) {
+function DriverCard({
+  selected,
+  disabled,
+  onClick,
+  children,
+}: {
+  selected: boolean
+  disabled: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <div
+      role="button"
+      tabIndex={disabled ? -1 : 0}
       aria-pressed={selected}
+      aria-disabled={disabled}
+      onClick={disabled ? undefined : onClick}
+      onKeyDown={(e) => {
+        if (disabled) return
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick()
+        }
+      }}
       style={{
         position: 'relative',
         scrollSnapAlign: 'start',
@@ -877,13 +1042,13 @@ function DriverCard({ selected, onClick, children }: { selected: boolean; onClic
         border: `2px solid ${selected ? 'var(--teal-500)' : 'var(--border-subtle)'}`,
         background: selected ? 'var(--teal-50)' : 'var(--surface-card)',
         boxShadow: selected ? '0 0 0 3px var(--teal-100)' : 'var(--shadow-xs)',
-        cursor: 'pointer',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.65 : 1,
         transition: 'border-color 120ms, box-shadow 120ms, background 120ms',
       }}
     >
-      {selected && <Icon name="check_circle" size={20} style={{ position: 'absolute', top: 10, right: 10, color: 'var(--teal-500)' }} />}
       {children}
-    </button>
+    </div>
   )
 }
 

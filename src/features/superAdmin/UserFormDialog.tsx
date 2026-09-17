@@ -75,7 +75,7 @@ export function UserFormDialog({ open, user, onClose }: UserFormDialogProps) {
   const handleSubmit = async () => {
     if (!form.fullName.trim()) return setLocalError('Le nom complet est requis.')
     if (!form.phone.trim()) return setLocalError('Le téléphone est requis.')
-    if (!isEdit && form.pin && !/^\d{4,6}$/.test(form.pin)) return setLocalError('Le PIN doit contenir 4 à 6 chiffres.')
+    if (!isEdit && !/^\d{4,6}$/.test(form.pin)) return setLocalError('Le PIN initial (4 à 6 chiffres) est requis.')
 
     const payload = {
       fullName: form.fullName.trim(),
@@ -92,7 +92,7 @@ export function UserFormDialog({ open, user, onClose }: UserFormDialogProps) {
       if (isEdit && user) {
         await updateMutation.mutateAsync({ userId: user.id, payload, previousRole: user.role })
       } else {
-        await createMutation.mutateAsync({ ...payload, pin: form.pin || '123456' })
+        await createMutation.mutateAsync({ ...payload, pin: form.pin })
       }
       onClose()
     } catch (e) {
@@ -147,7 +147,7 @@ export function UserFormDialog({ open, user, onClose }: UserFormDialogProps) {
         />
         {!isEdit && (
           <Input
-            label="Code PIN initial (optionnel, défaut 123456)"
+            label="Code PIN initial (requis, 4 à 6 chiffres)"
             placeholder="4 à 6 chiffres"
             value={form.pin}
             onChange={(e) => set({ pin: e.target.value.replace(/\D/g, '').slice(0, 6) })}

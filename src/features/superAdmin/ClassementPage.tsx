@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { Avatar, Badge, Card } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
@@ -38,10 +39,13 @@ function MobileField({ label, children }: { label: string; children: React.React
 
 export function ClassementPage() {
   const isMobile = useIsMobile()
+  const navigate = useNavigate()
   const query = useDriverRanking()
   const rankings = query.data ?? []
   const top3 = rankings.slice(0, 3)
   const rest = rankings.slice(3)
+
+  const openDetail = (userId: string) => navigate(`/admin/reputation/scores/${userId}`)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
@@ -63,6 +67,8 @@ export function ClassementPage() {
                     key={d.userId}
                     accent={MEDAL_ACCENTS[i]}
                     padding="md"
+                    interactive
+                    onClick={() => openDetail(d.userId)}
                     style={{ textAlign: 'center' }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
@@ -96,7 +102,7 @@ export function ClassementPage() {
             {rest.length > 0 && isMobile && (
               <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
                 {rest.map((d) => (
-                  <div key={d.userId} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)' }}>
+                  <div key={d.userId} onClick={() => openDetail(d.userId)} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                       <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: 'var(--text-body)', flex: 'none' }}>{d.rank}</span>
                       <Avatar name={d.fullName} src={d.profilePhoto ?? undefined} size="xs" />
@@ -169,7 +175,8 @@ export function ClassementPage() {
                   {rest.map((d) => (
                     <div
                       key={d.userId}
-                      style={{ display: 'grid', gridTemplateColumns: GRID, alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid var(--slate-100)' }}
+                      onClick={() => openDetail(d.userId)}
+                      style={{ display: 'grid', gridTemplateColumns: GRID, alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}
                     >
                       <span style={{ ...cell, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: 'var(--text-body)' }}>
                         {d.rank}

@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/auth'
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { homeForRole } from '@/routes/paths'
+import { useSupportContact } from '@/lib/usePublicConfig'
 
 const NAV_ITEMS = [
   { label: 'Comment ça marche', target: 'how-it-works' },
@@ -129,6 +130,7 @@ function FloatingShapes() {
 export function LandingPage() {
   const navigate = useNavigate()
   const { user, clearSession } = useAuthStore()
+  const support = useSupportContact()
   const [mobileMenu, setMobileMenu] = useState(false)
   const [trackingInput, setTrackingInput] = useState('')
   const [isMobile, setIsMobile] = useState(false)
@@ -1311,7 +1313,7 @@ export function LandingPage() {
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   {/* Téléphone */}
                   <a
-                      href="tel:+221765162796"
+                      href={`tel:${support.technicalPhone.replace(/\s/g, '')}`}
                       aria-label="Appeler SendProColis"
                       style={{
                         width: 38,
@@ -1335,7 +1337,7 @@ export function LandingPage() {
 
                   {/* E-mail */}
                   <a
-                      href="mailto:support-commercial@sendprocolis.com"
+                      href={`mailto:${support.email}`}
                       aria-label="Envoyer un e-mail"
                       style={{
                         width: 38,
@@ -1493,7 +1495,7 @@ export function LandingPage() {
               fontSize: 12.5
             }}>
               <span>© {new Date().getFullYear()} SendProColis. Tous droits réservés.</span>
-              <span>Dakar, Sénégal · support-commercial@sendprocolis.com</span>
+              <span>Dakar, Sénégal · {support.email}</span>
             </div>
           </div>
         </footer>

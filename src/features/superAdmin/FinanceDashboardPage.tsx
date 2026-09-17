@@ -27,7 +27,7 @@ export function FinanceDashboardPage() {
               <StatBox icon="trending_up" tone="teal" value={formatFcfa(d.totalDeposited)} label="Total Rechargé" />
               <StatBox icon="percent" tone="amber" value={formatFcfa(d.commissionsMonth)} label="Commissions du mois" />
               <StatBox icon="add_card" tone="primary" value={formatFcfa(d.depositsMonth)} label="Recharges du mois" />
-              <StatBox icon="warning" tone="red" value={d.walletsLow} label="Wallets faibles (&lt;500 FCFA)" />
+              <StatBox icon="warning" tone="red" value={d.walletsLow} label="Wallets à faible solde" />
               <StatBox icon="hourglass_disabled" tone="neutral" value={d.walletsInactive} label="Wallets inactifs" />
             </div>
           )}

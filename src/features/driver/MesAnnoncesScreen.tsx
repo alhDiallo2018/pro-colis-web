@@ -5,16 +5,19 @@
 import { NegotiationChat } from '@/components/NegotiationChat'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
-import { Avatar, Badge, Button, Dialog, Icon } from '@/ds'
+import { Avatar, Badge, Button, Dialog, Icon, Toast } from '@/ds'
 import type { Advertisement, AdvertisementOffer } from '@/lib/api/advertisements'
 import * as adsApi from '@/lib/api/advertisements'
+import { ApiError } from '@/lib/api/client'
+import { isCommissionDebtError, commissionDebtMessage } from '@/lib/commissionDebt'
 import { formatDate, formatFcfa, formatWeight } from '@/lib/format'
 import { queryClient } from '@/lib/queryClient'
 import { useAuthStore } from '@/store/auth'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMyAdvertisements } from './hooks'
+import { useDriverFinancialState, useMyAdvertisements } from './hooks'
+import { CommissionDebtNotice } from './CommissionDebtNotice'
 
 const STATUS_META: Record<string, { label: string; tone: 'amber' | 'green' | 'red' | 'neutral' }> = {
   pending: { label: 'En attente', tone: 'amber' },
@@ -26,12 +29,18 @@ const STATUS_META: Record<string, { label: string; tone: 'amber' | 'green' | 're
 export function MesAnnoncesScreen() {
   const navigate = useNavigate()
   const query = useMyAdvertisements()
+  const fin = useDriverFinancialState()
   const ads = query.data ?? []
   const [chatTarget, setChatTarget] = useState<{ peerId: string; peerName: string; ad: Advertisement; parcelId?: string | null; offer?: AdvertisementOffer } | null>(null)
 
   const acceptOffer = useMutation({
     mutationFn: ({ adId, offerId }: { adId: string; offerId: string }) => adsApi.acceptOffer(adId, offerId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['driver', 'advertisements'] }),
+    onError: (err) => {
+      if (isCommissionDebtError(err)) {
+        queryClient.invalidateQueries({ queryKey: ['driver', 'wallet'] })
+      }
+    },
   })
   const rejectOffer = useMutation({
     mutationFn: ({ adId, offerId }: { adId: string; offerId: string }) => adsApi.rejectOffer(adId, offerId),
@@ -40,6 +49,10 @@ export function MesAnnoncesScreen() {
 
   return (
     <div style={{ maxWidth: 840, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <CommissionDebtNotice />
+      {acceptOffer.error instanceof ApiError && (
+        <Toast tone="error" message={acceptOffer.error.message} />
+      )}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, color: 'var(--text-strong)', margin: 0 }}>
           Mes annonces
@@ -104,6 +117,9 @@ export function MesAnnoncesScreen() {
                       onReject={(id) => rejectOffer.mutate({ adId: ad.id, offerId: id })}
                       accepting={acceptOffer.isPending}
                       rejecting={rejectOffer.isPending}
+                      acceptBlocked={fin.hasDebt || !fin.canAcceptNewDeliveries}
+                      blockedLabel={fin.hasDebt ? 'Dette à régler' : 'Chargement…'}
+                      blockedTitle={fin.hasDebt ? commissionDebtMessage(fin.commissionDebt) : 'Chargement…'}
                       onChat={() => setChatTarget({ peerId: o.clientId, peerName: o.client?.fullName ?? 'Client', ad, parcelId: o.parcelId, offer: o })}
                     />
                   ))}
@@ -140,6 +156,8 @@ export function MesAnnoncesScreen() {
               advertisementId={chatTarget.ad.id}
               offerId={chatTarget.offer?.id}
               isOwner
+              acceptBlocked={fin.hasDebt || !fin.canAcceptNewDeliveries}
+              acceptBlockedLabel={fin.hasDebt ? 'Dette à régler' : 'Chargement…'}
               parcelInfo={{
                 trackingNumber: chatTarget.offer?.parcel?.trackingNumber,
                 departureCity: chatTarget.ad.departureCity,
@@ -192,6 +210,9 @@ function OfferRow({
   onReject,
   accepting,
   rejecting,
+  acceptBlocked = false,
+  blockedLabel = 'Dette à régler',
+  blockedTitle,
   onChat,
 }: {
   offer: AdvertisementOffer
@@ -200,6 +221,9 @@ function OfferRow({
   onReject: (id: string) => void
   accepting: boolean
   rejecting: boolean
+  acceptBlocked?: boolean
+  blockedLabel?: string
+  blockedTitle?: string
   onChat: () => void
 }) {
   const currentUser = useAuthStore((state) => state.user)
@@ -276,8 +300,14 @@ function OfferRow({
           <Button size="sm" variant="ghost" icon="close" onClick={() => onReject(offer.id)} disabled={rejecting}>
             Refuser
           </Button>
-          <Button size="sm" icon="check" onClick={() => onAccept(offer.id)} disabled={accepting}>
-            Accepter
+          <Button
+            size="sm"
+            icon={acceptBlocked ? 'lock' : 'check'}
+            onClick={() => onAccept(offer.id)}
+            disabled={accepting || acceptBlocked}
+            title={acceptBlocked ? blockedTitle : undefined}
+          >
+            {acceptBlocked ? blockedLabel : 'Accepter'}
           </Button>
         </div>
       ) : offer.status === 'pending' && !isFromClient ? (

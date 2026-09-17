@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Avatar, Badge, type AvatarStatus } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
@@ -28,7 +29,11 @@ export function ChauffeursPage() {
         {drivers.map((d) => {
           const st = STATUS_LABEL[d.driverStatus ?? 'offline'] ?? STATUS_LABEL.offline
           return (
-            <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderBottom: '1px solid var(--slate-100)' }}>
+            <Link
+              key={d.id}
+              to={`/admin/chauffeurs/${d.id}`}
+              style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderBottom: '1px solid var(--slate-100)', textDecoration: 'none', color: 'inherit' }}
+            >
               <Avatar name={d.fullName} src={d.profilePhoto ?? undefined} status={AVATAR_STATUS[d.driverStatus ?? 'offline'] ?? 'offline'} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14.5, color: 'var(--text-strong)' }}>{d.fullName}</div>
@@ -41,7 +46,7 @@ export function ChauffeursPage() {
                 <div>{d.completedDeliveries ?? 0} livraisons</div>
               </div>
               <Badge tone={st.tone}>{st.label}</Badge>
-            </div>
+            </Link>
           )
         })}
       </QueryState>

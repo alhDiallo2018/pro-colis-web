@@ -11,6 +11,7 @@ import type { Parcel } from '@/lib/api/types'
 import { formatFcfa, formatWeight } from '@/lib/format'
 import { useMemo, useState } from 'react'
 import { OfferDialog } from './OfferDialog'
+import { CommissionDebtNotice } from './CommissionDebtNotice'
 import { useDriverBidsSent, useDriverFreeParcels } from './hooks'
 
 export function LibreServiceScreen() {
@@ -54,7 +55,8 @@ export function LibreServiceScreen() {
   }
 
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto' }}>
+    <div style={{ maxWidth: 920, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <CommissionDebtNotice compact />
       <Panel
         title="Colis à prendre"
         flush

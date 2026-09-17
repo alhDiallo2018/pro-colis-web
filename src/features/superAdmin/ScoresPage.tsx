@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Avatar, Badge, Button, Input, Select, StatBox, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
+import { ScoreTransactionDetailDialog } from '@/components/ScoreTransactionDetailDialog'
 import {
   useReputationDashboard,
   useScores,
@@ -10,6 +11,7 @@ import {
 } from './hooks'
 import { formatDate, formatDateTime, formatPoints } from '@/lib/format'
 import { useIsMobile } from '@/lib/useMediaQuery'
+import type { ScoreTransaction } from '@/lib/api/admin-reputation'
 import { AddPointsDialog } from './AddPointsDialog'
 import { RemovePointsDialog } from './RemovePointsDialog'
 
@@ -68,6 +70,7 @@ export function ScoresPage() {
   const [addOpen, setAddOpen] = useState(false)
   const [removeOpen, setRemoveOpen] = useState(false)
   const [errorToast, setErrorToast] = useState<string | null>(null)
+  const [detailTx, setDetailTx] = useState<ScoreTransaction | null>(null)
 
   const [txFilter, setTxFilter] = useState('')
 
@@ -188,7 +191,7 @@ export function ScoresPage() {
                     onRetry={() => historyQuery.refetch()}
                   >
                     {transactions.map((tx) => (
-                      <div key={tx.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)' }}>
+                      <div key={tx.id} onClick={() => setDetailTx(tx)} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '15px 16px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                           <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-body)' }}>{formatDateTime(tx.createdAt)}</span>
                           <Badge tone={TX_TONE[tx.type] ?? 'neutral'}>{TX_LABEL[tx.type] ?? tx.type}</Badge>
@@ -238,7 +241,8 @@ export function ScoresPage() {
                       {transactions.map((tx) => (
                         <div
                           key={tx.id}
-                          style={{ display: 'grid', gridTemplateColumns: '1fr 100px 120px 1fr', alignItems: 'center', padding: '11px 18px', borderBottom: '1px solid var(--slate-100)' }}
+                          onClick={() => setDetailTx(tx)}
+                          style={{ display: 'grid', gridTemplateColumns: '1fr 100px 120px 1fr', alignItems: 'center', padding: '13px 18px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }}
                         >
                           <span style={{ ...cell, fontSize: 12.5, color: 'var(--text-body)' }}>{formatDateTime(tx.createdAt)}</span>
                           <span style={cell}>
@@ -277,6 +281,7 @@ export function ScoresPage() {
           open={removeOpen}
           onClose={() => setRemoveOpen(false)}
         />
+        <ScoreTransactionDetailDialog tx={detailTx} onClose={() => setDetailTx(null)} />
       </div>
     )
   }

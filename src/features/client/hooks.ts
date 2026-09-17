@@ -7,9 +7,22 @@ import * as rolesApi from '@/lib/api/roles'
 import * as usersApi from '@/lib/api/users'
 import * as adsApi from '@/lib/api/advertisements'
 import * as ratingsApi from '@/lib/api/ratings'
+import * as cancellationApi from '@/lib/api/cancellation'
 import type { ListParams } from '@/lib/api/types'
 import { useAuthStore } from '@/store/auth'
 import { queryClient } from '@/lib/queryClient'
+import type { ApiParcelStatus } from '@/lib/api/types'
+
+/**
+ * Intervalle de rafraîchissement du suivi (polling), configurable via
+ * `VITE_TRACKING_REFRESH_MS`. Défaut raisonnable : 15 s. Le backend n'expose
+ * pas encore la position GPS en SSE/WebSocket, d'où le polling du endpoint
+ * de tracking.
+ */
+const TRACKING_REFRESH_MS = Number(import.meta.env.VITE_TRACKING_REFRESH_MS) || 15_000
+
+/** Statuts terminaux : le suivi (et donc le polling) s'arrête. */
+const TERMINAL_STATUSES: readonly ApiParcelStatus[] = ['delivered', 'cancelled']
 
 export function useTrackParcel(trackingNumber: string, enabled: boolean) {
   return useQuery({
@@ -17,6 +30,12 @@ export function useTrackParcel(trackingNumber: string, enabled: boolean) {
     queryFn: () => parcelsApi.track(trackingNumber),
     enabled: enabled && trackingNumber.trim().length > 0,
     retry: false,
+    // Polling léger : s'arrête dès que la livraison est terminée/annulée pour
+    // ne pas surcharger le backend inutilement.
+    refetchInterval: (query) => {
+      const status = query.state.data?.status
+      return status && TERMINAL_STATUSES.includes(status) ? false : TRACKING_REFRESH_MS
+    },
   })
 }
 
@@ -113,6 +132,26 @@ export function useDrivers() {
   return useQuery({ queryKey: ['drivers', 'public'], queryFn: () => rolesApi.searchDrivers(), staleTime: 5 * 60_000 })
 }
 
+/** Chauffeurs actifs desservant une zone donnée (choix par localité). */
+export function useZoneDrivers(zoneId: string | undefined) {
+  return useQuery({
+    queryKey: ['drivers', 'zone', zoneId],
+    queryFn: () => rolesApi.zoneDrivers(zoneId as string),
+    enabled: !!zoneId,
+    staleTime: 5 * 60_000,
+  })
+}
+
+/** Fiche publique d'un chauffeur, consultable par le client. */
+export function usePublicDriver(driverId: string | undefined) {
+  return useQuery({
+    queryKey: ['drivers', 'public', driverId],
+    queryFn: () => rolesApi.publicDriverDetail(driverId as string),
+    enabled: !!driverId,
+    staleTime: 5 * 60_000,
+  })
+}
+
 export function useCreateParcel() {
   return useMutation({
     mutationFn: (payload: parcelsApi.CreateParcelPayload) => parcelsApi.create(payload),
@@ -153,6 +192,36 @@ export function useNegotiateBid() {
     mutationFn: ({ bidId, price, message }: { bidId: string; price: number; message?: string }) =>
       bidsApi.negotiate(bidId, { price, message }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['client', 'bids'] }),
+  })
+}
+
+/**
+ * Devis d'annulation d'un colis (conséquences financières calculées par le
+ * backend). Désactivé tant qu'aucun identifiant n'est fourni ; en cas d'échec
+ * (ex. endpoint non encore exposé), l'appelant affiche une confirmation neutre.
+ */
+export function useCancellationQuote(parcelId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: ['client', 'parcel', parcelId, 'cancel-quote'],
+    queryFn: () => cancellationApi.getCancellationQuote(parcelId as string),
+    enabled: !!parcelId && enabled,
+    retry: false,
+  })
+}
+
+/**
+ * Annulation d'un colis client. Après succès, le détail du colis et la liste
+ * sont resynchronisés ; la confirmation est verrouillée côté composant tant que
+ * la mutation est en cours pour empêcher les doubles soumissions.
+ */
+export function useCancelParcel(parcelId: string) {
+  return useMutation({
+    mutationFn: (payload: { reason?: string }) => cancellationApi.cancelParcel(parcelId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client', 'parcels'] })
+      queryClient.invalidateQueries({ queryKey: ['client', 'parcel', parcelId] })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
   })
 }
 

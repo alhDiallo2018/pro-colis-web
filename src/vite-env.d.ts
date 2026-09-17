@@ -2,6 +2,8 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_BASE_URL: string
+  /** Intervalle (ms) de rafraîchissement du suivi colis par polling. Défaut : 15000. */
+  readonly VITE_TRACKING_REFRESH_MS?: string
   /** Remontée des erreurs navigateur : `false` la désactive complètement. */
   readonly VITE_FARO_ENABLED?: string
   /** Chemin du collecteur Faro, proxifié par Caddy (défaut `/collect/faro`). */

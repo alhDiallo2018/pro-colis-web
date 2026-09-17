@@ -1,4 +1,5 @@
 import { MarketingHeader } from './MarketingHeader'
+import { useSupportContact, useLegalConfig } from '@/lib/usePublicConfig'
 
 export function ColisInterditsPage() {
     return (
@@ -266,6 +267,8 @@ function List({ items }: { items: Array<{ label: string; desc: string }> }) {
 }
 
 function FooterSection() {
+    const support = useSupportContact()
+    const legal = useLegalConfig()
     return (
         <div style={{
             marginTop: 48,
@@ -276,12 +279,12 @@ function FooterSection() {
             color: 'var(--text-muted)'
         }}>
             <p style={{ margin: 0 }}>
-                © {new Date().getFullYear()} SendProColis SARL — Tous droits réservés
+                © {new Date().getFullYear()} SendProColis — Tous droits réservés
             </p>
             <p style={{ margin: '4px 0 0' }}>
-                Dakar, Sénégal ·{' '}
-                <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>
-                    support-commercial@sendprocolis.com
+                {legal.address || 'Dakar, Sénégal'} ·{' '}
+                <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>
+                    {support.email}
                 </a>
             </p>
         </div>

@@ -6,16 +6,11 @@ import { useScoreBalance, useScoreHistory, useDriverWallet, useWithdrawWallet, u
 import { createPaydunyaPayment } from '@/lib/api/paydunya'
 import { formatDateTime, formatFcfa, formatPoints } from '@/lib/format'
 import { RechargeDialog } from './RechargeDialog'
+import { PayDebtDialog } from './PayDebtDialog'
 import { ApiError } from '@/lib/api/client'
 import { useAuthStore } from '@/store/auth'
+import { usePublicConfig } from '@/lib/usePublicConfig'
 import type { Withdrawal, WithdrawalMethod, WithdrawalStatus } from '@/lib/api/withdrawals'
-
-const WALLET_PACKS = [
-  { label: '1 000 FCFA', amount: 1000 },
-  { label: '2 000 FCFA', amount: 2000 },
-  { label: '5 000 FCFA', amount: 5000 },
-  { label: '10 000 FCFA', amount: 10000 },
-]
 
 export function DriverPointsScreen() {
   const balance = useScoreBalance()
@@ -27,14 +22,14 @@ export function DriverPointsScreen() {
   const withdrawalList = myWithdrawals.data ?? []
   const [showRecharge, setShowRecharge] = useState(false)
   const [showWalletRecharge, setShowWalletRecharge] = useState(false)
-  const [walletAmount, setWalletAmount] = useState(1000)
-  const [walletCustom, setWalletCustom] = useState('')
+  const [walletAmount, setWalletAmount] = useState('')
   const [walletLoading, setWalletLoading] = useState(false)
-  const [useCustomWallet, setUseCustomWallet] = useState(false)
+  const [walletError, setWalletError] = useState<string | null>(null)
   const [showWithdraw, setShowWithdraw] = useState(false)
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [withdrawMethod, setWithdrawMethod] = useState<WithdrawalMethod>('wave')
   const [withdrawPhone, setWithdrawPhone] = useState(userPhone)
+  const [showPayDebt, setShowPayDebt] = useState(false)
   const withdraw = useWithdrawWallet()
   const cancelWithdrawal = useCancelWithdrawal()
 
@@ -45,15 +40,26 @@ export function DriverPointsScreen() {
   const pendingBalance = Number(wallet.data?.pendingBalance ?? 0)
   const totalWithdrawn = Number(wallet.data?.totalWithdrawn ?? 0)
   const totalCommissionsPaid = Number(wallet.data?.totalCommissionsPaid ?? 0)
+  const commissionDebt = Number(wallet.data?.commissionDebt ?? 0)
+
+  // Montants de retrait issus de la configuration publique : aucune valeur en dur.
+  const publicConfig = usePublicConfig()
+  const minWithdraw = Number(publicConfig.data?.withdrawal.minAmount ?? 0)
+  const maxWithdraw = Number(publicConfig.data?.withdrawal.maxAmount ?? 0)
+  const belowMin = minWithdraw > 0 && availableBalance < minWithdraw
+  const withdrawAmountValue = Number(withdrawAmount)
+  const exceedsMax = maxWithdraw > 0 && withdrawAmountValue > maxWithdraw
 
   const rechargeWallet = async () => {
-    const amount = useCustomWallet ? Number(walletCustom) : walletAmount
-    if (!amount || amount < 100) return
+    const amount = Number(walletAmount)
+    if (!amount || amount <= 0) return
     setWalletLoading(true)
+    setWalletError(null)
     try {
       const result = await createPaydunyaPayment('wallet', { amount })
       window.location.href = result.paymentUrl
-    } catch {
+    } catch (e) {
+      setWalletError(e instanceof ApiError ? e.message : 'Erreur lors du rechargement')
       setWalletLoading(false)
     }
   }
@@ -155,6 +161,35 @@ export function DriverPointsScreen() {
                 {totalCommissionsPaid > 0 ? <> · Commissions: {formatFcfa(totalCommissionsPaid)}</> : null}
                 {totalWithdrawn > 0 ? <> · Retiré: {formatFcfa(totalWithdrawn)}</> : null}
               </div>
+              {commissionDebt > 0 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginTop: 8,
+                    padding: '8px 12px',
+                    background: 'var(--amber-50)',
+                    border: '1px solid var(--amber-100)',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    color: 'var(--amber-700)',
+                  }}
+                >
+                  <span className="material-symbols-rounded" style={{ fontSize: 16 }}>error_outline</span>
+                  Dette de commission : {formatFcfa(commissionDebt)} — nouvelles acceptations bloquées.
+                  <Button
+                    variant="amber"
+                    size="sm"
+                    icon="payments"
+                    onClick={() => setShowPayDebt(true)}
+                    style={{ marginLeft: 'auto', flex: 'none' }}
+                  >
+                    Régler la dette
+                  </Button>
+                </div>
+              )}
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <Button
@@ -171,8 +206,8 @@ export function DriverPointsScreen() {
                 size="sm"
                 icon="payments"
                 onClick={() => setShowWithdraw(true)}
-                disabled={availableBalance < 500 || hasActiveWithdrawal}
-                title={hasActiveWithdrawal ? 'Un retrait est déjà en cours' : availableBalance < 500 ? 'Minimum 500 FCFA' : undefined}
+                disabled={belowMin || hasActiveWithdrawal}
+                title={hasActiveWithdrawal ? 'Un retrait est déjà en cours' : belowMin ? `Minimum ${formatFcfa(minWithdraw)}` : undefined}
               >
                 Retirer
               </Button>
@@ -324,6 +359,8 @@ export function DriverPointsScreen() {
 
       <RechargeDialog open={showRecharge} onClose={() => setShowRecharge(false)} />
 
+      <PayDebtDialog open={showPayDebt} onClose={() => setShowPayDebt(false)} />
+
       <Dialog
         open={showWalletRecharge}
         onClose={() => setShowWalletRecharge(false)}
@@ -340,63 +377,27 @@ export function DriverPointsScreen() {
               block
               icon="add_card"
               loading={walletLoading}
-              disabled={useCustomWallet ? !Number(walletCustom) || Number(walletCustom) < 100 : false}
+              disabled={!Number(walletAmount) || Number(walletAmount) <= 0}
               onClick={rechargeWallet}
             >
-              Recharger {useCustomWallet ? formatFcfa(Number(walletCustom)) : formatFcfa(walletAmount)}
+              Recharger {formatFcfa(Number(walletAmount))}
             </Button>
           </>
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {!useCustomWallet ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {WALLET_PACKS.map((p) => (
-                <button
-                  key={p.amount}
-                  type="button"
-                  onClick={() => setWalletAmount(p.amount)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 14px',
-                    border: walletAmount === p.amount ? '2px solid var(--teal-500)' : '1px solid var(--border-subtle)',
-                    borderRadius: 'var(--radius-md)',
-                    background: walletAmount === p.amount ? 'var(--teal-50)' : 'var(--surface-card)',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    width: '100%',
-                  }}
-                >
-                  <span style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{p.label}</span>
-                  {walletAmount === p.amount && (
-                    <span className="material-symbols-rounded" style={{ fontSize: 20, color: 'var(--teal-600)' }}>
-                      check_circle
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <Input
-              label="Montant (FCFA)"
-              icon="payments"
-              type="number"
-              inputMode="numeric"
-              mono
-              placeholder="Ex : 3 000"
-              value={walletCustom}
-              onChange={(e) => setWalletCustom(e.target.value)}
-            />
-          )}
+          <Input
+            label="Montant (FCFA)"
+            icon="payments"
+            type="number"
+            inputMode="numeric"
+            mono
+            placeholder="Ex : 3 000"
+            value={walletAmount}
+            onChange={(e) => setWalletAmount(e.target.value)}
+          />
 
-          <span
-            style={{ fontSize: 13, color: 'var(--text-link)', cursor: 'pointer', fontWeight: 600 }}
-            onClick={() => setUseCustomWallet(!useCustomWallet)}
-          >
-            {useCustomWallet ? '← Choisir un montant' : 'Montant personnalisé'}
-          </span>
+          {walletError && <Toast tone="error" message={walletError} />}
 
           <div
             style={{
@@ -430,7 +431,7 @@ export function DriverPointsScreen() {
               block
               icon="payments"
               loading={withdraw.isPending}
-              disabled={!Number(withdrawAmount) || Number(withdrawAmount) < 500 || Number(withdrawAmount) > availableBalance || hasActiveWithdrawal}
+              disabled={!Number(withdrawAmount) || Number(withdrawAmount) < minWithdraw || exceedsMax || Number(withdrawAmount) > availableBalance || hasActiveWithdrawal}
               onClick={() => {
                 withdraw.mutate(
                   {
@@ -514,7 +515,9 @@ export function DriverPointsScreen() {
           >
             Solde disponible : {formatFcfa(availableBalance)}
             {pendingBalance > 0 ? <> (dont {formatFcfa(pendingBalance)} en attente)</> : null}
-            . Minimum : 500 FCFA. Traité sous 24-48h.
+            {minWithdraw > 0 ? <> . Minimum : {formatFcfa(minWithdraw)}</> : null}
+            {maxWithdraw > 0 ? <> . Maximum : {formatFcfa(maxWithdraw)}</> : null}
+            . Traité sous 24-48h.
           </div>
         </div>
       </Dialog>
@@ -563,8 +566,8 @@ export function DriverPointsScreen() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: statusColors[w.status] }}>
-                    {statusLabels[w.status]}
+                  <span style={{ fontSize: 12, fontWeight: 600, color: statusColors[w.status] ?? 'var(--text-muted)' }}>
+                    {statusLabels[w.status] ?? w.status}
                   </span>
                   {w.status === 'PENDING' && (
                     <button

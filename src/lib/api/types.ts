@@ -183,6 +183,30 @@ export interface ParcelEvent {
   createdAt?: string
 }
 
+/**
+ * Dernière position GPS réelle du chauffeur associé au colis, telle qu'exposée
+ * par l'API de tracking. `available` est `false` tant que le chauffeur n'a pas
+ * commencé à émettre sa position — le Web n'affiche alors aucune position.
+ */
+export interface DriverLocation {
+  available: boolean
+  latitude?: number | null
+  longitude?: number | null
+  /** ISO timestamp de la dernière position reçue depuis l'appareil du chauffeur. */
+  updatedAt?: string | null
+}
+
+/** Zone aplatie renvoyée par l'API de tracking (départ / arrivée). Les
+ *  coordonnées sont optionnelles : elles ne sont pas encore exposées par toutes
+ *  les versions de l'API. */
+export interface ParcelZoneRef {
+  id: string
+  name: string
+  city?: string | null
+  latitude?: number | null
+  longitude?: number | null
+}
+
 export interface Parcel {
   id: string
   trackingNumber: string
@@ -204,14 +228,24 @@ export interface Parcel {
   departureZoneId?: string | null
   departureZoneName?: string | null
   departureCity?: string | null
+  departureZone?: ParcelZoneRef | null
+  /** Coordonnées plates du départ (exposées par l'endpoint public de tracking). */
+  departureLatitude?: number | null
+  departureLongitude?: number | null
   arrivalZoneId?: string | null
   arrivalZoneName?: string | null
   arrivalCity?: string | null
+  arrivalZone?: ParcelZoneRef | null
+  /** Coordonnées plates de l'arrivée (exposées par l'endpoint public de tracking). */
+  arrivalLatitude?: number | null
+  arrivalLongitude?: number | null
   zoneId?: string | null
   driverId?: string | null
   driverName?: string | null
   driverPhone?: string | null
   driver?: User | null
+  /** Position GPS temps réel du chauffeur (null si l'API ne l'expose pas). */
+  driverLocation?: DriverLocation | null
   /** Chauffeur retenu (null tant que la proposition n'est pas acceptée). */
   assignedDriverId?: string | null
   assignedDriver?: User | null
@@ -246,6 +280,10 @@ export interface Parcel {
   cancellationReason?: string | null
   cancelledBy?: string | null
   cancelledAt?: string | null
+  /** Conséquences d'annulation (pénalité, remboursement, répartition) exposées
+   *  par le backend quand il les calcule. `null` = aucune donnée disponible.
+   *  Contrat mobile imbriqué : voir `ParcelCancellation`. */
+  cancellation?: ParcelCancellation | null
   createdBy?: string | null
   createdAt?: string
   updatedAt?: string
@@ -254,6 +292,113 @@ export interface Parcel {
   photoUrls?: string[]
   videoUrls?: string[]
   audioUrls?: string[]
+}
+
+/**
+ * Responsabilité d'une annulation, décidée exclusivement par le backend.
+ * Le Web ne doit jamais supposer une répartition (ex. 50/50) : il affiche la
+ * valeur retournée.
+ */
+export type CancellationResponsibility = 'client' | 'driver' | 'shared' | 'exempt' | string
+
+/** Statut du remboursement tel qu'exposé par l'API. */
+export type RefundStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'none' | string
+
+/** Conséquences financières pour une partie (client ou chauffeur). */
+export interface CancellationPartyBreakdown {
+  /** Pénalité imputée à cette partie. */
+  penalty?: number | null
+  /** Frais imputés à cette partie (hors pénalité). */
+  fees?: number | null
+  /** Montant remboursé à cette partie. */
+  refund?: number | null
+  /** Prélèvement wallet (chauffeur). */
+  walletDeduction?: number | null
+  walletBefore?: number | null
+  walletAfter?: number | null
+  /** Prélèvement de points (chauffeur). */
+  pointsDeduction?: number | null
+  pointsBefore?: number | null
+  pointsAfter?: number | null
+  /** Dette créée (chauffeur). */
+  debtAmount?: number | null
+  debtBefore?: number | null
+  debtAfter?: number | null
+}
+
+export interface CancellationReasonOption {
+  value: string
+  label: string
+}
+
+/**
+ * Contrat mobile d'annulation imbriqué, exposé par le backend dans le champ
+ * `parcel.cancellation` (via `snapshotToCancellation`). Il est distinct du
+ * contrat web plat (`CancellationOutcome`) renvoyé par les endpoints de devis
+ * et d'annulation : mêmes données, champs imbriqués et partiellement masqués
+ * selon le rôle (ex. `refund` est `null` pour un chauffeur).
+ */
+export interface ParcelCancellation {
+  allowed: boolean
+  penalized: boolean
+  /** Responsabilité décidée par le backend (équivalent mobile de `responsibility`). */
+  responsibleParty: CancellationResponsibility | null
+  penalty: {
+    amount: number | null
+    currency: string | null
+    label: string | null
+    applied: boolean
+    clientShare: number | null
+    driverShare: number | null
+  }
+  refund: {
+    initialAmount: number | null
+    fees: number | null
+    paydunyaFee: number | null
+    penaltyAmount: number | null
+    refundedAmount: number | null
+    status: RefundStatus | null
+  } | null
+  wallet: { before: number | null; deduction: number | null; after: number | null }
+  points: { before: number | null; deduction: number | null; after: number | null }
+  debt: { before: number | null; created: number | null; after: number | null }
+}
+
+/**
+ * Conséquences d'une annulation calculées et exposées par le backend.
+ * Tous les montants sont optionnels et jamais recalculés côté Web : le Web
+ * affiche uniquement ce que l'API retourne.
+ */
+export interface CancellationOutcome {
+  /** L'annulation est-elle autorisée ? (décidé par le backend) */
+  allowed: boolean
+  /** L'annulation est-elle pénalisée ? */
+  penalized: boolean
+  /** L'annulation est-elle exonérée de pénalité ? */
+  exempt: boolean
+  /** Responsabilité décidée par le backend. */
+  responsibility: CancellationResponsibility | null
+  /** Montant initialement payé. */
+  paidAmount?: number | null
+  /** Frais globaux (PayDunya + techniques). */
+  fees?: number | null
+  /** Frais PayDunya (distincts de la pénalité). */
+  paydunyaFee?: number | null
+  /** Frais techniques. */
+  technicalFee?: number | null
+  /** Pénalité totale. */
+  penalty?: number | null
+  /** Montant remboursé. */
+  refund?: number | null
+  refundStatus?: RefundStatus | null
+  /** Message de conséquence fourni par le backend. */
+  message?: string | null
+  /** Motifs d'annulation fournis par la configuration/API. */
+  reasons?: CancellationReasonOption[] | null
+  /** Part client (affichée uniquement au client). */
+  client?: CancellationPartyBreakdown | null
+  /** Part chauffeur (affichée uniquement au chauffeur/admin autorisé). */
+  driver?: CancellationPartyBreakdown | null
 }
 
 export interface Pagination {

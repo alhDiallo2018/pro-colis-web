@@ -1,9 +1,5 @@
 import { MarketingHeader } from './MarketingHeader'
-
-const CONTACT_INFO = {
-    email: 'support-commercial@sendprocolis.com',
-    address: 'Dakar, Sénégal'
-}
+import { useSupportContact, useLegalConfig } from '@/lib/usePublicConfig'
 
 export function CGUPage() {
     return (
@@ -421,6 +417,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function FooterSection() {
+    const support = useSupportContact()
+    const legal = useLegalConfig()
     return (
         <div style={{
             marginTop: 48,
@@ -431,12 +429,12 @@ function FooterSection() {
             color: 'var(--text-muted)'
         }}>
             <p style={{ margin: 0 }}>
-                © {new Date().getFullYear()} SendProColis SARL — Tous droits réservés
+                © {new Date().getFullYear()} SendProColis — Tous droits réservés
             </p>
             <p style={{ margin: '4px 0 0' }}>
-                Dakar, Sénégal ·{' '}
-                <a href={`mailto:${CONTACT_INFO.email}`} style={{ color: 'var(--color-primary)' }}>
-                    {CONTACT_INFO.email}
+                {legal.address || 'Dakar, Sénégal'} ·{' '}
+                <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>
+                    {support.email}
                 </a>
             </p>
         </div>

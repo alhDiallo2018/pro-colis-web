@@ -1,5 +1,4 @@
 import { api } from './client'
-import { calculateCommission } from '@/lib/commission'
 
 export interface CommissionEstimate {
   amount: number
@@ -19,29 +18,28 @@ export interface PayCashCommissionResult {
   pointsDebited?: number
   newWalletBalance?: number
   newScoreBalance?: number
-  debt?: { id: string; amount: number; status: string } | null
+  /** Montant non couvert, enregistré en dette (`commission_debt`) quand la
+   *  politique configurée l'autorise. 0 = commission entièrement réglée. */
+  debt?: number
+  /** Dette de commission cumulée sur le portefeuille, en FCFA. */
+  commissionDebt?: number
   transaction?: { id: string; type: string; amount: number }
 }
 
-/** Estimer la commission pour un montant (endpoint public preferé,
- *  avec fallback local si l'API n'est pas encore disponible). */
+/** Estimer la commission pour un montant. La commission provient exclusivement
+ *  de l'API (`/commissions/estimate`) : aucune valeur par défaut locale. En cas
+ *  d'échec réseau, l'erreur est propagée à l'appelant (useQuery la gère). */
 export async function estimate(amount: number): Promise<CommissionEstimate> {
-  try {
-    const { data } = await api.post('/commissions/estimate', { amount })
-    const result = data.commission ?? data.data ?? data
-    return {
-      amount,
-      commission: result.commission,
-      netAmount: result.netAmount ?? amount - result.commission,
-      percentage: result.percentage ?? data.percentage ?? 5,
-      minAmount: result.minAmount ?? data.minAmount ?? 100,
-      maxAmount: result.maxAmount ?? data.maxAmount ?? 500,
-      profile: result.profile ?? data.profile ?? 'local',
-    }
-  } catch {
-    // fallback local
-    const r = calculateCommission(amount)
-    return { amount, ...r, profile: 'local' }
+  const { data } = await api.post('/commissions/estimate', { amount })
+  const result = data.commission ?? data.data ?? data
+  return {
+    amount,
+    commission: result.commission,
+    netAmount: result.netAmount ?? amount - result.commission,
+    percentage: result.percentage ?? 0,
+    minAmount: result.minAmount ?? 0,
+    maxAmount: result.maxAmount ?? 0,
+    profile: result.profile ?? data.profile ?? 'local',
   }
 }
 
@@ -68,4 +66,28 @@ export async function payCashCommission(
     ...(amount != null ? { amount } : {}),
   })
   return data.result ?? data
+}
+
+export interface PayDebtResult {
+  /** Montant réellement réglé sur cette opération (FCFA). */
+  debtRepaid: number
+  /** Dette restante après l'opération (FCFA). */
+  remainingDebt: number
+  /** Dette de commission cumulée sur le portefeuille (FCFA). */
+  commissionDebt: number
+  /** Nouveau solde wallet après règlement (FCFA). */
+  balance: number
+  /** État dérivé renvoyé par l'API après règlement. */
+  canAcceptNewDeliveries: boolean
+}
+
+/**
+ * Règle tout ou partie de la dette de commission avec le solde wallet existant.
+ * `amount` est le montant demandé en FCFA ; `amount <= 0` signifie « régler tout
+ * ce que le solde permet ». L'API borne elle-même le montant par le solde et la
+ * dette restante : le Web ne recalcule jamais la règle métier.
+ */
+export async function payWalletDebt(amount: number): Promise<PayDebtResult> {
+  const { data } = await api.post('/driver/wallet/pay-debt', { amount })
+  return data.data ?? data
 }

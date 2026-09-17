@@ -1,5 +1,5 @@
 import { useEffect, useState, type ChangeEvent } from 'react'
-import { Button, Card, Input, Select, Dialog, Toast, Badge, Switch } from '@/ds'
+import { Button, Card, Input, Textarea, Select, Dialog, Toast, Badge, Switch } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import {
@@ -353,7 +353,7 @@ type ConfigSection = {
 type ConfigField = {
   key: string
   label: string
-  type: 'number' | 'text' | 'boolean'
+  type: 'number' | 'text' | 'boolean' | 'list' | 'json'
   defaultValue: ScalarValue
 }
 
@@ -370,13 +370,14 @@ const CONFIG_SCHEMA: ConfigSection[] = [
   {
     title: 'Score & Réputation',
     keys: [
-      { key: 'score.deliveryCompleted', label: 'Points par livraison réussie', type: 'number', defaultValue: 120 },
+      { key: 'score.deliveryCompleted', label: 'Points par livraison réussie', type: 'number', defaultValue: 0 },
       { key: 'score.signupBonus', label: 'Points bonus inscription', type: 'number', defaultValue: 0 },
       { key: 'score.cfaPerPoint', label: 'Équivalent CFA par point (FCFA)', type: 'number', defaultValue: 1 },
-      { key: 'score.commitmentFee', label: 'Points de frais d\'engagement (offre acceptée)', type: 'number', defaultValue: 1 },
+      { key: 'score.commitmentFee', label: 'Points de frais d\'engagement (offre acceptée)', type: 'number', defaultValue: 0 },
       { key: 'score.standardThreshold', label: 'Seuil niveau Standard (points)', type: 'number', defaultValue: 100 },
       { key: 'score.premiumThreshold', label: 'Seuil niveau Premium (points)', type: 'number', defaultValue: 500 },
       { key: 'score.eliteThreshold', label: 'Seuil niveau Elite (points)', type: 'number', defaultValue: 1000 },
+      { key: 'score.packs', label: 'Forfaits de points proposés (FCFA, séparés par des virgules)', type: 'list', defaultValue: '' },
     ],
   },
   {
@@ -384,18 +385,33 @@ const CONFIG_SCHEMA: ConfigSection[] = [
     keys: [
       { key: 'withdrawal.minAmount', label: 'Montant minimum de retrait (FCFA)', type: 'number', defaultValue: 500 },
       { key: 'withdrawal.maxAmount', label: 'Montant maximum de retrait (0=illimité)', type: 'number', defaultValue: 0 },
+      { key: 'withdrawal.maxPerDay', label: 'Plafond de retrait par jour (0=illimité)', type: 'number', defaultValue: 0 },
     ],
   },
   {
     title: 'Finances — Commission',
     keys: [
       { key: 'commission.insufficient_rule', label: 'Règle si solde insuffisant (block | warn | debt)', type: 'text', defaultValue: 'block' },
+      { key: 'commission.debtLimit', label: 'Plafond de dette de commission (0 = aucune limite)', type: 'number', defaultValue: 0 },
     ],
   },
   {
     title: 'Finances — Déboursement',
     keys: [
       { key: 'disbursement.mode', label: 'Mode (manual ou auto)', type: 'text', defaultValue: 'manual' },
+    ],
+  },
+  {
+    title: 'Annulation & Remboursement',
+    keys: [
+      { key: 'cancellation.penalty.percentage', label: 'Pénalité d\'annulation (%)', type: 'number', defaultValue: 0 },
+      { key: 'cancellation.penalty.minAmount', label: 'Pénalité minimum (FCFA)', type: 'number', defaultValue: 0 },
+      { key: 'cancellation.penalty.maxAmount', label: 'Pénalité maximum (FCFA)', type: 'number', defaultValue: 0 },
+      { key: 'cancellation.penalty.clientSharePercent', label: 'Part client si responsabilité partagée (%)', type: 'number', defaultValue: 0 },
+      { key: 'cancellation.fee.paydunyaPercentage', label: 'Frais PayDunya non remboursables (%)', type: 'number', defaultValue: 0 },
+      { key: 'cancellation.fee.technicalFixed', label: 'Frais technique fixe non remboursable (FCFA)', type: 'number', defaultValue: 0 },
+      { key: 'cancellation.fee.technicalPercentage', label: 'Frais technique non remboursable (%)', type: 'number', defaultValue: 0 },
+      { key: 'cancellation.reasons', label: 'Motifs d\'annulation (JSON)', type: 'json', defaultValue: '' },
     ],
   },
   {
@@ -411,18 +427,30 @@ const CONFIG_SCHEMA: ConfigSection[] = [
     ],
   },
   {
-    title: 'PayDunya',
+    title: 'Support',
     keys: [
-      { key: 'paydunya.masterKey', label: 'Clé principale (Master Key)', type: 'text', defaultValue: '' },
-      { key: 'paydunya.privateKey', label: 'Clé privée (Private Key)', type: 'text', defaultValue: '' },
-      { key: 'paydunya.publicKey', label: 'Clé publique (Public Key)', type: 'text', defaultValue: '' },
-      { key: 'paydunya.token', label: 'Token', type: 'text', defaultValue: '' },
-      { key: 'paydunya.mode', label: 'Mode (test ou live)', type: 'text', defaultValue: 'test' },
-      { key: 'paydunya.disburse.masterKey', label: 'Disburse — Master Key', type: 'text', defaultValue: '' },
-      { key: 'paydunya.disburse.privateKey', label: 'Disburse — Private Key', type: 'text', defaultValue: '' },
-      { key: 'paydunya.disburse.publicKey', label: 'Disburse — Public Key', type: 'text', defaultValue: '' },
-      { key: 'paydunya.disburse.token', label: 'Disburse — Token', type: 'text', defaultValue: '' },
-      { key: 'paydunya.disburse.mode', label: 'Disburse — Mode (test/live)', type: 'text', defaultValue: 'test' },
+      { key: 'support.phone', label: 'Téléphone commercial', type: 'text', defaultValue: '' },
+      { key: 'support.email', label: 'Email commercial', type: 'text', defaultValue: '' },
+      { key: 'support.technicalPhone', label: 'Téléphone technique', type: 'text', defaultValue: '' },
+      { key: 'support.technicalEmail', label: 'Email technique', type: 'text', defaultValue: '' },
+      { key: 'support.responseTime', label: 'Délai de réponse (ex: 24h)', type: 'text', defaultValue: '24h' },
+      { key: 'support.availability', label: 'Disponibilité (ex: 7j/7)', type: 'text', defaultValue: '7j/7' },
+    ],
+  },
+  {
+    title: 'Informations légales',
+    keys: [
+      { key: 'legal.companyName', label: 'Raison sociale', type: 'text', defaultValue: '' },
+      { key: 'legal.address', label: 'Adresse du siège', type: 'text', defaultValue: '' },
+      { key: 'legal.registrationNumber', label: 'Numéro d\'immatriculation', type: 'text', defaultValue: '' },
+      { key: 'legal.cdpAuthorization', label: 'Numéro d\'autorisation CDP', type: 'text', defaultValue: '' },
+      { key: 'legal.privacyEmail', label: 'Email contact protection des données', type: 'text', defaultValue: '' },
+      { key: 'legal.publisherName', label: 'Directeur de la publication', type: 'text', defaultValue: '' },
+      { key: 'legal.hostName', label: 'Hébergeur de la plateforme', type: 'text', defaultValue: '' },
+      { key: 'legal.directorName', label: 'Directeur Général (nom)', type: 'text', defaultValue: '' },
+      { key: 'legal.directorEmail', label: 'Directeur Général (email)', type: 'text', defaultValue: '' },
+      { key: 'legal.technicalDirectorName', label: 'Directeur Technique (nom)', type: 'text', defaultValue: '' },
+      { key: 'legal.technicalDirectorEmail', label: 'Directeur Technique (email)', type: 'text', defaultValue: '' },
     ],
   },
 ]
@@ -433,7 +461,18 @@ function buildForm(configFromApi: Record<string, unknown>): Record<string, Scala
     for (const field of section.keys) {
       const apiVal = configFromApi[field.key]
       if (apiVal !== undefined && apiVal !== null) {
-        form[field.key] = typeof apiVal === 'boolean' ? apiVal : (field.type === 'number' ? Number(apiVal) : String(apiVal))
+        if (field.type === 'list') {
+          const arr = Array.isArray(apiVal) ? apiVal : Array.isArray((apiVal as { value?: unknown })?.value) ? (apiVal as { value: unknown[] }).value : []
+          form[field.key] = arr.map((n) => String(n)).join(', ')
+        } else if (field.type === 'boolean') {
+          form[field.key] = apiVal as boolean
+        } else if (field.type === 'number') {
+          form[field.key] = Number(apiVal)
+        } else if (field.type === 'json') {
+          form[field.key] = typeof apiVal === 'string' ? apiVal : JSON.stringify(apiVal, null, 2)
+        } else {
+          form[field.key] = String(apiVal)
+        }
       } else {
         form[field.key] = field.defaultValue
       }
@@ -442,11 +481,48 @@ function buildForm(configFromApi: Record<string, unknown>): Record<string, Scala
   return form
 }
 
+/** Convertit le formulaire en valeurs prêtes à être stockées côté API. Les
+ *  champs `list` redeviennent des tableaux de nombres (le backend les consomme
+ *  ainsi, ex. `score.packs`). */
+function serializeForm(form: Record<string, ScalarValue>): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const section of CONFIG_SCHEMA) {
+    for (const field of section.keys) {
+      const v = form[field.key]
+      if (field.type === 'list') {
+        out[field.key] = String(v ?? '')
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .map(Number)
+          .filter((n) => Number.isFinite(n) && n > 0)
+      } else if (field.type === 'number') {
+        out[field.key] = Number(v)
+      } else if (field.type === 'json') {
+        const raw = String(v ?? '').trim()
+        if (!raw) {
+          out[field.key] = []
+          continue
+        }
+        try {
+          out[field.key] = JSON.parse(raw)
+        } catch {
+          throw new Error(`Champ « ${field.label} » : JSON invalide.`)
+        }
+      } else {
+        out[field.key] = v
+      }
+    }
+  }
+  return out
+}
+
 function SystemConfigPanel() {
   const config = useAdminConfig()
   const update = useUpdateConfig()
   const [form, setForm] = useState<Record<string, ScalarValue>>(buildForm({}))
   const [saved, setSaved] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   useEffect(() => {
     if (config.data) setForm(buildForm(config.data))
@@ -459,7 +535,15 @@ function SystemConfigPanel() {
 
   const submit = () => {
     setSaved(false)
-    update.mutate(form, { onSuccess: () => setSaved(true) })
+    setFormError(null)
+    let payload: Record<string, unknown>
+    try {
+      payload = serializeForm(form)
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : 'Configuration invalide')
+      return
+    }
+    update.mutate(payload, { onSuccess: () => setSaved(true) })
   }
 
   const error = update.error instanceof ApiError ? update.error.message : null
@@ -474,13 +558,28 @@ function SystemConfigPanel() {
     if (field.type === 'boolean') {
       return <Switch key={field.key} label={field.label} checked={!!v} onChange={(c) => set(field.key, c)} />
     }
+    if (field.type === 'json') {
+      return (
+        <Textarea
+          key={field.key}
+          label={field.label}
+          rows={7}
+          value={String(v ?? '')}
+          placeholder={'[{"value":"client_change_of_mind","label":"Changement d\'avis","responsibility":"client","exempt":false}]'}
+          help="Tableau JSON : value, label, responsibility (client | driver | shared | exempt), exempt (booléen)."
+          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => set(field.key, e.target.value)}
+          style={{ gridColumn: '1 / -1' }}
+        />
+      )
+    }
     const isNum = field.type === 'number'
     return (
       <Input
         key={field.key}
         label={field.label}
         type={isNum ? 'number' : 'text'}
-        mono={isNum}
+        mono={isNum || field.type === 'list'}
+        placeholder={field.type === 'list' ? 'Ex: 500, 1000, 3000' : undefined}
         value={String(v ?? field.defaultValue)}
         onChange={(e: ChangeEvent<HTMLInputElement>) =>
           set(field.key, isNum ? Number(e.target.value) : e.target.value)
@@ -498,11 +597,11 @@ function SystemConfigPanel() {
         isEmpty={false}
         onRetry={() => config.refetch()}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
           {allSections.map((sec) => {
             const fields = CONFIG_SCHEMA.find((s) => s.title === sec.title)!.keys
             return (
-              <div key={sec.title} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div key={sec.title} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <h4
                   style={{
                     margin: 0,
@@ -516,13 +615,26 @@ function SystemConfigPanel() {
                 >
                   {sec.title}
                 </h4>
-                {fields.map(renderField)}
+                {/* Les champs sont disposés en grille responsive (2+ colonnes sur
+                    desktop, 1 sur mobile) pour éviter qu'ils ne s'entassent en une
+                    seule colonne, ce qui rendait la saisie illisible. */}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                    gap: 16,
+                    alignItems: 'start',
+                  }}
+                >
+                  {fields.map(renderField)}
+                </div>
               </div>
             )
           })}
 
           {error && <Toast tone="error" message={error} />}
-          {saved && !error && <Toast tone="success" message="Configuration enregistrée." />}
+          {formError && <Toast tone="error" message={formError} />}
+          {saved && !error && !formError && <Toast tone="success" message="Configuration enregistrée." />}
 
           <div>
             <Button icon="save" loading={update.isPending} onClick={submit}>

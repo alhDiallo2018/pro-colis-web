@@ -3,8 +3,9 @@ import { Button, Dialog, Icon, Input, Textarea, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { NegotiationTurn } from '@/components/NegotiationTurn'
-import { useDriverProposals, useRespondToProposal } from './hooks'
+import { useDriverFinancialState, useDriverProposals, useRespondToProposal } from './hooks'
 import { ApiError } from '@/lib/api/client'
+import { commissionDebtMessage } from '@/lib/commissionDebt'
 import { formatFcfa } from '@/lib/format'
 import type { Parcel } from '@/lib/api/types'
 
@@ -53,6 +54,7 @@ export function ProposalsPanel() {
 
 function ProposalRow({ parcel, onCounter }: { parcel: Parcel; onCounter: () => void }) {
   const respond = useRespondToProposal()
+  const fin = useDriverFinancialState()
   const proposal = parcel.proposal
   const error = respond.error instanceof ApiError ? respond.error.message : null
 
@@ -60,6 +62,7 @@ function ProposalRow({ parcel, onCounter }: { parcel: Parcel; onCounter: () => v
   const price = proposal?.price ?? parcel.totalAmount ?? parcel.price ?? 0
   const canAccept = proposal?.canDriverAccept ?? true
   const pendingAction = respond.isPending ? respond.variables?.action : undefined
+  const acceptBlocked = fin.hasDebt || !fin.canAcceptNewDeliveries
 
   return (
     <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--slate-100)' }}>
@@ -99,6 +102,19 @@ function ProposalRow({ parcel, onCounter }: { parcel: Parcel; onCounter: () => v
       {parcel.description && (
         <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-body)', marginTop: 8 }}>{parcel.description}</div>
       )}
+
+      {/* Qui est le client, où enlever le colis et où le livrer : le chauffeur
+          doit pouvoir trancher sans ouvrir le détail complet. */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8, fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
+        <span>
+          Client : <strong style={{ color: 'var(--text-strong)' }}>{parcel.senderName || '—'}</strong>
+          {parcel.senderPhone ? ` · ${parcel.senderPhone}` : ''}
+        </span>
+        <span>
+          Livrer à : <strong style={{ color: 'var(--text-strong)' }}>{parcel.receiverName}</strong>
+          {parcel.receiverAddress ? ` · ${parcel.receiverAddress}` : ''}
+        </span>
+      </div>
 
       {/* Le dernier commentaire accompagne toujours le dernier prix : c'est ce
           qui permet de trancher sans rouvrir tout le fil de négociation. */}
@@ -140,15 +156,27 @@ function ProposalRow({ parcel, onCounter }: { parcel: Parcel; onCounter: () => v
           Négocier
         </Button>
         {canAccept ? (
-          <Button
-            size="sm"
-            variant="primary"
-            icon="check"
-            loading={pendingAction === 'accept'}
-            onClick={() => respond.mutate({ parcelId: parcel.id, action: 'accept' })}
-          >
-            Accepter
-          </Button>
+          acceptBlocked ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              icon="lock"
+              disabled
+              title={fin.hasDebt ? commissionDebtMessage(fin.commissionDebt) : 'Chargement…'}
+            >
+              {fin.hasDebt ? 'Dette à régler' : 'Accepter'}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="primary"
+              icon="check"
+              loading={pendingAction === 'accept'}
+              onClick={() => respond.mutate({ parcelId: parcel.id, action: 'accept' })}
+            >
+              Accepter
+            </Button>
+          )
         ) : (
           <NegotiationTurn waitingFor="client" />
         )}

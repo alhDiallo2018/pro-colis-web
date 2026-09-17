@@ -4,22 +4,19 @@ export interface CommissionConfig {
   maxAmount: number
 }
 
-const DEFAULT_CONFIG: CommissionConfig = {
-  percentage: 5,
-  minAmount: 100,
-  maxAmount: 500,
-}
-
-export function calculateCommission(amount: number, config: Partial<CommissionConfig> = {}): {
+/** Calcule la commission à partir d'une configuration explicite. Aucune valeur
+ *  par défaut n'est codée en dur : l'appelant fournit la configuration issue
+ *  de `/public/config` ou de `/commissions/estimate`. */
+export function calculateCommission(amount: number, config: CommissionConfig): {
   commission: number
   netAmount: number
   percentage: number
   minAmount: number
   maxAmount: number
 } {
-  const pct = config.percentage ?? DEFAULT_CONFIG.percentage
-  const min = config.minAmount ?? DEFAULT_CONFIG.minAmount
-  const max = config.maxAmount ?? DEFAULT_CONFIG.maxAmount
+  const pct = config.percentage
+  const min = config.minAmount
+  const max = config.maxAmount
 
   const raw = amount * (pct / 100)
   const commission = Math.min(max, Math.max(min, raw))
@@ -58,4 +55,19 @@ export function canPayCommission(
   commission: number,
 ): boolean {
   return walletBalance + scoreBalance >= commission
+}
+
+/**
+ * Un solde de points couvre-t-il une commission en FCFA ? Le taux de conversion
+ * provient exclusivement du backend (`score.cfaPerPoint`) : aucune hypothèse
+ * « 1 point = 1 FCFA » n'est codée ici. `scoreBalance` est entier, donc
+ * `scoreBalance * cfaPerPoint >= commission` équivaut à la règle serveur
+ * `scoreBalance >= ceil(commission / cfaPerPoint)`.
+ */
+export function pointsCoverCommission(
+  scoreBalance: number,
+  cfaPerPoint: number,
+  commission: number,
+): boolean {
+  return scoreBalance * cfaPerPoint >= commission
 }

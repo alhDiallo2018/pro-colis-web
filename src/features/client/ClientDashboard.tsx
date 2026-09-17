@@ -13,10 +13,20 @@ const ACTIVE_EXCLUDED = ['delivered', 'cancelled']
 export function ClientDashboard() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const { data } = useMyParcels({ limit: 200 })
+  const parcelsQuery = useMyParcels({ limit: 200 })
+  const data = parcelsQuery.data
   const offers = useReceivedBids()
   const stats = useMyStats()
   const bidStats = useMyBidStats()
+
+  // Une erreur réseau/API ne doit jamais être rendue comme « 0 » ou « vide ».
+  const hasError = parcelsQuery.isError || offers.isError
+  const retryAll = () => {
+    if (parcelsQuery.isError) parcelsQuery.refetch()
+    if (offers.isError) offers.refetch()
+    if (stats.isError) stats.refetch()
+    if (bidStats.isError) bidStats.refetch()
+  }
 
   const parcels = useMemo(() => data?.parcels ?? [], [data])
 
@@ -38,6 +48,27 @@ export function ClientDashboard() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+      {hasError && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '14px 18px',
+            background: 'var(--red-50)',
+            border: '1px solid var(--red-100)',
+            borderRadius: 'var(--radius-md)',
+          }}
+        >
+          <span style={{ flex: 1, fontSize: 13.5, color: 'var(--red-600)', fontWeight: 600 }}>
+            Impossible de charger vos données. Vérifiez votre connexion.
+          </span>
+          <Button size="sm" variant="secondary" icon="refresh" onClick={retryAll}>
+            Réessayer
+          </Button>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
         <StatBox icon="package_2" tone="primary" value={stats.data?.activeParcels ?? enCours} label="Colis en cours" />
         <StatBox icon="task_alt" tone="green" value={stats.data?.deliveredParcels ?? livres} label="Colis livrés" />
@@ -128,7 +159,7 @@ export function ClientDashboard() {
           >
             <ParcelsTable
               parcels={parcels.slice(0, 5)}
-              loading={!data}
+              loading={parcelsQuery.isLoading}
               onRowClick={(p) => navigate(`/client/colis/${p.id}`)}
               emptyHint="Créez votre premier colis pour le voir ici."
             />
@@ -141,7 +172,14 @@ export function ClientDashboard() {
             flush
             action={offers.data && offers.data.length > 0 ? <Badge tone="primary">{offers.data.length}</Badge> : undefined}
           >
-            {!offers.data || offers.data.length === 0 ? (
+            {offers.isError ? (
+              <div style={{ padding: 18, fontSize: 13.5, color: 'var(--red-600)' }}>
+                Impossible de charger les offres reçues.
+                <Button size="sm" variant="secondary" icon="refresh" onClick={() => offers.refetch()} style={{ marginTop: 10 }}>
+                  Réessayer
+                </Button>
+              </div>
+            ) : !offers.data || offers.data.length === 0 ? (
               <div style={{ padding: 18, fontSize: 13.5, color: 'var(--text-muted)' }}>Aucune offre reçue pour le moment.</div>
             ) : (
               <>

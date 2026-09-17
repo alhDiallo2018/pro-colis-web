@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Button, Card, EmptyState, Input, Stepper, StatusBadge, Tag } from '@/ds'
+import { Button, Card, EmptyState, Icon, Input, Stepper, StatusBadge, Tag } from '@/ds'
 import { QrCode } from '@/components/QrCode'
 import { useTrackParcel } from './hooks'
 import { buildSteps } from './parcelSteps'
-import { formatFcfa, formatWeight, toStatusKey } from '@/lib/format'
+import { getDriverLocationState, type DriverLocationState } from './tracking'
+import { TrackingMap, type MapPoint } from './TrackingMap'
+import { formatFcfa, formatTimeAgo, formatWeight, toStatusKey } from '@/lib/format'
 import { ApiError } from '@/lib/api/client'
+import type { DriverLocation, ParcelZoneRef } from '@/lib/api/types'
 
 export function SuiviScreen() {
   const { trackingNumber } = useParams<{ trackingNumber: string }>()
@@ -80,6 +83,13 @@ export function SuiviScreen() {
             </div>
           </Card>
 
+          <DriverPositionCard
+            state={getDriverLocationState(parcel)}
+            driverPoint={driverPoint(parcel.driverLocation)}
+            departurePoint={coordPoint(parcel.departureLatitude, parcel.departureLongitude) ?? zonePoint(parcel.departureZone)}
+            destinationPoint={coordPoint(parcel.arrivalLatitude, parcel.arrivalLongitude) ?? zonePoint(parcel.arrivalZone)}
+          />
+
           <Card>
             <h3 style={{ margin: '0 0 12px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>Historique</h3>
             <Stepper steps={buildSteps(parcel)} />
@@ -107,5 +117,77 @@ function Field({ label, value, align = 'left' }: { label: string; value: string;
       </div>
       <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, color: 'var(--text-strong)' }}>{value}</div>
     </div>
+  )
+}
+
+function zonePoint(zone: ParcelZoneRef | null | undefined): MapPoint | null {
+  if (!zone || zone.latitude == null || zone.longitude == null) return null
+  return { lat: zone.latitude, lng: zone.longitude }
+}
+
+/** Point de carte à partir des coordonnées plates renvoyées par l'endpoint de
+ *  tracking public (`departureLatitude`/`departureLongitude`, etc.). */
+function coordPoint(lat: number | null | undefined, lng: number | null | undefined): MapPoint | null {
+  if (lat == null || lng == null) return null
+  return { lat, lng }
+}
+
+function driverPoint(location: DriverLocation | null | undefined): MapPoint | null {
+  if (!location || location.latitude == null || location.longitude == null) return null
+  return { lat: location.latitude, lng: location.longitude }
+}
+
+function DriverPositionCard({
+  state,
+  driverPoint,
+  departurePoint,
+  destinationPoint,
+}: {
+  state: DriverLocationState
+  driverPoint: MapPoint | null
+  departurePoint: MapPoint | null
+  destinationPoint: MapPoint | null
+}) {
+  const live = state.kind === 'active' || state.kind === 'stale'
+
+  return (
+    <Card>
+      <h3 style={{ margin: '0 0 12px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
+        Position du chauffeur
+      </h3>
+
+      {state.kind === 'finished' && (
+        <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>
+          Livraison terminée — plus de suivi de position active.
+        </p>
+      )}
+
+      {state.kind === 'unavailable' && (
+        <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>
+          Position du chauffeur indisponible pour le moment.
+        </p>
+      )}
+
+      {state.kind === 'waiting' && (
+        <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>
+          En attente de position GPS…
+        </p>
+      )}
+
+      {live && (
+        <>
+          <TrackingMap driver={driverPoint} departure={departurePoint} destination={destinationPoint} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: 'var(--fs-sm)', color: 'var(--text-body)' }}>
+            <Icon name="two_wheeler" size={18} style={{ color: 'var(--teal-500)' }} />
+            <span style={{ fontWeight: 600 }}>Chauffeur</span>
+            <span style={{ color: 'var(--text-muted)' }}>
+              {state.kind === 'stale'
+                ? `Dernière position connue ${formatTimeAgo(state.location.updatedAt)}`
+                : `Dernière position reçue : ${formatTimeAgo(state.location.updatedAt)}`}
+            </span>
+          </div>
+        </>
+      )}
+    </Card>
   )
 }

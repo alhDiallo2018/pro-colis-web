@@ -88,6 +88,22 @@ export async function searchDrivers(): Promise<User[]> {
   return data.drivers ?? data.data ?? []
 }
 
+/**
+ * Chauffeurs actifs desservant une zone (`zone_drivers` + rattachement garage
+ * hérité). C'est la brique « choisir un chauffeur par localité » : la liste est
+ * déjà filtrée côté API par la zone de départ du colis.
+ */
+export async function zoneDrivers(zoneId: string): Promise<User[]> {
+  const { data } = await api.get(`/public/drivers/zone/${zoneId}`)
+  return data.drivers ?? data.data ?? []
+}
+
+/** Fiche publique d'un chauffeur — champs pertinents seulement, exposés par l'API. */
+export async function publicDriverDetail(driverId: string): Promise<User> {
+  const { data } = await api.get(`/public/drivers/${driverId}`)
+  return data.driver ?? data.data
+}
+
 interface UserList {
   users: User[]
   pagination?: Pagination

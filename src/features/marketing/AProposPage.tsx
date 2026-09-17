@@ -1,10 +1,5 @@
 import { MarketingHeader } from './MarketingHeader'
-
-const CONTACT_INFO = {
-    email: 'support-commercial@sendprocolis.com',
-    phone: '+221 76 516 27 96',
-    address: 'Dakar, Sénégal'
-}
+import { useSupportContact, useLegalConfig } from '@/lib/usePublicConfig'
 
 const VALUES = [
     {
@@ -50,6 +45,8 @@ const STEPS = [
 ]
 
 export function AProposPage() {
+    const support = useSupportContact()
+    const legal = useLegalConfig()
     return (
         <div style={{
             maxWidth: 900,
@@ -254,19 +251,19 @@ export function AProposPage() {
                             <span style={{ fontSize: 20 }}>📧</span>
                             <span>
                 <strong>Email :</strong>{' '}
-                                <EmailLink email={CONTACT_INFO.email} />
+                                <EmailLink email={support.email} />
               </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <span style={{ fontSize: 20 }}>📞</span>
                             <span>
-                <strong>Téléphone :</strong> {CONTACT_INFO.phone}
+                <strong>Téléphone :</strong> {support.technicalPhone || support.phone}
               </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <span style={{ fontSize: 20 }}>📍</span>
                             <span>
-                <strong>Adresse :</strong> {CONTACT_INFO.address}
+                <strong>Adresse :</strong> {legal.address || 'Dakar, Sénégal'}
               </span>
                         </div>
                     </div>
@@ -318,6 +315,8 @@ function EmailLink({ email }: { email: string }) {
 }
 
 function FooterSection() {
+    const support = useSupportContact()
+    const legal = useLegalConfig()
     return (
         <div style={{
             marginTop: 48,
@@ -328,10 +327,10 @@ function FooterSection() {
             color: 'var(--text-muted)'
         }}>
             <p style={{ margin: 0 }}>
-                © {new Date().getFullYear()} SendProColis SARL — Tous droits réservés
+                © {new Date().getFullYear()} SendProColis — Tous droits réservés
             </p>
             <p style={{ margin: '4px 0 0' }}>
-                Dakar, Sénégal · <EmailLink email={CONTACT_INFO.email} />
+                {legal.address || 'Dakar, Sénégal'} · <EmailLink email={support.email} />
             </p>
         </div>
     )

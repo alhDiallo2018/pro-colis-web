@@ -191,7 +191,13 @@ export function useAdminConfig() {
 export function useUpdateConfig() {
   return useMutation({
     mutationFn: (config: Record<string, unknown>) => roles.adminUpdateConfig(config),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'config'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'config'] })
+      // La config publique (commission, support, identité légale…) est lue par
+      // les pages client : on l'invalide pour que l'admin voie ses changements
+      // sans attendre l'expiration du cache.
+      queryClient.invalidateQueries({ queryKey: ['public', 'config'] })
+    },
   })
 }
 

@@ -53,11 +53,18 @@ interface Props {
    * de la négociation (`canClientAccept` / `canDriverAccept`).
    */
   canAccept?: boolean
+  /**
+   * Acceptation bloquée (ex. dette de commission impayée) : le bouton Accepter
+   * reste visible mais désactivé, avec un libellé explicite. L'API reste seule
+   * juge ; ce drapeau n'est qu'un affichage.
+   */
+  acceptBlocked?: boolean
+  acceptBlockedLabel?: string
   onCreateBid?: (price: number, message?: string) => void
   onAcceptBid?: (price: number, message?: string) => void
 }
 
-export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertisementId, offerId, parcelInfo, isOwner: _isOwner = false, canAccept, onCreateBid, onAcceptBid }: Props) {
+export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertisementId, offerId, parcelInfo, isOwner: _isOwner = false, canAccept, acceptBlocked = false, acceptBlockedLabel = 'Dette à régler', onCreateBid, onAcceptBid }: Props) {
   // Sans indication du parent, on retombe sur l'ancien comportement : seul le
   // propriétaire du colis pouvait accepter un prix.
   const acceptAllowed = canAccept ?? _isOwner
@@ -284,7 +291,7 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
   }
 
   const handleAcceptPrice = (amount: number) => {
-    if (acceptPrice.isPending) return
+    if (acceptPrice.isPending || acceptBlocked) return
 
     if (onAcceptBid) {
       onAcceptBid(amount, `Prix accept\u00e9: ${nf(amount)} FCFA`)
@@ -398,6 +405,8 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
                 mine={m.senderId === userId}
                 isOwner={acceptAllowed}
                 isLastNonMinePrice={m.id === lastNonMinePriceId}
+                acceptBlocked={acceptBlocked}
+                acceptBlockedLabel={acceptBlockedLabel}
                 onAcceptPrice={(amount) => handleAcceptPrice(amount)}
                 onCounterPrice={(amount) => handleCounterPrice(amount)}
                 onEdit={(body) => editMessage.mutate({ messageId: m.id, body })}
@@ -622,6 +631,8 @@ interface BubbleProps {
   mine: boolean
   isOwner?: boolean
   isLastNonMinePrice?: boolean
+  acceptBlocked?: boolean
+  acceptBlockedLabel?: string
   onAcceptPrice?: (amount: number) => void
   onCounterPrice?: (amount: number) => void
   onEdit?: (body: string) => void
@@ -637,7 +648,7 @@ function parsePriceProposal(body: string): { isPrice: boolean; amount: number; m
   return { isPrice: true, amount, message: parts.slice(1).join(':').trim() }
 }
 
-function MessageBubble({ message, mine, isOwner = false, isLastNonMinePrice = false, onAcceptPrice, onCounterPrice, onEdit, onDelete, busy = false }: BubbleProps) {
+function MessageBubble({ message, mine, isOwner = false, isLastNonMinePrice = false, acceptBlocked = false, acceptBlockedLabel = 'Dette à régler', onAcceptPrice, onCounterPrice, onEdit, onDelete, busy = false }: BubbleProps) {
   const priceData = parsePriceProposal(message.body)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(message.body ?? '')
@@ -670,7 +681,9 @@ function MessageBubble({ message, mine, isOwner = false, isLastNonMinePrice = fa
           {!mine && isOwner && isLastNonMinePrice && onAcceptPrice && (
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               <Button size="sm" variant="secondary" onClick={() => onCounterPrice?.(priceData.amount)}>Contre-proposition</Button>
-              <Button size="sm" icon="check" onClick={() => onAcceptPrice(priceData.amount)}>Accepter</Button>
+              <Button size="sm" icon={acceptBlocked ? 'lock' : 'check'} disabled={acceptBlocked} title={acceptBlocked ? acceptBlockedLabel : undefined} onClick={() => onAcceptPrice(priceData.amount)}>
+                {acceptBlocked ? acceptBlockedLabel : 'Accepter'}
+              </Button>
             </div>
           )}
           <div style={{ fontSize: 10, textAlign: 'right', marginTop: 8, color: 'var(--amber-500)' }}>

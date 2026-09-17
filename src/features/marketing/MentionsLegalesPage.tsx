@@ -1,6 +1,9 @@
 import { MarketingHeader } from './MarketingHeader'
+import { useSupportContact, useLegalConfig } from '@/lib/usePublicConfig'
 
 export function MentionsLegalesPage() {
+    const support = useSupportContact()
+    const legal = useLegalConfig()
     return (
         <div style={{
             maxWidth: 900,
@@ -79,7 +82,7 @@ export function MentionsLegalesPage() {
                             color: 'var(--text-strong)',
                             marginBottom: 4
                         }}>
-                            Serigne Fallou Ndao
+                            {legal.directorName || '[À COMPLÉTER]'}
                         </div>
                         <div style={{
                             fontSize: 13,
@@ -95,68 +98,65 @@ export function MentionsLegalesPage() {
                         }}>
                             Spécialiste en Finance & Stratégie
                         </div>
+                        {legal.directorEmail ? (
+                            <div style={{
+                                marginTop: 8,
+                                paddingTop: 8,
+                                borderTop: '1px solid var(--border-subtle)',
+                                fontSize: 13
+                            }}>
+                                <strong>📧 Email :</strong>{' '}
+                                <a href={`mailto:${legal.directorEmail}`} style={{ color: 'var(--color-primary)' }}>
+                                    {legal.directorEmail}
+                                </a>
+                            </div>
+                        ) : null}
+                    </div>
+
+                    <div style={{
+                        padding: 16,
+                        background: 'var(--card-bg)',
+                        borderRadius: 12,
+                        border: '1px solid var(--border-subtle)'
+                    }}>
                         <div style={{
-                            marginTop: 8,
-                            paddingTop: 8,
-                            borderTop: '1px solid var(--border-subtle)',
-                            fontSize: 13
+                            fontWeight: 700,
+                            fontSize: 15,
+                            color: 'var(--text-strong)',
+                            marginBottom: 4
                         }}>
-                            <strong>📧 Email :</strong>{' '}
-                            <a
-                                href="mailto:fallou.edu.uad@gmail.com"
-                                style={{color: 'var(--color-primary)'}}
-                            >
-                                fallou.edu.uad@gmail.com
-                            </a>
+                            {legal.technicalDirectorName || '[À COMPLÉTER]'}
                         </div>
+                        <div style={{
+                            fontSize: 13,
+                            color: 'var(--text-muted)',
+                            fontWeight: 500
+                        }}>
+                            Directeur Technique & Développement
+                        </div>
+                        <div style={{
+                            fontSize: 12,
+                            color: 'var(--text-muted)',
+                            marginTop: 4
+                        }}>
+                            Expert en Solutions Digitales & Innovation
+                        </div>
+                        {legal.technicalDirectorEmail ? (
+                            <div style={{
+                                marginTop: 8,
+                                paddingTop: 8,
+                                borderTop: '1px solid var(--border-subtle)',
+                                fontSize: 13
+                            }}>
+                                <strong>📧 Email :</strong>{' '}
+                                <a href={`mailto:${legal.technicalDirectorEmail}`} style={{ color: 'var(--color-primary)' }}>
+                                    {legal.technicalDirectorEmail}
+                                </a>
+                            </div>
+                        ) : null}
                     </div>
-
-                </div>
-
-                <div style={{
-                    padding: 16,
-                    background: 'var(--card-bg)',
-                    borderRadius: 12,
-                    border: '1px solid var(--border-subtle)'
-                }}>
-                    <div style={{
-                        fontWeight: 700,
-                        fontSize: 15,
-                        color: 'var(--text-strong)',
-                        marginBottom: 4
-                    }}>
-                        Thierno Alhassane Diallo Garki
-                    </div>
-                    <div style={{
-                        fontSize: 13,
-                        color: 'var(--text-muted)',
-                        fontWeight: 500
-                    }}>
-                        Directeur Technique & Développement
-                    </div>
-                    <div style={{
-                        fontSize: 12,
-                        color: 'var(--text-muted)',
-                        marginTop: 4
-                    }}>
-                        Expert en Solutions Digitales & Innovation
-                    </div>
-                    <div style={{
-                        marginTop: 8,
-                        paddingTop: 8,
-                        borderTop: '1px solid var(--border-subtle)',
-                        fontSize: 13
-                    }}>
-                        <strong>📧 Email :</strong>{' '}
-                        <a
-                            href="mailto:dialloalhassanegarki2018@gmail.com"
-                            style={{color: 'var(--color-primary)'}}
-                        >
-                            dialloalhassanegarki2018@gmail.com
-                        </a>
                 </div>
             </div>
-        </div>
 
     {/* Sections */
     }
@@ -165,23 +165,23 @@ export function MentionsLegalesPage() {
         <Section title="1. Éditeur de la plateforme">
             <p>
                 La plateforme <strong>SendProColis</strong> est une solution de mise en relation entre expéditeurs et
-                transporteurs, développée et opérée par <strong>SendProColis SARL</strong>, société de droit sénégalais
-                        dont le siège social est situé à <strong>Dakar, Sénégal</strong>.
+                transporteurs, développée et opérée par <strong>{legal.companyName || 'SendProColis'}</strong>, société de droit sénégalais
+                        dont le siège social est situé à <strong>{legal.address || 'Dakar, Sénégal'}</strong>.
                     </p>
-                    <ContactInfo />
+                    <ContactInfo address={legal.address || 'Dakar, Sénégal'} />
                 </Section>
 
                 {/* 2. Directeur de publication */}
                 <Section title="2. Directeur de publication">
                     <p>
-                        <strong>Serigne Fallou Ndao</strong>, en sa qualité de Directeur général de SendProColis SARL.
+                        <strong>{legal.publisherName || '[À COMPLÉTER]'}</strong>, en sa qualité de Directeur général de {legal.companyName || 'SendProColis'}.
                     </p>
                 </Section>
 
                 {/* 3. Hébergement */}
                 <Section title="3. Hébergement">
                     <p>
-                        La plateforme SendProColis est hébergée par <strong>OVHcloud</strong>, leader européen du cloud computing.
+                        La plateforme SendProColis est hébergée par <strong>{legal.hostName || '[À COMPLÉTER]'}</strong>.
                     </p>
                 </Section>
 
@@ -300,8 +300,8 @@ export function MentionsLegalesPage() {
                     <p style={{ marginTop: 16 }}>
                         Conformément à la réglementation, vous disposez d'un droit d'accès, de rectification, de suppression
                         et d'opposition au traitement de vos données. Pour exercer ces droits, contactez-nous à{' '}
-                        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>
-                            support-commercial@sendprocolis.com
+                        <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>
+                            {support.email}
                         </a>.
                     </p>
                 </Section>
@@ -379,8 +379,8 @@ export function MentionsLegalesPage() {
                 <Section title="15. Réclamations et médiation">
                     <p>
                         En cas de litige, l'utilisateur s'engage à contacter SendProColis en priorité par email à{' '}
-                        <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>
-                            support-commercial@sendprocolis.com
+                        <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>
+                            {support.email}
                         </a>{' '}
                         pour trouver une solution amiable.
                     </p>
@@ -427,12 +427,12 @@ export function MentionsLegalesPage() {
                 color: 'var(--text-muted)'
             }}>
                 <p style={{ margin: 0 }}>
-                    © {new Date().getFullYear()} SendProColis SARL — Tous droits réservés
+                    © {new Date().getFullYear()} SendProColis — Tous droits réservés
                 </p>
                 <p style={{ margin: '4px 0 0' }}>
-                    Dakar, Sénégal ·{' '}
-                    <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>
-                        support-commercial@sendprocolis.com
+                    {legal.address || 'Dakar, Sénégal'} ·{' '}
+                    <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>
+                        {support.email}
                     </a>
                 </p>
             </div>
@@ -475,7 +475,8 @@ function List({ items }: { items: string[] }) {
     )
 }
 
-function ContactInfo() {
+function ContactInfo({ address }: { address: string }) {
+    const support = useSupportContact()
     return (
         <div style={{
             marginTop: 12,
@@ -486,15 +487,15 @@ function ContactInfo() {
         }}>
             <p style={{ margin: 0 }}>
                 <strong>📧 Email :</strong>{' '}
-                <a href="mailto:support-commercial@sendprocolis.com" style={{ color: 'var(--color-primary)' }}>
-                    support-commercial@sendprocolis.com
+                <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>
+                    {support.email}
                 </a>
             </p>
             <p style={{ margin: '4px 0 0' }}>
-                <strong>📞 Téléphone :</strong> +221 76 516 27 96
+                <strong>📞 Téléphone :</strong> {support.technicalPhone || support.phone}
             </p>
             <p style={{ margin: '4px 0 0' }}>
-                <strong>📍 Siège :</strong> Dakar, Sénégal
+                <strong>📍 Siège :</strong> {address}
             </p>
         </div>
     )

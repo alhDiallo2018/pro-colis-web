@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Card } from '@/ds'
 import { MarketingHeader } from '@/features/marketing/MarketingHeader'
+import { useSupportContact } from '@/lib/usePublicConfig'
 
 interface FaqItem {
     question: string
@@ -138,6 +139,7 @@ function FaqTile({ item, index }: { item: FaqItem; index: number }) {
 }
 
 export function HelpScreen() {
+    const support = useSupportContact()
     const [query, setQuery] = useState('')
 
     const visibleFaqs = FAQS.filter(
@@ -395,7 +397,7 @@ export function HelpScreen() {
                             Chat support
                         </a>
                         <a
-                            href="mailto:support-commercial@sendprocolis.com"
+                            href={`mailto:${support.email}`}
                             style={{
                                 textDecoration: 'none',
                                 color: 'var(--color-primary)',

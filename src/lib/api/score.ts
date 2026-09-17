@@ -61,6 +61,11 @@ export interface DriverWallet {
   totalCommissionsPaid?: number
   totalDeposited: number
   totalSpent: number
+  totalRefunded?: number
+  /** Dette de commission non réglée (FCFA). `0` = aucune dette. */
+  commissionDebt?: number
+  /** État dérivé côté API : `false` tant qu'une dette de commission subsiste. */
+  canAcceptNewDeliveries?: boolean
   status: string
 }
 
