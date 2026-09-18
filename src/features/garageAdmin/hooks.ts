@@ -18,9 +18,9 @@ export function useAssignDriver() {
   })
 }
 
-export function useDeleteGarageParcel() {
+export function useCancelGarageParcel() {
   return useMutation({
-    mutationFn: (parcelId: string) => roles.garageDeleteParcel(parcelId),
+    mutationFn: ({ parcelId, reason }: { parcelId: string; reason: string }) => roles.garageCancelParcel(parcelId, reason),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['garage', 'parcels'] }),
   })
 }

@@ -53,13 +53,14 @@ export async function garageDrivers(): Promise<User[]> {
 }
 
 export async function garageAssignDriver(parcelId: string, driverId: string): Promise<Parcel> {
-  const { data } = await api.put(`/garage-admin/parcels/${parcelId}/assign-driver`, { driverId })
+  const { data } = await api.put(`/garage-admin/parcels/${parcelId}/status`, { status: 'confirmed', driverId })
   return data.parcel ?? data.data
 }
 
-/** Suppression d'un colis de la zone par l'admin de garage. */
-export async function garageDeleteParcel(parcelId: string): Promise<void> {
-  await api.delete(`/garage-admin/parcels/${parcelId}`)
+/** Annulation métier d'un colis par le garage, avec le motif requis par l'API. */
+export async function garageCancelParcel(parcelId: string, reason: string): Promise<Parcel> {
+  const { data } = await api.put(`/garage-admin/parcels/${parcelId}/status`, { status: 'cancelled', reason })
+  return data.parcel ?? data.data
 }
 
 /** Drivers of a given garage (public endpoint) — used by "Mon garage". */

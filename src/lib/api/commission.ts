@@ -75,9 +75,11 @@ export interface PayDebtResult {
   remainingDebt: number
   /** Dette de commission cumulée sur le portefeuille (FCFA). */
   commissionDebt: number
+  /** Seuil de blocage actuellement configuré (0 désactive le blocage). */
+  debtLimit: number
   /** Nouveau solde wallet après règlement (FCFA). */
   balance: number
-  /** État dérivé renvoyé par l'API après règlement. */
+  /** État métier renvoyé par l'API après règlement. */
   canAcceptNewDeliveries: boolean
 }
 

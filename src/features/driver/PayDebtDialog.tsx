@@ -91,7 +91,9 @@ export function PayDebtDialog({ open, onClose, onSuccess }: PayDebtDialogProps) 
             message={
               lastResult.remainingDebt <= 0
                 ? 'Dette entièrement réglée. Vous pouvez à nouveau accepter des livraisons.'
-                : `Il reste ${formatFcfa(lastResult.remainingDebt)} de dette de commission.`
+                : lastResult.canAcceptNewDeliveries
+                  ? `Il reste ${formatFcfa(lastResult.remainingDebt)} de dette, mais les nouvelles acceptations sont de nouveau autorisées.`
+                  : `Il reste ${formatFcfa(lastResult.remainingDebt)} de dette de commission. Les nouvelles acceptations restent bloquées.`
             }
           />
         )}

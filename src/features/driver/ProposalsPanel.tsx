@@ -62,7 +62,8 @@ function ProposalRow({ parcel, onCounter }: { parcel: Parcel; onCounter: () => v
   const price = proposal?.price ?? parcel.totalAmount ?? parcel.price ?? 0
   const canAccept = proposal?.canDriverAccept ?? true
   const pendingAction = respond.isPending ? respond.variables?.action : undefined
-  const acceptBlocked = fin.hasDebt || !fin.canAcceptNewDeliveries
+  const acceptBlocked = !fin.canAcceptNewDeliveries
+  const blockedLabel = fin.isLoading ? 'Chargement…' : fin.isError ? 'Indisponible' : 'Dette à régler'
 
   return (
     <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--slate-100)' }}>
@@ -162,9 +163,9 @@ function ProposalRow({ parcel, onCounter }: { parcel: Parcel; onCounter: () => v
               variant="secondary"
               icon="lock"
               disabled
-              title={fin.hasDebt ? commissionDebtMessage(fin.commissionDebt) : 'Chargement…'}
+              title={fin.hasDebt ? commissionDebtMessage(fin.commissionDebt, fin.debtLimit) : blockedLabel}
             >
-              {fin.hasDebt ? 'Dette à régler' : 'Accepter'}
+              {blockedLabel}
             </Button>
           ) : (
             <Button

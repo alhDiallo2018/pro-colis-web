@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { getPublicConfig, type PublicConfig } from '@/lib/api/publicConfig'
 
-/** Configuration publique partagée (commission, points, contacts support).
+/** Configuration publique partagée (commission, points, support et aide).
  *  Mise en cache par React Query ; rafraîchie à chaque démarrage de session. */
 export function usePublicConfig() {
   return useQuery<PublicConfig>({
@@ -24,6 +24,8 @@ export function useSupportContact(): {
   phone: string
   technicalEmail: string
   technicalPhone: string
+  responseTime: string
+  availability: string
 } {
   const { data } = usePublicConfig()
   return {
@@ -31,6 +33,8 @@ export function useSupportContact(): {
     phone: data?.support?.phone ?? '',
     technicalEmail: data?.support?.technicalEmail ?? '',
     technicalPhone: data?.support?.technicalPhone ?? '',
+    responseTime: data?.support?.responseTime ?? '',
+    availability: data?.support?.availability ?? '',
   }
 }
 

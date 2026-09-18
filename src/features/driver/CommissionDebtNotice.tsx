@@ -61,13 +61,10 @@ export function CommissionDebtNotice({ compact = false, showClearState = false }
             {formatFcfa(fin.commissionDebt)}
           </div>
           <div style={{ fontSize: 12.5, color: 'var(--amber-700)', marginTop: 4, lineHeight: 1.4 }}>
-            Vous devez régler cette dette avant de pouvoir accepter un nouveau colis. Vous pouvez toujours terminer
-            les livraisons déjà acceptées.
-            {fin.debtLimit > 0 && (
-              <>
-                {' '}Limite autorisée : {formatFcfa(fin.debtLimit)}.
-              </>
-            )}
+            {fin.isBlocked
+              ? 'Le seuil de blocage est atteint : réglez une partie de cette dette avant d’accepter un nouveau colis. Vous pouvez toujours terminer les livraisons déjà acceptées.'
+              : 'Cette dette reste inférieure au seuil de blocage : vous pouvez continuer à accepter des colis.'}
+            {fin.debtLimit > 0 && <> Seuil de blocage : {formatFcfa(fin.debtLimit)}.</>}
           </div>
           {!compact && (
             <Button size="sm" variant="amber" icon="payments" style={{ marginTop: 10 }} onClick={() => navigate('/driver/points')}>

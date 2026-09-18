@@ -28,10 +28,10 @@ export function OfferDialog({ parcel, onClose, onSuccess, existingBidId }: Offer
 
   if (!parcel) return null
 
-  // Une dette de commission bloque l'acceptation d'un prix reçu, pas l'envoi
-  // d'une première offre. L'API reste seule juge ; ce drapeau n'est que l'UI.
-  const acceptBlocked = fin.hasDebt || !fin.canAcceptNewDeliveries
-  const acceptBlockedLabel = fin.hasDebt ? 'Dette à régler' : 'Chargement…'
+  // Seul l'état métier renvoyé par l'API bloque l'acceptation : une dette
+  // inférieure au seuil configuré reste compatible avec une nouvelle course.
+  const acceptBlocked = !fin.canAcceptNewDeliveries
+  const acceptBlockedLabel = fin.isLoading ? 'Chargement…' : fin.isError ? 'Indisponible' : 'Dette à régler'
   const error = respondToBid.error instanceof ApiError ? respondToBid.error.message : null
 
   const handleFirstOffer = async (price: number, message?: string) => {
@@ -78,7 +78,7 @@ export function OfferDialog({ parcel, onClose, onSuccess, existingBidId }: Offer
         )}
         {fin.hasDebt && (
           <div style={{ paddingBottom: 8 }}>
-            <Toast tone="warning" message={commissionDebtMessage(fin.commissionDebt)} />
+            <Toast tone="warning" message={commissionDebtMessage(fin.commissionDebt, fin.debtLimit)} />
           </div>
         )}
         <NegotiationChat

@@ -67,10 +67,13 @@ interface Props {
 export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertisementId, offerId, parcelInfo, isOwner: _isOwner = false, canAccept, acceptBlocked = false, acceptBlockedLabel = 'Dette à régler', onCreateBid, onAcceptBid }: Props) {
   // Sans indication du parent, on retombe sur l'ancien comportement : seul le
   // propriétaire du colis pouvait accepter un prix.
-  const acceptAllowed = canAccept ?? _isOwner
   const user = useAuthStore((s) => s.user)
   const userId = user?.id
   const role = user?.role
+  // Le contrat API ne prévoit l'acceptation d'une offre d'annonce que pour le
+  // chauffeur. Le client peut répondre par une nouvelle contre-proposition.
+  const isAdvertisementOffer = Boolean(offerId && advertisementId)
+  const acceptAllowed = (canAccept ?? _isOwner) && (!isAdvertisementOffer || role === 'driver')
   const qc = useQueryClient()
   const key = ['messages', 'thread', peerId, parcelId ?? null]
 
@@ -127,10 +130,8 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
   const acceptPrice = useMutation({
     mutationFn: async (payload: { amount: number; message?: string }) => {
       if (offerId && advertisementId) {
-        if (role === 'driver') {
-          return adsApi.acceptOffer(advertisementId, offerId)
-        }
-        return adsApi.clientAcceptOffer(advertisementId, offerId)
+        if (role !== 'driver') return Promise.reject(new Error("Cette offre doit être acceptée par le chauffeur."))
+        return adsApi.acceptOffer(advertisementId, offerId)
       }
       if (!bidId || !parcelId) return Promise.resolve()
       if (role === 'driver') {

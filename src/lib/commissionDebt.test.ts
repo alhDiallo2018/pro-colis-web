@@ -37,6 +37,11 @@ describe('commissionDebtMessage', () => {
   it('n\'expose jamais le code technique COMMISSION_DEBT_REQUIRED', () => {
     expect(commissionDebtMessage(1500)).not.toContain(COMMISSION_DEBT_CODE)
   })
+
+  it('indique que les acceptations restent possibles sous le seuil', () => {
+    expect(commissionDebtMessage(500, 1000)).toContain('Vous pouvez encore accepter des colis')
+    expect(commissionDebtMessage(500, 1000)).toMatch(/1.000 FCFA/)
+  })
 })
 
 describe('remainingDebtMessage', () => {
@@ -44,6 +49,10 @@ describe('remainingDebtMessage', () => {
     expect(remainingDebtMessage(400)).toBe(
       'Il reste 400 FCFA de dette de commission. Les nouvelles acceptations restent bloquées.',
     )
+  })
+
+  it('confirme la réactivation lorsque la dette repasse sous le seuil', () => {
+    expect(remainingDebtMessage(400, true)).toContain('de nouveau accepter')
   })
 })
 

@@ -67,8 +67,11 @@ export function useDriverFinancialState() {
   const wallet = useDriverWallet()
   const publicConfig = usePublicConfig()
   const commissionDebt = Number(wallet.data?.commissionDebt ?? 0)
+  const debtLimit = Number(wallet.data?.debtLimit ?? publicConfig.data?.debtLimit ?? 0)
+  // Le backend autorise une dette inférieure au seuil ; une limite à zéro
+  // désactive volontairement le blocage des nouvelles acceptations.
   const canAcceptNewDeliveries = wallet.data
-    ? (wallet.data.canAcceptNewDeliveries ?? commissionDebt <= 0)
+    ? (wallet.data.canAcceptNewDeliveries ?? (debtLimit <= 0 || commissionDebt < debtLimit))
     : false
   return {
     isLoading: wallet.isLoading,
@@ -76,7 +79,8 @@ export function useDriverFinancialState() {
     commissionDebt,
     canAcceptNewDeliveries,
     hasDebt: commissionDebt > 0,
-    debtLimit: Number(publicConfig.data?.debtLimit ?? 0),
+    isBlocked: !canAcceptNewDeliveries,
+    debtLimit,
   }
 }
 

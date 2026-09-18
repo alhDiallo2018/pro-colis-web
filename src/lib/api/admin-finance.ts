@@ -124,9 +124,7 @@ export async function rechargeWallet(userId: string, payload: {
   parcelId?: string
   origin?: string
 }): Promise<{ wallet: Wallet; transaction: WalletTransaction }> {
-  // Le contrôleur API actuel lit encore userId dans le corps malgré le paramètre de route.
-  // L'envoyer aux deux endroits garde le client compatible sans changer l'URL canonique.
-  const { data } = await api.post(`/super-admin/wallets/${userId}/recharge`, { userId, ...payload })
+  const { data } = await api.post(`/super-admin/wallets/${userId}/recharge`, payload)
   return { wallet: data.wallet, transaction: data.transaction }
 }
 
@@ -138,8 +136,7 @@ export async function debitWallet(userId: string, payload: {
   parcelId?: string
   origin?: string
 }): Promise<{ wallet: Wallet; transaction: WalletTransaction }> {
-  // Même compatibilité temporaire que pour la recharge (voir commentaire ci-dessus).
-  const { data } = await api.post(`/super-admin/wallets/${userId}/debit`, { userId, ...payload })
+  const { data } = await api.post(`/super-admin/wallets/${userId}/debit`, payload)
   return { wallet: data.wallet, transaction: data.transaction }
 }
 

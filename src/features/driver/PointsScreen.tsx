@@ -44,11 +44,23 @@ export function DriverPointsScreen() {
 
   // Montants de retrait issus de la configuration publique : aucune valeur en dur.
   const publicConfig = usePublicConfig()
+  const debtLimit = Number(wallet.data?.debtLimit ?? publicConfig.data?.debtLimit ?? 0)
+  const canAcceptNewDeliveries = wallet.data?.canAcceptNewDeliveries
+    ?? (debtLimit <= 0 || commissionDebt < debtLimit)
   const minWithdraw = Number(publicConfig.data?.withdrawal.minAmount ?? 0)
   const maxWithdraw = Number(publicConfig.data?.withdrawal.maxAmount ?? 0)
+  const maxPerDay = Number(publicConfig.data?.withdrawal.maxPerDay ?? 0)
   const belowMin = minWithdraw > 0 && availableBalance < minWithdraw
   const withdrawAmountValue = Number(withdrawAmount)
   const exceedsMax = maxWithdraw > 0 && withdrawAmountValue > maxWithdraw
+  const todayUtc = new Date().toISOString().slice(0, 10)
+  const withdrawnToday = withdrawalList
+    .filter((withdrawal) => {
+      const requestedAt = withdrawal.requestedAt ?? withdrawal.createdAt
+      return requestedAt?.slice(0, 10) === todayUtc && ['PENDING', 'PROCESSING', 'SUCCESS'].includes(withdrawal.status)
+    })
+    .reduce((sum, withdrawal) => sum + Number(withdrawal.amount || 0), 0)
+  const exceedsDailyMax = maxPerDay > 0 && withdrawnToday + withdrawAmountValue > maxPerDay
 
   const rechargeWallet = async () => {
     const amount = Number(walletAmount)
@@ -178,7 +190,9 @@ export function DriverPointsScreen() {
                   }}
                 >
                   <span className="material-symbols-rounded" style={{ fontSize: 16 }}>error_outline</span>
-                  Dette de commission : {formatFcfa(commissionDebt)} — nouvelles acceptations bloquées.
+                  Dette de commission : {formatFcfa(commissionDebt)} — {canAcceptNewDeliveries
+                    ? 'acceptations encore autorisées.'
+                    : 'nouvelles acceptations bloquées.'}
                   <Button
                     variant="amber"
                     size="sm"
@@ -431,7 +445,7 @@ export function DriverPointsScreen() {
               block
               icon="payments"
               loading={withdraw.isPending}
-              disabled={!Number(withdrawAmount) || Number(withdrawAmount) < minWithdraw || exceedsMax || Number(withdrawAmount) > availableBalance || hasActiveWithdrawal}
+              disabled={!Number.isInteger(withdrawAmountValue) || withdrawAmountValue < minWithdraw || exceedsMax || exceedsDailyMax || withdrawAmountValue > availableBalance || hasActiveWithdrawal}
               onClick={() => {
                 withdraw.mutate(
                   {
@@ -517,7 +531,7 @@ export function DriverPointsScreen() {
             {pendingBalance > 0 ? <> (dont {formatFcfa(pendingBalance)} en attente)</> : null}
             {minWithdraw > 0 ? <> . Minimum : {formatFcfa(minWithdraw)}</> : null}
             {maxWithdraw > 0 ? <> . Maximum : {formatFcfa(maxWithdraw)}</> : null}
-            . Traité sous 24-48h.
+            {maxPerDay > 0 ? <> . Disponible aujourd’hui : {formatFcfa(Math.max(0, maxPerDay - withdrawnToday))}</> : null}.
           </div>
         </div>
       </Dialog>

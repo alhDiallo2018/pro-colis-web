@@ -1,6 +1,6 @@
 import { api } from './client'
 
-export type PaydunyaPaymentType = 'parcel' | 'score' | 'wallet'
+export type PaydunyaPaymentType = 'parcel' | 'score' | 'wallet' | 'penalty_debt'
 
 export interface PaydunyaPaymentResult {
   token: string
@@ -17,9 +17,9 @@ export interface PaydunyaConfirmResult {
 
 export async function createPaydunyaPayment(
   type: PaydunyaPaymentType,
-  { parcelId, points, amount }: { parcelId?: string; points?: number; amount?: number }
+  { parcelId, points, amount, debtId }: { parcelId?: string; points?: number; amount?: number; debtId?: string }
 ): Promise<PaydunyaPaymentResult> {
-  const { data } = await api.post('/payments/paydunya/create', { type, parcelId, points, amount })
+  const { data } = await api.post('/payments/paydunya/create', { type, parcelId, points, amount, debtId })
   return data.data ?? data
 }
 

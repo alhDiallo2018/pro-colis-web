@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Button, Card, Dialog, EmptyState, StatusBadge, Stepper, Tag } from '@/ds'
+import { Button, Card, Dialog, EmptyState, Select, StatusBadge, Stepper, Tag, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
 import * as parcelsApi from '@/lib/api/parcels'
 import { buildSteps } from '@/features/client/parcelSteps'
 import { formatFcfa, formatWeight, formatDate, toStatusKey } from '@/lib/format'
-import { useDeleteGarageParcel } from './hooks'
+import { usePublicConfig } from '@/lib/usePublicConfig'
+import { useCancelGarageParcel } from './hooks'
 import type { Parcel } from '@/lib/api/types'
 
 export function GarageParcelDetailPage() {
@@ -14,16 +15,21 @@ export function GarageParcelDetailPage() {
   const [parcel, setParcel] = useState<Parcel | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const deleteMutation = useDeleteGarageParcel()
+  const [confirmCancel, setConfirmCancel] = useState(false)
+  const [cancellationReason, setCancellationReason] = useState('')
+  const cancelMutation = useCancelGarageParcel()
+  const publicConfig = usePublicConfig()
+  const cancellationReasons = publicConfig.data?.cancellation?.reasons ?? []
 
-  const handleDelete = async () => {
-    if (!parcelId) return
+  const handleCancel = async () => {
+    if (!parcelId || !cancellationReason) return
     try {
-      await deleteMutation.mutateAsync(parcelId)
+      // L'annulation passe par le moteur métier du backend afin d'appliquer les
+      // remboursements et pénalités associés au motif sélectionné.
+      await cancelMutation.mutateAsync({ parcelId, reason: cancellationReason })
       navigate('/garage/colis')
     } catch {
-      setConfirmDelete(false)
+      // L'erreur structurée de React Query reste affichée dans la boîte de dialogue.
     }
   }
 
@@ -64,15 +70,17 @@ export function GarageParcelDetailPage() {
         <Button variant="ghost" size="sm" icon="arrow_back" onClick={() => navigate('/garage/colis')}>
           Retour
         </Button>
-        <Button
-          variant="danger"
-          size="sm"
-          icon="delete"
-          style={{ marginLeft: 'auto' }}
-          onClick={() => setConfirmDelete(true)}
-        >
-          Supprimer
-        </Button>
+        {!['delivered', 'cancelled'].includes(parcel.status) && (
+          <Button
+            variant="danger"
+            size="sm"
+            icon="cancel"
+            style={{ marginLeft: 'auto' }}
+            onClick={() => setConfirmCancel(true)}
+          >
+            Annuler le colis
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -115,21 +123,36 @@ export function GarageParcelDetailPage() {
       </Panel>
 
       <Dialog
-        open={confirmDelete}
-        title="Supprimer le colis"
-        icon="delete_forever"
+        open={confirmCancel}
+        title="Annuler le colis"
+        icon="cancel"
         iconTone="danger"
-        onClose={() => setConfirmDelete(false)}
+        onClose={() => setConfirmCancel(false)}
       >
         <p style={{ margin: 0 }}>
-          Voulez-vous vraiment supprimer le colis <strong>{parcel.trackingNumber}</strong> de votre zone ? Cette action est définitive.
+          Le colis <strong>{parcel.trackingNumber}</strong> sera annulé. Les conséquences financières sont calculées par le serveur selon le motif choisi.
         </p>
+        <Select
+          label="Motif d'annulation"
+          placeholder={publicConfig.isLoading ? 'Chargement des motifs…' : 'Choisir un motif'}
+          options={cancellationReasons}
+          value={cancellationReason}
+          onChange={(event) => setCancellationReason(event.target.value)}
+          disabled={publicConfig.isLoading || cancellationReasons.length === 0}
+          style={{ marginTop: 18 }}
+        />
+        {!publicConfig.isLoading && cancellationReasons.length === 0 && (
+          <Toast tone="error" message="Aucun motif d'annulation n'est configuré. Contactez un administrateur." style={{ marginTop: 12 }} />
+        )}
+        {cancelMutation.error && (
+          <Toast tone="error" message={cancelMutation.error.message} style={{ marginTop: 12 }} />
+        )}
         <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
-          <Button variant="secondary" onClick={() => setConfirmDelete(false)} block>
-            Annuler
+          <Button variant="secondary" onClick={() => setConfirmCancel(false)} block>
+            Retour
           </Button>
-          <Button variant="danger" onClick={handleDelete} loading={deleteMutation.isPending} disabled={deleteMutation.isPending} block>
-            Supprimer
+          <Button variant="danger" onClick={handleCancel} loading={cancelMutation.isPending} disabled={cancelMutation.isPending || !cancellationReason} block>
+            Confirmer l'annulation
           </Button>
         </div>
       </Dialog>

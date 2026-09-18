@@ -4,6 +4,7 @@ import { LocationInput, type PlaceDetails, type PlaceResult } from './LocationIn
 import { MapPicker } from './MapPicker'
 import { resolveZone, type ResolvedZone } from '@/lib/api/zones'
 import { ApiError } from '@/lib/api/client'
+import { isMeaningfulLocationLabel } from '@/lib/locationLabel'
 import type { Zone } from '@/lib/api/types'
 
 export interface ZonePickerDialogProps {
@@ -67,18 +68,23 @@ export function ZonePickerDialog({ open, initialQuery = '', onClose, onResolved 
     })
     setError(null)
     const suggested = fallbackName || details?.city || details?.formattedAddress?.split(',')[0]
-    if (!nameTouched && suggested) setName(suggested)
+    if (!nameTouched && isMeaningfulLocationLabel(suggested)) setName(suggested!.trim())
   }
 
   const handleSuggestion = (_value: string, place?: PlaceResult) => {
     // Le nom est proposé ici ; les coordonnées suivent via `onCoordinates`.
-    if (place && !nameTouched) setName(place.mainText || place.description)
+    if (place && !nameTouched) {
+      const suggested = place.mainText || place.description
+      setName(isMeaningfulLocationLabel(suggested) ? suggested : '')
+    }
   }
 
   const submit = async () => {
     if (!picked) return setError('Choisissez un lieu sur la carte ou dans la liste.')
     const label = name.trim()
-    if (label.length < 2) return setError('Donnez un nom à cette zone (2 caractères minimum).')
+    if (label.length < 2 || !isMeaningfulLocationLabel(label)) {
+      return setError('Donnez un vrai nom de localité (par exemple « Ouakam »), pas « Position actuelle » ni des coordonnées.')
+    }
 
     setBusy(true)
     setError(null)

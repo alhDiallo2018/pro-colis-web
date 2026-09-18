@@ -28,6 +28,13 @@ export interface PublicConfig {
     email: string
     technicalEmail: string
     technicalPhone: string
+    responseTime: string
+    availability: string
+  }
+  /** Contenu du centre d'aide administrable depuis le backend. */
+  help: {
+    topics: { icon: string; title: string }[]
+    faqs: { question: string; answer: string }[]
   }
   /** Motifs d'annulation (value/label uniquement). Les règles financières ne
    *  sont jamais exposées ici : la responsabilité reste calculée côté serveur. */

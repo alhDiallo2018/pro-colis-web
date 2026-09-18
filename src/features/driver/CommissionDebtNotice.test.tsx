@@ -30,6 +30,7 @@ describe('CommissionDebtNotice', () => {
       commissionDebt: 0,
       canAcceptNewDeliveries: false,
       hasDebt: false,
+      isBlocked: true,
       debtLimit: 0,
     } as ReturnType<typeof useDriverFinancialState>)
     renderNotice()
@@ -44,12 +45,13 @@ describe('CommissionDebtNotice', () => {
       commissionDebt: 500,
       canAcceptNewDeliveries: false,
       hasDebt: true,
-      debtLimit: 0,
+      isBlocked: true,
+      debtLimit: 500,
     } as ReturnType<typeof useDriverFinancialState>)
     renderNotice()
     expect(screen.getByText('Dette de commission')).toBeInTheDocument()
     expect(screen.getByText('500 FCFA')).toBeInTheDocument()
-    expect(screen.getByText(/régler cette dette avant de pouvoir accepter/)).toBeInTheDocument()
+    expect(screen.getByText(/seuil de blocage est atteint/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Régler la dette/ })).toBeInTheDocument()
   })
 
@@ -60,6 +62,7 @@ describe('CommissionDebtNotice', () => {
       commissionDebt: 400,
       canAcceptNewDeliveries: false,
       hasDebt: true,
+      isBlocked: true,
       debtLimit: 0,
     } as ReturnType<typeof useDriverFinancialState>)
     renderNotice()
@@ -73,10 +76,25 @@ describe('CommissionDebtNotice', () => {
       commissionDebt: 0,
       canAcceptNewDeliveries: true,
       hasDebt: false,
+      isBlocked: false,
       debtLimit: 0,
     } as ReturnType<typeof useDriverFinancialState>)
     renderNotice({ showClearState: true })
     expect(screen.getByText(/Vous pouvez accepter de nouveaux colis/)).toBeInTheDocument()
     expect(screen.queryByText(/Dette de commission/)).not.toBeInTheDocument()
+  })
+
+  it('n\'annonce pas de blocage lorsque la dette reste sous le seuil', () => {
+    mockFin.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      commissionDebt: 400,
+      canAcceptNewDeliveries: true,
+      hasDebt: true,
+      isBlocked: false,
+      debtLimit: 1000,
+    } as ReturnType<typeof useDriverFinancialState>)
+    renderNotice()
+    expect(screen.getByText(/continuer à accepter des colis/)).toBeInTheDocument()
   })
 })

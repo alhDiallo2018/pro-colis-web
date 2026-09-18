@@ -64,7 +64,9 @@ export interface DriverWallet {
   totalRefunded?: number
   /** Dette de commission non réglée (FCFA). `0` = aucune dette. */
   commissionDebt?: number
-  /** État dérivé côté API : `false` tant qu'une dette de commission subsiste. */
+  /** Seuil positif à partir duquel les nouvelles acceptations sont bloquées. */
+  debtLimit?: number
+  /** État métier calculé côté API à partir de la dette et du seuil configuré. */
   canAcceptNewDeliveries?: boolean
   status: string
 }

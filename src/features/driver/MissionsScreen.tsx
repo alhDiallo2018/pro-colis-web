@@ -149,15 +149,15 @@ export function MissionsScreen() {
                         client : sinon le chauffeur validerait sa propre offre
                         (l'API renvoie 409). */}
                     {(activeBid.canDriverAccept ?? activeBid.lastOfferBy === 'client') ? (
-                      fin.hasDebt || !fin.canAcceptNewDeliveries ? (
+                      !fin.canAcceptNewDeliveries ? (
                         <Button
                           size="sm"
                           icon="lock"
                           variant="secondary"
                           disabled
-                          title={fin.hasDebt ? commissionDebtMessage(fin.commissionDebt) : 'Chargement…'}
+                          title={fin.hasDebt ? commissionDebtMessage(fin.commissionDebt, fin.debtLimit) : fin.isError ? 'État financier indisponible' : 'Chargement…'}
                         >
-                          {fin.hasDebt ? 'Dette à régler' : 'Accepter'}
+                          {fin.isLoading ? 'Chargement…' : fin.isError ? 'Indisponible' : 'Dette à régler'}
                         </Button>
                       ) : (
                         <Button
@@ -243,8 +243,8 @@ export function MissionsScreen() {
             parcelId={negotiateTarget.parcel.id}
             bidId={negotiateTarget.bidId}
             canAccept={negotiateTarget.canAccept}
-            acceptBlocked={fin.hasDebt || !fin.canAcceptNewDeliveries}
-            acceptBlockedLabel={fin.hasDebt ? 'Dette à régler' : 'Chargement…'}
+            acceptBlocked={!fin.canAcceptNewDeliveries}
+            acceptBlockedLabel={fin.isLoading ? 'Chargement…' : fin.isError ? 'Indisponible' : 'Dette à régler'}
             parcelInfo={{
               trackingNumber: negotiateTarget.parcel.trackingNumber,
               departureCity: negotiateTarget.parcel.departureCity,

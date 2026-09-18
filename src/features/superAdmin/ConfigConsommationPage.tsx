@@ -433,8 +433,17 @@ const CONFIG_SCHEMA: ConfigSection[] = [
       { key: 'support.email', label: 'Email commercial', type: 'text', defaultValue: '' },
       { key: 'support.technicalPhone', label: 'Téléphone technique', type: 'text', defaultValue: '' },
       { key: 'support.technicalEmail', label: 'Email technique', type: 'text', defaultValue: '' },
-      { key: 'support.responseTime', label: 'Délai de réponse (ex: 24h)', type: 'text', defaultValue: '24h' },
-      { key: 'support.availability', label: 'Disponibilité (ex: 7j/7)', type: 'text', defaultValue: '7j/7' },
+      { key: 'support.responseTime', label: 'Délai de réponse (ex: 24h)', type: 'text', defaultValue: '' },
+      { key: 'support.availability', label: 'Disponibilité (ex: 7j/7)', type: 'text', defaultValue: '' },
+    ],
+  },
+  {
+    title: 'Centre d’aide',
+    // Ces deux tableaux sont servis tels quels par `/public/config` : les
+    // modifier ici met à jour le centre d'aide sans redéployer le frontend.
+    keys: [
+      { key: 'help.topics', label: 'Catégories d’aide (JSON : icon, title)', type: 'json', defaultValue: '' },
+      { key: 'help.faqs', label: 'Questions fréquentes (JSON : question, answer)', type: 'json', defaultValue: '' },
     ],
   },
   {

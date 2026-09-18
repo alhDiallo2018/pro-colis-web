@@ -20,6 +20,7 @@ function finState(debt: number, canAccept: boolean) {
     commissionDebt: debt,
     canAcceptNewDeliveries: canAccept,
     hasDebt: debt > 0,
+    isBlocked: !canAccept,
     debtLimit: 0,
   } as ReturnType<typeof useDriverFinancialState>
 }
@@ -80,7 +81,7 @@ describe('PayDebtDialog — règlement de la dette', () => {
       mutate,
       isPending: false,
       error: null,
-      data: { debtRepaid: 200, remainingDebt: 300, commissionDebt: 300, balance: 800, canAcceptNewDeliveries: false },
+      data: { debtRepaid: 200, remainingDebt: 300, commissionDebt: 300, balance: 800, debtLimit: 100, canAcceptNewDeliveries: false },
     } as unknown as ReturnType<typeof usePayWalletDebt>)
     renderDialog()
     expect(screen.getByText(/Il reste 300 FCFA de dette de commission/)).toBeInTheDocument()
@@ -91,7 +92,7 @@ describe('PayDebtDialog — règlement de la dette', () => {
       mutate: vi.fn(),
       isPending: false,
       error: null,
-      data: { debtRepaid: 500, remainingDebt: 0, commissionDebt: 0, balance: 500, canAcceptNewDeliveries: true },
+      data: { debtRepaid: 500, remainingDebt: 0, commissionDebt: 0, balance: 500, debtLimit: 100, canAcceptNewDeliveries: true },
     } as unknown as ReturnType<typeof usePayWalletDebt>)
     renderDialog()
     expect(screen.getByText(/Dette entièrement réglée/)).toBeInTheDocument()

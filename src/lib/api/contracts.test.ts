@@ -4,16 +4,20 @@ import { fetchActiveBroadcasts } from './broadcasts'
 import { listMine } from './parcels'
 import { driverDetail, getScore } from './admin-reputation'
 import { rechargeWallet } from './admin-finance'
+import { garageAssignDriver, garageCancelParcel } from './roles'
+import { createPaydunyaPayment } from './paydunya'
 
 vi.mock('./client', () => ({
   api: {
     get: vi.fn(),
     post: vi.fn(),
+    put: vi.fn(),
   },
 }))
 
 const mockedGet = api.get as Mock
 const mockedPost = api.post as Mock
+const mockedPut = api.put as Mock
 
 describe('contrats API critiques', () => {
   beforeEach(() => {
@@ -82,7 +86,7 @@ describe('contrats API critiques', () => {
     await expect(driverDetail('u-1')).resolves.toEqual(detail)
   })
 
-  it('envoie userId dans le corps de recharge exigé par le contrôleur actuel', async () => {
+  it('utilise le userId de la route canonique pour une recharge', async () => {
     mockedPost.mockResolvedValue({
       data: {
         wallet: { id: 'u-1', balance: 5000 },
@@ -92,9 +96,41 @@ describe('contrats API critiques', () => {
 
     await rechargeWallet('u-1', { amount: 5000, description: 'Ajustement' })
     expect(mockedPost).toHaveBeenCalledWith('/super-admin/wallets/u-1/recharge', {
-      userId: 'u-1',
       amount: 5000,
       description: 'Ajustement',
+    })
+  })
+
+  it('assigne un chauffeur via la transition de statut du garage', async () => {
+    mockedPut.mockResolvedValue({ data: { parcel: { id: 'p-1', status: 'confirmed' } } })
+
+    await garageAssignDriver('p-1', 'd-1')
+    expect(mockedPut).toHaveBeenCalledWith('/garage-admin/parcels/p-1/status', {
+      status: 'confirmed',
+      driverId: 'd-1',
+    })
+  })
+
+  it('annule un colis garage avec un motif métier', async () => {
+    mockedPut.mockResolvedValue({ data: { parcel: { id: 'p-1', status: 'cancelled' } } })
+
+    await garageCancelParcel('p-1', 'client_change_of_mind')
+    expect(mockedPut).toHaveBeenCalledWith('/garage-admin/parcels/p-1/status', {
+      status: 'cancelled',
+      reason: 'client_change_of_mind',
+    })
+  })
+
+  it('transmet l’identifiant de pénalité au paiement PayDunya', async () => {
+    mockedPost.mockResolvedValue({ data: { token: 'tok-1', paymentUrl: 'https://pay.test/tok-1' } })
+
+    await createPaydunyaPayment('penalty_debt', { debtId: 'debt-1', amount: 1500 })
+    expect(mockedPost).toHaveBeenCalledWith('/payments/paydunya/create', {
+      type: 'penalty_debt',
+      parcelId: undefined,
+      points: undefined,
+      amount: 1500,
+      debtId: 'debt-1',
     })
   })
 })

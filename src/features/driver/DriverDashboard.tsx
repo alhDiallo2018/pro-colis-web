@@ -115,7 +115,7 @@ export function DriverDashboard() {
         <StatBox icon="task_alt" tone="neutral" value={stats.data?.completedDeliveries ?? delivered} label="Colis livrés" />
         <StatBox icon="star" tone="amber" value={stats.data?.rating ? stats.data.rating.toFixed(1) : '—'} label="Note moyenne" />
         <StatBox icon="account_balance_wallet" tone="teal" value={wallet.data ? formatFcfa(wallet.data.balance) : '—'} label="Wallet" />
-        <StatBox icon="error_outline" tone={fin.hasDebt ? 'red' : 'green'} value={fin.isLoading ? '—' : formatFcfa(fin.commissionDebt)} label="Dette de commission" />
+        <StatBox icon="error_outline" tone={fin.isBlocked ? 'red' : fin.hasDebt ? 'amber' : 'green'} value={fin.isLoading ? '—' : formatFcfa(fin.commissionDebt)} label="Dette de commission" />
         <StatBox icon="stars" tone="amber" value={balance.data ?? stats.data?.scoreBalance ?? '—'} label="Points" />
       </div>
 
@@ -241,8 +241,8 @@ export function DriverDashboard() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Dette de commission : bloquante pour les nouvelles acceptations,
-              visible sans transformer le dashboard en écran d'erreur. */}
+          {/* La dette et son seuil de blocage restent visibles sans transformer
+              le dashboard en écran d'erreur. */}
           <CommissionDebtNotice showClearState={!fin.isLoading} />
 
           {/* Points card */}

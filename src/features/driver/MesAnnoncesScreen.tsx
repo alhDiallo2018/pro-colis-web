@@ -117,9 +117,9 @@ export function MesAnnoncesScreen() {
                       onReject={(id) => rejectOffer.mutate({ adId: ad.id, offerId: id })}
                       accepting={acceptOffer.isPending}
                       rejecting={rejectOffer.isPending}
-                      acceptBlocked={fin.hasDebt || !fin.canAcceptNewDeliveries}
-                      blockedLabel={fin.hasDebt ? 'Dette à régler' : 'Chargement…'}
-                      blockedTitle={fin.hasDebt ? commissionDebtMessage(fin.commissionDebt) : 'Chargement…'}
+                      acceptBlocked={!fin.canAcceptNewDeliveries}
+                      blockedLabel={fin.isLoading ? 'Chargement…' : fin.isError ? 'Indisponible' : 'Dette à régler'}
+                      blockedTitle={fin.hasDebt ? commissionDebtMessage(fin.commissionDebt, fin.debtLimit) : 'État financier indisponible'}
                       onChat={() => setChatTarget({ peerId: o.clientId, peerName: o.client?.fullName ?? 'Client', ad, parcelId: o.parcelId, offer: o })}
                     />
                   ))}
@@ -156,8 +156,8 @@ export function MesAnnoncesScreen() {
               advertisementId={chatTarget.ad.id}
               offerId={chatTarget.offer?.id}
               isOwner
-              acceptBlocked={fin.hasDebt || !fin.canAcceptNewDeliveries}
-              acceptBlockedLabel={fin.hasDebt ? 'Dette à régler' : 'Chargement…'}
+              acceptBlocked={!fin.canAcceptNewDeliveries}
+              acceptBlockedLabel={fin.isLoading ? 'Chargement…' : fin.isError ? 'Indisponible' : 'Dette à régler'}
               parcelInfo={{
                 trackingNumber: chatTarget.offer?.parcel?.trackingNumber,
                 departureCity: chatTarget.ad.departureCity,

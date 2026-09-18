@@ -107,12 +107,6 @@ export async function acceptOffer(advertisementId: string, offerId: string): Pro
   return data
 }
 
-/** Client : accepter une contre-proposition du chauffeur sur son offre. */
-export async function clientAcceptOffer(advertisementId: string, offerId: string): Promise<{ success: boolean; finalized?: boolean }> {
-  const { data } = await api.post(`/advertisements/${advertisementId}/offers/${offerId}/client-accept`)
-  return data
-}
-
 /** Chauffeur : refuser une offre sur son annonce. */
 export async function rejectOffer(advertisementId: string, offerId: string): Promise<void> {
   await api.post(`/advertisements/${advertisementId}/offers/${offerId}/reject`)
@@ -126,19 +120,4 @@ export async function negotiateOffer(
 ): Promise<AdvertisementOffer> {
   const { data } = await api.post(`/advertisements/${advertisementId}/offers/${offerId}/negotiate`, payload)
   return data.offer ?? data.data
-}
-
-/** Récupérer l'historique des négociations pour une offre d'annonce. */
-export async function getOfferNegotiations(advertisementId: string, offerId: string): Promise<Array<{
-  id: string
-  authorId: string
-  authorRole: string
-  authorName?: string
-  price: number
-  message?: string
-  type: string
-  createdAt: string
-}>> {
-  const { data } = await api.get(`/advertisements/${advertisementId}/offers/${offerId}/negotiations`)
-  return data.negotiations ?? []
 }

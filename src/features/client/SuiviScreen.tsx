@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Button, Card, EmptyState, Icon, Input, Stepper, StatusBadge, Tag } from '@/ds'
+import { Avatar, Badge, Button, Card, EmptyState, Icon, Input, Stepper, StatusBadge, Tag } from '@/ds'
 import { QrCode } from '@/components/QrCode'
 import { useTrackParcel } from './hooks'
 import { buildSteps } from './parcelSteps'
@@ -8,7 +8,7 @@ import { getDriverLocationState, type DriverLocationState } from './tracking'
 import { TrackingMap, type MapPoint } from './TrackingMap'
 import { formatFcfa, formatTimeAgo, formatWeight, toStatusKey } from '@/lib/format'
 import { ApiError } from '@/lib/api/client'
-import type { DriverLocation, ParcelZoneRef } from '@/lib/api/types'
+import type { DriverLocation, Parcel, ParcelZoneRef } from '@/lib/api/types'
 
 export function SuiviScreen() {
   const { trackingNumber } = useParams<{ trackingNumber: string }>()
@@ -85,6 +85,7 @@ export function SuiviScreen() {
 
           <DriverPositionCard
             state={getDriverLocationState(parcel)}
+            driver={parcel.driver}
             driverPoint={driverPoint(parcel.driverLocation)}
             departurePoint={coordPoint(parcel.departureLatitude, parcel.departureLongitude) ?? zonePoint(parcel.departureZone)}
             destinationPoint={coordPoint(parcel.arrivalLatitude, parcel.arrivalLongitude) ?? zonePoint(parcel.arrivalZone)}
@@ -139,11 +140,13 @@ function driverPoint(location: DriverLocation | null | undefined): MapPoint | nu
 
 function DriverPositionCard({
   state,
+  driver,
   driverPoint,
   departurePoint,
   destinationPoint,
 }: {
   state: DriverLocationState
+  driver: Parcel['driver']
   driverPoint: MapPoint | null
   departurePoint: MapPoint | null
   destinationPoint: MapPoint | null
@@ -155,6 +158,21 @@ function DriverPositionCard({
       <h3 style={{ margin: '0 0 12px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
         Position du chauffeur
       </h3>
+
+      {driver && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <Avatar name={driver.name ?? driver.fullName ?? 'Chauffeur'} src={driver.profilePhoto ?? undefined} size="sm" />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--text-strong)' }}>
+              {driver.name ?? driver.fullName ?? 'Chauffeur'}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              {[driver.vehicleType, Number(driver.rating ?? 0) > 0 ? `${Number(driver.rating).toFixed(1)} ★` : ''].filter(Boolean).join(' · ')}
+            </div>
+          </div>
+          {driver.isVerified && <Badge tone="green" icon="verified">Vérifié</Badge>}
+        </div>
+      )}
 
       {state.kind === 'finished' && (
         <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>

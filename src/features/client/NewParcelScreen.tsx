@@ -7,6 +7,8 @@ import { Avatar, Button, Card, Icon, IconButton, Input, Select, Switch, Textarea
 import { useCreateParcel, useDrivers, usePublicDriver, useZones, useZoneDrivers } from './hooks'
 import { driverStatusColor, driverStatusKey, driverStatusLabel, isDriverSelectable, DRIVER_AVATAR_STATUS } from '@/lib/driverStatus'
 import { ApiError } from '@/lib/api/client'
+import { createPaydunyaPayment } from '@/lib/api/paydunya'
+import { getClientDebtBlock } from '@/lib/clientDebt'
 import { uploadParcelAudio, uploadParcelPhoto, uploadParcelVideo } from '@/lib/api/uploads'
 import { useAuthStore } from '@/store/auth'
 import { formatFcfa, formatWeight } from '@/lib/format'
@@ -120,6 +122,8 @@ export function NewParcelScreen() {
   // create a duplicate — it just takes the user to the existing parcel.
   const [createdId, setCreatedId] = useState<string | null>(null)
   const [mediaError, setMediaError] = useState<string | null>(null)
+  const [debtPaymentLoading, setDebtPaymentLoading] = useState(false)
+  const [debtPaymentError, setDebtPaymentError] = useState<string | null>(null)
 
   const {
     register,
@@ -365,8 +369,28 @@ export function NewParcelScreen() {
     else doCreate()
   }
 
-  const apiError = createParcel.error instanceof ApiError ? createParcel.error.message : null
+  const debtBlock = getClientDebtBlock(createParcel.error)
+  const payableDebt = debtBlock?.debts.find((debt) => debt.remaining > 0)
+  const apiError = !debtBlock && createParcel.error instanceof ApiError ? createParcel.error.message : null
   const submitting = createParcel.isPending || uploading
+
+  const payOldestPenalty = async () => {
+    if (!payableDebt || debtPaymentLoading) return
+    setDebtPaymentLoading(true)
+    setDebtPaymentError(null)
+    try {
+      // La dette est réglée directement par PayDunya : aucun wallet client
+      // n'est impliqué et le brouillon reste disponible après le retour.
+      const result = await createPaydunyaPayment('penalty_debt', {
+        debtId: payableDebt.id,
+        amount: payableDebt.remaining,
+      })
+      window.location.href = result.paymentUrl
+    } catch (error) {
+      setDebtPaymentError(error instanceof ApiError ? error.message : 'Impossible de démarrer le paiement de la pénalité.')
+      setDebtPaymentLoading(false)
+    }
+  }
 
   return (
     <div style={{ width: '100%', maxWidth: 620, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -597,6 +621,44 @@ export function NewParcelScreen() {
                 )}
               </RecapSection>
 
+              {debtBlock && (
+                <div
+                  style={{
+                    padding: 16,
+                    border: '1px solid var(--amber-200)',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'var(--amber-50)',
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <Icon name="account_balance" size={22} style={{ color: 'var(--amber-700)' }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--text-strong)' }}>
+                        Pénalité d'annulation à régler
+                      </div>
+                      <p style={{ margin: '5px 0 0', fontSize: 13, lineHeight: 1.5, color: 'var(--amber-800)' }}>
+                        Vos pénalités impayées atteignent {formatFcfa(debtBlock.debtAmount)} pour un seuil de {formatFcfa(debtBlock.debtLimit)}.
+                        Réglez une dette puis publiez à nouveau ce colis.
+                      </p>
+                      {payableDebt && (
+                        <Button
+                          type="button"
+                          variant="amber"
+                          size="sm"
+                          icon="payments"
+                          loading={debtPaymentLoading}
+                          disabled={debtPaymentLoading}
+                          onClick={payOldestPenalty}
+                          style={{ marginTop: 12 }}
+                        >
+                          Régler {formatFcfa(payableDebt.remaining)}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {debtPaymentError && <Toast tone="error" message={debtPaymentError} />}
               {apiError && <Toast tone="error" message={apiError} />}
               {mediaError && <Toast tone="error" message={mediaError} />}
             </StepBody>
@@ -619,7 +681,7 @@ export function NewParcelScreen() {
               Continuer
             </Button>
           ) : (
-            <Button type="submit" block size="lg" icon="campaign" loading={submitting} style={{ marginLeft: 'auto' }}>
+            <Button type="submit" block size="lg" icon="campaign" loading={submitting} disabled={Boolean(debtBlock)} style={{ marginLeft: 'auto' }}>
               {uploading ? 'Envoi des fichiers…' : 'Publier l’annonce'}
             </Button>
           )}
@@ -954,6 +1016,11 @@ function DriverPicker({
                     <Avatar name={driver.fullName} src={driver.profilePhoto ?? undefined} size="md" status={DRIVER_AVATAR_STATUS[status]} />
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontWeight: 700, color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{driver.fullName}</div>
+                      {driver.isVerified && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 700, color: 'var(--teal-700)' }}>
+                          <Icon name="verified" size={13} /> Identité vérifiée
+                        </span>
+                      )}
                       <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {[driver.city, driver.region].filter(Boolean).join(', ') || 'Indépendant'}
                       </div>

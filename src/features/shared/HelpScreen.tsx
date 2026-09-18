@@ -1,80 +1,18 @@
 import { useState } from 'react'
-import { Card } from '@/ds'
+import { Card, Icon } from '@/ds'
 import { MarketingHeader } from '@/features/marketing/MarketingHeader'
-import { useSupportContact } from '@/lib/usePublicConfig'
+import { usePublicConfig, useSupportContact } from '@/lib/usePublicConfig'
 
-interface FaqItem {
-    question: string
-    answer: string
-}
+interface FaqItem { question: string; answer: string }
 
-const FAQS: FaqItem[] = [
-    {
-        question: 'Comment fonctionne le libre service ?',
-        answer: 'Vous publiez votre colis, des chauffeurs vérifiés font des offres, vous acceptez celle qui vous convient.',
-    },
-    {
-        question: 'Que se passe-t-il à la livraison ?',
-        answer: 'Le destinataire communique un code PIN au chauffeur pour confirmer la remise du colis.',
-    },
-    {
-        question: 'Comment sont calculés les points ?',
-        answer: 'Chaque colis livré crédite des points utilisables en réductions sur vos prochains envois.',
-    },
-    {
-        question: 'Comment payer mes envois ?',
-        answer: 'Vous pouvez payer par carte, Orange Money, Wave, Free Money ou en espèces. Le paiement est débité une fois le colis livré.',
-    },
-    {
-        question: 'Comment suivre mon colis ?',
-        answer: 'Connectez-vous à votre compte et allez dans "Suivi". Entrez votre numéro de suivi pour voir les statuts en temps réel.',
-    },
-    {
-        question: 'Puis-je annuler un colis ?',
-        answer: 'Oui, vous pouvez annuler un colis tant qu\'il n\'a pas encore été confirmé par un chauffeur. Au-delà, contactez notre support.',
-    },
-    {
-        question: 'Comment devenir chauffeur ?',
-        answer: 'Créez un compte en sélectionnant le rôle "Conduire", remplissez votre profil, ajoutez vos documents et votre véhicule. Notre équipe vérifiera vos informations.',
-    },
-    {
-        question: 'Quels documents sont nécessaires pour les chauffeurs ?',
-        answer: 'Permis de conduire, carte grise du véhicule, assurance, et pièce d\'identité (CNI ou passeport).',
-    },
-    {
-        question: 'Comment sont protégés mes paiements ?',
-        answer: 'Tous les paiements sont sécurisés via PayDunya. Les fonds sont conservés sur un compte séquestre jusqu\'à la confirmation de livraison.',
-    },
-    {
-        question: 'Que faire en cas de colis endommagé ?',
-        answer: 'Contactez notre support dans les 48 heures avec des photos du colis et votre numéro de suivi. Nous traiterons votre réclamation rapidement.',
-    },
-]
+const topicColors = ['var(--teal-50)', 'var(--blue-50)', 'var(--purple-50)', 'var(--green-50)', 'var(--red-50)', 'var(--amber-50)']
 
-const TOPICS = [
-    { icon: '📦', title: 'Créer et envoyer un colis' },
-    { icon: '💰', title: 'Libre service et offres' },
-    { icon: '📍', title: 'Suivi et livraison' },
-    { icon: '💳', title: 'Points et paiements' },
-    { icon: '🛡️', title: 'Sécurité et litiges' },
-    { icon: '👤', title: 'Mon compte' },
-]
-
-const topicColors: Record<string, string> = {
-    'Créer et envoyer un colis': 'var(--teal-50)',
-    'Libre service et offres': 'var(--blue-50)',
-    'Suivi et livraison': 'var(--purple-50)',
-    'Points et paiements': 'var(--green-50)',
-    'Sécurité et litiges': 'var(--red-50)',
-    'Mon compte': 'var(--amber-50)',
-}
-
-function FaqTile({ item, index }: { item: FaqItem; index: number }) {
+function FaqTile({ item, isLast }: { item: FaqItem; isLast: boolean }) {
     const [open, setOpen] = useState(false)
     return (
         <div
             style={{
-                borderBottom: index < FAQS.length - 1 ? '1px solid var(--border-subtle)' : 'none'
+                borderBottom: isLast ? 'none' : '1px solid var(--border-subtle)'
             }}
         >
             <button
@@ -140,9 +78,12 @@ function FaqTile({ item, index }: { item: FaqItem; index: number }) {
 
 export function HelpScreen() {
     const support = useSupportContact()
+    const publicConfig = usePublicConfig()
     const [query, setQuery] = useState('')
+    const topics = publicConfig.data?.help?.topics ?? []
+    const faqs = publicConfig.data?.help?.faqs ?? []
 
-    const visibleFaqs = FAQS.filter(
+    const visibleFaqs = faqs.filter(
         (f) =>
             f.question.toLowerCase().includes(query.toLowerCase()) ||
             f.answer.toLowerCase().includes(query.toLowerCase()),
@@ -250,7 +191,7 @@ export function HelpScreen() {
                 gap: 12,
                 marginBottom: 32
             }}>
-                {TOPICS.map((t, index) => (
+                {topics.map((t, index) => (
                     <div key={`topic-${index}`} style={{ cursor: 'pointer' }}>
                         <Card padding="md">
                             <div
@@ -258,7 +199,7 @@ export function HelpScreen() {
                                     width: 44,
                                     height: 44,
                                     borderRadius: 'var(--radius-sm)',
-                                    background: topicColors[t.title] || 'var(--teal-50)',
+                                    background: topicColors[index % topicColors.length],
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -266,7 +207,9 @@ export function HelpScreen() {
                                     fontSize: 22,
                                 }}
                             >
-                                {t.icon}
+                                {/^[a-z][a-z0-9_]*$/.test(t.icon)
+                                    ? <Icon name={t.icon} size={22} />
+                                    : t.icon}
                             </div>
                             <div style={{
                                 fontFamily: 'var(--font-display)',
@@ -308,15 +251,19 @@ export function HelpScreen() {
                         fontSize: 14,
                     }}>
                         <span style={{ fontSize: 40, display: 'block', marginBottom: 12 }}>🔍</span>
-                        Aucun résultat pour "<strong>{query}</strong>"
+                        {publicConfig.isLoading
+                            ? 'Chargement du contenu d’aide…'
+                            : query
+                              ? <>Aucun résultat pour « <strong>{query}</strong> »</>
+                              : 'Le contenu d’aide n’est pas encore configuré.'}
                         <br />
-                        <span style={{ fontSize: 13 }}>Essayez d'autres mots-clés ou contactez notre support.</span>
+                        <span style={{ fontSize: 13 }}>{query ? 'Essayez d’autres mots-clés ou contactez notre support.' : 'Vous pouvez contacter directement notre support.'}</span>
                     </div>
                 ) : (
                     <>
                         {visibleFaqs.map((f, index) => (
                             <div key={`faq-${index}`}>
-                                <FaqTile item={f} index={index} />
+                                <FaqTile item={f} isLast={index === visibleFaqs.length - 1} />
                             </div>
                         ))}
                     </>
@@ -369,7 +316,7 @@ export function HelpScreen() {
                             color: 'var(--text-muted)',
                             marginTop: 2,
                         }}>
-                            Notre équipe est disponible pour vous assister
+                            {[support.availability, support.responseTime && `réponse ${support.responseTime}`].filter(Boolean).join(' · ') || 'Notre équipe est disponible pour vous assister'}
                         </div>
                     </div>
                     <div style={{
@@ -396,7 +343,7 @@ export function HelpScreen() {
                             <span className="material-symbols-rounded" style={{ fontSize: 18 }}>chat</span>
                             Chat support
                         </a>
-                        <a
+                        {support.email && <a
                             href={`mailto:${support.email}`}
                             style={{
                                 textDecoration: 'none',
@@ -415,7 +362,7 @@ export function HelpScreen() {
                         >
                             <span className="material-symbols-rounded" style={{ fontSize: 18 }}>mail</span>
                             Par e-mail
-                        </a>
+                        </a>}
                     </div>
                 </div>
             </Card>

@@ -60,6 +60,11 @@ export function ContactPage() {
     const payload = { subject: fullSubject, message: fullMessage, name: name.trim(), email: email.trim() }
 
     if (!accessToken) {
+      if (!support.email) {
+        setFeedback({ tone: 'error', message: 'L’adresse email du support n’est pas encore configurée.' })
+        setSending(false)
+        return
+      }
       window.location.href = buildSupportMailto(payload, support.email)
       setFeedback({ tone: 'warning', message: `Votre application email va s'ouvrir pour envoyer le message à ${support.email}.` })
       setSending(false)
@@ -69,17 +74,23 @@ export function ContactPage() {
     try {
       await sendSupportMessage(payload)
       recordSupportSend()
-      setFeedback({ tone: 'success', message: 'Message envoyé ! Notre équipe vous répondra sous 24h ouvrées.' })
+      setFeedback({ tone: 'success', message: support.responseTime
+        ? `Message envoyé ! Délai de réponse annoncé : ${support.responseTime}.`
+        : 'Message envoyé ! Notre équipe vous répondra dans les meilleurs délais.' })
       setName('')
       setEmail('')
       setSubject('')
       setMessage('')
     } catch {
-      window.location.href = buildSupportMailto(payload, support.email)
-      setFeedback({
-        tone: 'warning',
-        message: `L'API est indisponible : votre application email va s'ouvrir pour écrire à ${support.email}.`,
-      })
+      if (support.email) {
+        window.location.href = buildSupportMailto(payload, support.email)
+        setFeedback({
+          tone: 'warning',
+          message: `L'API est indisponible : votre application email va s'ouvrir pour écrire à ${support.email}.`,
+        })
+      } else {
+        setFeedback({ tone: 'error', message: 'Le message n’a pas pu être envoyé et aucun email de secours n’est configuré.' })
+      }
     } finally {
       setSending(false)
     }
@@ -135,8 +146,7 @@ export function ContactPage() {
           borderRadius: 16,
           padding: 24,
           marginBottom: 40,
-          border: '1px solid var(--teal-200)',
-          borderLeft: '4px solid var(--teal-500)'
+          border: '1px solid var(--teal-200)'
         }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <span style={{ fontSize: 28 }}>💬</span>
@@ -148,14 +158,16 @@ export function ContactPage() {
                 color: 'var(--teal-700)',
                 margin: '0 0 4px 0'
               }}>
-                Disponibles 24h/24, 7j/7
+                {support.availability || 'Disponibilité du support'}
               </h3>
               <p style={{
                 margin: 0,
                 color: 'var(--teal-600)',
                 fontSize: 14
               }}>
-                Notre équipe est joignable à tout moment. Nous nous engageons à vous répondre dans les meilleurs délais.
+                {support.responseTime
+                  ? `Délai de réponse annoncé : ${support.responseTime}.`
+                  : 'Notre équipe vous répondra dans les meilleurs délais.'}
               </p>
             </div>
           </div>
@@ -192,9 +204,9 @@ export function ContactPage() {
                 Email
               </div>
               <div style={{ fontSize: 13 }}>
-                <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>
-                  {support.email}
-                </a>
+                {support.email
+                  ? <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>{support.email}</a>
+                  : 'À compléter'}
               </div>
             </div>
 
@@ -215,12 +227,9 @@ export function ContactPage() {
                 Téléphone / WhatsApp
               </div>
               <div style={{ fontSize: 13, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <a href={`tel:${support.technicalPhone.replace(/\s/g, '')}`} style={{ color: 'var(--color-primary)' }}>
-                  {support.technicalPhone}
-                </a>
-                <a href={`tel:${support.phone.replace(/\s/g, '')}`} style={{ color: 'var(--color-primary)' }}>
-                  {support.phone}
-                </a>
+                {support.technicalPhone && <a href={`tel:${support.technicalPhone.replace(/\s/g, '')}`} style={{ color: 'var(--color-primary)' }}>{support.technicalPhone}</a>}
+                {support.phone && <a href={`tel:${support.phone.replace(/\s/g, '')}`} style={{ color: 'var(--color-primary)' }}>{support.phone}</a>}
+                {!support.technicalPhone && !support.phone && 'À compléter'}
               </div>
             </div>
 
@@ -241,7 +250,7 @@ export function ContactPage() {
                 Adresse
               </div>
               <div style={{ fontSize: 13 }}>
-                {legal.address || 'Dakar, Sénégal'}
+                {legal.address || '[À COMPLÉTER]'}
               </div>
             </div>
           </div>
@@ -267,7 +276,7 @@ export function ContactPage() {
                 fontSize: 18,
                 color: 'var(--text-strong)'
               }}>
-              Disponibles 24h/24, 7j/7
+              {support.availability || 'Disponibilité à confirmer'}
             </span>
             </div>
             <p style={{
@@ -275,7 +284,7 @@ export function ContactPage() {
               fontSize: 14,
               color: 'var(--text-muted)'
             }}>
-              Notre équipe est joignable à tout moment, y compris les jours fériés et le week-end.
+              {support.responseTime ? `Délai de réponse annoncé : ${support.responseTime}.` : 'Contactez-nous pour connaître les délais de réponse.'}
             </p>
             <div style={{
               marginTop: 12,
@@ -377,10 +386,8 @@ export function ContactPage() {
             © {new Date().getFullYear()} SendProColis — Tous droits réservés
           </p>
           <p style={{ margin: '4px 0 0' }}>
-            Dakar, Sénégal ·{' '}
-            <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>
-              {support.email}
-            </a>
+            {legal.address || '[Adresse à compléter]'}
+            {support.email && <> · <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>{support.email}</a></>}
           </p>
         </div>
       </div>

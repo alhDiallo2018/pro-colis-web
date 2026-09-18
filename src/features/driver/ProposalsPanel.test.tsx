@@ -69,6 +69,7 @@ describe('ProposalsPanel — acceptation vs dette', () => {
       commissionDebt: 0,
       canAcceptNewDeliveries: true,
       hasDebt: false,
+      isBlocked: false,
       debtLimit: 0,
     } as ReturnType<typeof useDriverFinancialState>)
     renderPanel()
@@ -78,6 +79,20 @@ describe('ProposalsPanel — acceptation vs dette', () => {
     expect(screen.queryByRole('button', { name: /Dette à régler/ })).not.toBeInTheDocument()
   })
 
+  it('une dette sous le seuil ne bloque pas le bouton Accepter', () => {
+    mockFin.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      commissionDebt: 500,
+      canAcceptNewDeliveries: true,
+      hasDebt: true,
+      isBlocked: false,
+      debtLimit: 1000,
+    } as ReturnType<typeof useDriverFinancialState>)
+    renderPanel()
+    expect(screen.getByRole('button', { name: /Accepter/ })).not.toBeDisabled()
+  })
+
   it('commissionDebt = 500 → bouton Accepter bloqué et message de dette affiché', () => {
     mockFin.mockReturnValue({
       isLoading: false,
@@ -85,6 +100,7 @@ describe('ProposalsPanel — acceptation vs dette', () => {
       commissionDebt: 500,
       canAcceptNewDeliveries: false,
       hasDebt: true,
+      isBlocked: true,
       debtLimit: 0,
     } as ReturnType<typeof useDriverFinancialState>)
     renderPanel()
@@ -101,9 +117,10 @@ describe('ProposalsPanel — acceptation vs dette', () => {
       commissionDebt: 0,
       canAcceptNewDeliveries: false,
       hasDebt: false,
+      isBlocked: true,
       debtLimit: 0,
     } as ReturnType<typeof useDriverFinancialState>)
     renderPanel()
-    expect(screen.getByRole('button', { name: /Accepter/ })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /Chargement/ })).toBeDisabled()
   })
 })

@@ -78,13 +78,14 @@ export function DriverProfileScreen() {
                     <Badge tone={status === 'available' ? 'green' : status === 'busy' ? 'amber' : 'neutral'} icon={status === 'available' ? 'check_circle' : status === 'busy' ? 'schedule' : 'block'}>
                       {driverStatusLabel(status)}
                     </Badge>
+                    {driver.isVerified && <Badge tone="green" icon="verified" style={{ marginLeft: 6 }}>Identité vérifiée</Badge>}
                   </div>
                 </div>
               </div>
 
               <div style={{ marginTop: 16 }}>
                 {driver.phone && <Row label="Contact" value={driver.phone} />}
-                {driver.vehiclePlate && <Row label="Véhicule" value={[driver.vehicleModel, driver.vehiclePlate].filter(Boolean).join(' — ')} />}
+                {(driver.vehicleModel || driver.vehicleType) && <Row label="Véhicule" value={[driver.vehicleType, driver.vehicleModel].filter(Boolean).join(' — ')} />}
               </div>
 
               <div style={{ display: 'flex', gap: 12, marginTop: 18 }}>

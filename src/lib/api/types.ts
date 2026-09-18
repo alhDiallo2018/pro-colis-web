@@ -70,6 +70,9 @@ export interface User {
   walletBalance?: number
   vehiclePlate?: string | null
   vehicleModel?: string | null
+  vehicleType?: string | null
+  /** Nom public compact utilisé par l'endpoint de suivi anonyme. */
+  name?: string
 }
 
 export interface Zone {

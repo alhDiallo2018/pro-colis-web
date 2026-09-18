@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NegotiationChat } from '@/components/NegotiationChat'
 import { Icon } from '@/ds'
+import { useSupportContact } from '@/lib/usePublicConfig'
 
 const SUPPORT_USERS = {
   commercial: {
@@ -21,6 +22,7 @@ type SupportType = keyof typeof SUPPORT_USERS
 
 export function SupportChatScreen() {
   const [selected, setSelected] = useState<SupportType | null>(null)
+  const support = useSupportContact()
 
   if (!selected) {
     return (
@@ -155,7 +157,7 @@ export function SupportChatScreen() {
                 display: 'inline-block',
               }}
             />
-            En ligne · Réponse sous 24h
+            {[support.availability, support.responseTime && `Réponse ${support.responseTime}`].filter(Boolean).join(' · ') || 'Support'}
           </div>
         </div>
       </div>
