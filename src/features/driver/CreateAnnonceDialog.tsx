@@ -69,7 +69,12 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
     setExtraZones(saved.extraZones ?? [])
   }
 
-  const cityOf = (id: string) => zoneList.find((z) => z.id === id)?.city ?? undefined
+  // Les zones issues de Places peuvent ne pas avoir de ville. Conserver un
+  // libellé lisible sans remplacer leur UUID par celui du garage miroir.
+  const cityOf = (id: string) => {
+    const zone = zoneList.find((z) => z.id === id)
+    return zone?.city?.trim() || zone?.displayName?.trim() || zone?.name?.trim() || undefined
+  }
   const valid = !!departureZoneId && !!arrivalZoneId && departureZoneId !== arrivalZoneId
 
   const reset = () => {

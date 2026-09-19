@@ -1,3 +1,4 @@
+import { locationLabel } from '@/lib/api/advertisements'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Avatar, Badge, Button, Card, Dialog, Icon, IconButton, Input, Select, Textarea, Toast } from '@/ds'
@@ -75,11 +76,11 @@ export function AnnonceDetailScreen() {
                   borderRadius: 'var(--radius-md)',
                 }}
               >
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--teal-700)' }}>{ad.departureCity ?? '—'}</span>
+                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--teal-700)' }}>{locationLabel(ad, 'departure')}</span>
                 <span style={{ flex: 1, height: 0, borderTop: '2px dashed var(--teal-300)', maxWidth: 90 }} />
                 <Icon name="local_shipping" size={18} style={{ color: 'var(--teal-500)' }} />
                 <span style={{ flex: 1, height: 0, borderTop: '2px dashed var(--teal-300)', maxWidth: 90 }} />
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--teal-700)' }}>{ad.arrivalCity ?? '—'}</span>
+                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--teal-700)' }}>{locationLabel(ad, 'arrival')}</span>
               </div>
 
               <div style={{ marginTop: 12 }}>
@@ -151,8 +152,8 @@ export function AnnonceDetailScreen() {
                     parcelId={myOffer?.parcelId ?? undefined}
                   parcelInfo={{
                     trackingNumber: myOffer?.parcel?.trackingNumber,
-                    departureCity: ad.departureCity,
-                    arrivalCity: ad.arrivalCity,
+                    departureCity: locationLabel(ad, 'departure'),
+                    arrivalCity: locationLabel(ad, 'arrival'),
                     description: ad.description || `Annonce — ${formatFcfa(myOffer?.price)} propose`,
                     weight: myOffer?.parcel?.weight ?? null,
                     type: myOffer?.parcel?.type,

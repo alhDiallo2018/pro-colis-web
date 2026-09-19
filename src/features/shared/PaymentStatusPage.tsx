@@ -1,5 +1,6 @@
+import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/ds'
 import { MarketingHeader } from '@/features/marketing/MarketingHeader'
 import { confirmPaydunyaPayment } from '@/lib/api/paydunya'
@@ -53,6 +54,7 @@ const UI: Record<UiState, { icon: string; color: string; bg: string; title: stri
 
 export function PaymentStatusPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [params] = useSearchParams()
   const support = useSupportContact()
   const user = useAuthStore((s) => s.user)
@@ -66,6 +68,13 @@ export function PaymentStatusPage() {
   })
 
   const state: UiState = !token || query.isError ? 'failed' : query.isLoading ? 'pending' : uiStateFor(query.data?.status)
+  // Un statut confirmé déclenche une relecture des dettes : ne jamais déduire
+  // côté navigateur qu'une facture règle forcément tout le reliquat.
+  useEffect(() => {
+    if (state !== 'success') return
+    void queryClient.invalidateQueries({ queryKey: ['client', 'debts'] })
+    void queryClient.invalidateQueries({ queryKey: ['driver', 'wallet'] })
+  }, [state, queryClient])
   const ui = UI[state]
   const homeLabel = user ? 'Retour à mon espace' : 'Se connecter'
   const goHome = () => navigate(user ? homeForRole(user.role) : '/login')
@@ -151,6 +160,9 @@ export function PaymentStatusPage() {
             <Button variant="secondary" icon="receipt_long" onClick={() => window.open(query.data.receiptUrl, '_blank')}>
               Voir le reçu
             </Button>
+          )}
+          {(user?.role === 'client' || user?.role === 'driver') && (
+            <Button variant="secondary" icon="receipt_long" onClick={() => navigate(`/${user.role}/dettes`)}>Mes dettes</Button>
           )}
           <Button variant="primary" iconTrailing="arrow_forward" onClick={goHome}>
             {homeLabel}

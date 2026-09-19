@@ -55,7 +55,8 @@ export interface ResolvedZone {
   matchedBy?: 'placeId' | 'proximity' | 'created' | string
 }
 
-/** Résout un lieu Google Places en zone (la crée en "pending" si nécessaire). */
+/** Résout un lieu en zone : `data.id` alimente les champs *ZoneId.
+ * Le garage miroir de compatibilité ne doit jamais remplacer cet identifiant. */
 export async function resolveZone(payload: ResolveZonePayload): Promise<ResolvedZone> {
   const { data } = await api.post('/zones/resolve', payload)
   return {

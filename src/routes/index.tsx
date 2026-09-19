@@ -1,3 +1,5 @@
+import { ClientDebtsScreen } from '@/features/client/ClientDebtsScreen'
+import { DriverDebtsScreen } from '@/features/driver/DriverDebtsScreen'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { RequireAuth, RequireRole } from './guards'
 import { LoginPage } from '@/features/auth/LoginPage'
@@ -103,6 +105,7 @@ const CLIENT_NAV: NavSection[] = [
       { label: 'Annonces chauffeurs', icon: 'campaign', to: '/client/annonces' },
       { label: 'Suivi', icon: 'qr_code_2', to: '/client/suivi' },
       { label: 'Messages', icon: 'forum', to: '/client/messages' },
+      { label: 'Mes dettes', icon: 'receipt_long', to: '/client/dettes' },
       { label: 'Profil', icon: 'person', to: '/client/profil' },
     ],
   },
@@ -116,6 +119,7 @@ const DRIVER_NAV: NavSection[] = [
       { label: 'Mes annonces', icon: 'campaign', to: '/driver/annonces' },
       { label: 'Mes missions', icon: 'local_shipping', to: '/driver/missions' },
       { label: 'Revenus', icon: 'payments', to: '/driver/revenus' },
+      { label: 'Mes dettes', icon: 'receipt_long', to: '/driver/dettes' },
       { label: 'Points & paiements', icon: 'account_balance_wallet', to: '/driver/points' },
       { label: 'Documents', icon: 'description', to: '/driver/documents' },
       { label: 'Itinéraire', icon: 'map', to: '/driver/itinerary' },
@@ -266,6 +270,7 @@ export const router = createBrowserRouter([
       { path: 'colis/:parcelId/confirm', element: <ConfirmDeliveryScreen /> },
       { path: 'suivi', element: <SuiviScreen /> },
       { path: 'messages', element: <MessagesScreen /> },
+      { path: 'dettes', element: <ClientDebtsScreen /> },
       { path: 'profil', element: <ProfilScreen /> },
       { path: 'notifications', element: <NotificationsScreen /> },
     ],
@@ -298,6 +303,7 @@ export const router = createBrowserRouter([
       { path: 'messages', element: <MessagesScreen /> },
       { path: 'historique', element: <HistoriqueScreen /> },
       { path: 'garage', element: <MonGarageScreen /> },
+      { path: 'dettes', element: <DriverDebtsScreen /> },
       { path: 'profil', element: <DriverProfilScreen /> },
       { path: 'parametres', element: <DriverParametresScreen /> },
       { path: 'notifications', element: <NotificationsScreen /> },

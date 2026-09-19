@@ -1,3 +1,4 @@
+import { locationLabel } from '@/lib/api/advertisements'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Avatar, Icon, Input } from '@/ds'
@@ -26,7 +27,7 @@ export function ClientAnnoncesScreen() {
     const q = search.trim().toLowerCase()
     if (!q) return inZone
     return inZone.filter((a) =>
-      [a.departureCity, a.arrivalCity, a.driver?.fullName, a.driverName, a.description].some(
+      [locationLabel(a, 'departure'), locationLabel(a, 'arrival'), a.departureCity, a.arrivalCity, a.driver?.fullName, a.driverName, a.description].some(
         (v) => v && String(v).toLowerCase().includes(q),
       ),
     )
@@ -110,9 +111,9 @@ function AnnonceCard({ ad, onClick }: { ad: Advertisement; onClick: () => void }
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '14px 0', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, color: 'var(--text-strong)' }}>
-        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ad.departureCity ?? '—'}</span>
+        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{locationLabel(ad, 'departure')}</span>
         <Icon name="local_shipping" size={18} style={{ color: 'var(--teal-500)' }} />
-        <span style={{ flex: 1, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ad.arrivalCity ?? '—'}</span>
+        <span style={{ flex: 1, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{locationLabel(ad, 'arrival')}</span>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 12, borderTop: '1px solid var(--border-subtle)' }}>

@@ -123,6 +123,12 @@ export function DriverProfilScreen() {
         ]}
       />
 
+      <Card padding="lg">
+        <h3 style={{ margin: '0 0 8px', fontFamily: 'var(--font-display)' }}>Mes dettes</h3>
+        <p style={{ color: 'var(--text-muted)' }}>Consultez les montants restant à régler et régularisez votre situation.</p>
+        <Button variant="secondary" icon="receipt_long" onClick={() => navigate('/driver/dettes')}>Consulter mes dettes</Button>
+      </Card>
+
       {/* Activité */}
       <Card padding="lg">
         <h3 style={{ margin: '0 0 14px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>

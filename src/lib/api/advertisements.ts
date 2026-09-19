@@ -35,6 +35,12 @@ export interface Advertisement {
   driver?: User | null
   departureZoneId?: string | null
   arrivalZoneId?: string | null
+  departureName?: string | null
+  arrivalName?: string | null
+  departureZoneName?: string | null
+  arrivalZoneName?: string | null
+  departureGarageName?: string | null
+  arrivalGarageName?: string | null
   departureCity?: string | null
   arrivalCity?: string | null
   departureAt?: string | null
@@ -120,4 +126,10 @@ export async function negotiateOffer(
 ): Promise<AdvertisementOffer> {
   const { data } = await api.post(`/advertisements/${advertisementId}/offers/${offerId}/negotiate`, payload)
   return data.offer ?? data.data
+}
+
+/** Même libellé dans les cartes, détails et conversations, sans chaîne vide. */
+export function locationLabel(ad: Advertisement, side: 'departure' | 'arrival'): string {
+  return [ad[`${side}Name`], ad[`${side}ZoneName`], ad[`${side}GarageName`], ad[`${side}City`]]
+    .map((value) => value?.trim()).find(Boolean) || '—'
 }

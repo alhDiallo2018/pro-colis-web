@@ -1,3 +1,4 @@
+import { locationLabel } from '@/lib/api/advertisements'
 // ============================================================
 // FILE: lib/screens/driver/MesAnnoncesScreen.tsx
 // ============================================================
@@ -160,8 +161,8 @@ export function MesAnnoncesScreen() {
               acceptBlockedLabel={fin.isLoading ? 'Chargement…' : fin.isError ? 'Indisponible' : 'Dette à régler'}
               parcelInfo={{
                 trackingNumber: chatTarget.offer?.parcel?.trackingNumber,
-                departureCity: chatTarget.ad.departureCity,
-                arrivalCity: chatTarget.ad.arrivalCity,
+                departureCity: locationLabel(chatTarget.ad, 'departure'),
+                arrivalCity: locationLabel(chatTarget.ad, 'arrival'),
                 receiverName: chatTarget.offer?.parcel?.receiverName,
                 receiverPhone: chatTarget.offer?.parcel?.receiverPhone,
                 receiverAddress: chatTarget.offer?.parcel?.receiverAddress,
@@ -194,9 +195,9 @@ function AdHeader({ ad }: { ad: Advertisement }) {
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
         <span className="material-symbols-rounded" style={{ fontSize: 16, color: 'var(--text-muted)' }}>location_on</span>
         <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-body)' }}>
-          {ad.departureCity ?? '—'}
+          {locationLabel(ad, 'departure')}
           <span className="material-symbols-rounded" style={{ fontSize: 14, color: 'var(--text-faint)', verticalAlign: 'middle', margin: '0 2px' }}>arrow_right_alt</span>
-          {ad.arrivalCity ?? '—'}
+          {locationLabel(ad, 'arrival')}
         </span>
       </span>
       <Badge tone={s.tone}>{s.label}</Badge>
