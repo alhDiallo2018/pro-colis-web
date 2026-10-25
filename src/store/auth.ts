@@ -7,6 +7,7 @@ interface AuthState {
   user: User | null
   accessToken: string | null
   refreshToken: string | null
+  sessionId: string | null
   /** Becomes true once the persisted state has been rehydrated. */
   hydrated: boolean
   setSession: (session: AuthSession) => void
@@ -22,19 +23,20 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       hydrated: false,
-      setSession: ({ user, accessToken, refreshToken }) => set({ user, accessToken, refreshToken }),
+      sessionId: null,
+      setSession: ({ user, accessToken, refreshToken }) => set({ user, accessToken, refreshToken, sessionId: crypto.randomUUID?.() ?? Array.from(crypto.getRandomValues(new Uint8Array(16)), (v) => v.toString(16).padStart(2, '0')).join('') }),
       setTokens: ({ accessToken, refreshToken }) => set({ accessToken, refreshToken }),
       setUser: (user) => set({ user }),
       clearSession: () => {
         // Les brouillons de formulaires sont des données personnelles : on ne
         // les laisse pas derrière soi sur un poste partagé.
         clearAllFormDrafts()
-        set({ user: null, accessToken: null, refreshToken: null })
+        set({ user: null, accessToken: null, refreshToken: null, sessionId: null })
       },
     }),
     {
       name: 'sendprocolis-auth',
-      partialize: (s) => ({ user: s.user, accessToken: s.accessToken, refreshToken: s.refreshToken }),
+      partialize: (s) => ({ user: s.user, accessToken: s.accessToken, refreshToken: s.refreshToken, sessionId: s.sessionId }),
       onRehydrateStorage: () => (state) => {
         if (state) state.hydrated = true
       },
@@ -45,4 +47,14 @@ export const useAuthStore = create<AuthState>()(
 /** Read auth state outside React (e.g. axios interceptors). */
 export const authStore = {
   get: () => useAuthStore.getState(),
+}
+
+// Zustand ne synchronise pas spontanement les autres onglets. Recharger le
+// store evite qu'un ancien onglet reutilise indefiniment un refresh consomme.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'sendprocolis-auth' || event.key === null) {
+      void useAuthStore.persist.rehydrate()
+    }
+  })
 }

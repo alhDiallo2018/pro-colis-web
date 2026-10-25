@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button, IconButton, Input, Toast } from '@/ds'
 import { AuthShell } from './AuthShell'
 import * as authApi from '@/lib/api/auth'
@@ -22,6 +22,10 @@ function errorMessage(error: unknown, fallback: string) {
  */
 export function ForgotPinPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  // La recuperation du PIN est un detour du parcours de reconnexion : garder
+  // l'adresse d'origine jusqu'au retour sur le formulaire de connexion.
+  const backToLogin = () => navigate('/login', { replace: true, state: location.state })
   const [step, setStep] = useState<Step>('identifier')
   const [identifier, setIdentifier] = useState('')
   const [otpCode, setOtpCode] = useState('')
@@ -86,7 +90,7 @@ export function ForgotPinPage() {
       }
     >
       <div style={{ marginBottom: 24 }}>
-        <IconButton icon="arrow_back" aria-label="Retour" onClick={() => navigate('/login')} />
+        <IconButton icon="arrow_back" aria-label="Retour" onClick={backToLogin} />
       </div>
 
       {done ? (
@@ -97,7 +101,7 @@ export function ForgotPinPage() {
           <p style={{ fontSize: 15, color: 'var(--text-muted)', margin: '0 0 32px' }}>
             Vos autres sessions ont été déconnectées. Connectez-vous avec votre nouveau code.
           </p>
-          <Button block size="lg" iconTrailing="arrow_forward" onClick={() => navigate('/login', { replace: true })}>
+          <Button block size="lg" iconTrailing="arrow_forward" onClick={backToLogin}>
             Se connecter
           </Button>
         </>
@@ -207,7 +211,7 @@ export function ForgotPinPage() {
 
       <p style={{ textAlign: 'center', fontSize: 14, color: 'var(--text-muted)', margin: '28px 0 0' }}>
         Vous vous souvenez de votre code ?{' '}
-        <span style={{ color: 'var(--text-link)', fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/login')}>
+        <span style={{ color: 'var(--text-link)', fontWeight: 700, cursor: 'pointer' }} onClick={backToLogin}>
           Se connecter
         </span>
       </p>

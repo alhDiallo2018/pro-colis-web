@@ -6,6 +6,7 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { RegisterPage } from '@/features/auth/RegisterPage'
 import { ForgotPinPage } from '@/features/auth/ForgotPinPage'
 import { LandingPage } from '@/features/marketing/LandingPage'
+import { InstallPage } from '@/features/pwa/InstallPage'
 import { AProposPage } from '@/features/marketing/AProposPage'
 import { ContactPage } from '@/features/marketing/ContactPage'
 import { MentionsLegalesPage } from '@/features/marketing/MentionsLegalesPage'
@@ -80,6 +81,7 @@ import { ScoresPage } from '@/features/superAdmin/ScoresPage'
 import { ClassementPage } from '@/features/superAdmin/ClassementPage'
 import { DriverDetailPage } from '@/features/superAdmin/DriverDetailPage'
 import { BrevoConfigScreen } from '@/features/superAdmin/BrevoConfigScreen'
+import { ManualMessagePanel } from '@/features/superAdmin/ManualMessagePanel'
 import { PaydunyaConfigScreen } from '@/features/superAdmin/PaydunyaConfigScreen'
 import BroadcastsPage from '@/features/superAdmin/BroadcastsPage'
 import { BroadcastBanner } from '@/components/BroadcastBanner'
@@ -138,6 +140,7 @@ const GARAGE_NAV: NavSection[] = [
       { label: 'Tableau de bord', icon: 'dashboard', to: '/garage', end: true },
       { label: 'Colis', icon: 'package_2', to: '/garage/colis' },
       { label: 'Chauffeurs', icon: 'local_shipping', to: '/garage/chauffeurs' },
+      { label: 'Envoyer un message', icon: 'mail', to: '/garage/envoyer-message' },
       { label: 'Assignations', icon: 'assignment_ind', to: '/garage/assignations' },
       { label: 'Rapports', icon: 'monitoring', to: '/garage/rapports' },
       { label: 'Support', icon: 'support_agent', to: '/garage/support' },
@@ -154,6 +157,7 @@ const SUPER_NAV: NavSection[] = [
       { label: 'Colis', icon: 'package_2', to: '/admin/colis' },
       { label: 'Chauffeurs', icon: 'local_shipping', to: '/admin/chauffeurs' },
       { label: 'Utilisateurs', icon: 'group', to: '/admin/users' },
+      { label: 'Envoyer un message', icon: 'mail', to: '/admin/envoyer-message' },
     ],
   },
   {
@@ -208,6 +212,8 @@ const SUPER_NAV: NavSection[] = [
 ]
 
 export const router = createBrowserRouter([
+  { path: '/installer', element: <InstallPage /> },
+  { path: '/app', element: <RoleHomeRedirect /> },
   { path: '/', element: <LandingPage /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
@@ -332,6 +338,7 @@ export const router = createBrowserRouter([
       { path: 'colis', element: <GarageColisPage /> },
       { path: 'colis/:parcelId', element: <GarageParcelDetailPage /> },
       { path: 'chauffeurs', element: <GarageChauffeursPage /> },
+      { path: 'envoyer-message', element: <ManualMessagePanel /> },
       { path: 'assignations', element: <GarageAssignationsPage /> },
       { path: 'rapports', element: <GarageRapportsPage /> },
       { path: 'support', element: <AdminSupportScreen /> },
@@ -385,6 +392,7 @@ export const router = createBrowserRouter([
       { path: 'reputation/scores/:userId', element: <ScoreDetailPage /> },
       { path: 'reputation/classement', element: <ClassementPage /> },
       { path: 'notifications-brevo', element: <BrevoConfigScreen /> },
+      { path: 'envoyer-message', element: <ManualMessagePanel /> },
       { path: 'paydunya', element: <PaydunyaConfigScreen /> },
       { path: 'broadcasts', element: <BroadcastsPage /> },
       { path: 'chauffeurs/:userId', element: <DriverDetailPage /> },
@@ -393,7 +401,7 @@ export const router = createBrowserRouter([
       { path: 'incidents', element: <IncidentsScreen /> },
       { path: 'rapports', element: <RapportsPage /> },
       { path: 'systeme', element: <SystemePage /> },
-      { path: 'support', element: <AdminSupportScreen /> },
+      { path: 'support', element: <SupportConversationsScreen /> },
       { path: 'moderation', element: <ModerationScreen /> },
       { path: 'profil', element: <StaffProfilScreen /> },
       { path: 'notifications', element: <NotificationsScreen /> },
@@ -411,6 +419,8 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <SupportDashboard /> },
       { path: 'conversations', element: <SupportConversationsScreen /> },
+      { path: 'envoyer-message', element: <ManualMessagePanel /> },
+      { path: 'chauffeurs/:userId', element: <DriverDetailPage /> },
       {
         path: 'moderation',
         element: (

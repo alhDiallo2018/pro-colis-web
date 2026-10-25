@@ -24,10 +24,12 @@ www.{$DOMAIN} {
 	encode zstd gzip
 
 	# API REST + fichiers uploadés → conteneur API (jamais exposé publiquement).
+	# Le nom de conteneur est unique : plusieurs projets Compose peuvent
+	# publier le meme alias "api" sur le reseau partage et melanger les versions.
 	# On garde le chemin intact : l'API expose /api/v1/* et sert /uploads/*.
 	@backend path /api/* /uploads/*
 	handle @backend {
-		reverse_proxy api:8080
+		reverse_proxy sendprocolis-api:8080
 	}
 
 	# PayDunya IPN (Instant Payment Notification) — endpoint configuré dans le
@@ -41,7 +43,7 @@ www.{$DOMAIN} {
 	}
 	handle @paydunyaIpn {
 		rewrite * /api/v1/payments/paydunya/ipn
-		reverse_proxy api:8080
+		reverse_proxy sendprocolis-api:8080
 	}
 
 	# Collecte des erreurs du navigateur → receiver Faro de Grafana Alloy.
@@ -70,7 +72,16 @@ www.{$DOMAIN} {
 	# SPA React : sert les fichiers statiques, fallback index.html pour le routing client.
 	handle {
 		root * /srv
-		try_files {path} /index.html
-		file_server
+		# Le worker et le manifeste doivent être revalidés à chaque déploiement.
+		@pwa path /sw.js /manifest.webmanifest /offline.html
+		header @pwa Cache-Control "no-cache"
+		header /sw.js Service-Worker-Allowed "/"
+		header /manifest.webmanifest Content-Type "application/manifest+json"
+		route {
+			try_files {path} /index.html
+			# L'ordre explicite applique l'en-tête APRÈS la réécriture SPA.
+			header /index.html Cache-Control "no-cache"
+			file_server
+		}
 	}
 }

@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Avatar, Badge, Button, Dialog, IconButton, Toast } from '@/ds'
+import { RecipientSelectionActions, useRecipientSelection } from '@/components/RecipientSelection'
+import { useEffect, useState } from 'react'
+import { Avatar, Badge, Button, Dialog, IconButton, Input, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { DetailList, DetailRow, DetailSection } from '@/components/DetailList'
@@ -32,7 +33,23 @@ const statusLabel = (u: User) => (u.status === 'active' ? 'Actif' : u.status ===
 
 export function UtilisateursPage() {
   const isMobile = useIsMobile()
-  const query = useAdminUsers()
+  const selection = useRecipientSelection()
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [page, setPage] = useState(1)
+  useEffect(() => {
+    // Ne pas programmer de remise à zéro au montage : elle pourrait annuler
+    // un clic rapide sur « Suivant » pendant les 250 premières millisecondes.
+    if (search.trim() === debouncedSearch) return
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search.trim())
+      setPage(1)
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [search, debouncedSearch])
+  // Recherche sur toute la base, avant pagination : un filtre local ne verrait
+  // que les vingt premiers comptes et masquerait les utilisateurs plus anciens.
+  const query = useAdminUsers({ search: debouncedSearch, page, limit: 20 })
   const updateStatus = useUpdateUserStatus()
   const deleteMutation = useDeleteUser()
   const resetPin = useResetUserPin()
@@ -118,11 +135,19 @@ export function UtilisateursPage() {
         }
         flush
       >
+        <div style={{ padding: '14px 18px' }}>
+          <Input label="Rechercher un utilisateur" icon="search"
+            placeholder="Nom, e-mail ou téléphone" value={search}
+            onChange={(event) => setSearch(event.target.value)} />
+        </div>
+        <RecipientSelectionActions selected={selection.selected} onChange={selection.setSelected}
+          pageUsers={users} disabled={query.isFetching || search.trim() !== debouncedSearch} />
         {isMobile ? (
           <QueryState {...queryStateProps}>
             {users.map((u) => (
               <div key={u.id} style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '13px 16px', borderBottom: '1px solid var(--slate-100)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                  {selection.checkbox(u, query.isFetching || search.trim() !== debouncedSearch)}
                   <Avatar name={u.fullName} src={u.profilePhoto ?? undefined} size="sm" />
                   <span style={{ minWidth: 0, flex: 1 }}>
                     <span style={{ display: 'block', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -168,6 +193,7 @@ export function UtilisateursPage() {
           {users.map((u) => (
             <div key={u.id} style={{ display: 'grid', gridTemplateColumns: GRID, alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid var(--slate-100)' }}>
               <span style={{ ...cell, gap: 11 }}>
+                {selection.checkbox(u, query.isFetching || search.trim() !== debouncedSearch)}
                 <Avatar name={u.fullName} src={u.profilePhoto ?? undefined} size="sm" />
                 <span style={{ minWidth: 0 }}>
                   <span style={{ display: 'block', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -189,6 +215,14 @@ export function UtilisateursPage() {
         </div>
         </div>
         )}
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, padding: '14px 18px' }}>
+          <Button variant="secondary" size="sm" disabled={page <= 1 || query.isFetching}
+            onClick={() => setPage((value) => value - 1)}>Précédent</Button>
+          <span>Page {page} sur {Math.max(1, query.data?.pagination?.totalPages ?? 1)}</span>
+          <Button variant="secondary" size="sm"
+            disabled={page >= (query.data?.pagination?.totalPages ?? 1) || query.isFetching}
+            onClick={() => setPage((value) => value + 1)}>Suivant</Button>
+        </div>
       </Panel>
 
       <UserFormDialog open={createOpen} onClose={() => setCreateOpen(false)} />

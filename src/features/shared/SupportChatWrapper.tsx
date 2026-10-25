@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { Icon } from '@/ds'
 import { useAuthStore } from '@/store/auth'
 import { homeForRole } from '@/routes/paths'
@@ -7,6 +7,8 @@ import { SupportChatScreen } from './SupportChatScreen'
 export function SupportChatWrapper() {
   const user = useAuthStore((s) => s.user)
   const home = homeForRole(user?.role)
+  if (user?.role === 'super_admin') return <Navigate to="/admin/support" replace />
+  if (user?.role.startsWith('support')) return <Navigate to="/support-admin/conversations" replace />
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--surface-page)' }}>

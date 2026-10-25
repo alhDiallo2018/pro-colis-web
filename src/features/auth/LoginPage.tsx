@@ -1,23 +1,31 @@
 import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button, IconButton, Input, Toast } from '@/ds'
 import { AuthShell } from './AuthShell'
 import { useLogin } from './useAuth'
-import { homeForRole } from '@/routes/paths'
+import { loginDestination } from '@/routes/login-destination'
+import type { AuthSession } from '@/lib/api/types'
 import { ApiError } from '@/lib/api/client'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const login = useLogin()
   const [identifier, setIdentifier] = useState('')
   const [pin, setPin] = useState('')
   const prevPinRef = useRef('')
 
+  // Les deux modes (bouton et sixieme chiffre du PIN) doivent reprendre la
+  // meme destination. Aucun retour n'est consomme tant que la connexion echoue.
+  const onLoginSuccess = (session: AuthSession) => {
+    navigate(loginDestination(location.state, session.user.role), { replace: true })
+  }
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     login.mutate(
       { identifier: identifier.trim(), pin },
-      { onSuccess: (session) => navigate(homeForRole(session.user.role), { replace: true }) },
+      { onSuccess: onLoginSuccess },
     )
   }
 
@@ -62,6 +70,7 @@ export function LoginPage() {
       <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30, color: 'var(--text-strong)', margin: '0 0 8px', letterSpacing: '-0.01em' }}>
         Bon retour 👋
       </h1>
+      <p><Link to="/installer" style={{ color: 'var(--color-primary)' }}>Installer ProColis sur iPhone ou iPad</Link></p>
       <p style={{ fontSize: 15, color: 'var(--text-muted)', margin: '0 0 32px' }}>
         Entrez votre identifiant et votre code PIN.
       </p>
@@ -89,7 +98,7 @@ export function LoginPage() {
             if (prevPinRef.current.length === 5 && val.length === 6 && identifier.trim()) {
               login.mutate(
                 { identifier: identifier.trim(), pin: val },
-                { onSuccess: (session) => navigate(homeForRole(session.user.role), { replace: true }) },
+                { onSuccess: onLoginSuccess },
               )
             }
             prevPinRef.current = val
@@ -105,7 +114,7 @@ export function LoginPage() {
       </form>
 
       <p style={{ textAlign: 'center', fontSize: 14, margin: '20px 0 0' }}>
-        <span style={{ color: 'var(--text-link)', fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/pin-oublie')}>
+        <span style={{ color: 'var(--text-link)', fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/pin-oublie', { state: location.state })}>
           Code PIN oublié ?
         </span>
       </p>

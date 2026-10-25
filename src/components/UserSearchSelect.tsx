@@ -75,7 +75,7 @@ export function UserSearchSelect({
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const { data, isFetching } = useAssistanceUserSearch(debounced, open)
+  const { data, isFetching, isError, refetch } = useAssistanceUserSearch(debounced, open)
   const users = useMemo(() => data ?? [], [data])
 
   const borderColor = error
@@ -105,6 +105,19 @@ export function UserSearchSelect({
       )}
 
       <div
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-label={typeof label === 'string' ? label : placeholder}
+        aria-expanded={open}
+        aria-disabled={disabled}
+        onKeyDown={(event) => {
+          if (event.target !== event.currentTarget || disabled) return
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            setOpen(!open)
+            setTimeout(() => inputRef.current?.focus(), 50)
+          }
+        }}
         onClick={() => {
           if (disabled) return
           setOpen(!open)
@@ -132,6 +145,7 @@ export function UserSearchSelect({
           <input
             ref={inputRef}
             type="text"
+            aria-label="Rechercher un utilisateur par nom, téléphone ou e-mail"
             placeholder="Nom, téléphone ou e-mail…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -202,7 +216,11 @@ export function UserSearchSelect({
             </div>
           )}
 
-          {isFetching && users.length === 0 ? (
+          {isError ? (
+            <div role="alert" style={{ padding: 16 }}>
+              Recherche indisponible. <button type="button" onClick={() => refetch()}>Réessayer</button>
+            </div>
+          ) : isFetching || query.trim() !== debounced ? (
             <div style={{ padding: 20, textAlign: 'center', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>Recherche…</div>
           ) : users.length === 0 ? (
             <div style={{ padding: 20, textAlign: 'center' }}>
@@ -259,10 +277,11 @@ function UserRow({
   selected: boolean
   onSelect: (user: AssistanceUser) => void
 }) {
-  const subtitle = [user.phone, ROLE_LABEL[user.role] ?? user.role, user.city].filter(Boolean).join(' · ')
+  const subtitle = [user.email, user.phone, ROLE_LABEL[user.role] ?? user.role, user.city].filter(Boolean).join(' · ')
   return (
     <button
       type="button"
+      aria-label={`Sélectionner ${user.fullName}`}
       onClick={() => onSelect(user)}
       style={{
         display: 'flex',

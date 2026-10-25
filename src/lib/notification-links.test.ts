@@ -37,3 +37,10 @@ describe('liens des notifications', () => {
     })
   })
 })
+
+it('ouvre la boîte support selon le rôle pour une notification de conversation', () => {
+  const support = { ...notification, type: 'support_chat', parcelId: null }
+  expect(notificationAction(support, 'client')?.to).toBe('/support')
+  expect(notificationAction(support, 'support_technique')?.to).toBe('/support-admin/conversations')
+  expect(notificationAction(support, 'super_admin')?.to).toBe('/admin/support')
+})

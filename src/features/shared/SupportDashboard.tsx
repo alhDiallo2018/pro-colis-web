@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { Avatar, Badge, Button, Icon, StatBox } from '@/ds'
 import { Panel } from '@/components/Panel'
-import * as messagesApi from '@/lib/api/messages'
+import { supportChats } from '@/lib/api/supportChat'
 import * as assistancesApi from '@/lib/api/assistances'
 import { useAuthStore } from '@/store/auth'
 import { usePlatformStats, useMyStats } from './profile/hooks'
@@ -24,38 +24,20 @@ const ROLE_LABEL: Record<string, string> = {
 export function SupportDashboard() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const usesPersonalInbox = user?.role === 'support_technique' || user?.role === 'support_commercial'
   const myStats = useMyStats()
   const platform = usePlatformStats()
 
   const conversations = useQuery({
     queryKey: ['admin', 'support', 'conversations', user?.role],
-    queryFn: async (): Promise<SupportConversation[]> => {
-      if (!usesPersonalInbox) return messagesApi.adminSupportConversations()
-
-      // Les comptes support spécialisés ne sont pas acceptés par l'endpoint
-      // agrégé historique. On adapte donc leur boîte personnelle au même modèle.
-      const personal = await messagesApi.conversations()
-      return personal.map((conversation) => ({
-        id: conversation.id,
-        body: conversation.body,
-        isRead: (conversation.unreadCount ?? (conversation.isRead ? 0 : 1)) === 0,
-        createdAt: conversation.createdAt,
-        senderId: conversation.otherUser.id,
-        receiverId: user?.id ?? '',
-        messageCount: Math.max(conversation.unreadCount ?? 0, 1),
-        user: {
-          id: conversation.otherUser.id,
-          fullName: conversation.otherUser.fullName,
-          profilePhoto: conversation.otherUser.profilePhoto ?? null,
-          role: conversation.otherUser.role,
-        },
-        supportUser: {
-          id: user?.id ?? '',
-          fullName: user?.fullName ?? 'Support',
-        },
-      }))
-    },
+    queryFn: async (): Promise<SupportConversation[]> => (await supportChats()).map(chat => ({
+      id: chat.id, body: chat.lastMessage?.body ?? '', createdAt: chat.lastMessageAt,
+      messageCount: chat.unreadCount ?? 0,
+      isRead: !chat.unreadCount, senderId: chat.userId, receiverId: chat.assignedTo?.id ?? '',
+      user: { ...chat.user, profilePhoto: chat.user.profilePhoto ?? null },
+      supportUser: { id: chat.assignedTo?.id ?? '', fullName: chat.assignedTo?.fullName ?? 'En attente',
+        role: chat.assignedTo?.role ?? 'support', profilePhoto: null },
+      lastAgent: chat.assignedTo ?? undefined,
+    })),
     refetchInterval: 15_000,
   })
 

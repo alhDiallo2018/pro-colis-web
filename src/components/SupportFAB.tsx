@@ -1,4 +1,5 @@
 import { Icon } from '@/ds'
+import { useLocation } from 'react-router-dom'
 
 const style = {
   position: 'fixed',
@@ -20,6 +21,9 @@ const style = {
 } as const
 
 export function SupportFAB() {
+  const { pathname } = useLocation()
+  // Sur le fil support, ce raccourci masquerait le bouton d'envoi vocal.
+  if (['/support', '/support-admin/conversations', '/admin/support'].includes(pathname)) return null
   return (
     <a
       href="/support"

@@ -1,4 +1,5 @@
 import { Button, Input } from '@/ds'
+import { usePwa } from '@/features/pwa/context'
 import { useAuthStore } from '@/store/auth'
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -117,6 +118,13 @@ const GooglePlayIcon = ({ size = 20 }: { size?: number }) => (
     </svg>
 )
 
+function AppDownloadIcon({ size }: { size: number }) {
+  const { appleMobile } = usePwa()
+  return appleMobile
+    ? <span className="material-symbols-rounded" aria-hidden="true" style={{ fontSize: size }}>install_mobile</span>
+    : <GooglePlayIcon size={size} />
+}
+
 function FloatingShapes() {
   return (
       <>
@@ -129,6 +137,7 @@ function FloatingShapes() {
 
 export function LandingPage() {
   const navigate = useNavigate()
+  const { appleMobile } = usePwa()
   const { user, clearSession } = useAuthStore()
   const support = useSupportContact()
   const [mobileMenu, setMobileMenu] = useState(false)
@@ -337,8 +346,8 @@ export function LandingPage() {
 
               {/* ✅ BOUTON TÉLÉCHARGER L'APP - adapté à la taille */}
               <a
-                  href={PLAY_STORE_URL}
-                  target="_blank"
+                  href={appleMobile ? '/installer' : PLAY_STORE_URL}
+                  target={appleMobile ? undefined : "_blank"}
                   rel="noopener noreferrer"
                   style={{
                     display: 'inline-flex',
@@ -363,7 +372,7 @@ export function LandingPage() {
                     e.currentTarget.style.transform = 'scale(1)'
                   }}
               >
-                <GooglePlayIcon size={isMobile ? 16 : 18} />
+                <AppDownloadIcon size={isMobile ? 16 : 18} />
                 <span style={{ display: isMobile ? 'none' : 'inline' }}>Télécharger l'app</span>
                 <span style={{ display: isMobile ? 'inline' : 'none' }}>App</span>
               </a>
@@ -477,8 +486,8 @@ export function LandingPage() {
 
                   {/* Télécharger l'app dans le menu mobile */}
                   <a
-                      href={PLAY_STORE_URL}
-                      target="_blank"
+                      href={appleMobile ? '/installer' : PLAY_STORE_URL}
+                      target={appleMobile ? undefined : "_blank"}
                       rel="noopener noreferrer"
                       style={{
                         display: 'flex',
@@ -496,7 +505,7 @@ export function LandingPage() {
                       }}
                       onClick={() => setMobileMenu(false)}
                   >
-                    <GooglePlayIcon size={22} />
+                    <AppDownloadIcon size={22} />
                     Télécharger l'application
                   </a>
                 </div>
@@ -707,8 +716,8 @@ export function LandingPage() {
                   gap: 10
                 }}>
                   <a
-                      href={PLAY_STORE_URL}
-                      target="_blank"
+                      href={appleMobile ? '/installer' : PLAY_STORE_URL}
+                      target={appleMobile ? undefined : "_blank"}
                       rel="noopener noreferrer"
                       style={{
                         display: 'flex',
@@ -732,7 +741,7 @@ export function LandingPage() {
                         e.currentTarget.style.background = 'var(--slate-900)'
                       }}
                   >
-                    <GooglePlayIcon size={18} />
+                    <AppDownloadIcon size={18} />
                     Télécharger l'app
                   </a>
                 </div>
@@ -1229,8 +1238,8 @@ export function LandingPage() {
               position: 'relative'
             }}>
               <a
-                  href={PLAY_STORE_URL}
-                  target="_blank"
+                  href={appleMobile ? '/installer' : PLAY_STORE_URL}
+                  target={appleMobile ? undefined : "_blank"}
                   rel="noopener noreferrer"
                   style={{
                     display: 'inline-flex',
@@ -1256,12 +1265,12 @@ export function LandingPage() {
                     e.currentTarget.style.transform = 'scale(1)'
                   }}
               >
-                <GooglePlayIcon size={24} />
+                <AppDownloadIcon size={24} />
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                 <span style={{ fontSize: 10, opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Disponible sur
                 </span>
-                  <span style={{ fontSize: 16, fontWeight: 800 }}>Google Play</span>
+                  <span style={{ fontSize: 16, fontWeight: 800 }}>{appleMobile ? 'iPhone & iPad' : 'Google Play'}</span>
                 </div>
               </a>
             </div>
@@ -1431,10 +1440,10 @@ export function LandingPage() {
                   <span style={{ width: 1, height: 30, background: 'rgba(255,255,255,0.08)', alignSelf: 'center' }} />
 
                   <a
-                      href={PLAY_STORE_URL}
-                      target="_blank"
+                      href={appleMobile ? '/installer' : PLAY_STORE_URL}
+                      target={appleMobile ? undefined : "_blank"}
                       rel="noopener noreferrer"
-                      aria-label="Télécharger l'application sur Google Play"
+                      aria-label={appleMobile ? "Installer ProColis sur iPhone ou iPad" : "Télécharger l’application sur Google Play"}
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -1459,7 +1468,7 @@ export function LandingPage() {
                         e.currentTarget.style.transform = 'scale(1)'
                       }}
                   >
-                    <GooglePlayIcon size={18} />
+                    <AppDownloadIcon size={18} />
                     <span>Télécharger l'app</span>
                   </a>
                 </div>
@@ -1467,6 +1476,7 @@ export function LandingPage() {
               <FooterCol title="À propos" links={[
                 { label: 'À propos de SendProColis', to: '/a-propos' },
                 { label: 'Comment ça marche', to: '/help' },
+                { label: 'Installer sur iPhone / iPad', to: '/installer' },
                 { label: 'Contact', to: '/contact' },
               ]} />
               <FooterCol title="Légal" links={[

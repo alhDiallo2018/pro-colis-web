@@ -29,6 +29,11 @@ export function notificationAction(
   notification: AppNotification,
   role: Role | undefined,
 ): NotificationAction | null {
+  if (notification.type === 'support_chat') {
+    const to = role === 'super_admin' ? '/admin/support'
+      : role?.startsWith('support') ? '/support-admin/conversations' : '/support';
+    return { label: 'Ouvrir la conversation support', to }
+  }
   const parcelId = notification.parcelId ?? dataString(notification, 'parcelId')
   const trackingNumber = dataString(notification, 'trackingNumber')
 

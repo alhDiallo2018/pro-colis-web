@@ -54,6 +54,10 @@ export interface AssistanceUser {
   role: string
   city?: string | null
   status?: string
+  driverStatus?: string | null
+  profilePhoto?: string | null
+  rating?: number | string | null
+  completedDeliveries?: number | null
 }
 
 /**

@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/auth'
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { SupportFAB } from '@/components/SupportFAB'
+import { SupportAvailability } from '@/components/SupportAvailability'
 
 export interface NavItem {
   label: string
@@ -64,9 +65,9 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
       ? {
           display: 'flex',
           position: 'fixed',
-          top: 0,
-          left: 0,
-          height: '100dvh',
+          top: 'env(safe-area-inset-top, 0px)',
+          left: 'env(safe-area-inset-left, 0px)',
+          height: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
           zIndex: 45,
           transform: open ? 'translateX(0)' : 'translateX(-100%)',
           transition: 'transform 0.25s var(--ease-standard, ease)',
@@ -256,6 +257,7 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
         </header>
 
         {banner}
+        <SupportAvailability />
 
         <main style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
           <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%' }}>

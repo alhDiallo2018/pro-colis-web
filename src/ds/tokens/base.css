@@ -12,6 +12,8 @@ img, video, canvas { max-width: 100%; }
 
 body {
   margin: 0;
+  /* Les bords sûrs protègent le contenu en mode installé et en paysage iOS. */
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   font-family: var(--font-body);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
@@ -19,6 +21,10 @@ body {
   background: var(--surface-page);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+@media (display-mode: standalone) {
+  html { min-height: 100dvh; }
 }
 
 /* Material Symbols (matches the Flutter app's Material icon set) */

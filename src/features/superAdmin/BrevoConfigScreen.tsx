@@ -3,6 +3,7 @@ import { Button, Card, Input, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { getBrevoConfig, updateBrevoConfig, testBrevoConnection, type BrevoConfig } from '@/lib/api/brevo'
 import { ApiError } from '@/lib/api/client'
+import { ManualMessagePanel } from './ManualMessagePanel'
 
 export function BrevoConfigScreen() {
   const [config, setConfig] = useState<BrevoConfig | null>(null)
@@ -77,6 +78,7 @@ export function BrevoConfigScreen() {
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <ManualMessagePanel />
       <Panel title="Configuration Brevo (Email & SMS)">
         <p style={{ margin: '0 0 20px', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
           Brevo (ex-SendinBlue) est le fournisseur d'emails transactionnels et de SMS.

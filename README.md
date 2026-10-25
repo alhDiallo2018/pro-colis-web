@@ -32,6 +32,41 @@ L'API doit tourner. En dev Docker elle est sur `http://localhost:18081/api/v1`
 - `npm run lint` — oxlint
 - `npm run test` — Vitest
 
+## Installation iPhone / iPad (PWA)
+
+La route publique `/installer` explique l'installation depuis Safari : **Partager →
+Sur l'écran d'accueil → Ajouter** (activer « Ouvrir comme app web » si proposé).
+Les boutons de téléchargement de l'accueil dirigent les appareils iOS vers ce
+guide. Un lien reste accessible depuis la connexion et le pied de page.
+
+- Le manifeste et l'icône Apple ouvrent l'application en mode autonome, sans App
+  Store. `/app` redirige vers l'espace du rôle connecté ou la connexion.
+- Les marges de sécurité iOS protègent les bords en mode autonome / paysage.
+- Une connexion est nécessaire pour les opérations métier. Le worker ne conserve
+  ni réponses API, ni fichiers téléversés, ni pages privées. En cas de coupure ou
+  d'erreur serveur 5xx sur une navigation, `/offline.html` propose de réessayer
+  l'URL initiale. Les données déjà affichées en mémoire peuvent rester visibles.
+- Le build génère `dist/sw.js` avec un identifiant de version. Les mises à jour
+  attendent le bouton **Mettre à jour** pour préserver les saisies ; le cache
+  historique `procolis-v1` est supprimé lors de l'activation.
+- Le worker fonctionne seulement en build de production, sur **HTTPS** (ou
+  localhost pour les tests). Caddy revalide le HTML, le worker et le manifeste.
+  Déployer l'ensemble du nouveau `dist` et le `Caddyfile` mis à jour.
+- Cette version n'ajoute pas de notifications push iOS ni de suivi GPS en
+  arrière-plan. Les fonctions web existantes restent accessibles dans l'app.
+
+Vérification locale : `npm run build`, puis `npm run preview`. Tests de
+non-régression : `npm test -- src/features/pwa`.
+
+Recette sur un iPhone réel après déploiement HTTPS : ouvrir `/installer` dans
+Safari, ajouter l'icône, lancer ProColis, se connecter et vérifier le bon espace,
+fermer / rouvrir l'app, puis vérifier le secours en mode avion et le bouton
+Réessayer après reconnexion. Vérifier également une mise à jour pendant une
+saisie avant de la confirmer. Le navigateur de bureau ne valide pas les
+particularités de stockage et d'installation de Safari iOS.
+
+Guide Apple : https://support.apple.com/guide/iphone/open-as-web-app-iphea86e5236/ios
+
 ## Notes d'intégration API
 
 - **Connexion = identifiant (email/téléphone) + code PIN 6 chiffres** (`/auth/login-with-pin`).

@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/auth'
 const BASE_ITEMS = [
   { label: 'Tableau de bord', icon: 'dashboard', to: '/support-admin', end: true },
   { label: 'Support', icon: 'support_agent', to: '/support-admin/conversations' },
+  { label: 'Envoyer un message', icon: 'mail', to: '/support-admin/envoyer-message' },
   { label: 'Assistances', icon: 'contact_support', to: '/support-admin/assistances' },
   { label: 'Colis', icon: 'package_2', to: '/support-admin/colis' },
   { label: 'Chauffeurs', icon: 'local_shipping', to: '/support-admin/chauffeurs' },

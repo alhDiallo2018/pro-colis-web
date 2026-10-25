@@ -1,4 +1,4 @@
-import axios, { AxiosError, type AxiosRequestConfig, type AxiosInstance } from 'axios'
+import axios, { AxiosError, type InternalAxiosRequestConfig, type AxiosInstance } from 'axios'
 import { authStore, useAuthStore } from '@/store/auth'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
@@ -17,63 +17,115 @@ export class ApiError extends Error {
   }
 }
 
-/** Bare client without interceptors — used for the refresh call to avoid loops. */
-const bare = axios.create({ baseURL: BASE_URL })
+/** Transport sans intercepteur pour ne jamais boucler sur /auth/refresh. */
+const bare = axios.create({ baseURL: BASE_URL, timeout: 30_000 })
+export const api: AxiosInstance = axios.create({ baseURL: BASE_URL, timeout: 30_000 })
 
-export const api: AxiosInstance = axios.create({ baseURL: BASE_URL })
+type AuthRequest = InternalAxiosRequestConfig & {
+  _retried?: boolean
+  _authSessionId?: string | null
+  _authAccessToken?: string | null
+}
+const publicAuthRoutes = new Set([
+  '/auth/login', '/auth/login-with-pin', '/auth/register', '/auth/refresh',
+  '/auth/logout', '/auth/forgot-password', '/auth/reset-password',
+  '/auth/send-otp', '/auth/verify-otp', '/auth/verify-email', '/auth/resend-verification',
+])
+const isPublicAuth = (url = '') => publicAuthRoutes.has(url.split('?')[0])
 
-// Attach the Bearer token from the auth store.
-api.interceptors.request.use((config) => {
-  const token = authStore.get().accessToken
-  if (token) {
-    config.headers = config.headers ?? {}
-    config.headers.Authorization = `Bearer ${token}`
+api.interceptors.request.use((config: AuthRequest) => {
+  const state = authStore.get()
+  if (config._retried && config._authSessionId !== state.sessionId) {
+    throw new ApiError('Session modifiée', 'SESSION_CHANGED', 0)
+  }
+  config._authSessionId = state.sessionId
+  config._authAccessToken = state.accessToken
+  if (state.accessToken && !isPublicAuth(config.url)) {
+    config.headers.set('Authorization', `Bearer ${state.accessToken}`)
   }
   return config
 })
 
-// Single-flight refresh: concurrent 401s share one refresh promise.
-let refreshPromise: Promise<string> | null = null
+function asApiError(error: unknown): ApiError {
+  if (error instanceof ApiError) return error
+  const failure = error as AxiosError<{ message?: string; error?: { code?: string; details?: unknown[] } }>
+  return new ApiError(failure.response?.data?.message || failure.message || 'Erreur réseau',
+    failure.response?.data?.error?.code || 'NETWORK_ERROR', failure.response?.status ?? 0,
+    failure.response?.data?.error?.details ?? [])
+}
 
-async function refreshAccessToken(): Promise<string> {
-  const { refreshToken } = authStore.get()
-  if (!refreshToken) throw new ApiError('Session expirée', 'UNAUTHORIZED', 401)
-  const { data } = await bare.post('/auth/refresh', { refreshToken })
-  const accessToken: string = data.accessToken
-  const newRefresh: string = data.refreshToken ?? refreshToken
-  if (!accessToken) throw new ApiError('Session expirée', 'UNAUTHORIZED', 401)
-  useAuthStore.getState().setTokens({ accessToken, refreshToken: newRefresh })
-  return accessToken
+let refreshFlight: { sessionId: string | null; promise: Promise<string> } | null = null
+
+async function refreshAccessToken(failedAccessToken: string, sessionId: string | null): Promise<string> {
+  const renew = async () => {
+    // Relire APRES le verrou : un autre onglet peut avoir fini la rotation.
+    await useAuthStore.persist.rehydrate()
+    const start = authStore.get()
+    if (start.sessionId !== sessionId || !start.accessToken) {
+      throw new ApiError('Session modifiée', 'SESSION_CHANGED', 0)
+    }
+    if (start.accessToken !== failedAccessToken) return start.accessToken
+    if (!start.refreshToken) {
+      useAuthStore.getState().clearSession()
+      throw new ApiError('Session expirée', 'UNAUTHORIZED', 401)
+    }
+    try {
+      const { data } = await bare.post('/auth/refresh', { refreshToken: start.refreshToken })
+      const current = authStore.get()
+      if (current.sessionId !== sessionId || !current.accessToken) {
+        throw new ApiError('Session modifiée', 'SESSION_CHANGED', 0)
+      }
+      // Une reponse ancienne ne remplace jamais une connexion ou rotation plus recente.
+      if (current.refreshToken !== start.refreshToken) return current.accessToken
+      if (!data.accessToken || !data.refreshToken) {
+        throw new ApiError('Réponse de renouvellement invalide', 'INVALID_AUTH_RESPONSE', 502)
+      }
+      useAuthStore.getState().setTokens(data)
+      return data.accessToken as string
+    } catch (error) {
+      const failure = asApiError(error)
+      const current = authStore.get()
+      if (current.sessionId === sessionId && current.refreshToken === start.refreshToken && failure.status === 401) {
+        useAuthStore.getState().clearSession()
+      }
+      // 429, 5xx, timeout et hors-ligne preservent la session et leur vrai statut.
+      throw failure
+    }
+  }
+  // Le verrou navigateur couvre les onglets ; la promesse couvre les requetes
+  // du meme onglet. Sans Web Locks, la grace serveur absorbe les doublons proches.
+  if (typeof navigator !== 'undefined' && navigator.locks) {
+    return navigator.locks.request('sendprocolis-auth-refresh', renew)
+  }
+  return renew()
 }
 
 api.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError<{ message?: string; error?: { code?: string; details?: unknown[] } }>) => {
-    const original = error.config as (AxiosRequestConfig & { _retried?: boolean }) | undefined
-    const status = error.response?.status
-
-    // Try one transparent refresh on 401, then replay the original request.
-    if (status === 401 && original && !original._retried && !original.url?.includes('/auth/')) {
-      original._retried = true
-      try {
-        refreshPromise = refreshPromise ?? refreshAccessToken()
-        const token = await refreshPromise
-        refreshPromise = null
-        original.headers = { ...(original.headers ?? {}), Authorization: `Bearer ${token}` }
-        return api(original)
-      } catch {
-        refreshPromise = null
-        useAuthStore.getState().clearSession()
-      }
+  async (error: AxiosError) => {
+    const original = error.config as AuthRequest | undefined
+    const state = authStore.get()
+    if (error.response?.status !== 401 || !original || isPublicAuth(original.url) ||
+        !original._authAccessToken || original._authSessionId !== state.sessionId) {
+      throw asApiError(error)
     }
-
-    const body = error.response?.data
-    throw new ApiError(
-      body?.message || error.message || 'Erreur réseau',
-      body?.error?.code || 'NETWORK_ERROR',
-      status ?? 0,
-      body?.error?.details ?? [],
-    )
+    if (original._retried) {
+      if (state.accessToken === original._authAccessToken) useAuthStore.getState().clearSession()
+      throw asApiError(error)
+    }
+    original._retried = true
+    if (!refreshFlight || refreshFlight.sessionId !== state.sessionId) {
+      const flight = { sessionId: state.sessionId, promise: Promise.resolve('') }
+      flight.promise = refreshAccessToken(original._authAccessToken, state.sessionId).finally(() => {
+        if (refreshFlight === flight) refreshFlight = null
+      })
+      refreshFlight = flight
+    }
+    const token = await refreshFlight.promise
+    // Le nouveau token est aussi rattache a la generation de session courante.
+    if (authStore.get().sessionId !== original._authSessionId) throw new ApiError('Session modifiée', 'SESSION_CHANGED', 0)
+    original.headers.set('Authorization', `Bearer ${token}`)
+    return api(original)
   },
 )
 

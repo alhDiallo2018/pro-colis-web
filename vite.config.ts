@@ -4,6 +4,26 @@ import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
+import { createHash } from 'node:crypto'
+
+/** Versionne le worker à partir des bundles et de l'écran de secours, sans
+ * dépendance de build supplémentaire ni cache des données de l'utilisateur. */
+function pwaPlugin(): Plugin {
+  return {
+    name: 'procolis-pwa',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      const source = readFileSync(new URL('./pwa/sw.js', import.meta.url), 'utf-8')
+      const hash = createHash('sha256').update(Object.keys(bundle).sort().join('\n') + source)
+      // Les icônes non hashées doivent elles aussi invalider le précache.
+      for (const file of ['offline.html', 'manifest.webmanifest', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png']) {
+        hash.update(readFileSync(new URL(`./public/${file}`, import.meta.url)))
+      }
+      const version = hash.digest('hex').slice(0, 16)
+      this.emitFile({ type: 'asset', fileName: 'sw.js', source: source.replace('__BUILD_VERSION__', version) })
+    },
+  }
+}
 
 function broadcastsPlugin(): Plugin {
   const dataDir = join(process.cwd(), '.broadcasts')
@@ -67,7 +87,7 @@ function broadcastsPlugin(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), broadcastsPlugin()],
+  plugins: [react(), broadcastsPlugin(), pwaPlugin()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

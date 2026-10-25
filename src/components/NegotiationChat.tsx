@@ -7,6 +7,7 @@ import * as adsApi from '@/lib/api/advertisements'
 import { isMessageEditable, type ChatMessage } from '@/lib/api/messages'
 import { uploadChatAudio, uploadChatPhoto, uploadChatVideo } from '@/lib/api/uploads'
 import { useAuthStore } from '@/store/auth'
+import { supportThread, supportSend } from '@/lib/api/supportChat'
 
 const PRIX_PREFIX = '__PRIX__'
 
@@ -25,6 +26,8 @@ function nf(n: number) {
 }
 
 interface Props {
+  supportConversationId?: string
+  readOnly?: boolean
   peerId: string
   peerName: string
   parcelId?: string
@@ -64,7 +67,7 @@ interface Props {
   onAcceptBid?: (price: number, message?: string) => void
 }
 
-export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertisementId, offerId, parcelInfo, isOwner: _isOwner = false, canAccept, acceptBlocked = false, acceptBlockedLabel = 'Dette à régler', onCreateBid, onAcceptBid }: Props) {
+export function NegotiationChat({ supportConversationId, readOnly = false, peerId, peerName, parcelId, bidId, advertisementId, offerId, parcelInfo, isOwner: _isOwner = false, canAccept, acceptBlocked = false, acceptBlockedLabel = 'Dette à régler', onCreateBid, onAcceptBid }: Props) {
   // Sans indication du parent, on retombe sur l'ancien comportement : seul le
   // propriétaire du colis pouvait accepter un prix.
   const user = useAuthStore((s) => s.user)
@@ -75,21 +78,22 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
   const isAdvertisementOffer = Boolean(offerId && advertisementId)
   const acceptAllowed = (canAccept ?? _isOwner) && (!isAdvertisementOffer || role === 'driver')
   const qc = useQueryClient()
-  const key = ['messages', 'thread', peerId, parcelId ?? null]
+  const key = supportConversationId ? ['support-chat', supportConversationId] : ['messages', 'thread', peerId, parcelId ?? null]
 
   const thread = useQuery({
     queryKey: key,
-    queryFn: () => messagesApi.thread(peerId, parcelId),
+    queryFn: async () => supportConversationId ? supportThread(supportConversationId) : messagesApi.thread(peerId, parcelId),
     enabled: Boolean(peerId),
     refetchInterval: 4000,
   })
-  const messages = thread.data ?? []
+  const messages = Array.isArray(thread.data) ? thread.data : thread.data?.messages ?? []
 
   const send = useMutation({
     mutationFn: (payload: { body?: string; audioUrl?: string; photoUrl?: string; videoUrl?: string }) =>
-      messagesApi.send({ receiverId: peerId, parcelId, ...payload }),
+      supportConversationId ? supportSend(supportConversationId, payload) : messagesApi.send({ receiverId: peerId, parcelId, ...payload }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: key })
+      if (supportConversationId) qc.invalidateQueries({ queryKey: ['support-chat', 'queue'] })
       qc.invalidateQueries({ queryKey: ['client', 'bids'] })
       qc.invalidateQueries({ queryKey: ['driver', 'bids'] })
     },
@@ -387,7 +391,7 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
           <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)', padding: 20 }}>
             <Icon name="forum" size={28} style={{ color: 'var(--text-faint)' }} />
             <p style={{ margin: '6px 0 0', fontSize: 'var(--fs-sm)' }}>
-              Demarrez la negociation avec {peerName}.
+              {supportConversationId ? `Écrivez votre message à ${peerName}.` : `Demarrez la negociation avec ${peerName}.`}
             </p>
           </div>
         ) : (
@@ -400,9 +404,11 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
               : null
 
             return messages.map((m) => (
+              <div key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {supportConversationId && <span style={{ fontSize: 11, textAlign: m.senderId === userId ? 'right' : 'left', color: 'var(--text-muted)' }}>{m.sender?.fullName ?? 'Support'}</span>}
               <MessageBubble
-                key={m.id}
                 message={m}
+                supportMessage={!!supportConversationId}
                 mine={m.senderId === userId}
                 isOwner={acceptAllowed}
                 isLastNonMinePrice={m.id === lastNonMinePriceId}
@@ -410,10 +416,11 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
                 acceptBlockedLabel={acceptBlockedLabel}
                 onAcceptPrice={(amount) => handleAcceptPrice(amount)}
                 onCounterPrice={(amount) => handleCounterPrice(amount)}
-                onEdit={(body) => editMessage.mutate({ messageId: m.id, body })}
-                onDelete={() => setPendingDelete(m.id)}
+                onEdit={supportConversationId || readOnly ? undefined : (body) => editMessage.mutate({ messageId: m.id, body })}
+                onDelete={supportConversationId || readOnly ? undefined : () => setPendingDelete(m.id)}
                 busy={editMessage.isPending || deleteMessage.isPending}
               />
+              </div>
             ))
           })()
         )}
@@ -424,6 +431,8 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
         )}
       </div>
 
+      {send.isError && <p role="alert">{send.error instanceof Error ? send.error.message : 'Envoi impossible'}</p>}
+      {!readOnly && <>
       {/* price input row */}
       {showPrice && (
         <div style={{ display: 'flex', gap: 8, paddingTop: 8, alignItems: 'center' }}>
@@ -491,11 +500,11 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
           </>
         ) : (
           <>
-            <button type="button" aria-label="Proposer un prix" title="Proposer un prix"
+            {!supportConversationId && <button type="button" aria-label="Proposer un prix" title="Proposer un prix"
               onClick={() => setShowPrice(!showPrice)}
               style={iconBtn(showPrice ? 'var(--amber-500)' : 'var(--surface-sunken)', showPrice ? '#fff' : 'var(--text-muted)')}>
               <Icon name="payments" size={20} />
-            </button>
+            </button>}
             <button
               type="button"
               aria-label="Envoyer une photo"
@@ -542,6 +551,7 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
         )}
       </div>
 
+      </>}
       {/* Suppression d'un message : irréversible côté fil, donc confirmée. */}
       {pendingDelete && (
         <Dialog
@@ -628,6 +638,7 @@ export function NegotiationChat({ peerId, peerName, parcelId, bidId, advertiseme
 }
 
 interface BubbleProps {
+  supportMessage?: boolean
   message: ChatMessage
   mine: boolean
   isOwner?: boolean
@@ -649,8 +660,8 @@ function parsePriceProposal(body: string): { isPrice: boolean; amount: number; m
   return { isPrice: true, amount, message: parts.slice(1).join(':').trim() }
 }
 
-function MessageBubble({ message, mine, isOwner = false, isLastNonMinePrice = false, acceptBlocked = false, acceptBlockedLabel = 'Dette à régler', onAcceptPrice, onCounterPrice, onEdit, onDelete, busy = false }: BubbleProps) {
-  const priceData = parsePriceProposal(message.body)
+function MessageBubble({ supportMessage = false, message, mine, isOwner = false, isLastNonMinePrice = false, acceptBlocked = false, acceptBlockedLabel = 'Dette à régler', onAcceptPrice, onCounterPrice, onEdit, onDelete, busy = false }: BubbleProps) {
+  const priceData = supportMessage ? null : parsePriceProposal(message.body)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(message.body ?? '')
 
