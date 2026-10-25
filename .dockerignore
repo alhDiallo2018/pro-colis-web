@@ -10,3 +10,7 @@ output.txt
 .DS_Store
 npm-debug.log*
 *.log
+
+# Sauvegardes et fichiers de recuperation locaux : jamais dans les images.
+*.bak.*
+*.save

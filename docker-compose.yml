@@ -54,7 +54,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: 8080
-      DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:5432/sendprocolis?schema=public
+      DATABASE_URL: "${DATABASE_URL:?DATABASE_URL doit être définie dans .env}"
+      METRICS_TOKEN: "${METRICS_TOKEN:?METRICS_TOKEN manquant dans .env}"
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       JWT_ACCESS_EXPIRES_IN: 15m
