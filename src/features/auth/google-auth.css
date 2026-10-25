@@ -1,0 +1,13 @@
+.pc-google-auth { margin: 0 0 24px; }
+.pc-google-button { width: 100%; min-height: 44px; }
+.pc-google-auth p { color: var(--text-muted); font-size: 14px; line-height: 1.5; }
+.pc-google-divider { display: flex; align-items: center; gap: 12px; margin-top: 24px; color: var(--text-muted); font-size: 12px; }
+.pc-google-divider::before, .pc-google-divider::after { content: ''; height: 1px; flex: 1; background: var(--border-strong); }
+.pc-google-profile { padding: 24px; border: 1px solid var(--border-strong); border-radius: 16px; background: var(--surface-card); }
+.pc-google-profile h2 { font-family: var(--font-display); font-size: 22px; margin: 20px 0 8px; color: var(--text-strong); }
+.pc-google-profile .pc-google-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .08em; margin: 0 0 6px; }
+.pc-google-profile .pc-google-email { font-weight: 700; color: var(--text-strong); overflow-wrap: anywhere; margin: 0; }
+.pc-google-profile form { display: flex; flex-direction: column; gap: 16px; margin: 20px 0 12px; }
+.pc-google-profile > button { margin-top: 8px; width: 100%; }
+.pc-google-profile .pc-google-label { margin: 0 0 8px; font-weight: 600; }
+@media (max-width: 480px) { .pc-google-profile { padding: 18px 14px; } }

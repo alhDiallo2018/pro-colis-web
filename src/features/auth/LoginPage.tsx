@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button, IconButton, Input, Toast } from '@/ds'
+import { GoogleAuth } from './GoogleAuth'
 import { AuthShell } from './AuthShell'
 import { useLogin } from './useAuth'
 import { loginDestination } from '@/routes/login-destination'
@@ -11,6 +12,7 @@ export function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const login = useLogin()
+  const [googleActive, setGoogleActive] = useState(false)
   const [identifier, setIdentifier] = useState('')
   const [pin, setPin] = useState('')
   const prevPinRef = useRef('')
@@ -75,7 +77,9 @@ export function LoginPage() {
         Entrez votre identifiant et votre code PIN.
       </p>
 
-      <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <GoogleAuth onSuccess={onLoginSuccess} onFlowChange={setGoogleActive} />
+
+      {!googleActive && <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <Input
           label="Identifiant"
           icon="person"
@@ -111,7 +115,7 @@ export function LoginPage() {
         <Button type="submit" block size="lg" iconTrailing="arrow_forward" loading={login.isPending} disabled={!identifier.trim() || !pinValid}>
           Se connecter
         </Button>
-      </form>
+      </form>}
 
       <p style={{ textAlign: 'center', fontSize: 14, margin: '20px 0 0' }}>
         <span style={{ color: 'var(--text-link)', fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/pin-oublie', { state: location.state })}>
@@ -121,7 +125,7 @@ export function LoginPage() {
 
       <p style={{ textAlign: 'center', fontSize: 14, color: 'var(--text-muted)', margin: '28px 0 0' }}>
         Pas encore de compte ?{' '}
-        <span style={{ color: 'var(--text-link)', fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/register')}>
+        <span style={{ color: 'var(--text-link)', fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/register', { state: location.state })}>
           Créer un compte
         </span>
       </p>

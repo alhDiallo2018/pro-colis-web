@@ -81,6 +81,9 @@ www.{$DOMAIN} {
 			try_files {path} /index.html
 			# L'ordre explicite applique l'en-tête APRÈS la réécriture SPA.
 			header /index.html Cache-Control "no-cache"
+			# Conserver la communication avec la fenetre Google en mode popup.
+			header /index.html Cross-Origin-Opener-Policy "same-origin-allow-popups"
+			header /index.html Referrer-Policy "strict-origin-when-cross-origin"
 			file_server
 		}
 	}

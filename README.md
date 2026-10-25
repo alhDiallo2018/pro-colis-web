@@ -77,3 +77,24 @@ Guide Apple : https://support.apple.com/guide/iphone/open-as-web-app-iphea86e523
   le DS utilise `pickup` / `transit` / `delivering`. Mapping dans `src/lib/format.ts` (`toStatusKey`).
 - Le dossier `ProcoLis mockups et dashboards/` (design system source) et `specs/` sont
   des références, exclus du lint.
+
+
+### Connexion et inscription Google
+
+`/login` et `/register` utilisent le bouton officiel Google Identity Services.
+Le client OAuth **Application Web** est lu depuis `/api/v1/auth/google/config`.
+Renseigner `GOOGLE_WEB_CLIENT_ID` dans le `.env` de la stack Compose web : cette
+valeur est transmise à l'API. Aucun secret OAuth ni variable Vite n'est requis.
+Autoriser `https://sendprocolis.com` dans les origines JavaScript du client Google
+(et l'origine exacte avec port pour le développement).
+
+Déployer les migrations Google de l'API et recréer le service API après avoir
+renseigné sa configuration. Le web gère ensuite la connexion, l'association par
+PIN ou l'inscription avec validation SMS, choix du profil et consentement.
+Brevo doit être configuré pour l'envoi des SMS. Sans client OAuth configuré,
+les formulaires classiques restent disponibles et Google est indiqué indisponible.
+
+Le Caddyfile autorise les popups d'authentification sur la SPA. Le parcours
+utilise un callback JavaScript, sans nouvelle URI de redirection côté API.
+Les tests automatisés simulent Google/SMS ; un essai réel exige une origine
+Google autorisée et les services configurés.

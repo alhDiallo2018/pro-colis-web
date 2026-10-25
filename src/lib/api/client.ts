@@ -28,6 +28,8 @@ type AuthRequest = InternalAxiosRequestConfig & {
 }
 const publicAuthRoutes = new Set([
   '/auth/login', '/auth/login-with-pin', '/auth/register', '/auth/refresh',
+  // Une preuve Google/PIN refusee ne doit jamais declencher une rotation de session.
+  '/auth/google/config', '/auth/google', '/auth/google/link', '/auth/google/phone-otp', '/auth/google/register',
   '/auth/logout', '/auth/forgot-password', '/auth/reset-password',
   '/auth/send-otp', '/auth/verify-otp', '/auth/verify-email', '/auth/resend-verification',
 ])

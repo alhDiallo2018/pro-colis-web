@@ -59,6 +59,8 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       JWT_ACCESS_EXPIRES_IN: 15m
       JWT_REFRESH_EXPIRES_IN: 30d
+      # Client OAuth Web public, partage par Android et Google Identity Services.
+      GOOGLE_WEB_CLIENT_ID: ${GOOGLE_WEB_CLIENT_ID:-}
       OTP_EXPIRES_MINUTES: 10
       UPLOAD_STORAGE: local
       UPLOAD_LOCAL_DIR: uploads

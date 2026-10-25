@@ -150,3 +150,16 @@ it('relit les jetons de lautre onglet apres acquisition du verrou navigateur', a
   expect(refreshCount).toBe(0)
   expect(store.getState().refreshToken).toBe('refresh-other-tab')
 })
+
+it.each(['/auth/google', '/auth/google/link', '/auth/google/phone-otp', '/auth/google/register'])('une erreur Google sur %s ne renouvelle pas la session existante', async url => {
+  const requests: string[] = []
+  transport = async config => {
+    requests.push(config.url!)
+    expect(config.headers.get('Authorization')).toBeUndefined()
+    fail(config, 401)
+  }
+  const { api, store } = await openSession()
+  await expect(api.post(url, {})).rejects.toMatchObject({ status: 401 })
+  expect(requests).toEqual([url])
+  expect(store.getState().accessToken).toBe('access-old')
+})

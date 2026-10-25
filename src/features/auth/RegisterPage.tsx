@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button, Checkbox, IconButton, Input, SegmentedControl, Toast } from '@/ds'
+import { GoogleAuth } from './GoogleAuth'
 import { AuthShell } from './AuthShell'
 import { useRegister } from './useAuth'
-import { homeForRole } from '@/routes/paths'
+import { loginDestination } from '@/routes/login-destination'
 import { ApiError } from '@/lib/api/client'
 import type { Role } from '@/lib/api/types'
 import { LocationInput } from '@/components/LocationInput'
@@ -22,6 +23,8 @@ const PERKS = [
 
 export function RegisterPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [googleActive, setGoogleActive] = useState(false)
   const registerMut = useRegister()
   const [role, setRole] = useState<Role>('client')
   const [fullName, setFullName] = useState('')
@@ -55,7 +58,7 @@ export function RegisterPage() {
         phone: `${countryCode}${phone.trim()}`,
         pin,
       },
-      { onSuccess: (session) => navigate(homeForRole(session.user.role), { replace: true }) },
+      { onSuccess: (session) => navigate(loginDestination(location.state, session.user.role), { replace: true }) },
     )
   }
 
@@ -92,7 +95,10 @@ export function RegisterPage() {
       </h1>
       <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '0 0 22px' }}>Quelques informations et vous êtes prêt.</p>
 
-      <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <GoogleAuth onFlowChange={setGoogleActive} initialRole={role === 'driver' ? 'driver' : 'client'}
+        onSuccess={session => navigate(loginDestination(location.state, session.user.role), { replace: true })} />
+
+      {!googleActive && <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         <div>
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, color: 'var(--text-body)', marginBottom: 8 }}>Je veux…</div>
           <SegmentedControl block options={ROLE_OPTIONS} value={role} onChange={(v) => setRole(v as Role)} />
@@ -162,11 +168,11 @@ export function RegisterPage() {
         <Button type="submit" block size="lg" icon="person_add" loading={registerMut.isPending} disabled={!canSubmit}>
           Créer mon compte
         </Button>
-      </form>
+      </form>}
 
       <p style={{ textAlign: 'center', fontSize: 14, color: 'var(--text-muted)', margin: '22px 0 0' }}>
         Déjà un compte ?{' '}
-        <span style={{ color: 'var(--text-link)', fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/login')}>
+        <span style={{ color: 'var(--text-link)', fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/login', { state: location.state })}>
           Se connecter
         </span>
       </p>
