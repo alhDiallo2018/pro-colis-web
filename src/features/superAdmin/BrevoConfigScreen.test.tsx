@@ -61,9 +61,35 @@ it('permet le retour explicite a la cle du serveur', async () => {
 
 it('explique une configuration absente et permet de renseigner la premiere cle', async () => {
   vi.mocked(getBrevoConfig).mockResolvedValue({ ...configured, apiKey: '', apiKeyConfigured: false, apiKeySource: 'none', environmentApiKeyConfigured: false })
-  await open()
+  const user = await open()
   expect(screen.getByRole('status')).toHaveTextContent('Aucune clé API configurée.')
   expect(screen.getByLabelText('Nouvelle clé API Brevo')).toBeEnabled()
+  await user.type(screen.getByLabelText('Adresse email de test'), 'test@example.test')
+  expect(screen.getByRole('button', { name: /Tester/ })).toBeDisabled()
+  await user.click(screen.getByRole('button', { name: /Enregistrer/ }))
+  expect(updateBrevoConfig).not.toHaveBeenCalled()
+  expect(screen.getByText('Renseignez une clé API Brevo avant d’enregistrer la configuration.')).toBeInTheDocument()
+  await user.type(screen.getByLabelText('Nouvelle clé API Brevo'), 'new-test-key')
+  await user.click(screen.getByRole('button', { name: /Enregistrer/ }))
+  await waitFor(() => expect(updateBrevoConfig).toHaveBeenCalledWith(expect.objectContaining({ apiKey: 'new-test-key' })))
+  await waitFor(() => expect(screen.getByRole('button', { name: /Tester/ })).toBeEnabled())
+})
+
+it('ne permet pas de retirer la cle admin quand aucune cle serveur ne peut la remplacer', async () => {
+  vi.mocked(getBrevoConfig).mockResolvedValue({ ...configured, apiKeySource: 'database', environmentApiKeyConfigured: false })
+  const user = await open()
+  expect(screen.getByRole('button', { name: 'Utiliser la clé du serveur' })).toBeDisabled()
+  await user.click(screen.getByRole('button', { name: 'Utiliser la clé du serveur' }))
+  await user.click(screen.getByRole('button', { name: /Enregistrer/ }))
+  await waitFor(() => expect(updateBrevoConfig).toHaveBeenCalledTimes(1))
+  expect(vi.mocked(updateBrevoConfig).mock.calls[0][0]).not.toHaveProperty('apiKey')
+})
+
+it('ne presente pas une sauvegarde sans cle effective comme une configuration operationnelle', async () => {
+  vi.mocked(updateBrevoConfig).mockResolvedValue({ ...configured, apiKey: '', apiKeyConfigured: false, apiKeySource: 'none', environmentApiKeyConfigured: false })
+  const user = await open()
+  await user.click(screen.getByRole('button', { name: /Enregistrer/ }))
+  expect(await screen.findByText('Paramètres enregistrés, mais aucune clé API Brevo n’est configurée. Les envois sont indisponibles.')).toBeInTheDocument()
 })
 
 it('ne permet pas d ecraser les reglages tant que leur chargement a echoue', async () => {

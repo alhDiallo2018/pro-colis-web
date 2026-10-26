@@ -13,6 +13,7 @@ export function BrevoConfigScreen() {
   const [testEmail, setTestEmail] = useState('')
   const [testing, setTesting] = useState(false)
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null)
+  const keyConfigured = config?.apiKeyConfigured ?? Boolean(config?.apiKey)
 
   const [form, setForm] = useState({
     apiKey: '',
@@ -23,6 +24,7 @@ export function BrevoConfigScreen() {
 
   const load = async () => {
     setLoading(true)
+    setMessage(null)
     try {
       const c = await getBrevoConfig()
       setConfig(c)
@@ -44,6 +46,12 @@ export function BrevoConfigScreen() {
   }
 
   const save = async () => {
+    // Un champ vide conserve seulement une cle deja enregistree. Il ne peut
+    // pas configurer Brevo lors de la premiere saisie ou apres son retrait.
+    if (!keyConfigured && !form.apiKey.trim() && !useServerKey) {
+      setMessage({ tone: 'error', text: 'Renseignez une clé API Brevo avant d’enregistrer la configuration.' })
+      return
+    }
     // Une erreur sur le nom SMS ne doit pas masquer la cause du refus de
     // sauvegarde de la cle. Le meme plafond est applique par l'API.
     if (form.smsSender.trim().length > 11) {
@@ -64,7 +72,9 @@ export function BrevoConfigScreen() {
       setConfig(updated)
       setUseServerKey(false)
       setForm({ apiKey: '', senderEmail: updated.senderEmail, senderName: updated.senderName, smsSender: updated.smsSender })
-      setMessage({ tone: 'success', text: 'Configuration Brevo enregistrée.' })
+      setMessage((updated.apiKeyConfigured ?? Boolean(updated.apiKey))
+        ? { tone: 'success', text: 'Configuration Brevo enregistrée. Testez l’envoi pour vérifier son fonctionnement.' }
+        : { tone: 'error', text: 'Paramètres enregistrés, mais aucune clé API Brevo n’est configurée. Les envois sont indisponibles.' })
     } catch (e) {
       setMessage({ tone: 'error', text: e instanceof ApiError ? e.message : 'Échec de la sauvegarde.' })
     } finally {
@@ -120,15 +130,18 @@ export function BrevoConfigScreen() {
               type="password"
               autoComplete="new-password"
               spellCheck={false}
-              placeholder="Laisser vide pour conserver la clé actuelle"
+              placeholder={keyConfigured ? 'Laisser vide pour conserver la clé actuelle' : 'Renseigner la clé API Brevo'}
               value={form.apiKey}
               onChange={(e) => { setUseServerKey(false); setForm((f) => ({ ...f, apiKey: e.target.value })) }}
             />
             {config.apiKeySource === 'database' && (
-              <Button variant="ghost" onClick={() => { setUseServerKey(true); setForm((f) => ({ ...f, apiKey: '' })) }}>
+              <Button variant="ghost" disabled={!config.environmentApiKeyConfigured} onClick={() => { setUseServerKey(true); setForm((f) => ({ ...f, apiKey: '' })) }}>
                 Utiliser la clé du serveur
               </Button>
             )}
+            {config.apiKeySource === 'database' && !config.environmentApiKeyConfigured && <p style={{ margin: 0, fontSize: 'var(--fs-sm)' }}>
+              Aucune clé serveur disponible. La clé enregistrée dans l’administration est conservée.
+            </p>}
             {useServerKey && <p style={{ margin: 0, fontSize: 'var(--fs-sm)' }}>
               Après enregistrement, la clé du serveur sera utilisée.
               {!config.environmentApiKeyConfigured && ' Aucune clé serveur n’est actuellement configurée : les envois seront indisponibles.'}
@@ -168,6 +181,9 @@ export function BrevoConfigScreen() {
         <p style={{ margin: '0 0 16px', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
           Envoyez un email de test pour vérifier que la configuration fonctionne.
         </p>
+        {!keyConfigured && <p style={{ fontSize: 'var(--fs-sm)' }}>
+          {config ? 'Enregistrez une clé API Brevo pour activer le test d’envoi.' : 'Chargez la configuration avant de tester l’envoi.'}
+        </p>}
 
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <Input
@@ -178,7 +194,7 @@ export function BrevoConfigScreen() {
             onChange={(e) => setTestEmail(e.target.value)}
             style={{ flex: 1 }}
           />
-          <Button icon="send" loading={testing} disabled={!testEmail} onClick={test}>
+          <Button icon="send" loading={testing} disabled={!testEmail || !keyConfigured || saving} onClick={test}>
             Tester
           </Button>
         </div>
