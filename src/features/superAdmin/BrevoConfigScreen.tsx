@@ -44,6 +44,12 @@ export function BrevoConfigScreen() {
   }
 
   const save = async () => {
+    // Une erreur sur le nom SMS ne doit pas masquer la cause du refus de
+    // sauvegarde de la cle. Le meme plafond est applique par l'API.
+    if (form.smsSender.trim().length > 11) {
+      setMessage({ tone: 'error', text: 'L’expéditeur SMS doit contenir au maximum 11 caractères. Utilisez par exemple ProColis.' })
+      return
+    }
     setSaving(true)
     setMessage(null)
     try {
@@ -51,9 +57,9 @@ export function BrevoConfigScreen() {
       // envoie une valeur vide pour retirer la surcharge stockee en base.
       const updated = await updateBrevoConfig({
         ...(useServerKey ? { apiKey: '' } : form.apiKey.trim() ? { apiKey: form.apiKey.trim() } : {}),
-        senderEmail: form.senderEmail,
+        senderEmail: form.senderEmail.trim(),
         senderName: form.senderName,
-        smsSender: form.smsSender,
+        smsSender: form.smsSender.trim(),
       })
       setConfig(updated)
       setUseServerKey(false)
@@ -141,7 +147,8 @@ export function BrevoConfigScreen() {
             />
             <Input
               label="Expéditeur SMS (max 11 caractères)"
-              placeholder="SENDPROCOLIS"
+              placeholder="ProColis"
+              error={form.smsSender.trim().length > 11 ? 'Maximum 11 caractères, par exemple ProColis.' : undefined}
               value={form.smsSender}
               onChange={(e) => setForm((f) => ({ ...f, smsSender: e.target.value }))}
             />

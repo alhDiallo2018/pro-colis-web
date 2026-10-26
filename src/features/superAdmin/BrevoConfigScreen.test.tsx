@@ -74,3 +74,19 @@ it('ne permet pas d ecraser les reglages tant que leur chargement a echoue', asy
   await screen.findByText('Impossible de charger la configuration.')
   expect(screen.queryByRole('button', { name: /Enregistrer/ })).not.toBeInTheDocument()
 })
+
+
+it('explique le refus d un expediteur SMS de 12 caracteres avant toute sauvegarde', async () => {
+  const user = await open()
+  const sender = screen.getByLabelText('Expéditeur SMS (max 11 caractères)')
+  await user.clear(sender)
+  await user.type(sender, 'SENDPROCOLIS')
+  await user.type(screen.getByLabelText('Nouvelle clé API Brevo'), 'test-only-key')
+  await user.click(screen.getByRole('button', { name: /Enregistrer/ }))
+  expect(updateBrevoConfig).not.toHaveBeenCalled()
+  expect(screen.getByText('L’expéditeur SMS doit contenir au maximum 11 caractères. Utilisez par exemple ProColis.')).toBeInTheDocument()
+  await user.clear(sender)
+  await user.type(sender, 'ProColis')
+  await user.click(screen.getByRole('button', { name: /Enregistrer/ }))
+  await waitFor(() => expect(updateBrevoConfig).toHaveBeenCalledWith(expect.objectContaining({ smsSender: 'ProColis', apiKey: 'test-only-key' })))
+})
