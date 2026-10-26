@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { Icon } from '@/ds'
 import type { Zone } from '@/lib/api/types'
 import type { ResolvedZone } from '@/lib/api/zones'
+import { LocationInput, type PlaceDetails } from './LocationInput'
 import { ZonePickerDialog } from './ZonePickerDialog'
 
 export interface GarageSearchSelectProps {
@@ -38,6 +39,8 @@ export function GarageSearchSelect({
 }: GarageSearchSelectProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [pickerQuery, setPickerQuery] = useState('')
+  const [initialPlace, setInitialPlace] = useState<{ lat: number; lng: number; details?: PlaceDetails }>()
   const [pickerOpen, setPickerOpen] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -101,6 +104,8 @@ export function GarageSearchSelect({
   }
 
   const handleStartAdd = () => {
+    setPickerQuery(query)
+    setInitialPlace(undefined)
     setPickerOpen(true)
     setOpen(false)
   }
@@ -137,22 +142,33 @@ export function GarageSearchSelect({
           alignItems: 'center',
           gap: 8,
           height: 48,
-          padding: '0 14px',
+          padding: open && canAddNew ? 0 : '0 14px',
           background: disabled ? 'var(--surface-sunken)' : 'var(--surface-card)',
-          border: `1px solid ${borderColor}`,
+          border: open && canAddNew ? 'none' : `1px solid ${borderColor}`,
           borderRadius: 'var(--radius-md)',
           boxShadow: open && !error ? 'var(--ring-focus)' : 'none',
           transition: 'border-color var(--dur-fast), box-shadow var(--dur-fast)',
           cursor: disabled ? 'not-allowed' : 'pointer',
         }}
       >
-        {icon && (
+        {icon && !(open && canAddNew) && (
           <span className="material-symbols-rounded" style={{ fontSize: 20, color: open ? 'var(--color-primary)' : 'var(--text-faint)' }}>
             {icon}
           </span>
         )}
 
-        {open ? (
+        {open && canAddNew ? (
+          <div style={{ flex: 1, minWidth: 0, position: 'relative', zIndex: 1001 }} onClick={e => e.stopPropagation()}>
+            <LocationInput autoFocus icon="search" value={query} placeholder="Ville, quartier, adresse dans le monde…"
+              showGeolocate={false} onChange={text => setQuery(text)}
+              onCoordinates={(lat, lng, details) => {
+                setInitialPlace({ lat, lng, details })
+                setPickerQuery(details?.formattedAddress || query)
+                setPickerOpen(true)
+                setOpen(false)
+              }} />
+          </div>
+        ) : open ? (
           <input
             ref={inputRef}
             type="text"
@@ -190,10 +206,15 @@ export function GarageSearchSelect({
           </span>
         )}
 
-        <span className="material-symbols-rounded" style={{ fontSize: 22, color: 'var(--text-muted)' }}>
+        {!(open && canAddNew) && <span className="material-symbols-rounded" style={{ fontSize: 22, color: 'var(--text-muted)' }}>
           {open ? 'search' : 'expand_more'}
-        </span>
+        </span>}
       </div>
+
+      {canAddNew && <button type="button" disabled={disabled} onClick={handleStartAdd}
+        style={{ marginTop: 8, padding: '10px 0', border: 0, background: 'transparent', color: 'var(--color-primary)', cursor: 'pointer', font: 'inherit' }}>
+        <Icon name="map" size={18} /> Choisir un point précis sur la carte
+      </button>}
 
       {error && <span style={{ fontSize: 12, color: 'var(--color-danger)', display: 'block', marginTop: 4 }}>{error}</span>}
 
@@ -274,7 +295,8 @@ export function GarageSearchSelect({
       {canAddNew && (
         <ZonePickerDialog
           open={pickerOpen}
-          initialQuery={query}
+          initialQuery={pickerQuery}
+          initialPlace={initialPlace}
           onClose={() => setPickerOpen(false)}
           onResolved={handleResolved}
         />

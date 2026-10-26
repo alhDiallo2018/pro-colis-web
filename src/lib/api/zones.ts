@@ -38,6 +38,7 @@ export async function listZones(params?: {
 }
 
 export interface ResolveZonePayload {
+  exactPoint?: boolean
   placeId?: string
   name?: string
   displayName?: string

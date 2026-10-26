@@ -11,6 +11,7 @@ export interface ZonePickerDialogProps {
   open: boolean
   /** Texte déjà saisi dans le sélecteur, réutilisé comme nom par défaut. */
   initialQuery?: string
+  initialPlace?: { lat: number; lng: number; details?: PlaceDetails }
   onClose: () => void
   /**
    * Zone retenue. `zone` est la zone : c'est elle qu'il faut poser
@@ -22,6 +23,7 @@ export interface ZonePickerDialogProps {
 interface Picked {
   lat: number
   lng: number
+  exactPoint?: boolean
   placeId?: string
   city?: string
   region?: string
@@ -36,23 +38,27 @@ interface Picked {
  * La zone créée part en `pending` côté API : elle est utilisable tout de suite
  * par son auteur, mais n'apparaît chez les autres qu'une fois validée.
  */
-export function ZonePickerDialog({ open, initialQuery = '', onClose, onResolved }: ZonePickerDialogProps) {
+export function ZonePickerDialog({ open, initialQuery = '', initialPlace, onClose, onResolved }: ZonePickerDialogProps) {
   const [picked, setPicked] = useState<Picked | null>(null)
   const [name, setName] = useState(initialQuery)
   // L'utilisateur a-t-il repris la main sur le nom ? Si oui, on cesse de
   // l'écraser à chaque déplacement du repère.
   const [nameTouched, setNameTouched] = useState(false)
+  const [resolving, setResolving] = useState(false)
+  const [searchQuery, setSearchQuery] = useState(initialQuery)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
-    setPicked(null)
-    setName(initialQuery)
+    setSearchQuery(initialQuery)
+    setResolving(false)
+    setPicked(initialPlace ? { lat: initialPlace.lat, lng: initialPlace.lng, ...initialPlace.details } : null)
+    setName(initialPlace?.details?.name || initialPlace?.details?.district || initialQuery)
     setNameTouched(false)
     setBusy(false)
     setError(null)
-  }, [open, initialQuery])
+  }, [open, initialQuery, initialPlace])
 
   if (!open) return null
 
@@ -60,6 +66,7 @@ export function ZonePickerDialog({ open, initialQuery = '', onClose, onResolved 
     setPicked({
       lat,
       lng,
+      exactPoint: details?.exactPoint,
       placeId: details?.placeId,
       city: details?.city,
       region: details?.region,
@@ -67,11 +74,13 @@ export function ZonePickerDialog({ open, initialQuery = '', onClose, onResolved 
       formattedAddress: details?.formattedAddress,
     })
     setError(null)
-    const suggested = fallbackName || details?.city || details?.formattedAddress?.split(',')[0]
-    if (!nameTouched && isMeaningfulLocationLabel(suggested)) setName(suggested!.trim())
+    const suggested = fallbackName || details?.name || details?.district || details?.formattedAddress || details?.city
+    if (!nameTouched) setName(isMeaningfulLocationLabel(suggested) ? suggested!.trim() : '')
   }
 
-  const handleSuggestion = (_value: string, place?: PlaceResult) => {
+  const handleSuggestion = (value: string, place?: PlaceResult) => {
+    setSearchQuery(value)
+    setPicked(null)
     // Le nom est proposé ici ; les coordonnées suivent via `onCoordinates`.
     if (place && !nameTouched) {
       const suggested = place.mainText || place.description
@@ -80,6 +89,7 @@ export function ZonePickerDialog({ open, initialQuery = '', onClose, onResolved 
   }
 
   const submit = async () => {
+    if (resolving || busy) return
     if (!picked) return setError('Choisissez un lieu sur la carte ou dans la liste.')
     const label = name.trim()
     if (label.length < 2 || !isMeaningfulLocationLabel(label)) {
@@ -90,6 +100,7 @@ export function ZonePickerDialog({ open, initialQuery = '', onClose, onResolved 
     setError(null)
     try {
       const result = await resolveZone({
+        exactPoint: picked.exactPoint,
         placeId: picked.placeId,
         name: label,
         displayName: picked.formattedAddress || label,
@@ -121,16 +132,16 @@ export function ZonePickerDialog({ open, initialQuery = '', onClose, onResolved 
       onClose={busy ? undefined : onClose}
       icon="add_location_alt"
       iconTone="primary"
-      title="Ajouter une zone"
+      title="Choisir un lieu"
       // Plus haut que le défaut du Dialog : la carte a besoin de place pour
       // rester manipulable sans que le formulaire disparaisse.
-      style={{ maxWidth: 520, maxHeight: 'min(92vh, 760px)', textAlign: 'left' }}
+      style={{ maxWidth: 640, maxHeight: 'min(94dvh, 860px)', textAlign: 'left' }}
       actions={
         <>
           <Button variant="secondary" block onClick={onClose} disabled={busy}>
             Annuler
           </Button>
-          <Button block icon="check" loading={busy} disabled={busy || !picked} onClick={submit}>
+          <Button block icon="check" loading={busy} disabled={busy || resolving || !picked} onClick={submit}>
             Utiliser cette zone
           </Button>
         </>
@@ -138,23 +149,27 @@ export function ZonePickerDialog({ open, initialQuery = '', onClose, onResolved 
     >
       <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <p style={{ margin: 0, fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
-          Recherchez le lieu, ou pointez-le directement sur la carte s’il n’apparaît pas dans les
-          suggestions. Vous pourrez l’utiliser immédiatement ; il sera validé ensuite par l’équipe.
+          1. Recherchez une ville, un quartier ou une adresse dans le monde entier.
+          2. Touchez ou cliquez sur la carte pour placer le repère au point exact.
+          3. Vérifiez le lieu puis confirmez. Vous pourrez l’utiliser immédiatement ; il sera validé ensuite par l’équipe.
         </p>
 
         <LocationInput
-          label="Rechercher un lieu"
+          label="Rechercher partout dans le monde"
+          value={searchQuery}
+          onResolving={setResolving}
           icon="search"
-          placeholder="Ville, quartier, repère…"
-          disabled={busy}
+          placeholder="Paris, Dakar, Tokyo, une adresse…"
+          disabled={busy || resolving}
           onChange={handleSuggestion}
           onCoordinates={(lat, lng, details) => applyDetails(lat, lng, details)}
         />
 
         <MapPicker
           value={picked ? { lat: picked.lat, lng: picked.lng } : null}
+          onResolving={setResolving}
           onChange={(lat, lng, details) => applyDetails(lat, lng, details)}
-          disabled={busy}
+          disabled={busy || resolving}
         />
 
         <Input

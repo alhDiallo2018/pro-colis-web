@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { Icon } from '@/ds'
+import { reversePlace } from '@/lib/api/places'
 import { extractPlaceDetails, loadGoogleMaps, type PlaceDetails } from './LocationInput'
 
 export interface MapPickerProps {
@@ -12,6 +13,7 @@ export interface MapPickerProps {
    * n'a rien à renvoyer pour ce point (pleine mer, désert…).
    */
   onChange: (lat: number, lng: number, details?: PlaceDetails) => void
+  onResolving?: (busy: boolean) => void
   height?: number
   disabled?: boolean
   style?: CSSProperties
@@ -25,15 +27,19 @@ const PICKED_ZOOM = 13
  * Carte Google Maps avec repère déplaçable, pour situer un lieu absent de
  * l'autocomplétion (village, quartier, point de rendez-vous informel).
  */
-export function MapPicker({ value, onChange, height = 240, disabled = false, style }: MapPickerProps) {
+export function MapPicker({ value, onChange, height = 300, disabled = false, style, onResolving }: MapPickerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
   const markerRef = useRef<google.maps.Marker | null>(null)
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null)
+  const generationRef = useRef(0)
+  const disabledRef = useRef(disabled)
+  disabledRef.current = disabled
+  const resolvingRef = useRef(onResolving)
+  resolvingRef.current = onResolving
   const onChangeRef = useRef(onChange)
   // Un repositionnement venant de la carte ne doit pas déclencher un recentrage
   // qui ferait sauter la vue sous le doigt de l'utilisateur.
-  const selfUpdateRef = useRef(false)
+  const selfUpdateRef = useRef<{ lat: number; lng: number } | null>(null)
 
   const [ready, setReady] = useState(false)
   const [failed, setFailed] = useState(false)
@@ -45,27 +51,23 @@ export function MapPicker({ value, onChange, height = 240, disabled = false, sty
 
   /** Géocodage inverse puis remontée du point au parent. */
   const emit = async (lat: number, lng: number) => {
-    selfUpdateRef.current = true
+    if (disabledRef.current) return
+    const generation = ++generationRef.current
     setGeocoding(true)
-    let details: PlaceDetails | undefined
+    resolvingRef.current?.(true)
+    let details: PlaceDetails = { exactPoint: true }
     try {
-      const geocoder = geocoderRef.current ?? new google.maps.Geocoder()
-      geocoderRef.current = geocoder
-      const res = await geocoder.geocode({ location: { lat, lng } })
-      const first = res.results[0]
-      if (first) {
-        details = {
-          ...extractPlaceDetails(first.address_components),
-          placeId: first.place_id,
-          formattedAddress: first.formatted_address,
-        }
-      }
+      const first = await reversePlace(lat, lng)
+      if (first) details = { ...extractPlaceDetails(first.address_components), exactPoint: true,
+        placeId: first.place_id, formattedAddress: first.formatted_address }
     } catch {
-      // Quota ou billing absent : on garde les coordonnées, sans libellé.
-    } finally {
-      setGeocoding(false)
+      // Le point reste utilisable si l'utilisateur renseigne son nom lui-même.
     }
+    if (generation !== generationRef.current) return
+    selfUpdateRef.current = { lat, lng }
+    setGeocoding(false)
     onChangeRef.current(lat, lng, details)
+    resolvingRef.current?.(false)
   }
 
   useEffect(() => {
@@ -90,7 +92,7 @@ export function MapPicker({ value, onChange, height = 240, disabled = false, sty
       const marker = new google.maps.Marker({
         map,
         position: value ?? undefined,
-        draggable: true,
+        draggable: !disabledRef.current,
         visible: !!value,
       })
       markerRef.current = marker
@@ -101,16 +103,19 @@ export function MapPicker({ value, onChange, height = 240, disabled = false, sty
       })
 
       map.addListener('click', (e: google.maps.MapMouseEvent) => {
-        if (!e.latLng) return
+        if (disabledRef.current || !e.latLng) return
         marker.setPosition(e.latLng)
         marker.setVisible(true)
         void emit(e.latLng.lat(), e.latLng.lng())
       })
 
       setReady(true)
-    })
+    }).catch(() => { if (!cancelled) setFailed(true) })
     return () => {
       cancelled = true
+      generationRef.current++
+      if (markerRef.current) { google.maps.event.clearInstanceListeners(markerRef.current); markerRef.current.setMap(null) }
+      if (mapRef.current) google.maps.event.clearInstanceListeners(mapRef.current)
     }
     // Monté une seule fois : les changements de `value` sont traités ci-dessous.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,23 +127,25 @@ export function MapPicker({ value, onChange, height = 240, disabled = false, sty
     const map = mapRef.current
     const marker = markerRef.current
     if (!map || !marker) return
-    if (selfUpdateRef.current) {
-      selfUpdateRef.current = false
-      return
-    }
+    const emitted = selfUpdateRef.current
+    selfUpdateRef.current = null
+    if (emitted && emitted.lat === value?.lat && emitted.lng === value?.lng) return
     if (!value) {
       marker.setVisible(false)
       return
     }
+    // Une sélection externe invalide tout géocodage de carte en vol.
+    generationRef.current++
+    setGeocoding(false)
     marker.setPosition(value)
     marker.setVisible(true)
     map.panTo(value)
     if ((map.getZoom() ?? 0) < PICKED_ZOOM) map.setZoom(PICKED_ZOOM)
-  }, [value])
+  }, [value?.lat, value?.lng, ready])
 
   useEffect(() => {
     markerRef.current?.setDraggable(!disabled)
-  }, [disabled])
+  }, [disabled, ready])
 
   if (failed) {
     return (
@@ -179,10 +186,8 @@ export function MapPicker({ value, onChange, height = 240, disabled = false, sty
       {ready && (
         <div
           style={{
-            position: 'absolute',
-            left: 8,
-            right: 8,
-            bottom: 8,
+            // L'aide reste hors de la carte pour laisser les crédits Google visibles.
+            marginTop: 8,
             display: 'flex',
             alignItems: 'center',
             gap: 6,

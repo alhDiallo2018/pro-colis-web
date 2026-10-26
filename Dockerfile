@@ -13,6 +13,9 @@ COPY . .
 
 # L'URL de l'API est injectée AU BUILD (Vite inline les VITE_* dans le bundle).
 # Fournie par docker-compose : https://${DOMAIN}/api/v1
+# Clé publique du SDK navigateur, transmise explicitement au build Vite.
+ARG VITE_GOOGLE_MAPS_API_KEY
+ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 

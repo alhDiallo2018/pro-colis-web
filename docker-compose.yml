@@ -18,6 +18,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY:-${GOOGLE_MAPS_API_KEY:-}}
         VITE_API_BASE_URL: https://${DOMAIN}/api/v1
         VITE_APP_RELEASE: ${APP_RELEASE:-dev}
         VITE_FARO_ENABLED: ${FARO_ENABLED:-true}
@@ -62,6 +63,7 @@ services:
       JWT_REFRESH_EXPIRES_IN: 30d
       # Client OAuth Web public, partage par Android et Google Identity Services.
       # Valeur publique de ce projet ; une variable explicite permet de la remplacer.
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
       GOOGLE_WEB_CLIENT_ID: ${GOOGLE_WEB_CLIENT_ID-856894814285-blm20bnfamss8spptpjvp2c5984rgsni.apps.googleusercontent.com}
       OTP_EXPIRES_MINUTES: 10
       UPLOAD_STORAGE: local
