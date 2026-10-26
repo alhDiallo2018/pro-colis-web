@@ -62,7 +62,7 @@ services:
       JWT_REFRESH_EXPIRES_IN: 30d
       # Client OAuth Web public, partage par Android et Google Identity Services.
       # Valeur publique de ce projet ; une variable explicite permet de la remplacer.
-      GOOGLE_WEB_CLIENT_ID: ${GOOGLE_WEB_CLIENT_ID-856894814285-liup8k5nqvth5f10h2bcnd82obc4v5vi.apps.googleusercontent.com}
+      GOOGLE_WEB_CLIENT_ID: ${GOOGLE_WEB_CLIENT_ID-856894814285-blm20bnfamss8spptpjvp2c5984rgsni.apps.googleusercontent.com}
       OTP_EXPIRES_MINUTES: 10
       UPLOAD_STORAGE: local
       UPLOAD_LOCAL_DIR: uploads
