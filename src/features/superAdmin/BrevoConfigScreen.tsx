@@ -9,6 +9,7 @@ export function BrevoConfigScreen() {
   const [config, setConfig] = useState<BrevoConfig | null>(null)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [useServerKey, setUseServerKey] = useState(false)
   const [testEmail, setTestEmail] = useState('')
   const [testing, setTesting] = useState(false)
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null)
@@ -26,8 +27,10 @@ export function BrevoConfigScreen() {
       const c = await getBrevoConfig()
       setConfig(c)
       if (c) {
+        setUseServerKey(false)
         setForm({
-          apiKey: c.apiKey?.replace(/(.{4}).*(.{4})$/, '$1****$2') ?? '',
+          // Le champ ne contient qu'une nouvelle saisie, jamais le masque retourne.
+          apiKey: '',
           senderEmail: c.senderEmail ?? '',
           senderName: c.senderName ?? '',
           smsSender: c.smsSender ?? '',
@@ -44,12 +47,17 @@ export function BrevoConfigScreen() {
     setSaving(true)
     setMessage(null)
     try {
+      // Champ vide = conserver la cle. Seul le choix explicite du serveur
+      // envoie une valeur vide pour retirer la surcharge stockee en base.
       const updated = await updateBrevoConfig({
+        ...(useServerKey ? { apiKey: '' } : form.apiKey.trim() ? { apiKey: form.apiKey.trim() } : {}),
         senderEmail: form.senderEmail,
         senderName: form.senderName,
         smsSender: form.smsSender,
       })
       setConfig(updated)
+      setUseServerKey(false)
+      setForm({ apiKey: '', senderEmail: updated.senderEmail, senderName: updated.senderName, smsSender: updated.smsSender })
       setMessage({ tone: 'success', text: 'Configuration Brevo enregistrée.' })
     } catch (e) {
       setMessage({ tone: 'error', text: e instanceof ApiError ? e.message : 'Échec de la sauvegarde.' })
@@ -82,7 +90,8 @@ export function BrevoConfigScreen() {
       <Panel title="Configuration Brevo (Email & SMS)">
         <p style={{ margin: '0 0 20px', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
           Brevo (ex-SendinBlue) est le fournisseur d'emails transactionnels et de SMS.
-          La clé API est configurée côté serveur (variable d'environnement <code>BREVO_API_KEY</code>).
+          Vous pouvez enregistrer la clé ici ou utiliser celle configurée sur le serveur.
+          La clé enregistrée ici est prioritaire.
         </p>
 
         {!config && !loading && (
@@ -93,8 +102,31 @@ export function BrevoConfigScreen() {
 
         {loading && <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>Chargement...</p>}
 
-        {!loading && (
+        {config && !loading && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <p role="status" style={{ margin: 0, fontSize: 'var(--fs-sm)' }}>
+              {config.apiKeySource === 'database' ? 'Clé enregistrée dans l’administration (prioritaire).'
+                : config.apiKeySource === 'environment' ? 'Clé configurée sur le serveur.'
+                  : (config.apiKeyConfigured ?? Boolean(config.apiKey)) ? 'Une clé est configurée.' : 'Aucune clé API configurée.'}
+            </p>
+            <Input
+              label="Nouvelle clé API Brevo"
+              type="password"
+              autoComplete="new-password"
+              spellCheck={false}
+              placeholder="Laisser vide pour conserver la clé actuelle"
+              value={form.apiKey}
+              onChange={(e) => { setUseServerKey(false); setForm((f) => ({ ...f, apiKey: e.target.value })) }}
+            />
+            {config.apiKeySource === 'database' && (
+              <Button variant="ghost" onClick={() => { setUseServerKey(true); setForm((f) => ({ ...f, apiKey: '' })) }}>
+                Utiliser la clé du serveur
+              </Button>
+            )}
+            {useServerKey && <p style={{ margin: 0, fontSize: 'var(--fs-sm)' }}>
+              Après enregistrement, la clé du serveur sera utilisée.
+              {!config.environmentApiKeyConfigured && ' Aucune clé serveur n’est actuellement configurée : les envois seront indisponibles.'}
+            </p>}
             <Input
               label="Email expéditeur"
               placeholder="no-reply@sendprocolis.com"
@@ -114,7 +146,7 @@ export function BrevoConfigScreen() {
               onChange={(e) => setForm((f) => ({ ...f, smsSender: e.target.value }))}
             />
             <div>
-              <Button icon="save" loading={saving} onClick={save}>
+              <Button icon="save" loading={saving} disabled={!config} onClick={save}>
                 Enregistrer
               </Button>
             </div>

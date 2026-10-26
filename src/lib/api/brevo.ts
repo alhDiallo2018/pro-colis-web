@@ -20,7 +20,11 @@ export interface BrevoSmsParams {
 
 export interface BrevoConfig {
   provider: 'brevo'
+  /** Indicateur masque uniquement : le secret ne revient jamais de l API. */
   apiKey: string
+  apiKeyConfigured?: boolean
+  apiKeySource?: 'database' | 'environment' | 'none'
+  environmentApiKeyConfigured?: boolean
   senderEmail: string
   senderName: string
   smsSender: string
@@ -76,7 +80,7 @@ export async function getBrevoConfig(): Promise<BrevoConfig | null> {
 /**
  * Met à jour la configuration Brevo (super admin uniquement).
  */
-export async function updateBrevoConfig(config: Partial<BrevoConfig>): Promise<BrevoConfig> {
+export async function updateBrevoConfig(config: Partial<Pick<BrevoConfig, 'apiKey' | 'senderEmail' | 'senderName' | 'smsSender'>>): Promise<BrevoConfig> {
   const { data } = await api.put('/admin/notifications/brevo-config', config)
   return data.config as BrevoConfig
 }
