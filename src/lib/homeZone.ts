@@ -16,6 +16,7 @@ type UserZoneFields = Pick<
 
 /** Tout objet portant un trajet : un colis comme une annonce. */
 export interface RouteLike {
+  itinerary?: {stops: {zoneId:string;name?:string}[]} | null
   zoneId?: string | null
   departureZoneId?: string | null
   arrivalZoneId?: string | null
@@ -80,6 +81,7 @@ export function hasHomeZone(user: UserZoneFields | null | undefined): boolean {
 export function isInHomeZone(item: RouteLike, user: UserZoneFields | null | undefined): boolean {
   const zone = getHomeZone(user)
   if (!zone.id && !zone.name) return false
+  if(item.itinerary?.stops.some(s=>(zone.id&&s.zoneId===zone.id)||(zone.name&&normalizeZoneName(s.name)===normalizeZoneName(zone.name))))return true
 
   // Correspondance par identifiant (prioritaire, insensible aux libellés)
   const matchesZoneId =

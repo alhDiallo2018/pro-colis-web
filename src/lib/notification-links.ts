@@ -34,6 +34,8 @@ export function notificationAction(
       : role?.startsWith('support') ? '/support-admin/conversations' : '/support';
     return { label: 'Ouvrir la conversation support', to }
   }
+  const advertisementId = dataString(notification, 'advertisementId')
+  if (advertisementId && role === 'client') return { label: 'Voir le départ', to: `/client/annonces/${encodeURIComponent(advertisementId)}` }
   const parcelId = notification.parcelId ?? dataString(notification, 'parcelId')
   const trackingNumber = dataString(notification, 'trackingNumber')
 

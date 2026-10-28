@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Avatar, Badge, Button, Icon, StatBox } from '@/ds'
+import { QueryState } from '@/components/QueryState'
 import { Panel } from '@/components/Panel'
 import { ParcelsTable } from '@/components/ParcelsTable'
 import { useMyParcels, useReceivedBids } from './hooks'
@@ -20,7 +21,7 @@ export function ClientDashboard() {
   const bidStats = useMyBidStats()
 
   // Une erreur réseau/API ne doit jamais être rendue comme « 0 » ou « vide ».
-  const hasError = parcelsQuery.isError || offers.isError
+  const hasError = parcelsQuery.isError || offers.isError || stats.isError || bidStats.isError
   const retryAll = () => {
     if (parcelsQuery.isError) parcelsQuery.refetch()
     if (offers.isError) offers.refetch()
@@ -41,18 +42,25 @@ export function ClientDashboard() {
   const tracked = useMemo(() => {
     const active = parcels.filter((p) => !ACTIVE_EXCLUDED.includes(p.status) && p.status !== 'free')
     const order = ['out_for_delivery', 'arrived', 'in_transit', 'picked_up', 'confirmed', 'pending']
-    return [...active].sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status))[0] ?? null
+    const rank = (status: string) => { const index = order.indexOf(status); return index < 0 ? order.length : index }
+    return [...active].sort((a, b) => rank(a.status) - rank(b.status))[0] ?? null
   }, [parcels])
 
   const firstName = user?.fullName?.split(' ')[0] ?? ''
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+      <div className="pc-dashboard-actions">
+        <div className="pc-dashboard-intro"><h2>Vos envois, simplement</h2><p>Envoyez un colis, comparez les offres et suivez sa livraison.</p></div>
+        <Button icon="add" onClick={() => navigate('/client/nouveau')}>Envoyer un colis</Button>
+        <Button variant="secondary" icon="gavel" onClick={() => navigate('/client/offres')}>Offres reçues</Button>
+      </div>
       {hasError && (
-        <div
+        <div role="alert"
           style={{
             display: 'flex',
             alignItems: 'center',
+            flexWrap: 'wrap',
             gap: 12,
             padding: '14px 18px',
             background: 'var(--red-50)',
@@ -69,12 +77,12 @@ export function ClientDashboard() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
-        <StatBox icon="package_2" tone="primary" value={stats.data?.activeParcels ?? enCours} label="Colis en cours" />
-        <StatBox icon="task_alt" tone="green" value={stats.data?.deliveredParcels ?? livres} label="Colis livrés" />
-        <StatBox icon="sell" tone="amber" value={libre} label="Annonces publiées" />
-        <StatBox icon="gavel" tone="teal" value={bidStats.data?.pending ?? offers.data?.length ?? 0} label="Offres à traiter" />
-        <StatBox icon="payments" tone="neutral" value={formatFcfa(totalSpent)} label="Total dépensé" />
+      <div className="pc-dashboard-stats">
+        <StatBox icon="package_2" tone="primary" value={stats.data?.activeParcels ?? (data ? enCours : '—')} label="Colis en cours" />
+        <StatBox icon="task_alt" tone="green" value={stats.data?.deliveredParcels ?? (data ? livres : '—')} label="Colis livrés" />
+        <StatBox icon="sell" tone="amber" value={data ? libre : '—'} label="Annonces publiées" />
+        <StatBox icon="gavel" tone="teal" value={bidStats.data?.pending ?? offers.data?.length ?? '—'} label="Offres à traiter" />
+        <StatBox icon="payments" tone="neutral" value={data ? formatFcfa(totalSpent) : '—'} label="Total dépensé" />
       </div>
 
       <div className="pc-split">
@@ -82,14 +90,12 @@ export function ClientDashboard() {
           {/* Colis suivi en direct */}
           <div
             style={{
-              background: 'var(--gradient-brand)',
+              background: 'var(--deep-700)',
               borderRadius: 'var(--radius-lg)',
               padding: 20,
               color: '#fff',
               boxShadow: 'var(--shadow-brand)',
-              cursor: tracked ? 'pointer' : 'default',
             }}
-            onClick={() => tracked && navigate(`/client/colis/${tracked.id}`)}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 10 }}>
               <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: 0.9 }}>
@@ -103,7 +109,7 @@ export function ClientDashboard() {
               )}
             </div>
 
-            {tracked ? (
+            {parcelsQuery.isLoading ? <p role="status">Chargement de vos colis…</p> : parcelsQuery.isError && !data ? <p>Votre suivi est temporairement indisponible. Réessayez pour retrouver vos colis.</p> : tracked ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
                   <div>
@@ -128,7 +134,7 @@ export function ClientDashboard() {
                   {tracked.estimatedDeliveryDate && <span>Livraison estimée · {formatDate(tracked.estimatedDeliveryDate)}</span>}
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <Button variant="secondary" block icon="qr_code_2" onClick={() => navigate('/client/suivi')}>
+                  <Button variant="secondary" block icon="qr_code_2" onClick={() => navigate(`/client/suivi?tracking=${encodeURIComponent(tracked.trackingNumber)}`)}>
                     Suivre
                   </Button>
                   <Button variant="amber" block icon="visibility" onClick={() => navigate(`/client/colis/${tracked.id}`)}>
@@ -157,12 +163,14 @@ export function ClientDashboard() {
               </Button>
             }
           >
+            <QueryState isLoading={parcelsQuery.isLoading} isError={parcelsQuery.isError && !data} onRetry={() => parcelsQuery.refetch()}>
             <ParcelsTable
               parcels={parcels.slice(0, 5)}
               loading={parcelsQuery.isLoading}
               onRowClick={(p) => navigate(`/client/colis/${p.id}`)}
               emptyHint="Créez votre premier colis pour le voir ici."
             />
+            </QueryState>
           </Panel>
         </div>
 
@@ -172,7 +180,7 @@ export function ClientDashboard() {
             flush
             action={offers.data && offers.data.length > 0 ? <Badge tone="primary">{offers.data.length}</Badge> : undefined}
           >
-            {offers.isError ? (
+            {offers.isLoading ? <p role="status" style={{ padding: 18 }}>Chargement des offres…</p> : offers.isError ? (
               <div style={{ padding: 18, fontSize: 13.5, color: 'var(--red-600)' }}>
                 Impossible de charger les offres reçues.
                 <Button size="sm" variant="secondary" icon="refresh" onClick={() => offers.refetch()} style={{ marginTop: 10 }}>

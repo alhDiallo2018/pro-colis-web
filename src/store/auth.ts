@@ -31,6 +31,7 @@ export const useAuthStore = create<AuthState>()(
         // Les brouillons de formulaires sont des données personnelles : on ne
         // les laisse pas derrière soi sur un poste partagé.
         clearAllFormDrafts()
+        try { for (let i=localStorage.length-1;i>=0;i--) { const key=localStorage.key(i); if (key?.startsWith('procolis-offline-history:')) localStorage.removeItem(key) } } catch { /* Stockage privé indisponible. */ }
         set({ user: null, accessToken: null, refreshToken: null, sessionId: null })
       },
     }),

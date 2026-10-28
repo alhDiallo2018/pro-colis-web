@@ -1,9 +1,11 @@
+import type { Itinerary } from '@/features/transport/domain'
 import { api } from './client'
 import type { ListParams, User } from './types'
 
 export interface AdvertisementOffer {
   id: string
   advertisementId: string
+  journeySegment?: {pickup: {name:string}; dropoff: {name:string}} | null
   clientId: string
   client?: User | null
   parcelId?: string | null
@@ -29,6 +31,8 @@ export interface AdvertisementOffer {
 }
 
 export interface Advertisement {
+  itinerary?: Itinerary | null
+  transport?: {vehicleId:string; reference:string; type:string} | null
   id: string
   driverId: string
   driverName?: string
@@ -60,6 +64,8 @@ export interface Advertisement {
 }
 
 export interface CreateAdvertisementPayload {
+  itinerary?: Itinerary
+  vehicleId?: string
   departureCity?: string
   arrivalCity?: string
   departureZoneId?: string | null

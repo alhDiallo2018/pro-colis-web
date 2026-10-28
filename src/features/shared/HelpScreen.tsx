@@ -1,3 +1,4 @@
+import { HelpGuides } from '@/features/experience/HelpGuides'
 import { useState } from 'react'
 import { Card, Icon } from '@/ds'
 import { MarketingHeader } from '@/features/marketing/MarketingHeader'
@@ -98,6 +99,7 @@ export function HelpScreen() {
             color: 'var(--text-body)',
         }}>
             <MarketingHeader />
+            <HelpGuides guides={publicConfig.data?.help?.guides} />
 
             {/* En-tête */}
             <div style={{

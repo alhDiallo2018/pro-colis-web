@@ -37,15 +37,14 @@ export function OfferDialog({ parcel, onClose, onSuccess, existingBidId }: Offer
   const handleFirstOffer = async (price: number, message?: string) => {
     if (bidId || bidCreatedRef.current) return
     bidCreatedRef.current = true
-    createBid.mutate(
-      { parcelId: parcel.id, price, message, audioUrl: audioUrl ?? undefined },
-      {
-        onSuccess: (bid: { id: string }) => {
-          setBidId(bid.id)
-          onSuccess?.()
-        },
-      },
-    )
+    try {
+      const bid = await createBid.mutateAsync({ parcelId: parcel.id, price, message, audioUrl: audioUrl ?? undefined })
+      setBidId(bid.id)
+      onSuccess?.()
+    } catch (error) {
+      bidCreatedRef.current = false
+      throw error
+    }
   }
 
   const handleAcceptBid = (price: number, message?: string) => {

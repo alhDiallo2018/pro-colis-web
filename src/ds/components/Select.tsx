@@ -35,11 +35,16 @@ export function Select({
   id,
   className,
   style,
+  onFocus,
+  onBlur,
+  'aria-describedby': describedBy,
+  'aria-invalid': invalid,
   ...rest
 }: SelectProps) {
   const [focus, setFocus] = useState(false)
   const autoId = useId()
   const fid = id || autoId
+  const feedbackId = `${fid}-feedback`
   const borderColor = error ? 'var(--color-danger)' : focus ? 'var(--border-focus)' : 'var(--border-default)'
   const norm: SelectOption[] = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o))
   return (
@@ -68,7 +73,7 @@ export function Select({
         }}
       >
         {icon && (
-          <span className="material-symbols-rounded" style={{ flex: 'none', fontSize: 20, color: focus ? 'var(--color-primary)' : 'var(--text-faint)' }}>
+          <span aria-hidden="true" className="material-symbols-rounded" style={{ flex: 'none', fontSize: 20, color: focus ? 'var(--color-primary)' : 'var(--text-faint)' }}>
             {icon}
           </span>
         )}
@@ -77,8 +82,10 @@ export function Select({
           value={value}
           onChange={onChange}
           disabled={disabled}
-          onFocus={() => setFocus(true)}
-          onBlur={() => setFocus(false)}
+          onFocus={(event) => { setFocus(true); onFocus?.(event) }}
+          onBlur={(event) => { setFocus(false); onBlur?.(event) }}
+          aria-invalid={error ? true : invalid}
+          aria-describedby={[describedBy, error ? feedbackId : undefined].filter(Boolean).join(" ") || undefined}
           style={{
             flex: 1,
             minWidth: 0,
@@ -89,7 +96,7 @@ export function Select({
             background: 'transparent',
             fontFamily: 'var(--font-body)',
             fontWeight: 500,
-            fontSize: 15,
+            fontSize: 16,
             color: value ? 'var(--text-strong)' : 'var(--text-faint)',
             cursor: disabled ? 'not-allowed' : 'pointer',
             textOverflow: 'ellipsis',
@@ -107,11 +114,11 @@ export function Select({
             </option>
           ))}
         </select>
-        <span className="material-symbols-rounded" style={{ flex: 'none', fontSize: 22, color: 'var(--text-muted)', pointerEvents: 'none' }}>
+        <span aria-hidden="true" className="material-symbols-rounded" style={{ flex: 'none', fontSize: 22, color: 'var(--text-muted)', pointerEvents: 'none' }}>
           expand_more
         </span>
       </div>
-      {error && <span style={{ fontSize: 12, color: 'var(--color-danger)', overflowWrap: 'anywhere' }}>{error}</span>}
+      {error && <span id={feedbackId} role="alert" style={{ fontSize: 12, color: 'var(--color-danger)', overflowWrap: 'anywhere' }}>{error}</span>}
     </div>
   )
 }

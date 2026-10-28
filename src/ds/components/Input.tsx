@@ -36,11 +36,16 @@ export function Input({
   id,
   className,
   style,
+  onFocus,
+  onBlur,
+  'aria-describedby': describedBy,
+  'aria-invalid': invalid,
   ...rest
 }: InputProps) {
   const [focus, setFocus] = useState(false)
   const autoId = useId()
   const fid = id || autoId
+  const feedbackId = `${fid}-feedback`
   const borderColor = error ? 'var(--color-danger)' : focus ? 'var(--border-focus)' : 'var(--border-default)'
   return (
     // `minWidth: 0` keeps the field shrinkable inside a flex row or grid track:
@@ -67,7 +72,7 @@ export function Input({
         }}
       >
         {icon && (
-          <span className="material-symbols-rounded" style={{ flex: 'none', fontSize: 20, color: focus ? 'var(--color-primary)' : 'var(--text-faint)' }}>
+          <span aria-hidden="true" className="material-symbols-rounded" style={{ flex: 'none', fontSize: 20, color: focus ? 'var(--color-primary)' : 'var(--text-faint)' }}>
             {icon}
           </span>
         )}
@@ -78,8 +83,10 @@ export function Input({
           onChange={onChange}
           placeholder={placeholder}
           disabled={disabled}
-          onFocus={() => setFocus(true)}
-          onBlur={() => setFocus(false)}
+          onFocus={(event) => { setFocus(true); onFocus?.(event) }}
+          onBlur={(event) => { setFocus(false); onBlur?.(event) }}
+          aria-invalid={error ? true : invalid}
+          aria-describedby={[describedBy, (error || help) ? feedbackId : undefined].filter(Boolean).join(" ") || undefined}
           style={{
             flex: 1,
             minWidth: 0,
@@ -88,7 +95,7 @@ export function Input({
             background: 'transparent',
             fontFamily: mono ? 'var(--font-mono)' : 'var(--font-body)',
             fontWeight: mono ? 600 : 500,
-            fontSize: 15,
+            fontSize: 16,
             color: 'var(--text-strong)',
             letterSpacing: mono ? '0.02em' : 0,
           }}
@@ -99,7 +106,7 @@ export function Input({
         )}
       </div>
       {(error || help) && (
-        <span style={{ fontSize: 12, color: error ? 'var(--color-danger)' : 'var(--text-muted)', overflowWrap: 'anywhere' }}>{error || help}</span>
+        <span id={feedbackId} role={error ? "alert" : undefined} style={{ fontSize: 12, color: error ? 'var(--color-danger)' : 'var(--text-muted)', overflowWrap: 'anywhere' }}>{error || help}</span>
       )}
     </div>
   )

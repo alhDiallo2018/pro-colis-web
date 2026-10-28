@@ -133,15 +133,30 @@ export function LocationInput({
   const [geoError, setGeoError] = useState<string | null>(null)
   const [searching, setSearching] = useState(false)
   const [searched, setSearched] = useState(false)
-  const [searchEnabled, setSearchEnabled] = useState(Boolean(value))
+  const [searchEnabled, setSearchEnabled] = useState(false)
+  const queryRef = useRef(value)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const sessionTokenRef = useRef(crypto.randomUUID())
   const generationRef = useRef(0)
   const searchGenerationRef = useRef(0)
 
   useEffect(() => {
-    if (value !== query) { setQuery(value); setSearchEnabled(Boolean(value)) }
-  }, [value])
+    // Une valeur chargée depuis le profil, la carte ou un autre champ n'est
+    // pas une nouvelle recherche. Elle invalide aussi les réponses en vol.
+    if (value === queryRef.current) return
+    queryRef.current = value
+    generationRef.current++
+    searchGenerationRef.current++
+    setQuery(value)
+    setSearchEnabled(false)
+    setSuggestions([])
+    setShowSuggestions(false)
+    setSearching(false)
+    setSearched(false)
+    setLocating(false)
+    setGeoError(null)
+    onResolving?.(false)
+  }, [value, onResolving])
   useEffect(() => () => { generationRef.current++; searchGenerationRef.current++ }, [])
 
   useEffect(() => {
@@ -172,17 +187,32 @@ export function LocationInput({
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        searchGenerationRef.current++
+        setSearchEnabled(false)
+        setSuggestions([])
         setShowSuggestions(false)
+        setSearching(false)
+        setSearched(false)
       }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  const closeSuggestions = () => {
+    searchGenerationRef.current++
+    setSearchEnabled(false)
+    setSuggestions([])
+    setShowSuggestions(false)
+    setSearching(false)
+    setSearched(false)
+  }
+
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     generationRef.current++
     searchGenerationRef.current++
     setLocating(false)
+    queryRef.current = e.target.value
     setQuery(e.target.value)
     setSearchEnabled(true)
     onChange(e.target.value)
@@ -193,6 +223,7 @@ export function LocationInput({
   const handleSelectSuggestion = async (place: PlaceResult) => {
     searchGenerationRef.current++
     setSearchEnabled(false)
+    queryRef.current = place.description
     setQuery(place.description)
     setSuggestions([])
     setShowSuggestions(false)
@@ -247,7 +278,7 @@ export function LocationInput({
 
   const handleGeolocate = () => {
     if (!navigator.geolocation) { setGeoError('Géolocalisation non supportée.'); return }
-    setSearchEnabled(false)
+    closeSuggestions()
     setLocating(true)
     setGeoError(null)
     onResolving?.(true)
@@ -258,7 +289,7 @@ export function LocationInput({
         const first = await reversePlace(latitude, longitude)
         if (generation !== generationRef.current) return
         const addr = first ? buildAddress(first.address_components) ?? first.formatted_address : undefined
-        if (addr) { setQuery(addr); onChange(addr) }
+        if (addr) { queryRef.current = addr; setQuery(addr); onChange(addr) }
         onCoordinates?.(latitude, longitude, first ? {
           ...extractPlaceDetails(first.address_components), exactPoint: true,
           placeId: first.place_id, formattedAddress: first.formatted_address,
@@ -277,7 +308,9 @@ export function LocationInput({
   }
 
   return (
-    <div ref={wrapperRef} style={{ position: 'relative', ...style }}>
+    <div ref={wrapperRef} style={{ position: 'relative', ...style }}
+      onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) closeSuggestions() }}
+    >
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
         <div style={{ flex: 1 }}>
           <Input

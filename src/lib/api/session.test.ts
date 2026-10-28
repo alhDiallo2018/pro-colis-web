@@ -163,3 +163,10 @@ it.each(['/auth/google', '/auth/google/link', '/auth/google/phone-otp', '/auth/g
   expect(requests).toEqual([url])
   expect(store.getState().accessToken).toBe('access-old')
 })
+
+it('rejette une réponse métier réussie arrivée après un changement de compte',async()=>{
+ const gate=deferred<void>();transport=async config=>{await gate.promise;return reply(config,{parcels:[{id:'private-a'}]})}
+ const {api,store}=await openSession();const request=api.get('/client/parcels');await new Promise(r=>setTimeout(r,0))
+ store.getState().setSession({user:{id:'user-b',role:'client'} as User,accessToken:'access-b',refreshToken:'refresh-b'});gate.resolve()
+ await expect(request).rejects.toMatchObject({code:'SESSION_CHANGED'})
+})

@@ -73,9 +73,9 @@
   /* ============================================================
      SEMANTIC ALIASES — use these in product UI, not raw scales
      ============================================================ */
-  --color-primary:        var(--teal-500);
-  --color-primary-hover:  var(--teal-600);
-  --color-primary-active: var(--teal-700);
+  --color-primary:        var(--teal-600); /* Texte blanc lisible sur les actions. */
+  --color-primary-hover:  var(--teal-700);
+  --color-primary-active: var(--teal-800);
   --color-primary-soft:   var(--teal-50);
 
   --color-accent:         var(--amber-400);

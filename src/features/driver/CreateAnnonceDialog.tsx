@@ -1,3 +1,6 @@
+import { TripEditor } from '@/features/transport/TripEditor'
+import { vehicleTypes, type Stop } from '@/features/transport/domain'
+import * as vehiclesApi from '@/lib/api/vehicles'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Button, Dialog, Input, Textarea, Toast } from '@/ds'
@@ -25,11 +28,19 @@ interface DraftPayload {
   description: string
   audioUrl: string | null
   extraZones: Zone[]
+  stops?: Stop[]
+  duration?: number
+  line?: string
 }
 
 /** Modal for a driver to publish a trip advertisement (annonce de trajet). */
 export function CreateAnnonceDialog({ open, onClose }: Props) {
   const createAd = useCreateAdvertisement()
+  const vehicleQ = useQuery({queryKey:['driver','vehicle'],queryFn:vehiclesApi.getMine})
+  const vehicle=vehicleQ.data
+  const category=(vehicle?.type??'').toLowerCase()
+  const serviceType=['bus','tata','horaire','minibus','autobus'].includes(category)?'shuttle':category==='gp'?'gp':'trip'
+  const [stops,setStops]=useState<Stop[]>([]),[duration,setDuration]=useState(60),[line,setLine]=useState('')
   const zonesQ = useQuery({ queryKey: ['zones', 'public'], queryFn: () => zonesApi.listPublic(), staleTime: 5 * 60_000 })
   const zones = zonesQ.data ?? []
 
@@ -49,7 +60,7 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
   // URL se conserve donc sans surcoût.
   const draft = useFormDraft<DraftPayload>({
     slot: 'annonce',
-    values: { departureZoneId, arrivalZoneId, departureAt, weight, price, description, audioUrl, extraZones },
+    values: { departureZoneId, arrivalZoneId, departureAt, weight, price, description, audioUrl, extraZones, stops, duration, line },
     hasContent: Boolean(departureZoneId || arrivalZoneId || departureAt || weight || price || description || audioUrl),
     paused: !open,
   })
@@ -63,10 +74,11 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
     setArrival(saved.arrivalZoneId)
     setDepartureAt(saved.departureAt)
     setWeight(saved.weight)
-    setPrice(saved.price)
+    setPrice('')
     setDescription(saved.description)
     setAudioUrl(saved.audioUrl)
     setExtraZones(saved.extraZones ?? [])
+    setStops(saved.stops??[]);setDuration(saved.duration??60);setLine(saved.line??'')
   }
 
   // Les zones issues de Places peuvent ne pas avoir de ville. Conserver un
@@ -75,7 +87,8 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
     const zone = zoneList.find((z) => z.id === id)
     return zone?.city?.trim() || zone?.displayName?.trim() || zone?.name?.trim() || undefined
   }
-  const valid = !!departureZoneId && !!arrivalZoneId && departureZoneId !== arrivalZoneId
+  const ordered=[{zoneId:departureZoneId,offsetMinutes:0},...stops,{zoneId:arrivalZoneId,offsetMinutes:duration}]
+  const valid=!!vehicle && new Date(departureAt).getTime()>Date.now() && Number(weight||vehicle.capacity)>0 && (serviceType!=='shuttle'||!!line.trim()) && new Set(ordered.map(s=>s.zoneId)).size===ordered.length && ordered.every((s,i)=>!!s.zoneId&&Number.isInteger(s.offsetMinutes)&&(!i||s.offsetMinutes>ordered[i-1].offsetMinutes))
 
   const reset = () => {
     setDeparture('')
@@ -85,18 +98,22 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
     setPrice('')
     setDescription('')
     setAudioUrl(null)
+    setStops([]);setDuration(60);setLine('')
   }
 
   const submit = () => {
     createAd.mutate(
       {
+        vehicleId: vehicle?.id,
+        itinerary: {serviceType,lineNumber:line.trim()||null,stops:ordered},
         departureZoneId,
         arrivalZoneId,
         departureCity: cityOf(departureZoneId),
         arrivalCity: cityOf(arrivalZoneId),
         departureAt: departureAt ? new Date(departureAt).toISOString() : null,
-        availableWeight: weight ? Number(weight) : null,
-        proposedPrice: price ? Number(price) : null,
+        availableWeight: Number(weight||vehicle?.capacity),
+        // Le tarif sera négocié pour le colis réellement proposé.
+        proposedPrice: null,
         description: description.trim() || null,
         audioUrl: audioUrl ?? undefined,
       },
@@ -139,6 +156,8 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
         {draft.pending && (
           <DraftRestoreBanner savedAt={draft.pending.savedAt} onRestore={restoreDraft} onDiscard={draft.discard} />
         )}
+        <p>{vehicle?`Véhicule enregistré : ${vehicle.model} · ${vehicleTypes.find(t=>t.value===category)?.label??vehicle.type}`:'Complétez votre véhicule dans le profil avant de publier.'}</p>
+        {serviceType==='shuttle'&&<Input label="Numéro de ligne" value={line} maxLength={40} onChange={e=>setLine(e.target.value)}/>}
         <div className="pc-field-pair" style={{ gap: 12 }}>
           <GarageSearchSelect
             label="Départ"
@@ -159,6 +178,9 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
             onAddNew={addResolvedZone}
           />
         </div>
+        <TripEditor stops={stops} onChange={setStops} zones={zoneList} onAddNew={addResolvedZone}/>
+        <Input label="Durée jusqu’à l’arrivée (minutes)" type="number" min={1} value={String(duration)} onChange={e=>setDuration(Number(e.target.value))}/>
+        <p>Ce trajet sera mémorisé automatiquement pour vos prochains départs.</p>
         <Input
           label="Date et heure de départ"
           icon="schedule"
@@ -167,8 +189,8 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
           onChange={(e) => setDepartureAt(e.target.value)}
         />
         <div className="pc-field-pair" style={{ gap: 12 }}>
-          <Input label="Poids dispo. (kg)" icon="weight" type="number" inputMode="decimal" mono value={weight} onChange={(e) => setWeight(e.target.value)} />
-          <Input label="Prix proposé (FCFA)" icon="payments" type="number" inputMode="numeric" mono value={price} onChange={(e) => setPrice(e.target.value)} />
+          <Input label="Poids dispo. (kg)" icon="weight" type="number" inputMode="decimal" mono placeholder={String(vehicle?.capacity??'')} value={weight} onChange={(e) => setWeight(e.target.value)} />
+          <p className="transport-note"><strong>Prix à négocier</strong><br/>Publiez votre trajet sans tarif. Vous conviendrez du prix après avoir reçu l’offre du client et les détails de son colis.</p>
         </div>
         <Textarea label="Description (optionnel)" placeholder="Ex : véhicule climatisé, départ confirmé." maxLength={200} value={description} onChange={(e) => setDescription(e.target.value)} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

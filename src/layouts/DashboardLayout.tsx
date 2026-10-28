@@ -2,8 +2,10 @@ import { Avatar, Icon } from '@/ds'
 import { useLogout } from '@/features/auth/useAuth'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { useAuthStore } from '@/store/auth'
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useModalFocus } from '@/lib/useModalFocus'
+import './dashboard.css'
 import { SupportFAB } from '@/components/SupportFAB'
 import { SupportAvailability } from '@/components/SupportAvailability'
 
@@ -40,6 +42,8 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
   const location = useLocation()
   const isMobile = useMediaQuery('(max-width: 900px)')
   const [open, setOpen] = useState(!isMobile)
+  const menuRef = useRef<HTMLElement>(null)
+  useModalFocus(isMobile && open, menuRef, () => setOpen(false))
 
   // Re-sync default open state when crossing the breakpoint…
   useEffect(() => setOpen(!isMobile), [isMobile])
@@ -83,6 +87,7 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', background: 'var(--surface-page)', fontFamily: 'var(--font-body)' }}>
+      <a className="pc-skip-link" href="#main-content">Aller au contenu</a>
       {/* Mobile drawer backdrop */}
       {isMobile && open && (
         <div
@@ -93,7 +98,14 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
       )}
 
       {/* Sidebar */}
-      <aside style={asideStyle}>
+      <aside id="dashboard-menu" ref={menuRef} tabIndex={-1} style={asideStyle}
+        inert={isMobile && !open}
+        aria-hidden={isMobile && !open ? true : undefined}
+        role={isMobile && open ? "dialog" : undefined}
+        aria-modal={isMobile && open ? true : undefined}
+        aria-label="Menu principal"
+      >
+        {isMobile && <button className="pc-menu-close" onClick={() => setOpen(false)} aria-label="Fermer le menu"><Icon name="close" size={22} /> Fermer</button>}
         <Link
           to="/"
           aria-label="Retour à l'accueil SendProColis"
@@ -105,11 +117,11 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 17 }}>
             {LOGO}
             <span style={{ color: 'var(--amber-400)' }}>PRO</span>
-            <span style={{ color: 'var(--font-display)' }}>COLIS</span>
+            <span style={{ color: 'inherit' }}>COLIS</span>
           </span>
         </Link>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto' }}>
+        <nav aria-label="Navigation principale" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto' }}>
           {nav.map((section, i) => (
             <div key={i}>
               {section.heading && (
@@ -119,7 +131,7 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
                     fontWeight: 800,
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
-                    color: 'rgba(255,255,255,0.32)',
+                    color: 'rgba(255,255,255,0.65)',
                     padding: '14px 12px 6px',
                   }}
                 >
@@ -135,7 +147,7 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
                     display: 'flex',
                     alignItems: 'center',
                     gap: 12,
-                    height: 42,
+                    minHeight: 46,
                     padding: '0 12px',
                     marginBottom: 3,
                     borderRadius: 'var(--radius-sm)',
@@ -144,7 +156,7 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
                     fontSize: 14,
                     textDecoration: 'none',
                     color: isActive ? '#fff' : 'rgba(255,255,255,0.66)',
-                    background: isActive ? 'var(--teal-500)' : 'transparent',
+                    background: isActive ? 'var(--teal-600)' : 'transparent',
                   })}
                 >
                   {({ isActive }) => (
@@ -188,7 +200,7 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
           <button
             onClick={logout}
             aria-label="Se déconnecter"
-            style={{ border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: 4 }}
+            style={{ border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: 10, minWidth: 44, minHeight: 44 }}
           >
             <span className="material-symbols-rounded" style={{ fontSize: 20 }}>
               logout
@@ -198,7 +210,7 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
       </aside>
 
       {/* Main */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+      <div inert={isMobile && open} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <header
           style={{
             height: 'var(--header-h)',
@@ -218,13 +230,14 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
             onClick={() => setOpen((o) => !o)}
             aria-label={open ? 'Réduire le menu' : 'Ouvrir le menu'}
             aria-expanded={open}
+            aria-controls="dashboard-menu"
             style={{
               flex: 'none',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: 40,
-              height: 40,
+              width: 44,
+              height: 44,
               border: '1px solid var(--border-subtle)',
               borderRadius: 'var(--radius-sm)',
               background: 'var(--surface-card)',
@@ -259,7 +272,7 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
         {banner}
         <SupportAvailability />
 
-        <main style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
+        <main id="main-content" tabIndex={-1} style={{ flex: 1, overflowY: 'auto', padding: isMobile ? 16 : 24 }}>
           <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%' }}>
             <Outlet />
           </div>

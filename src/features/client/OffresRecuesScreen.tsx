@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Avatar, Badge, Button, Card, Dialog, Icon, Toast } from '@/ds'
+import { Avatar, Badge, Button, Card, Dialog, Icon, Select, Toast } from '@/ds'
 import { QueryState } from '@/components/QueryState'
 import { NegotiationChat } from '@/components/NegotiationChat'
 import { NegotiationTurn } from '@/components/NegotiationTurn'
@@ -17,11 +17,21 @@ const STATUS_META: Record<string, { label: string; tone: 'amber' | 'primary' | '
 
 export function OffresRecuesScreen() {
   const query = useReceivedBids()
-  const bids = query.data ?? []
+  const [parcelFilter, setParcelFilter] = useState('')
+  const [sort, setSort] = useState('recent')
+  const allBids = query.data ?? []
+  const parcels = [...new Map(allBids.map(b => [b.parcelId, b.parcel?.trackingNumber ?? b.parcelId])).entries()]
+  const bids = allBids.filter(b => !parcelFilter || b.parcelId === parcelFilter).sort((a, b) => sort === 'price'
+    ? Number(a.lastPrice ?? a.price) - Number(b.lastPrice ?? b.price)
+    : Date.parse(b.lastMessageAt ?? b.updatedAt ?? b.createdAt ?? '') - Date.parse(a.lastMessageAt ?? a.updatedAt ?? a.createdAt ?? ''))
   const [chatTarget, setChatTarget] = useState<Bid | null>(null)
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <h1>Comparer les offres</h1>
+      <p>Choisissez un colis pour comparer son dernier prix, le chauffeur et la dernière réponse.</p>
+      <Select label="Colis à comparer" value={parcelFilter} onChange={e => setParcelFilter(e.target.value)} options={[{ value:'',label:'Tous mes colis' }, ...parcels.map(([value,label]) => ({value,label}))]} />
+      <Select label="Trier les offres" value={sort} onChange={e => setSort(e.target.value)} options={[{value:'recent',label:'Dernière réponse'},{value:'price',label:'Prix croissant'}]} />
       <QueryState
         isLoading={query.isLoading}
         isError={query.isError}
@@ -150,6 +160,11 @@ function BidRow({ bid, onNegotiate }: { bid: Bid; onNegotiate: () => void }) {
         <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 20, color: 'var(--teal-600)' }}>{formatFcfa(lastPrice)}</span>
       </div>
 
+      <p style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
+        Véhicule : {bid.driverVehicleType ?? 'à confirmer'} · Disponibilité actuelle : {({ available: 'disponible', busy: 'occupé', offline: 'hors ligne' })[bid.driverAvailability ?? ''] ?? 'à confirmer'}
+        {bid.driverRating != null && <> · Note : {bid.driverRating}/5</>}
+        <br />Dernière réponse : {bid.lastMessageAt || bid.respondedAt || bid.createdAt ? new Date((bid.lastMessageAt ?? bid.respondedAt ?? bid.createdAt)!).toLocaleString('fr-FR') : 'non renseignée'}
+      </p>
       {/* Le dernier commentaire accompagne le dernier prix : c'est le couple
           qu'on relit au moment d'accepter, sans rouvrir le fil. */}
       {lastMessage && (

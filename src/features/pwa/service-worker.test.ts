@@ -37,7 +37,7 @@ describe('service worker ProColis', () => {
     const fallback = new Response('Connexion indisponible')
     cache.match.mockResolvedValue(fallback)
     expect(await request('/client/colis/123', 'navigate').respondWith.mock.calls[0][0]).toBe(fallback)
-    expect(cache.match).toHaveBeenCalledWith('/offline.html')
+    expect(cache.match).toHaveBeenCalledWith('/index.html')
     expect(cache.put).not.toHaveBeenCalled()
   })
 

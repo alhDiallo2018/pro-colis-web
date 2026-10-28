@@ -1,3 +1,4 @@
+import { vehicleTypes as VEHICLE_TYPES } from '@/features/transport/domain'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Badge, Button, Card, Input, Select, StatBox, Toast } from '@/ds'
@@ -16,14 +17,7 @@ import { useMyDriverStats, useMyIdentityStatus } from '@/features/shared/profile
 import { ApiError } from '@/lib/api/client'
 import { formatDate, formatFcfa } from '@/lib/format'
 
-const VEHICLE_TYPES = [
-  { value: 'Minibus', label: 'Minibus' },
-  { value: 'Van', label: 'Van' },
-  { value: 'Berline', label: 'Berline' },
-  { value: 'Pickup', label: 'Pickup' },
-  { value: 'Camion', label: 'Camion' },
-  { value: 'Moto', label: 'Moto' },
-]
+
 
 const DRIVER_STATUS_LABEL: Record<string, { label: string; tone: 'green' | 'amber' | 'neutral' }> = {
   available: { label: 'Disponible', tone: 'green' },
@@ -67,7 +61,7 @@ export function DriverProfilScreen() {
     if (vehicleQ.data) {
       setPlate(vehicleQ.data.plateNumber ?? '')
       setModel(vehicleQ.data.model ?? '')
-      setType(vehicleQ.data.type ?? '')
+      setType(({moto:'motorcycle',camion:'truck',fourgonnette:'van',minibus:'bus',tata:'bus',horaire:'bus'} as Record<string,string>)[vehicleQ.data.type?.toLowerCase()] ?? vehicleQ.data.type?.toLowerCase() ?? '')
       setCapacity(vehicleQ.data.capacity != null ? String(vehicleQ.data.capacity) : '')
     }
   }, [vehicleQ.data])
@@ -210,7 +204,7 @@ export function DriverProfilScreen() {
           </div>
           <div className="pc-field-pair" style={{ gap: 16 }}>
             <Select label="Type" icon="category" placeholder="Type de véhicule" options={VEHICLE_TYPES} value={type} onChange={(e) => setType(e.target.value)} />
-            <Input label="Capacité (places / kg)" icon="weight" type="number" inputMode="numeric" mono value={capacity} onChange={(e) => setCapacity(e.target.value)} />
+            <Input label="Capacité colis (kg)" icon="weight" type="number" inputMode="numeric" mono value={capacity} onChange={(e) => setCapacity(e.target.value)} />
           </div>
           {!user.zoneId && (
             <Toast tone="info" message="Vous n'êtes rattaché à aucune zone — votre véhicule sera enregistré sans zone." />

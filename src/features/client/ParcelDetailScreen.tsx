@@ -1,3 +1,4 @@
+import { ParcelExperience } from '@/features/experience/ParcelExperience'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Avatar, Badge, Button, Card, Icon, IconButton, Stepper, StatusBadge, Tag, Textarea, Toast } from '@/ds'
@@ -95,6 +96,7 @@ export function ParcelDetailScreen() {
                 <QrCode value={`${window.location.origin}/track/${parcel.trackingNumber}`} size={150} caption="Scanner pour suivre ce colis" />
               </div>
             </Card>
+            <ParcelExperience key={`${parcel.id}-${parcel.status}`} parcelId={parcel.id} />
 
             {parcel.price && parcel.price > 0 && parcel.paymentStatus !== 'completed' && (
               <PaydunyaPayCard parcelId={parcel.id} amount={parcel.price} trackingNumber={parcel.trackingNumber} />

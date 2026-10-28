@@ -149,6 +149,9 @@ export interface ParcelProposal {
 }
 
 export interface Bid {
+  driverVehicleType?: string | null
+  driverAvailability?: string | null
+  driverRating?: number | string | null
   id: string
   parcelId: string
   driverId: string

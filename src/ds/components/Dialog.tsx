@@ -1,4 +1,5 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { useId, useRef, type CSSProperties, type ReactNode } from 'react'
+import { useModalFocus } from '@/lib/useModalFocus'
 
 export type DialogIconTone = 'primary' | 'danger' | 'green' | 'amber'
 
@@ -25,6 +26,9 @@ const KEYFRAMES =
   '@keyframes pc-fade{from{opacity:0}to{opacity:1}}@keyframes pc-pop{from{opacity:0;transform:translateY(8px) scale(0.97)}to{opacity:1;transform:none}}'
 
 export function Dialog({ open = true, title, icon, iconTone = 'primary', size = 'md', children, actions, onClose, style }: DialogProps) {
+  const titleId = useId()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useModalFocus(open, dialogRef, onClose)
   if (!open) return null
 
   const tones: Record<DialogIconTone, [string, string]> = {
@@ -58,6 +62,10 @@ export function Dialog({ open = true, title, icon, iconTone = 'primary', size = 
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        ref={dialogRef}
+        tabIndex={-1}
+        aria-labelledby={title ? titleId : undefined}
+        aria-label={title ? undefined : "Fenêtre de dialogue"}
         role="dialog"
         aria-modal="true"
         className="pc-dialog"
@@ -107,7 +115,7 @@ export function Dialog({ open = true, title, icon, iconTone = 'primary', size = 
               </span>
             )}
             {title && (
-              <h3
+              <h3 id={titleId}
                 style={{
                   margin: 0,
                   fontFamily: 'var(--font-display)',

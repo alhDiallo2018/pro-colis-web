@@ -1,3 +1,4 @@
+import { ParcelExperience } from '@/features/experience/ParcelExperience'
 import { useState, useEffect } from 'react'
 import { Avatar, Button, Dialog, Select, StatusBadge, Stepper, Tag, Toast } from '@/ds'
 import { ParcelMedia } from './ParcelMedia'
@@ -26,6 +27,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 
 export function ParcelDetailDialog({ parcel, onClose }: ParcelDetailDialogProps) {
   const role = useAuthStore((s) => s.user?.role)
+  const userId = useAuthStore((s) => s.user?.id)
   // Confidentialité : le chauffeur ne voit jamais les montants payés/remboursés
   // du client, et le client ne voit jamais les soldes privés du chauffeur.
   // Seuls les rôles staff (admin/support) ont la vue complète. On ne se contente
@@ -135,6 +137,7 @@ export function ParcelDetailDialog({ parcel, onClose }: ParcelDetailDialogProps)
           {parcel.isFreeForBidding && <Tag tone="primary" icon="sell">Libre service</Tag>}
         </div>
 
+        {(role === 'client' && parcel.senderId === userId || role === 'driver' && parcel.assignedDriverId === userId) && <ParcelExperience key={parcel.id} parcelId={parcel.id} />}
         <Row label="Départ" value={parcel.departureCity ?? parcel.departureZoneName ?? '—'} />
         <Row label="Arrivée" value={parcel.arrivalCity ?? parcel.arrivalZoneName ?? '—'} />
         <Row label="Poids" value={parcel.weight != null ? formatWeight(parcel.weight) : '—'} />

@@ -65,6 +65,7 @@ export function Button({
       type={type}
       onClick={onClick}
       disabled={isDisabled}
+      aria-busy={loading || undefined}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => {
         setHover(false)
@@ -99,18 +100,18 @@ export function Button({
       {...rest}
     >
       {loading && (
-        <span className="material-symbols-rounded" style={{ fontSize: s.ic, animation: 'pc-spin 0.7s linear infinite' }}>
+        <span aria-hidden="true" className="material-symbols-rounded" style={{ fontSize: s.ic, animation: 'pc-spin 0.7s linear infinite' }}>
           progress_activity
         </span>
       )}
       {!loading && icon && (
-        <span className="material-symbols-rounded" style={{ fontSize: s.ic }}>
+        <span aria-hidden="true" className="material-symbols-rounded" style={{ fontSize: s.ic }}>
           {icon}
         </span>
       )}
       {children}
       {!loading && iconTrailing && (
-        <span className="material-symbols-rounded" style={{ fontSize: s.ic }}>
+        <span aria-hidden="true" className="material-symbols-rounded" style={{ fontSize: s.ic }}>
           {iconTrailing}
         </span>
       )}

@@ -443,6 +443,7 @@ const CONFIG_SCHEMA: ConfigSection[] = [
     // modifier ici met à jour le centre d'aide sans redéployer le frontend.
     keys: [
       { key: 'help.topics', label: 'Catégories d’aide (JSON : icon, title)', type: 'json', defaultValue: '' },
+      { key: 'help.guides', label: 'Consignes FR / WO (JSON : id, language, title, text, audioUrl, published). Publier après validation linguistique.', type: 'json', defaultValue: '' },
       { key: 'help.faqs', label: 'Questions fréquentes (JSON : question, answer)', type: 'json', defaultValue: '' },
     ],
   },

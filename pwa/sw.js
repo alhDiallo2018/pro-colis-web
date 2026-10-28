@@ -1,13 +1,15 @@
 /* Le build remplace ce marqueur : chaque version possède son propre cache.
- * Aucune page métier, réponse API ou pièce jointe n'est conservée ici.
- * Sans réseau, une page autonome explique comment reprendre la navigation.
+ * Seul le shell HTML public et ses bundles sont précachés.
+ * Aucune réponse API, page personnalisée ou pièce jointe n'est conservée ici.
  */
 const CACHE = 'procolis-__BUILD_VERSION__'
 const OFFLINE = '/offline.html'
+const SHELL = '/index.html'
+const APP_ASSETS = /*__APP_ASSETS__*/ []
 const PUBLIC_FILES = [OFFLINE, '/icons/apple-touch-icon.png', '/icons/icon-192.png', '/icons/icon-512.png']
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PUBLIC_FILES)))
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll([...PUBLIC_FILES, SHELL, ...APP_ASSETS])))
   // Pas de skipWaiting automatique : une saisie en cours doit être préservée.
 })
 
@@ -44,7 +46,7 @@ self.addEventListener('fetch', (event) => {
         // Safari peut suspendre l'application et la rouvrir hors connexion.
       }
       const cache = await caches.open(CACHE)
-      return (await cache.match(OFFLINE)) ?? new Response('Connexion indisponible. Réessayez dans quelques instants.', {
+      return (await cache.match(SHELL)) ?? (await cache.match(OFFLINE)) ?? new Response('Connexion indisponible. Réessayez dans quelques instants.', {
         status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' },
       })
     })())

@@ -45,14 +45,15 @@ export function SegmentedControl({ options = [], value, onChange, size = 'md', b
           <button
             key={o.value}
             type="button"
+            aria-pressed={active}
             onClick={() => onChange && onChange(o.value)}
             style={{
-              flex: block ? 1 : 'none',
+              flex: block ? '1 0 auto' : 'none',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 6,
-              height: s.h,
+              minHeight: Math.max(44, s.h),
               padding: `0 ${s.px}px`,
               fontFamily: 'var(--font-display)',
               fontWeight: 600,

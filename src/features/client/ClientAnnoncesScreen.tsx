@@ -5,6 +5,9 @@ import { Avatar, Icon, Input } from '@/ds'
 import { QueryState } from '@/components/QueryState'
 import { ZoneFilter } from '@/components/ZoneFilter'
 import { useZoneFilter } from '@/lib/useZoneFilter'
+import { GarageSearchSelect } from '@/components/GarageSearchSelect'
+import type { Zone } from '@/lib/api/types'
+import { useZones } from './hooks'
 import { useDriverAnnonces } from './hooks'
 import { formatDate, formatFcfa, formatWeight } from '@/lib/format'
 import type { Advertisement } from '@/lib/api/advertisements'
@@ -12,7 +15,10 @@ import type { Advertisement } from '@/lib/api/advertisements'
 /** Client browses drivers' trip advertisements and can bid on them. */
 export function ClientAnnoncesScreen() {
   const navigate = useNavigate()
-  const query = useDriverAnnonces()
+  const [service,setService]=useState(''),[pickup,setPickup]=useState(''),[dropoff,setDropoff]=useState(''),[weight,setWeight]=useState(''),[line,setLine]=useState('')
+  const zones=useZones(),[extra,setExtra]=useState<Zone[]>([])
+  const [page,setPage]=useState(1)
+  const query = useDriverAnnonces({page,limit:30,...(service?{serviceType:service}:{}),...(line.trim()?{lineNumber:line.trim()}:{}),...(pickup&&dropoff?{pickupZoneId:pickup,dropoffZoneId:dropoff,...(Number(weight)>0?{weight:Number(weight)}:{})}:{})})
   const all = useMemo(() => query.data ?? [], [query.data])
   const [search, setSearch] = useState('')
   const {
@@ -27,7 +33,7 @@ export function ClientAnnoncesScreen() {
     const q = search.trim().toLowerCase()
     if (!q) return inZone
     return inZone.filter((a) =>
-      [locationLabel(a, 'departure'), locationLabel(a, 'arrival'), a.departureCity, a.arrivalCity, a.driver?.fullName, a.driverName, a.description].some(
+      [a.itinerary?.lineNumber,...(a.itinerary?.stops.map(s=>s.name)??[]), locationLabel(a, 'departure'), locationLabel(a, 'arrival'), a.departureCity, a.arrivalCity, a.driver?.fullName, a.driverName, a.description].some(
         (v) => v && String(v).toLowerCase().includes(q),
       ),
     )
@@ -42,6 +48,7 @@ export function ClientAnnoncesScreen() {
         Trajets proposés par les chauffeurs. Appuyez sur une annonce pour voir les détails et faire une offre.
       </p>
 
+      <section className="transport-panel"><h2>Trouvez le trajet de votre colis</h2><div className="transport-choices">{[{value:'',label:'Tous les services'},{value:'trip',label:'Trajets'},{value:'shuttle',label:'Navettes'},{value:'gp',label:'GP'}].map(t=><button className="transport-choice" aria-pressed={service===t.value} key={t.value} onClick={()=>{setService(t.value);setPage(1)}}>{t.label}</button>)}</div><div className="transport-fields"><GarageSearchSelect label="Retrait du colis" zones={[...(zones.data??[]),...extra]} value={pickup} onChange={id=>{setPickup(id);setPage(1)}} onAddNew={z=>setExtra(old=>[...old,z])}/><GarageSearchSelect label="Remise du colis" zones={[...(zones.data??[]),...extra]} value={dropoff} onChange={id=>{setDropoff(id);setPage(1)}} onAddNew={z=>setExtra(old=>[...old,z])}/><Input label="Poids (kg)" type="number" min={0.01} value={weight} onChange={e=>{setWeight(e.target.value);setPage(1)}}/><Input label="Numéro de ligne" value={line} onChange={e=>{setLine(e.target.value);setPage(1)}}/></div>{Boolean(pickup)!==Boolean(dropoff)&&<p>Précisez le retrait et la remise pour filtrer les trajets compatibles.</p>}<a href="/client/vehicules">Voir les véhicules en direct sur la carte</a></section>
       {hasAny && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 260px', maxWidth: 420 }}>
@@ -71,7 +78,7 @@ export function ClientAnnoncesScreen() {
             <AnnonceCard key={a.id} ad={a} onClick={() => navigate(`/client/annonces/${a.id}`)} />
           ))}
         </div>
-      </QueryState>
+      </QueryState><div className="transport-choices"><button className="transport-choice" disabled={page===1} onClick={()=>setPage(p=>p-1)}>Précédent</button><span>Page {page}</span><button className="transport-choice" disabled={all.length<30} onClick={()=>setPage(p=>p+1)}>Suivant</button></div>
     </div>
   )
 }
@@ -97,6 +104,7 @@ function AnnonceCard({ ad, onClick }: { ad: Advertisement; onClick: () => void }
         transition: 'box-shadow var(--dur-base), transform var(--dur-base)',
       }}
     >
+      {ad.itinerary&&<p>{ad.itinerary.serviceType==='shuttle'?`Navette ${ad.itinerary.lineNumber}`:ad.itinerary.serviceType==='gp'?'GP':'Trajet'} · véhicule {ad.transport?.reference} · {ad.itinerary.stops.length} arrêts</p>}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <Avatar name={driverName} src={ad.driver?.profilePhoto ?? undefined} size="sm" />
         <div style={{ flex: 1, minWidth: 0 }}>

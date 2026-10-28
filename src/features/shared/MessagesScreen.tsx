@@ -159,6 +159,7 @@ export function MessagesScreen() {
             </div>
             <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
               <NegotiationChat
+                key={selected.key}
                 peerId={selected.peerId}
                 peerName={selected.peerName}
                 parcelId={selected.parcelId ?? undefined}

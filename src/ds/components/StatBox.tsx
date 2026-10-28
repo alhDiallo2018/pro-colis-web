@@ -28,6 +28,7 @@ export function StatBox({ value, label, icon, tone = 'neutral', delta, style }: 
         display: 'flex',
         flexDirection: 'column',
         gap: 10,
+        minWidth: 0,
         padding: 'var(--space-4)',
         background: 'var(--surface-card)',
         border: '1px solid var(--border-subtle)',
@@ -74,7 +75,8 @@ export function StatBox({ value, label, icon, tone = 'neutral', delta, style }: 
             fontFamily: 'var(--font-display)',
             fontWeight: 800,
             fontSize: 26,
-            lineHeight: 1,
+            lineHeight: 1.2,
+            overflowWrap: 'anywhere',
             color: 'var(--text-strong)',
           }}
         >

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { Avatar, Badge, Button, Card, EmptyState, Icon, Input, Stepper, StatusBadge, Tag } from '@/ds'
 import { QrCode } from '@/components/QrCode'
 import { useTrackParcel } from './hooks'
@@ -11,7 +11,10 @@ import { ApiError } from '@/lib/api/client'
 import type { DriverLocation, Parcel, ParcelZoneRef } from '@/lib/api/types'
 
 export function SuiviScreen() {
-  const { trackingNumber } = useParams<{ trackingNumber: string }>()
+  const params = useParams<{ trackingNumber: string }>()
+  const [searchParams] = useSearchParams()
+  // Le suivi depuis l’accueil préremplit la référence, comme un QR code.
+  const trackingNumber = params.trackingNumber ?? searchParams.get('tracking') ?? undefined
   const [input, setInput] = useState(trackingNumber ?? '')
   const [tracking, setTracking] = useState(trackingNumber?.trim().toUpperCase() ?? '')
   const query = useTrackParcel(tracking, !!tracking)

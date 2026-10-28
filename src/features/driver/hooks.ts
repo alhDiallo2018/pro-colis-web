@@ -167,7 +167,9 @@ export function useMyAdvertisements() {
 export function useCreateAdvertisement() {
   return useMutation({
     mutationFn: (payload: adsApi.CreateAdvertisementPayload) => adsApi.create(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['driver', 'advertisements'] }),
+    onSuccess: async () => {
+      await Promise.all([queryClient.invalidateQueries({ queryKey: ['driver', 'advertisements'] }), queryClient.invalidateQueries({ queryKey: ['route-templates'] })])
+    },
   })
 }
 

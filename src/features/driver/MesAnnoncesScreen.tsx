@@ -1,3 +1,7 @@
+import { api } from '@/lib/api/client'
+import { RoutePlanner } from '@/features/transport/RoutePlanner'
+import { JourneySharing } from '@/features/transport/JourneySharing'
+import { TripStops } from '@/features/transport/TripStops'
 import { locationLabel } from '@/lib/api/advertisements'
 // ============================================================
 // FILE: lib/screens/driver/MesAnnoncesScreen.tsx
@@ -51,6 +55,8 @@ export function MesAnnoncesScreen() {
   return (
     <div style={{ maxWidth: 840, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <CommissionDebtNotice />
+      <RoutePlanner />
+      <JourneySharing />
       {acceptOffer.error instanceof ApiError && (
         <Toast tone="error" message={acceptOffer.error.message} />
       )}
@@ -73,7 +79,7 @@ export function MesAnnoncesScreen() {
         onRetry={() => query.refetch()}
       >
         {ads.map((ad) => (
-          <Panel key={ad.id} title={<AdHeader ad={ad} />}>
+          <Panel key={ad.id} title={<AdHeader ad={ad} />}><TripStops ad={ad}/>{ad.itinerary&&<RememberRoute advertisementId={ad.id}/>}{ad.itinerary && ad.status === "open" && <JourneySharing advertisementId={ad.id}/>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', gap: 32, fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
                 {ad.availableWeight != null && (
@@ -263,7 +269,8 @@ function OfferRow({
             {offer.parcel.receiverName && <> · {offer.parcel.receiverName}</>}
           </div>
         )}
-        {(offer.message || offer.responseMessage) && (
+        {offer.journeySegment && <p>Retrait : {offer.journeySegment.pickup?.name} → Remise : {offer.journeySegment.dropoff?.name}</p>}
+          {(offer.message || offer.responseMessage) && (
           <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {offer.responseMessage ?? offer.message}
           </div>
@@ -405,4 +412,10 @@ function OfferRow({
     )}
   </>
   )
+}
+
+function RememberRoute({advertisementId}:{advertisementId:string}){
+ const [message,setMessage]=useState('')
+ const save=useMutation({mutationFn:()=>api.post('/driver/route-templates',{advertisementId}),onSuccess:()=>{setMessage('Trajet disponible dans vos trajets habituels.');void queryClient.invalidateQueries({queryKey:['route-templates']})},onError:e=>setMessage(e.message)})
+ return <div><Button variant="secondary" loading={save.isPending} onClick={()=>save.mutate()}>Réutiliser ce trajet</Button>{message&&<p role="status">{message}</p>}</div>
 }

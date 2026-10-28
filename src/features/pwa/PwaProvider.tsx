@@ -85,7 +85,7 @@ export function PwaProvider({ children }: { children: ReactNode }) {
 
   return (
     <PwaContext.Provider value={{ installed, appleMobile }}>
-      {!online && <div className="pwa-notice" role="status">Vous êtes hors connexion. Reconnectez-vous pour consulter et modifier vos colis.</div>}
+      {!online && <div className="pwa-notice" role="status">Vous êtes hors connexion. Votre profil et votre historique sauvegardé restent accessibles depuis le menu. Les opérations et le GPS nécessitent Internet.</div>}
       {waiting && online && (
         <div className="pwa-notice" role="status">
           <span>Une nouvelle version est prête. Terminez votre saisie avant de l’appliquer.</span>

@@ -25,7 +25,7 @@ export function IconButton({
   ...rest
 }: IconButtonProps) {
   const sizes: Record<IconButtonSize, { d: number; ic: number }> = {
-    sm: { d: 34, ic: 18 },
+    sm: { d: 44, ic: 18 },
     md: { d: 44, ic: 22 },
     lg: { d: 52, ic: 26 },
   }
@@ -62,7 +62,7 @@ export function IconButton({
       }}
       {...rest}
     >
-      <span className="material-symbols-rounded" style={{ fontSize: s.ic }}>
+      <span aria-hidden="true" className="material-symbols-rounded" style={{ fontSize: s.ic }}>
         {icon}
       </span>
     </button>

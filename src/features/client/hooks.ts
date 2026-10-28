@@ -105,8 +105,8 @@ export function useReceivedBids() {
 }
 
 /** Drivers' trip advertisements that the client can browse and bid on. */
-export function useDriverAnnonces() {
-  return useQuery({ queryKey: ['annonces', 'list'], queryFn: () => adsApi.list({ status: 'open' }) })
+export function useDriverAnnonces(params:ListParams={}) {
+  return useQuery({ queryKey: ['annonces', 'list',params], queryFn: () => adsApi.list({ status: 'open',...params }),refetchInterval:30000 })
 }
 
 export function useAnnonce(advertisementId: string | undefined) {

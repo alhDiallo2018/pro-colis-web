@@ -23,7 +23,7 @@ export function AvailabilityToggle() {
       <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: available ? 'var(--green-700)' : 'var(--text-muted)' }}>
         {available ? 'Disponible' : 'Indisponible'}
       </span>
-      <Switch checked={available} disabled={update.isPending} onChange={(c) => update.mutate(c ? 'available' : 'offline')} />
+      <Switch aria-label="Disponibilité pour de nouvelles livraisons" checked={available} disabled={update.isPending} onChange={(c) => update.mutate(c ? 'available' : 'offline')} />
     </div>
   )
 }

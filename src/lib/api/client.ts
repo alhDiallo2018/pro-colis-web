@@ -37,6 +37,7 @@ const isPublicAuth = (url = '') => publicAuthRoutes.has(url.split('?')[0])
 
 api.interceptors.request.use((config: AuthRequest) => {
   const state = authStore.get()
+  if (typeof navigator !== 'undefined' && !navigator.onLine) throw new ApiError('Hors connexion : reconnectez-vous pour effectuer cette opération.', 'OFFLINE', 0)
   if (config._retried && config._authSessionId !== state.sessionId) {
     throw new ApiError('Session modifiée', 'SESSION_CHANGED', 0)
   }
@@ -103,7 +104,11 @@ async function refreshAccessToken(failedAccessToken: string, sessionId: string |
 }
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const config=response.config as AuthRequest
+    if(config._authAccessToken && !isPublicAuth(config.url) && config._authSessionId!==authStore.get().sessionId) throw new ApiError('Session modifiée','SESSION_CHANGED',0)
+    return response
+  },
   async (error: AxiosError) => {
     const original = error.config as AuthRequest | undefined
     const state = authStore.get()

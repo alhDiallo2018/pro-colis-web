@@ -1,3 +1,5 @@
+import { TripStops } from '@/features/transport/TripStops'
+import { LiveJourneys } from '@/features/transport/LiveJourneys'
 import { locationLabel } from '@/lib/api/advertisements'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -96,6 +98,7 @@ export function AnnonceDetailScreen() {
               {ad.audioUrl && <audio controls src={ad.audioUrl} style={{ width: '100%', maxWidth: 360, height: 40, marginTop: 12 }} />}
             </Card>
 
+            <TripStops ad={ad}/>{ad.itinerary && <LiveJourneys advertisementId={ad.id}/>}
             {myOffer ? (
               <Card style={{ background: 'var(--teal-50)', border: '1px solid var(--teal-100)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -195,10 +198,11 @@ function OfferDialog({
   const [parcelId, setParcelId] = useState('')
   const [chatOpen, setChatOpen] = useState(false)
 
+  const detail = useAnnonce(advertisementId)
   if (!open) return null
 
   const priceNum = Number(price)
-  const valid = price !== '' && priceNum > 0
+  const valid = price !== '' && priceNum > 0 && (!detail.data?.itinerary || !!parcelId)
   const error = createOffer.error instanceof ApiError ? createOffer.error.message : null
 
   const submit = () => {
@@ -216,8 +220,13 @@ function OfferDialog({
   }
 
   const parcelOptions = [
-    { value: '', label: 'Sans colis' },
-    ...parcels.slice(0, 10).map((p) => ({
+    { value: '', label: detail.data?.itinerary ? 'Choisissez le colis à transporter' : 'Sans colis' },
+    ...parcels.filter(p => {
+      const stops=detail.data?.itinerary?.stops
+      if(!stops)return true
+      const from=stops.findIndex(s=>s.zoneId===p.departureZoneId),to=stops.findIndex(s=>s.zoneId===p.arrivalZoneId)
+      return from>=0&&to>from&&Number(p.weight)>0&&new Date(stops[from].scheduledAt!).getTime()>Date.now()&&['pending','free','proposal_sent','negotiating'].includes(p.status)
+    }).map((p) => ({
       value: p.id,
       label: `${p.trackingNumber} — ${p.receiverName || p.description?.slice(0, 25) || 'Colis'} (${p.status})`,
     })),
@@ -248,7 +257,8 @@ function OfferDialog({
           Proposez votre prix a <strong style={{ color: 'var(--text-strong)' }}>{driverName}</strong>
           {proposedPrice != null ? ` (il propose ${formatFcfa(proposedPrice)})` : ''}.
         </p>
-        {parcels.length > 0 && (
+        {detail.data?.itinerary && parcelOptions.length===1 && <p>Aucun colis compatible. Créez un colis avec un retrait et une remise dans le sens de ce trajet.</p>}
+        {(parcels.length > 0 || detail.data?.itinerary) && (
             <Select
             label="Colis concerne"
             options={parcelOptions}

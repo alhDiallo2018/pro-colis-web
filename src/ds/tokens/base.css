@@ -37,3 +37,21 @@ body {
 .material-symbols-rounded.fill { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
 
 ::selection { background: var(--teal-100); color: var(--teal-800); }
+
+/* Un repère clavier commun aux menus, formulaires et actions métier. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--teal-600);
+  outline-offset: 3px;
+}
+/* Les animations restent facultatives, y compris celles définies en ligne. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (pointer: coarse) {
+  button:not([role="switch"]) { min-height: 44px; }
+}

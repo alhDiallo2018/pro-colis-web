@@ -109,13 +109,13 @@ export function MesColisScreen() {
           }}
         >
           <div style={{ flex: '1 1 220px', minWidth: 180 }}>
-            <Input icon="search" placeholder="Rechercher (suivi, ville, nom…)" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input aria-label="Rechercher un colis" icon="search" placeholder="Rechercher (suivi, ville, nom…)" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <div style={{ flex: '0 1 200px' }}>
-            <Select icon="category" options={TYPE_FILTERS} value={type} onChange={(e) => setType(e.target.value)} />
+            <Select aria-label="Type de colis" icon="category" options={TYPE_FILTERS} value={type} onChange={(e) => setType(e.target.value)} />
           </div>
           <div style={{ flex: '0 1 190px' }}>
-            <Select icon="sort" options={SORTS} value={sort} onChange={(e) => setSort(e.target.value)} />
+            <Select aria-label="Trier les colis" icon="sort" options={SORTS} value={sort} onChange={(e) => setSort(e.target.value)} />
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Badge, Button, StatBox } from '@/ds'
+import { QueryState } from '@/components/QueryState'
 import { Panel } from '@/components/Panel'
 import { ProposalsPanel } from './ProposalsPanel'
 import { BarChart } from '@/components/BarChart'
@@ -46,6 +47,10 @@ export function DriverDashboard() {
   const [showAnnonce, setShowAnnonce] = useState(searchParams.has('annonce'))
   const [showRecharge, setShowRecharge] = useState(false)
   const [showItineraire, setShowItineraire] = useState(false)
+
+  const queries = [mine, stats, free, sent, ads, balance, wallet]
+  const hasError = queries.some(query => query.isError)
+  const retryFailed = () => { queries.filter(query => query.isError).forEach(query => { void query.refetch() }) }
 
   const parcels = useMemo(() => mine.data?.parcels ?? [], [mine.data])
   const allFreeParcels = useMemo(() => free.data?.parcels ?? [], [free.data])
@@ -101,21 +106,22 @@ export function DriverDashboard() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-        <Button icon="campaign" onClick={() => setShowAnnonce(true)}>
-          Créer une annonce
-        </Button>
+      <div className="pc-dashboard-actions">
+        <div className="pc-dashboard-intro"><h2>Votre activité du jour</h2><p>Retrouvez vos missions et les colis disponibles sur votre trajet.</p></div>
+        <Button icon="sell" onClick={() => navigate('/driver/libre')}>Trouver un colis</Button>
+        <Button variant="secondary" icon="campaign" onClick={() => setShowAnnonce(true)}>Publier un trajet</Button>
       </div>
+      {hasError && <div role="alert" className="pc-dashboard-feedback"><span>Certaines données n’ont pas pu être actualisées. Les dernières données disponibles restent affichées.</span><Button size="sm" variant="secondary" icon="refresh" onClick={retryFailed}>Réessayer</Button></div>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
-        <StatBox icon="local_shipping" tone="primary" value={stats.data?.assignedParcels ?? parcels.length} label="Missions" />
+      <div className="pc-dashboard-stats">
+        <StatBox icon="local_shipping" tone="primary" value={stats.data?.assignedParcels ?? (mine.data ? parcels.length : '—')} label="Missions" />
         <StatBox icon="pending_actions" tone="teal" value={stats.data?.activeParcels ?? '—'} label="En cours" />
-        <StatBox icon="sell" tone="green" value={allFreeParcels.length} label="Colis disponibles" />
-        <StatBox icon="gavel" tone="amber" value={stats.data?.pendingBids ?? sent.data?.length ?? 0} label="Offres en attente" />
-        <StatBox icon="task_alt" tone="neutral" value={stats.data?.completedDeliveries ?? delivered} label="Colis livrés" />
+        <StatBox icon="sell" tone="green" value={free.data ? allFreeParcels.length : '—'} label="Colis disponibles" />
+        <StatBox icon="gavel" tone="amber" value={stats.data?.pendingBids ?? (sent.data ? sent.data.filter(bid => bid.status === 'pending').length : '—')} label="Offres en attente" />
+        <StatBox icon="task_alt" tone="neutral" value={stats.data?.completedDeliveries ?? (mine.data ? delivered : '—')} label="Colis livrés" />
         <StatBox icon="star" tone="amber" value={stats.data?.rating ? stats.data.rating.toFixed(1) : '—'} label="Note moyenne" />
-        <StatBox icon="account_balance_wallet" tone="teal" value={wallet.data ? formatFcfa(wallet.data.balance) : '—'} label="Wallet" />
-        <StatBox icon="error_outline" tone={fin.isBlocked ? 'red' : fin.hasDebt ? 'amber' : 'green'} value={fin.isLoading ? '—' : formatFcfa(fin.commissionDebt)} label="Dette de commission" />
+        <StatBox icon="account_balance_wallet" tone="teal" value={wallet.data ? formatFcfa(wallet.data.balance) : '—'} label="Portefeuille" />
+        <StatBox icon="error_outline" tone={fin.isBlocked ? 'red' : fin.hasDebt ? 'amber' : 'green'} value={wallet.data ? formatFcfa(fin.commissionDebt) : '—'} label="Dette de commission" />
         <StatBox icon="stars" tone="amber" value={balance.data ?? stats.data?.scoreBalance ?? '—'} label="Points" />
       </div>
 
@@ -123,8 +129,7 @@ export function DriverDashboard() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Mission en cours */}
           <div
-            style={{ background: 'var(--gradient-brand)', borderRadius: 'var(--radius-lg)', padding: 20, color: '#fff', boxShadow: 'var(--shadow-brand)', cursor: active ? 'pointer' : 'default' }}
-            onClick={() => active && setDetailTarget(active)}
+            style={{ background: 'var(--deep-700)', borderRadius: 'var(--radius-lg)', padding: 20, color: '#fff', boxShadow: 'var(--shadow-brand)' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: 0.9 }}>
@@ -139,7 +144,7 @@ export function DriverDashboard() {
                 </span>
               )}
             </div>
-            {active ? (
+            {mine.isLoading ? <p role="status">Chargement de vos missions…</p> : mine.isError && !mine.data ? <p>Vos missions sont temporairement indisponibles. Réessayez pour les retrouver.</p> : active ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
                   <div>
@@ -166,7 +171,7 @@ export function DriverDashboard() {
                 </div>
               </>
             ) : (
-              <div style={{ fontSize: 14.5, opacity: 0.9 }}>Aucune mission en cours. Faites une offre sur une annonce.</div>
+              <div style={{ fontSize: 14.5, opacity: 0.9 }}>Aucune mission en cours. Consultez les colis à prendre pour proposer un transport.</div>
             )}
           </div>
 
@@ -196,6 +201,7 @@ export function DriverDashboard() {
               </div>
             }
           >
+            <QueryState isLoading={free.isLoading} isError={free.isError && !free.data} onRetry={() => free.refetch()}>
             {freeParcels.length === 0 ? (
               <div style={{ padding: 18, fontSize: 13.5, color: 'var(--text-muted)' }}>
                 {!hasZone
@@ -237,6 +243,7 @@ export function DriverDashboard() {
                   </Button>
                 </div>
               )}))}
+          </QueryState>
           </Panel>
         </div>
 
@@ -246,7 +253,7 @@ export function DriverDashboard() {
           <CommissionDebtNotice showClearState={!fin.isLoading} />
 
           {/* Points card */}
-          <div style={{ background: 'var(--gradient-brand)', borderRadius: 'var(--radius-lg)', padding: 20, color: '#fff', boxShadow: 'var(--shadow-brand)' }}>
+          <div style={{ background: 'var(--deep-700)', borderRadius: 'var(--radius-lg)', padding: 20, color: '#fff', boxShadow: 'var(--shadow-brand)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 42, height: 42, borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.18)' }}>
                 <span className="material-symbols-rounded fill" style={{ fontSize: 23 }}>
@@ -283,9 +290,9 @@ export function DriverDashboard() {
             }
           >
             <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 26, color: 'var(--text-strong)', marginBottom: 14 }}>
-              {formatFcfa(revenue.total)}
+              {mine.data ? formatFcfa(revenue.total) : '—'}
             </div>
-            {revenue.hasData ? (
+            {!mine.data ? <p>Les revenus seront affichés après le chargement de vos livraisons.</p> : revenue.hasData ? (
               <BarChart bars={revenue.bars} labels={revenue.labels} highlightLast />
             ) : (
               <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
@@ -295,6 +302,7 @@ export function DriverDashboard() {
           </Panel>
 
           <Panel title="Mes offres" flush>
+            <QueryState isLoading={sent.isLoading} isError={sent.isError && !sent.data} onRetry={() => sent.refetch()}>
             {(sent.data ?? []).slice(0, 4).map((b) => (
               <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 18px', borderBottom: '1px solid var(--slate-100)' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -307,6 +315,7 @@ export function DriverDashboard() {
               </div>
             ))}
             {(!sent.data || sent.data.length === 0) && <div style={{ padding: 18, fontSize: 13.5, color: 'var(--text-muted)' }}>Aucune offre envoyée.</div>}
+            </QueryState>
           </Panel>
 
           <Panel
@@ -318,6 +327,7 @@ export function DriverDashboard() {
               </Button>
             }
           >
+            <QueryState isLoading={ads.isLoading} isError={ads.isError && !ads.data} onRetry={() => ads.refetch()}>
             {(ads.data ?? []).slice(0, 4).map((a) => (
               <div
                 key={a.id}
@@ -340,6 +350,7 @@ export function DriverDashboard() {
             {(!ads.data || ads.data.length === 0) && (
               <div style={{ padding: 18, fontSize: 13.5, color: 'var(--text-muted)' }}>Aucune annonce. Publiez un trajet pour recevoir des colis.</div>
             )}
+            </QueryState>
           </Panel>
         </div>
       </div>

@@ -33,6 +33,7 @@ export interface PublicConfig {
   }
   /** Contenu du centre d'aide administrable depuis le backend. */
   help: {
+    guides?: { id: string; language: 'fr' | 'wo'; title: string; text: string; audioUrl: string | null }[]
     topics: { icon: string; title: string }[]
     faqs: { question: string; answer: string }[]
   }

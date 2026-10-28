@@ -32,6 +32,7 @@ export function SupportFAB() {
         textDecoration: 'none',
       }}
       title="Chat support"
+      aria-label="Contacter le support"
     >
       <Icon name="support_agent" style={{ fontSize: 26 }} />
     </a>

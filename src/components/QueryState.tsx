@@ -28,7 +28,7 @@ export function QueryState({
 }: QueryStateProps) {
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-12)', color: 'var(--color-primary)' }}>
+      <div role="status" aria-label="Chargement en cours" style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-12)', color: 'var(--color-primary)' }}>
         <Icon name="progress_activity" size={32} style={{ animation: 'pc-spin 0.7s linear infinite' }} />
         <style>{`@keyframes pc-spin{to{transform:rotate(360deg)}}`}</style>
       </div>

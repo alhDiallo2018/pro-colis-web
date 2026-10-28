@@ -2,6 +2,7 @@ import { useId } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 
 export interface SwitchProps {
+  'aria-label'?: string
   checked?: boolean
   onChange?: (checked: boolean) => void
   label?: ReactNode
@@ -12,7 +13,7 @@ export interface SwitchProps {
 }
 
 /** Switch toggle (assurance, urgence, disponibilité chauffeur). */
-export function Switch({ checked = false, onChange, label, description, disabled = false, id, style }: SwitchProps) {
+export function Switch({ checked = false, onChange, label, description, disabled = false, id, style, 'aria-label': ariaLabel }: SwitchProps) {
   const autoId = useId()
   const fid = id || autoId
   return (
@@ -22,6 +23,7 @@ export function Switch({ checked = false, onChange, label, description, disabled
         display: 'flex',
         alignItems: 'center',
         gap: 12,
+        minHeight: 44,
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.5 : 1,
         ...style,
@@ -32,6 +34,7 @@ export function Switch({ checked = false, onChange, label, description, disabled
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-label={ariaLabel}
         disabled={disabled}
         onClick={() => onChange && onChange(!checked)}
         style={{
