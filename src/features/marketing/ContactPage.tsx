@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button, Input, Textarea, Toast } from '@/ds'
 import type { ToastTone } from '@/ds'
-import { MarketingHeader } from './MarketingHeader'
+import { MarketingLayout, MarketingHero, MarketingSection, MarketingAlert } from './MarketingLayout'
 import { useSupportContact, useLegalConfig } from '@/lib/usePublicConfig'
 import { buildSupportMailto, sendSupportMessage, checkSupportRateLimit, recordSupportSend, formatWait } from '@/lib/api/support'
 import { useAuthStore } from '@/store/auth'
@@ -45,7 +45,6 @@ export function ContactPage() {
 
     const limit = checkSupportRateLimit()
     if (!limit.allowed) {
-      // ✅ Utiliser une variable pour waitSeconds
       const waitSeconds = (limit as { allowed: false; waitSeconds: number }).waitSeconds
       setFeedback({
         tone: 'warning',
@@ -97,320 +96,179 @@ export function ContactPage() {
   }
 
   return (
-      <div style={{
-        maxWidth: 900,
-        margin: '0 auto',
-        padding: '40px 20px 60px',
-        fontFamily: 'var(--font-body)',
-        color: 'var(--text-body)',
-        lineHeight: 1.7
-      }}>
-        <MarketingHeader />
+      <MarketingLayout>
+        <MarketingHero
+            eyebrow="Support"
+            eyebrowIcon="support_agent"
+            title={<>CONTACT</>}
+            lead="SendProColis — Nous sommes à votre écoute"
+            updated="17 juillet 2026"
+        />
+        <div className="mkt-sections">
+          <MarketingAlert tone="info" title={support.availability || 'Disponibilité du support'}>
+            {support.responseTime
+                ? `Délai de réponse annoncé : ${support.responseTime}.`
+                : 'Notre équipe vous répondra dans les meilleurs délais.'}
+          </MarketingAlert>
 
-        {/* En-tête */}
-        <div style={{
-          textAlign: 'center',
-          marginBottom: 48,
-          paddingBottom: 32,
-          borderBottom: '2px solid var(--border-subtle)'
-        }}>
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: 800,
-            fontSize: 'clamp(28px, 4vw, 36px)',
-            color: 'var(--text-strong)',
-            marginBottom: 8
-          }}>
-            CONTACT
-          </h1>
-          <p style={{
-            fontSize: 16,
-            color: 'var(--text-muted)',
-            margin: 0
-          }}>
-            SendProColis — Nous sommes à votre écoute
-          </p>
-          <p style={{
-            fontSize: 13,
-            color: 'var(--text-muted)',
-            marginTop: 8,
-            fontWeight: 500
-          }}>
-            Dernière mise à jour : 17 juillet 2026
-          </p>
-        </div>
-
-        {/* Avertissement */}
-        <div style={{
-          background: 'var(--teal-50)',
-          borderRadius: 16,
-          padding: 24,
-          marginBottom: 40,
-          border: '1px solid var(--teal-200)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-            <span style={{ fontSize: 28 }}>💬</span>
-            <div>
-              <h3 style={{
-                fontFamily: 'var(--font-display)',
-                fontWeight: 700,
-                fontSize: 16,
-                color: 'var(--teal-700)',
-                margin: '0 0 4px 0'
-              }}>
-                {support.availability || 'Disponibilité du support'}
-              </h3>
-              <p style={{
-                margin: 0,
-                color: 'var(--teal-600)',
-                fontSize: 14
-              }}>
-                {support.responseTime
-                  ? `Délai de réponse annoncé : ${support.responseTime}.`
-                  : 'Notre équipe vous répondra dans les meilleurs délais.'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Section 1 : Nous contacter */}
-        <Section title="Nous contacter">
-          <p>
-            Notre équipe est à votre écoute pour toute question, suggestion ou assistance. N'hésitez pas à nous
-            joindre par l'un des moyens suivants.
-          </p>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-            gap: 16,
-            marginTop: 20,
-            marginBottom: 20
-          }}>
-            {/* Email */}
-            <div style={{
-              padding: 18,
-              background: 'var(--surface-page)',
-              borderRadius: 12,
-              border: '1px solid var(--border-subtle)'
-            }}>
-              <div style={{ fontSize: 28, marginBottom: 8 }}>📧</div>
-              <div style={{
-                fontWeight: 700,
-                fontSize: 14,
-                color: 'var(--text-strong)',
-                marginBottom: 4
-              }}>
-                Email
-              </div>
-              <div style={{ fontSize: 13 }}>
-                {support.email
-                  ? <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>{support.email}</a>
-                  : 'À compléter'}
-              </div>
-            </div>
-
-            {/* Téléphone */}
-            <div style={{
-              padding: 18,
-              background: 'var(--surface-page)',
-              borderRadius: 12,
-              border: '1px solid var(--border-subtle)'
-            }}>
-              <div style={{ fontSize: 28, marginBottom: 8 }}>📞</div>
-              <div style={{
-                fontWeight: 700,
-                fontSize: 14,
-                color: 'var(--text-strong)',
-                marginBottom: 4
-              }}>
-                Téléphone / WhatsApp
-              </div>
-              <div style={{ fontSize: 13, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {support.technicalPhone && <a href={`tel:${support.technicalPhone.replace(/\s/g, '')}`} style={{ color: 'var(--color-primary)' }}>{support.technicalPhone}</a>}
-                {support.phone && <a href={`tel:${support.phone.replace(/\s/g, '')}`} style={{ color: 'var(--color-primary)' }}>{support.phone}</a>}
-                {!support.technicalPhone && !support.phone && 'À compléter'}
-              </div>
-            </div>
-
-            {/* Adresse */}
-            <div style={{
-              padding: 18,
-              background: 'var(--surface-page)',
-              borderRadius: 12,
-              border: '1px solid var(--border-subtle)'
-            }}>
-              <div style={{ fontSize: 28, marginBottom: 8 }}>📍</div>
-              <div style={{
-                fontWeight: 700,
-                fontSize: 14,
-                color: 'var(--text-strong)',
-                marginBottom: 4
-              }}>
-                Adresse
-              </div>
-              <div style={{ fontSize: 13 }}>
-                {legal.address || '[À COMPLÉTER]'}
-              </div>
-            </div>
-          </div>
-
-          {/* Horaires */}
-          <div style={{
-            padding: 20,
-            background: 'var(--surface-page)',
-            borderRadius: 12,
-            border: '1px solid var(--border-subtle)',
-            textAlign: 'center'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 10,
-              marginBottom: 8
-            }}>
-              <span style={{ fontSize: 24 }}>🕐</span>
-              <span style={{
-                fontWeight: 800,
-                fontSize: 18,
-                color: 'var(--text-strong)'
-              }}>
-              {support.availability || 'Disponibilité à confirmer'}
-            </span>
-            </div>
-            <p style={{
-              margin: 0,
-              fontSize: 14,
-              color: 'var(--text-muted)'
-            }}>
-              {support.responseTime ? `Délai de réponse annoncé : ${support.responseTime}.` : 'Contactez-nous pour connaître les délais de réponse.'}
+          <MarketingSection title="Nous contacter" icon="support_agent" iconTone="teal">
+            <p>
+              Notre équipe est à votre écoute pour toute question, suggestion ou assistance. N'hésitez pas à nous
+              joindre par l'un des moyens suivants.
             </p>
+
+            <div className="mkt-grid">
+              {support.email ? (
+                  <a href={`mailto:${support.email}`} className="mkt-contact-card">
+                    <div className="mkt-contact-card-icon"><span className="material-symbols-rounded">mail</span></div>
+                    <div>
+                      <div className="mkt-contact-card-label">Email</div>
+                      <div className="mkt-contact-card-value">{support.email}</div>
+                    </div>
+                  </a>
+              ) : (
+                  <div className="mkt-contact-card">
+                    <div className="mkt-contact-card-icon"><span className="material-symbols-rounded">mail</span></div>
+                    <div>
+                      <div className="mkt-contact-card-label">Email</div>
+                      <div className="mkt-contact-card-value">À compléter</div>
+                    </div>
+                  </div>
+              )}
+
+              <div className="mkt-contact-card">
+                <div className="mkt-contact-card-icon"><span className="material-symbols-rounded">call</span></div>
+                <div>
+                  <div className="mkt-contact-card-label">Téléphone / WhatsApp</div>
+                  <div className="mkt-contact-card-value" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {support.technicalPhone && <a href={`tel:${support.technicalPhone.replace(/\s/g, '')}`}>{support.technicalPhone}</a>}
+                    {support.phone && <a href={`tel:${support.phone.replace(/\s/g, '')}`}>{support.phone}</a>}
+                    {!support.technicalPhone && !support.phone && 'À compléter'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mkt-contact-card">
+                <div className="mkt-contact-card-icon"><span className="material-symbols-rounded">pin_drop</span></div>
+                <div>
+                  <div className="mkt-contact-card-label">Adresse</div>
+                  <div className="mkt-contact-card-value">{legal.address || '[À COMPLÉTER]'}</div>
+                </div>
+              </div>
+            </div>
+
             <div style={{
-              marginTop: 12,
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 24,
-              flexWrap: 'wrap',
-              fontSize: 13
+              marginTop: 16,
+              padding: 20,
+              background: 'var(--surface-sunken)',
+              borderRadius: 12,
+              border: '1px solid var(--border-subtle)',
+              textAlign: 'center'
             }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: 'var(--green-500)' }}>●</span> Support client
-            </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: 'var(--blue-500)' }}>●</span> Assistance technique
-            </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: 'var(--amber-500)' }}>●</span> Réclamations
-            </span>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 10,
+                marginBottom: 8
+              }}>
+                <span className="material-symbols-rounded" aria-hidden="true" style={{ fontSize: 24 }}>schedule</span>
+                <span style={{ fontWeight: 800, fontSize: 18, color: 'var(--text-strong)' }}>
+                  {support.availability || 'Disponibilité à confirmer'}
+                </span>
+              </div>
+              <p style={{ margin: 0, fontSize: 14, color: 'var(--text-muted)' }}>
+                {support.responseTime ? `Délai de réponse annoncé : ${support.responseTime}.` : 'Contactez-nous pour connaître les délais de réponse.'}
+              </p>
+              <div style={{
+                marginTop: 12,
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 24,
+                flexWrap: 'wrap',
+                fontSize: 13
+              }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ color: 'var(--green-500)' }}>●</span> Support client
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ color: 'var(--blue-500)' }}>●</span> Assistance technique
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ color: 'var(--amber-500)' }}>●</span> Réclamations
+                </span>
+              </div>
             </div>
-          </div>
-        </Section>
+          </MarketingSection>
 
-        {/* Section 2 : Formulaire de contact */}
-        <Section title="Formulaire de contact">
-          <p>
-            Vous pouvez également utiliser le formulaire ci-dessous pour nous envoyer un message.
-            Nous vous répondrons dans les plus brefs délais.
-          </p>
-
-          <form onSubmit={onSubmit} noValidate style={{
-            marginTop: 16,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 16,
-            maxWidth: 560
-          }}>
-            <Input
-                label="Nom complet"
-                icon="person"
-                placeholder="Votre nom"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                error={errors.name}
-                autoComplete="name"
-            />
-            <Input
-                label="Email"
-                icon="mail"
-                type="email"
-                placeholder="votre@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                error={errors.email}
-                autoComplete="email"
-            />
-            <Input
-                label="Sujet"
-                icon="subject"
-                placeholder="Sujet de votre message"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                error={errors.subject}
-            />
-            <Textarea
-                label="Message"
-                placeholder="Votre message..."
-                rows={5}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                error={errors.message}
-            />
-            {feedback && (
-                <Toast tone={feedback.tone} message={feedback.message} onClose={() => setFeedback(null)} />
-            )}
-            <div>
-              <Button
-                  type="submit"
-                  variant="primary"
-                  iconTrailing="send"
-                  loading={sending}
-                  size="lg"
-              >
-                Envoyer le message
-              </Button>
-            </div>
-          </form>
-        </Section>
-
-        {/* Footer */}
-        <div style={{
-          marginTop: 48,
-          paddingTop: 24,
-          borderTop: '1px solid var(--border-subtle)',
-          textAlign: 'center',
-          fontSize: 13,
-          color: 'var(--text-muted)'
-        }}>
-          <p style={{ margin: 0 }}>
-            © {new Date().getFullYear()} SendProColis — Tous droits réservés
-          </p>
-          <p style={{ margin: '4px 0 0' }}>
-            {legal.address || '[Adresse à compléter]'}
-            {support.email && <> · <a href={`mailto:${support.email}`} style={{ color: 'var(--color-primary)' }}>{support.email}</a></>}
-          </p>
+          <MarketingSection title="Formulaire de contact" icon="mail" iconTone="indigo">
+            <p>
+              Vous pouvez également utiliser le formulaire ci-dessous pour nous envoyer un message.
+              Nous vous répondrons dans les plus brefs délais.
+            </p>
+            <form onSubmit={onSubmit} noValidate className="mkt-form-grid" style={{ marginTop: 16 }}>
+              <div className="mkt-form-field">
+                <Input
+                    label="Nom complet"
+                    icon="person"
+                    placeholder="Votre nom"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    error={errors.name}
+                    autoComplete="name"
+                />
+              </div>
+              <div className="mkt-form-field">
+                <Input
+                    label="Email"
+                    icon="mail"
+                    type="email"
+                    placeholder="votre@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    error={errors.email}
+                    autoComplete="email"
+                />
+              </div>
+              <div className="mkt-form-field mkt-form-field--full">
+                <Input
+                    label="Sujet"
+                    icon="subject"
+                    placeholder="Sujet de votre message"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    error={errors.subject}
+                />
+              </div>
+              <div className="mkt-form-field mkt-form-field--full">
+                <Textarea
+                    label="Message"
+                    placeholder="Votre message..."
+                    rows={5}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    error={errors.message}
+                />
+              </div>
+              {feedback && (
+                  <div className="mkt-form-field mkt-form-field--full">
+                    <Toast tone={feedback.tone} message={feedback.message} onClose={() => setFeedback(null)} />
+                  </div>
+              )}
+              <div className="mkt-form-field mkt-form-field--full mkt-form-row">
+                <Button
+                    type="submit"
+                    variant="primary"
+                    iconTrailing="send"
+                    loading={sending}
+                    size="lg"
+                >
+                  Envoyer le message
+                </Button>
+              </div>
+            </form>
+          </MarketingSection>
         </div>
-      </div>
-  )
-}
-
-// ==================== COMPOSANTS ====================
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-      <div style={{ marginTop: 32 }}>
-        <h2 style={{
-          fontFamily: 'var(--font-display)',
-          fontWeight: 700,
-          fontSize: 'clamp(18px, 2vw, 21px)',
-          color: 'var(--text-strong)',
-          margin: '0 0 12px 0',
-          paddingBottom: 8,
-          borderBottom: '2px solid var(--color-primary-soft)'
-        }}>
-          {title}
-        </h2>
-        {children}
-      </div>
+      </MarketingLayout>
   )
 }

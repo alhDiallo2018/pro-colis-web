@@ -25,6 +25,16 @@ export const ClientDebtsScreen = lazy(() =>
     default: module.ClientDebtsScreen,
   })),
 );
+export const ClientWalletScreen = lazy(() =>
+  import("@/features/client/ClientWalletScreen").then((module) => ({
+    default: module.ClientWalletScreen,
+  })),
+);
+export const SettingsScreen = lazy(() =>
+  import("@/features/shared/SettingsScreen").then((module) => ({
+    default: module.SettingsScreen,
+  })),
+);
 export const DriverDebtsScreen = lazy(() =>
   import("@/features/driver/DriverDebtsScreen").then((module) => ({
     default: module.DriverDebtsScreen,

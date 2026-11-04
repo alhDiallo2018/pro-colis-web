@@ -18,9 +18,12 @@ export function DriverDebtsScreen() {
     wallet.data.commissionDebt < 0 || !Number.isFinite(wallet.data.balance)
   )
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <h1 style={{ margin: 0, fontFamily: 'var(--font-display)' }}>Mes dettes</h1>
+    <div className="cm-detail-page" style={{ maxWidth: 720 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Mes dettes</h1>
+          <p className="cm-page-head-sub">Commissions et pénalités encore dues</p>
+        </div>
         <Button variant="secondary" icon="refresh" loading={wallet.isFetching} onClick={() => wallet.refetch()}>Actualiser</Button>
       </div>
       <QueryState isLoading={wallet.isLoading} isError={wallet.isError || incomplete} error={wallet.error} onRetry={() => wallet.refetch()}>

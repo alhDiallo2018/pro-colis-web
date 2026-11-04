@@ -3,12 +3,7 @@ import { RoutePlanner } from '@/features/transport/RoutePlanner'
 import { JourneySharing } from '@/features/transport/JourneySharing'
 import { TripStops } from '@/features/transport/TripStops'
 import { locationLabel } from '@/lib/api/advertisements'
-// ============================================================
-// FILE: lib/screens/driver/MesAnnoncesScreen.tsx
-// ============================================================
-
 import { NegotiationChat } from '@/components/NegotiationChat'
-import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { Avatar, Badge, Button, Dialog, Icon, Toast } from '@/ds'
 import type { Advertisement, AdvertisementOffer } from '@/lib/api/advertisements'
@@ -27,8 +22,14 @@ import { CommissionDebtNotice } from './CommissionDebtNotice'
 const STATUS_META: Record<string, { label: string; tone: 'amber' | 'green' | 'red' | 'neutral' }> = {
   pending: { label: 'En attente', tone: 'amber' },
   countered: { label: 'Contre-offre', tone: 'amber' },
-  accepted: { label: 'Acceptee', tone: 'green' },
-  rejected: { label: 'Refusee', tone: 'red' },
+  accepted: { label: 'Acceptée', tone: 'green' },
+  rejected: { label: 'Refusée', tone: 'red' },
+}
+
+const AD_STATUS_LABELS: Record<string, { label: string; tone: 'green' | 'amber' | 'red' }> = {
+  open: { label: 'Ouverte', tone: 'green' },
+  closed: { label: 'Fermée', tone: 'red' },
+  cancelled: { label: 'Annulée', tone: 'amber' },
 }
 
 export function MesAnnoncesScreen() {
@@ -52,22 +53,31 @@ export function MesAnnoncesScreen() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['driver', 'advertisements'] }),
   })
 
+  const openCount = ads.filter(a => (a.status ?? 'open') === 'open').length
+
   return (
-    <div style={{ maxWidth: 840, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 920 }}>
       <CommissionDebtNotice />
+
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Mes annonces</h1>
+          <p className="cm-page-head-sub">
+            Publiez vos trajets, recevez des offres et acceptez vos meilleures
+            {ads.length > 0 && <> · <strong>{openCount}</strong> ouvertes sur <strong>{ads.length}</strong></>}
+          </p>
+        </div>
+        <Button icon="add" onClick={() => navigate('/driver?annonce=1')}>
+          Créer une annonce
+        </Button>
+      </div>
+
       <RoutePlanner />
       <JourneySharing />
+
       {acceptOffer.error instanceof ApiError && (
         <Toast tone="error" message={acceptOffer.error.message} />
       )}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, color: 'var(--text-strong)', margin: 0 }}>
-          Mes annonces
-        </h2>
-        <Button icon="add" onClick={() => navigate('/driver?annonce=1')}>
-          Creer une annonce
-        </Button>
-      </div>
 
       <QueryState
         isLoading={query.isLoading}
@@ -75,70 +85,24 @@ export function MesAnnoncesScreen() {
         error={query.error}
         isEmpty={ads.length === 0}
         emptyTitle="Aucune annonce"
-        emptyMessage="Vous n'avez pas encore cree d'annonce. Publiez un trajet pour recevoir des offres de clients."
+        emptyMessage="Vous n'avez pas encore créé d'annonce. Publiez un trajet pour recevoir des offres de clients."
+        emptyAction={<Button icon="add" onClick={() => navigate('/driver?annonce=1')}>Créer une annonce</Button>}
         onRetry={() => query.refetch()}
       >
-        {ads.map((ad) => (
-          <Panel key={ad.id} title={<AdHeader ad={ad} />}><TripStops ad={ad}/>{ad.itinerary&&<RememberRoute advertisementId={ad.id}/>}{ad.itinerary && ad.status === "open" && <JourneySharing advertisementId={ad.id}/>}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', gap: 32, fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
-                {ad.availableWeight != null && (
-                  <div>
-                    <span style={{ fontWeight: 600, color: 'var(--text-body)' }}>Poids dispo</span>
-                    <br />
-                    {formatWeight(ad.availableWeight)}
-                  </div>
-                )}
-                {ad.proposedPrice != null && (
-                  <div>
-                    <span style={{ fontWeight: 600, color: 'var(--text-body)' }}>Prix propose</span>
-                    <br />
-                    {formatFcfa(ad.proposedPrice)}
-                  </div>
-                )}
-                {ad.proposedPrice == null && (
-                  <div style={{ color: 'var(--text-faint)', fontStyle: 'italic' }}>Prix a negocier</div>
-                )}
-                <div>
-                  <span style={{ fontWeight: 600, color: 'var(--text-body)' }}>Depart</span>
-                  <br />
-                  {ad.departureAt ? formatDate(ad.departureAt) : 'Flexible'}
-                </div>
-              </div>
-
-              {ad.description && (
-                <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-body)' }}>{ad.description}</div>
-              )}
-
-              {ad.offers && ad.offers.length > 0 ? (
-                <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-sm)', color: 'var(--text-strong)', marginBottom: 10 }}>
-                    Offres recues ({ad.offers.length})
-                  </div>
-                  {ad.offers.map((o) => (
-                    <OfferRow
-                      key={o.id}
-                      offer={o}
-                      adId={ad.id}
-                      onAccept={(id) => acceptOffer.mutate({ adId: ad.id, offerId: id })}
-                      onReject={(id) => rejectOffer.mutate({ adId: ad.id, offerId: id })}
-                      accepting={acceptOffer.isPending}
-                      rejecting={rejectOffer.isPending}
-                      acceptBlocked={!fin.canAcceptNewDeliveries}
-                      blockedLabel={fin.isLoading ? 'Chargement…' : fin.isError ? 'Indisponible' : 'Dette à régler'}
-                      blockedTitle={fin.hasDebt ? commissionDebtMessage(fin.commissionDebt, fin.debtLimit) : 'État financier indisponible'}
-                      onChat={() => setChatTarget({ peerId: o.clientId, peerName: o.client?.fullName ?? 'Client', ad, parcelId: o.parcelId, offer: o })}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-faint)', fontStyle: 'italic' }}>
-                  Aucune offre recue pour cette annonce.
-                </div>
-              )}
-            </div>
-          </Panel>
-        ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-card)' }}>
+          {ads.map((ad) => (
+            <AdCard
+              key={ad.id}
+              ad={ad}
+              fin={fin}
+              onAccept={(offerId) => acceptOffer.mutate({ adId: ad.id, offerId })}
+              onReject={(offerId) => rejectOffer.mutate({ adId: ad.id, offerId })}
+              accepting={acceptOffer.isPending}
+              rejecting={rejectOffer.isPending}
+              onChat={(o) => setChatTarget({ peerId: o.clientId, peerName: o.client?.fullName ?? 'Client', ad, parcelId: o.parcelId, offer: o })}
+            />
+          ))}
+        </div>
       </QueryState>
 
       {chatTarget && (
@@ -147,7 +111,7 @@ export function MesAnnoncesScreen() {
           onClose={() => setChatTarget(null)}
           icon="forum"
           iconTone="primary"
-          title={`Negocier avec ${chatTarget.peerName}`}
+          title={`Négocier avec ${chatTarget.peerName}`}
           style={{ maxWidth: 640 }}
           actions={
             <Button variant="secondary" block onClick={() => setChatTarget(null)}>
@@ -188,42 +152,97 @@ export function MesAnnoncesScreen() {
   )
 }
 
-function AdHeader({ ad }: { ad: Advertisement }) {
+function AdCard({
+  ad, fin, onAccept, onReject, accepting, rejecting, onChat,
+}: {
+  ad: Advertisement
+  fin: ReturnType<typeof useDriverFinancialState>
+  onAccept: (offerId: string) => void
+  onReject: (offerId: string) => void
+  accepting: boolean
+  rejecting: boolean
+  onChat: (offer: AdvertisementOffer) => void
+}) {
   const status = ad.status || 'open'
-  const labels: Record<string, { label: string; tone: 'green' | 'amber' | 'red' }> = {
-    open: { label: 'Ouverte', tone: 'green' },
-    closed: { label: 'Fermee', tone: 'red' },
-    cancelled: { label: 'Annulee', tone: 'amber' },
-  }
-  const s = labels[status] ?? labels.open
+  const s = AD_STATUS_LABELS[status] ?? AD_STATUS_LABELS.open
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-        <span className="material-symbols-rounded" style={{ fontSize: 16, color: 'var(--text-muted)' }}>location_on</span>
-        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-body)' }}>
+    <section className="cm-ad-card">
+      <header className="cm-ad-card-head">
+        <div className="cm-ad-card-route">
+          <Icon name="location_on" size={18} style={{ color: 'var(--teal-600)' }} />
           {locationLabel(ad, 'departure')}
-          <span className="material-symbols-rounded" style={{ fontSize: 14, color: 'var(--text-faint)', verticalAlign: 'middle', margin: '0 2px' }}>arrow_right_alt</span>
+          <Icon name="arrow_right_alt" size={18} style={{ color: 'var(--text-faint)' }} />
           {locationLabel(ad, 'arrival')}
-        </span>
-      </span>
-      <Badge tone={s.tone}>{s.label}</Badge>
-    </div>
+        </div>
+        <Badge tone={s.tone}>{s.label}</Badge>
+      </header>
+
+      <div className="cm-ad-card-body">
+        <TripStops ad={ad} />
+        {ad.itinerary && <RememberRoute advertisementId={ad.id} />}
+        {ad.itinerary && ad.status === 'open' && <JourneySharing advertisementId={ad.id} />}
+
+        <div className="cm-ad-card-meta">
+          {ad.availableWeight != null && (
+            <div>
+              <div className="cm-ad-card-meta-label">Poids dispo</div>
+              <div className="cm-ad-card-meta-value">{formatWeight(ad.availableWeight)}</div>
+            </div>
+          )}
+          <div>
+            <div className="cm-ad-card-meta-label">Prix proposé</div>
+            <div className="cm-ad-card-meta-value" style={{ color: ad.proposedPrice != null ? 'var(--teal-700)' : 'var(--text-faint)' }}>
+              {ad.proposedPrice != null ? formatFcfa(ad.proposedPrice) : 'À négocier'}
+            </div>
+          </div>
+          <div>
+            <div className="cm-ad-card-meta-label">Départ</div>
+            <div className="cm-ad-card-meta-value">{ad.departureAt ? formatDate(ad.departureAt) : 'Flexible'}</div>
+          </div>
+        </div>
+
+        {ad.description && (
+          <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-body)', background: 'var(--surface-sunken)', padding: '10px 14px', borderRadius: 'var(--cm-radius-chip)' }}>
+            {ad.description}
+          </div>
+        )}
+
+        <div>
+          <h3 className="cm-ad-card-section-title">
+            Offres reçues
+            {ad.offers && ad.offers.length > 0 && <span className="cm-ad-card-section-count">{ad.offers.length}</span>}
+          </h3>
+          {ad.offers && ad.offers.length > 0 ? (
+            ad.offers.map((o) => (
+              <OfferRow
+                key={o.id}
+                offer={o}
+                onAccept={onAccept}
+                onReject={onReject}
+                accepting={accepting}
+                rejecting={rejecting}
+                acceptBlocked={!fin.canAcceptNewDeliveries}
+                blockedLabel={fin.isLoading ? 'Chargement…' : fin.isError ? 'Indisponible' : 'Dette à régler'}
+                blockedTitle={fin.hasDebt ? commissionDebtMessage(fin.commissionDebt, fin.debtLimit) : 'État financier indisponible'}
+                onChat={() => onChat(o)}
+              />
+            ))
+          ) : (
+            <div className="cm-ad-card-no-offers">
+              Aucune offre reçue pour cette annonce.
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
   )
 }
 
 function OfferRow({
-  offer,
-  onAccept,
-  onReject,
-  accepting,
-  rejecting,
-  acceptBlocked = false,
-  blockedLabel = 'Dette à régler',
-  blockedTitle,
-  onChat,
+  offer, onAccept, onReject, accepting, rejecting, acceptBlocked = false, blockedLabel = 'Dette à régler', blockedTitle, onChat,
 }: {
   offer: AdvertisementOffer
-  adId: string
   onAccept: (id: string) => void
   onReject: (id: string) => void
   accepting: boolean
@@ -237,185 +256,181 @@ function OfferRow({
   const status = STATUS_META[offer.status] ?? STATUS_META.pending
   const [showParcel, setShowParcel] = useState(false)
 
-  // ✅ Vérifier si l'offre vient du client (pas du chauffeur connecté)
   const isFromClient = offer.clientId !== currentUser?.id
-
-  // ✅ Le chauffeur peut accepter si :
-  // 1. L'offre est en attente (pending) et vient du client
-  // 2. OU c'est une contre-offre du client (status === 'countered' et c'est le client qui a fait la dernière offre)
-  const canAccept = 
+  const canAccept =
     (offer.status === 'pending' && isFromClient) ||
     (offer.status === 'countered' && isFromClient)
-
-  // ✅ Le chauffeur a envoyé une contre-offre
   const isMyCounter = offer.status === 'countered' && !isFromClient
 
   return (
     <>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderTop: '1px solid var(--slate-50)' }}>
-      <Avatar name={offer.client?.fullName ?? 'Client'} src={offer.client?.profilePhoto ?? undefined} size="sm" />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-sm)', color: 'var(--text-strong)' }}>
-          {offer.client?.fullName ?? 'Client'}
-        </div>
-        {offer.parcel && (
-          <div
-            style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}
-            onClick={() => setShowParcel(true)}
-            title="Voir les infos du colis"
-          >
-            <span style={{ color: 'var(--text-link)', fontWeight: 600 }}>{offer.parcel.trackingNumber}</span>
-            {offer.parcel.weight != null && <> · {offer.parcel.weight} kg</>}
-            {offer.parcel.receiverName && <> · {offer.parcel.receiverName}</>}
-          </div>
-        )}
-        {offer.journeySegment && <p>Retrait : {offer.journeySegment.pickup?.name} → Remise : {offer.journeySegment.dropoff?.name}</p>}
-          {(offer.message || offer.responseMessage) && (
-          <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {offer.responseMessage ?? offer.message}
-          </div>
-        )}
-        {/* ✅ Afficher qui a fait la dernière offre */}
-        {offer.status === 'countered' && (
-          <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--primary)', fontWeight: 600 }}>
-            {isFromClient ? '📩 Nouvelle contre-offre du client' : '📤 Contre-offre envoyée'}
-          </div>
-        )}
-      </div>
-      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 'var(--fs-sm)', color: 'var(--teal-600)', whiteSpace: 'nowrap' }}>
-        {formatFcfa(offer.price)}
-      </span>
-      <Badge tone={status.tone}>{status.label}</Badge>
-
-      {/* ✅ Gestion des actions selon le statut et l'expéditeur */}
-      {offer.status === 'accepted' ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--green-700)', fontWeight: 600, fontSize: 'var(--fs-sm)' }}>
-          <Icon name="check_circle" size={16} /> Acceptée
-        </div>
-      ) : offer.status === 'rejected' ? (
-        <div style={{ color: 'var(--text-faint)', fontStyle: 'italic', fontSize: 'var(--fs-xs)' }}>Refusée</div>
-      ) : isMyCounter ? (
-        // ✅ Chauffeur a envoyé une contre-offre → attend la réponse du client
-        <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-          ⏳ En attente réponse client
-        </div>
-      ) : canAccept ? (
-        // ✅ Le chauffeur peut accepter l'offre du client
-        <div style={{ display: 'flex', gap: 4 }}>
-          <Button size="sm" variant="secondary" icon="forum" onClick={onChat}>
-            Chat
-          </Button>
-          <Button size="sm" variant="ghost" icon="close" onClick={() => onReject(offer.id)} disabled={rejecting}>
-            Refuser
-          </Button>
-          <Button
-            size="sm"
-            icon={acceptBlocked ? 'lock' : 'check'}
-            onClick={() => onAccept(offer.id)}
-            disabled={accepting || acceptBlocked}
-            title={acceptBlocked ? blockedTitle : undefined}
-          >
-            {acceptBlocked ? blockedLabel : 'Accepter'}
-          </Button>
-        </div>
-      ) : offer.status === 'pending' && !isFromClient ? (
-        // ✅ Le chauffeur ne peut pas accepter sa propre offre
-        <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-faint)', fontStyle: 'italic' }}>
-          Votre offre
-        </div>
-      ) : offer.status === 'countered' && !isFromClient ? (
-        // ✅ Le chauffeur attend la réponse du client
-        <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-          ⏳ En attente réponse client
-        </div>
-      ) : null}
-    </div>
-
-    {showParcel && offer.parcel && (
-      <Dialog
-        open
-        onClose={() => setShowParcel(false)}
-        icon="package_2"
-        iconTone="primary"
-        title={`Colis — ${offer.parcel.trackingNumber}`}
-        style={{ maxWidth: 480 }}
-        actions={
-          <Button variant="secondary" block onClick={() => setShowParcel(false)}>
-            Fermer
-          </Button>
-        }
-      >
-        <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {offer.parcel.description && (
-            <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-body)', background: 'var(--slate-50)', padding: '10px 14px', borderRadius: 'var(--radius-md)' }}>
-              {offer.parcel.description}
-            </div>
+      <div className="cm-offer-inline-row">
+        <Avatar name={offer.client?.fullName ?? 'Client'} src={offer.client?.profilePhoto ?? undefined} size="sm" />
+        <div className="cm-offer-inline-row-body">
+          <p className="cm-offer-inline-row-name">{offer.client?.fullName ?? 'Client'}</p>
+          {offer.parcel && (
+            <p className="cm-offer-inline-row-sub">
+              <a onClick={() => setShowParcel(true)} title="Voir les infos du colis">
+                {offer.parcel.trackingNumber}
+              </a>
+              {offer.parcel.weight != null && <> · {offer.parcel.weight} kg</>}
+              {offer.parcel.receiverName && <> · {offer.parcel.receiverName}</>}
+            </p>
           )}
+          {offer.journeySegment && (
+            <p className="cm-offer-inline-row-sub">
+              Retrait : {offer.journeySegment.pickup?.name} → Remise : {offer.journeySegment.dropoff?.name}
+            </p>
+          )}
+          {(offer.message || offer.responseMessage) && (
+            <p className="cm-offer-inline-row-sub" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {offer.responseMessage ?? offer.message}
+            </p>
+          )}
+          {offer.status === 'countered' && (
+            <p className="cm-offer-inline-row-sub" style={{ color: 'var(--teal-700)', fontWeight: 700 }}>
+              {isFromClient ? 'Nouvelle contre-offre du client' : 'Contre-offre envoyée'}
+            </p>
+          )}
+        </div>
+        <span className="cm-offer-inline-row-price">{formatFcfa(offer.price)}</span>
+        <Badge tone={status.tone}>{status.label}</Badge>
 
-          <div className="pc-field-pair" style={{ gap: '8px 16px', fontSize: 'var(--fs-sm)' }}>
-            {offer.parcel.weight != null && (
-              <div><span style={{ color: 'var(--text-muted)' }}>Poids</span><br /><strong>{offer.parcel.weight} kg</strong></div>
-            )}
-            {offer.parcel.type && (
-              <div><span style={{ color: 'var(--text-muted)' }}>Type</span><br /><strong>{offer.parcel.type}</strong></div>
-            )}
-            <div><span style={{ color: 'var(--text-muted)' }}>Statut</span><br /><strong>{offer.parcel.status}</strong></div>
-            {offer.parcel.receiverName && (
-              <div><span style={{ color: 'var(--text-muted)' }}>Destinataire</span><br /><strong>{offer.parcel.receiverName}</strong></div>
-            )}
-            {offer.parcel.receiverPhone && (
-              <div><span style={{ color: 'var(--text-muted)' }}>Tel destinataire</span><br /><strong style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-xs)' }}>{offer.parcel.receiverPhone}</strong></div>
-            )}
-            {offer.parcel.receiverAddress && (
-              <div style={{ gridColumn: 'span 2' }}><span style={{ color: 'var(--text-muted)' }}>Adresse</span><br /><strong>{offer.parcel.receiverAddress}</strong></div>
-            )}
-          </div>
+        <div className="cm-offer-inline-row-actions">
+          {offer.status === 'accepted' ? (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--green-700)', fontWeight: 700, fontSize: 'var(--fs-sm)' }}>
+              <Icon name="check_circle" size={16} /> Acceptée
+            </span>
+          ) : offer.status === 'rejected' ? (
+            <span style={{ color: 'var(--text-faint)', fontStyle: 'italic', fontSize: 'var(--fs-xs)' }}>Refusée</span>
+          ) : isMyCounter ? (
+            <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+              ⏳ En attente réponse client
+            </span>
+          ) : canAccept ? (
+            <>
+              <Button size="sm" variant="secondary" icon="forum" onClick={onChat}>
+                Chat
+              </Button>
+              <Button size="sm" variant="ghost" icon="close" onClick={() => onReject(offer.id)} disabled={rejecting}>
+                Refuser
+              </Button>
+              <Button
+                size="sm"
+                icon={acceptBlocked ? 'lock' : 'check'}
+                onClick={() => onAccept(offer.id)}
+                disabled={accepting || acceptBlocked}
+                title={acceptBlocked ? blockedTitle : undefined}
+              >
+                {acceptBlocked ? blockedLabel : 'Accepter'}
+              </Button>
+            </>
+          ) : offer.status === 'pending' && !isFromClient ? (
+            <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-faint)', fontStyle: 'italic' }}>Votre offre</span>
+          ) : offer.status === 'countered' && !isFromClient ? (
+            <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+              ⏳ En attente réponse client
+            </span>
+          ) : null}
+        </div>
+      </div>
 
-          {(offer.parcel.photoUrls?.length ?? 0) > 0 && (
-            <div>
-              <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>
-                Photos ({offer.parcel.photoUrls!.length})
+      {showParcel && offer.parcel && (
+        <Dialog
+          open
+          onClose={() => setShowParcel(false)}
+          icon="package_2"
+          iconTone="primary"
+          title={`Colis — ${offer.parcel.trackingNumber}`}
+          style={{ maxWidth: 480 }}
+          actions={
+            <Button variant="secondary" block onClick={() => setShowParcel(false)}>
+              Fermer
+            </Button>
+          }
+        >
+          <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {offer.parcel.description && (
+              <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-body)', background: 'var(--surface-sunken)', padding: '10px 14px', borderRadius: 'var(--radius-md)' }}>
+                {offer.parcel.description}
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {offer.parcel.photoUrls!.map((url, i) => (
-                  <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                    <img src={url} alt={`Photo ${i + 1}`} style={{ width: 72, height: 72, borderRadius: 'var(--radius-sm)', objectFit: 'cover', border: '1px solid var(--border-subtle)' }} />
-                  </a>
+            )}
+
+            <div className="pc-field-pair" style={{ gap: '8px 16px', fontSize: 'var(--fs-sm)' }}>
+              {offer.parcel.weight != null && (
+                <div><span style={{ color: 'var(--text-muted)' }}>Poids</span><br /><strong>{offer.parcel.weight} kg</strong></div>
+              )}
+              {offer.parcel.type && (
+                <div><span style={{ color: 'var(--text-muted)' }}>Type</span><br /><strong>{offer.parcel.type}</strong></div>
+              )}
+              <div><span style={{ color: 'var(--text-muted)' }}>Statut</span><br /><strong>{offer.parcel.status}</strong></div>
+              {offer.parcel.receiverName && (
+                <div><span style={{ color: 'var(--text-muted)' }}>Destinataire</span><br /><strong>{offer.parcel.receiverName}</strong></div>
+              )}
+              {offer.parcel.receiverPhone && (
+                <div><span style={{ color: 'var(--text-muted)' }}>Tel destinataire</span><br /><strong style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-xs)' }}>{offer.parcel.receiverPhone}</strong></div>
+              )}
+              {offer.parcel.receiverAddress && (
+                <div style={{ gridColumn: 'span 2' }}><span style={{ color: 'var(--text-muted)' }}>Adresse</span><br /><strong>{offer.parcel.receiverAddress}</strong></div>
+              )}
+            </div>
+
+            {(offer.parcel.photoUrls?.length ?? 0) > 0 && (
+              <div>
+                <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6 }}>
+                  Photos ({offer.parcel.photoUrls!.length})
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {offer.parcel.photoUrls!.map((url, i) => (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                      <img src={url} alt={`Photo ${i + 1}`} style={{ width: 72, height: 72, borderRadius: 'var(--radius-sm)', objectFit: 'cover', border: '1px solid var(--border-subtle)' }} />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(offer.parcel.audioUrls?.length ?? 0) > 0 && (
+              <div>
+                <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>
+                  Messages vocaux
+                </div>
+                {offer.parcel.audioUrls!.map((url, i) => (
+                  <audio key={i} controls src={url} style={{ width: '100%', height: 32, maxWidth: 320 }} />
                 ))}
               </div>
-            </div>
-          )}
+            )}
 
-          {(offer.parcel.audioUrls?.length ?? 0) > 0 && (
-            <div>
-              <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>
-                Messages vocaux
+            {(offer.parcel.videoUrls?.length ?? 0) > 0 && (
+              <div>
+                <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>
+                  Vidéos ({offer.parcel.videoUrls!.length})
+                </div>
+                {offer.parcel.videoUrls!.map((url, i) => (
+                  <video key={i} controls src={url} style={{ width: '100%', maxWidth: 320, borderRadius: 'var(--radius-sm)' }} />
+                ))}
               </div>
-              {offer.parcel.audioUrls!.map((url, i) => (
-                <audio key={i} controls src={url} style={{ width: '100%', height: 32, maxWidth: 320 }} />
-              ))}
-            </div>
-          )}
-
-          {(offer.parcel.videoUrls?.length ?? 0) > 0 && (
-            <div>
-              <div style={{ fontSize: 'var(--fs-xs)', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>
-                Videos ({offer.parcel.videoUrls!.length})
-              </div>
-              {offer.parcel.videoUrls!.map((url, i) => (
-                <video key={i} controls src={url} style={{ width: '100%', maxWidth: 320, borderRadius: 'var(--radius-sm)' }} />
-              ))}
-            </div>
-          )}
-        </div>
-      </Dialog>
-    )}
-  </>
+            )}
+          </div>
+        </Dialog>
+      )}
+    </>
   )
 }
 
-function RememberRoute({advertisementId}:{advertisementId:string}){
- const [message,setMessage]=useState('')
- const save=useMutation({mutationFn:()=>api.post('/driver/route-templates',{advertisementId}),onSuccess:()=>{setMessage('Trajet disponible dans vos trajets habituels.');void queryClient.invalidateQueries({queryKey:['route-templates']})},onError:e=>setMessage(e.message)})
- return <div><Button variant="secondary" loading={save.isPending} onClick={()=>save.mutate()}>Réutiliser ce trajet</Button>{message&&<p role="status">{message}</p>}</div>
+function RememberRoute({ advertisementId }: { advertisementId: string }) {
+  const [message, setMessage] = useState('')
+  const save = useMutation({
+    mutationFn: () => api.post('/driver/route-templates', { advertisementId }),
+    onSuccess: () => { setMessage('Trajet disponible dans vos trajets habituels.'); void queryClient.invalidateQueries({ queryKey: ['route-templates'] }) },
+    onError: e => setMessage(e.message),
+  })
+  return (
+    <div>
+      <Button variant="secondary" size="sm" icon="bookmark_add" loading={save.isPending} onClick={() => save.mutate()}>
+        Réutiliser ce trajet
+      </Button>
+      {message && <p role="status" style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 6 }}>{message}</p>}
+    </div>
+  )
 }

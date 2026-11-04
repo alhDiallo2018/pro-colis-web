@@ -9,8 +9,14 @@ export function FinanceDashboardPage() {
   const d = query.data
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-      <Panel title="Tableau de bord financier">
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Tableau de bord financier</h1>
+          <p className="cm-page-head-sub">Wallets, commissions et recharges de la plateforme</p>
+        </div>
+      </div>
+      <Panel title="Vue d'ensemble">
         <QueryState
           isLoading={query.isLoading}
           isError={query.isError}

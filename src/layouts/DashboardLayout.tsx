@@ -8,6 +8,7 @@ import { useModalFocus } from '@/lib/useModalFocus'
 import './dashboard.css'
 import { SupportFAB } from '@/components/SupportFAB'
 import { SupportAvailability } from '@/components/SupportAvailability'
+import { SessionLock } from '@/features/pwa/SessionLock'
 
 export interface NavItem {
   label: string
@@ -87,6 +88,7 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', background: 'var(--surface-page)', fontFamily: 'var(--font-body)' }}>
+      <SessionLock />
       <a className="pc-skip-link" href="#main-content">Aller au contenu</a>
       {/* Mobile drawer backdrop */}
       {isMobile && open && (

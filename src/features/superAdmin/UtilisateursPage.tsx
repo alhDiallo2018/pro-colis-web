@@ -123,11 +123,20 @@ export function UtilisateursPage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Utilisateurs</h1>
+          <p className="cm-page-head-sub">
+            Comptes, rôles et statuts
+            {query.data?.pagination && <> · <strong>{query.data.pagination.total}</strong> comptes</>}
+          </p>
+        </div>
+      </div>
       {notice && <Toast tone="info" message={notice} onClose={() => setNotice(null)} />}
 
       <Panel
-        title={`Utilisateurs${query.data?.pagination ? ` · ${query.data.pagination.total}` : ''}`}
+        title="Annuaire"
         action={
           <Button size="sm" variant="primary" icon="person_add" onClick={() => setCreateOpen(true)}>
             Nouvel utilisateur

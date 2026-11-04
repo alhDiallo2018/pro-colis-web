@@ -75,7 +75,16 @@ export function PaymentsPage() {
   const pagination = query.data?.pagination
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Paiements</h1>
+          <p className="cm-page-head-sub">
+            Transactions PayDunya et règlements internes
+            {pagination?.total != null && <> · <strong>{pagination.total}</strong></>}
+          </p>
+        </div>
+      </div>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <SegmentedControl size="sm" options={STATUS_FILTERS} value={status} onChange={setStatus} />
         <Select
@@ -86,7 +95,7 @@ export function PaymentsPage() {
         />
       </div>
 
-      <Panel title={`Paiements${pagination ? ` · ${pagination.total}` : ''}`} flush>
+      <Panel title="Historique" flush>
         {isMobile ? (
           <QueryState
             isLoading={query.isLoading}

@@ -36,7 +36,7 @@ export function ProfilScreen() {
   const cancelled = parcels.filter((p) => p.status === 'cancelled').length
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 900 }}>
       <ProfileHeader
         user={user}
         onPhotoChange={setPhotoDataUrl}

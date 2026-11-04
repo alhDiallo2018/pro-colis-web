@@ -242,7 +242,16 @@ function WalletList() {
   const inactifs = wallets.filter((w) => !w.lastActivityAt).length
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Portefeuilles</h1>
+          <p className="cm-page-head-sub">
+            Soldes des comptes utilisateurs et activités
+            {totalWallets > 0 && <> · <strong>{totalWallets}</strong> comptes</>}
+          </p>
+        </div>
+      </div>
       <div
         style={{
           display: 'flex',

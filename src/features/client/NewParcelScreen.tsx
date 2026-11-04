@@ -15,7 +15,6 @@ import {
   Button,
   Card,
   Icon,
-  IconButton,
   Input,
   Select,
   Switch,
@@ -661,44 +660,21 @@ export function NewParcelScreen() {
   };
 
   return (
-    <div
-      style={{
-        width: "100%",
-        maxWidth: 620,
-        margin: "0 auto",
-        display: "flex",
-        flexDirection: "column",
-        gap: 18,
-      }}
-    >
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <IconButton
-          icon="arrow_back"
+    <div className="cm-newparcel-page">
+      {/* Header — Citymapper hero compact */}
+      <div className="cm-newparcel-head">
+        <button
+          type="button"
+          className="cm-newparcel-head-back"
           aria-label="Retour"
           onClick={() => navigate(-1)}
-        />
-        <div>
-          <h1
-            style={{
-              margin: 0,
-              fontFamily: "var(--font-display)",
-              fontWeight: 800,
-              fontSize: "var(--fs-h2)",
-              color: "var(--text-strong)",
-              letterSpacing: "var(--ls-snug)",
-            }}
-          >
-            Nouvelle annonce
-          </h1>
-          <p
-            style={{
-              margin: "2px 0 0",
-              fontSize: "var(--fs-sm)",
-              color: "var(--text-muted)",
-            }}
-          >
-            Publiez votre colis en {STEPS.length} étapes.
+        >
+          <Icon name="arrow_back" size={22} />
+        </button>
+        <div className="cm-newparcel-head-body">
+          <h1>Nouvelle annonce</h1>
+          <p className="cm-newparcel-head-sub">
+            Publiez votre colis en {STEPS.length} étapes · suivi étape {step + 1} sur {STEPS.length}
           </p>
         </div>
       </div>
@@ -1308,92 +1284,32 @@ function Stepper({
 }) {
   const fraction = STEPS.length > 1 ? current / (STEPS.length - 1) : 0;
   return (
-    <div style={{ position: "relative", padding: "0 4px" }}>
+    <div className="cm-newparcel-stepper">
+      <div className="cm-newparcel-stepper-rail" />
       <div
-        style={{
-          position: "absolute",
-          top: 13,
-          left: "12.5%",
-          right: "12.5%",
-          height: 2,
-          background: "var(--border-default)",
-        }}
+        className="cm-newparcel-stepper-fill"
+        style={{ width: `calc(${75 * fraction}%)` }}
       />
-      <div
-        style={{
-          position: "absolute",
-          top: 13,
-          left: "12.5%",
-          width: `calc(${75 * fraction}%)`,
-          height: 2,
-          background: "var(--teal-500)",
-          transition: "width 0.3s ease",
-        }}
-      />
-      <div style={{ display: "flex", position: "relative" }}>
+      <div className="cm-newparcel-stepper-steps">
         {STEPS.map((label, i) => {
           const done = i < current;
           const active = i === current;
           const reachable = i <= maxStep;
+          const classes = ["cm-newparcel-step"];
+          if (done || active) classes.push("cm-newparcel-step--reached");
+          if (active) classes.push("cm-newparcel-step--active");
           return (
             <button
               key={label}
               type="button"
               disabled={!reachable}
+              className={classes.join(" ")}
               onClick={() => reachable && onJump(i)}
-              style={{
-                flex: 1,
-                // Nowrap labels would otherwise push the rail past a narrow
-                // phone instead of ellipsing inside their own step.
-                minWidth: 0,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 7,
-                border: "none",
-                background: "transparent",
-                cursor: reachable ? "pointer" : "default",
-                padding: 0,
-              }}
             >
-              <span
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: "50%",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 700,
-                  fontSize: 13,
-                  background:
-                    done || active ? "var(--teal-500)" : "var(--surface-card)",
-                  color: done || active ? "#fff" : "var(--text-faint)",
-                  border: `2px solid ${done || active ? "var(--teal-500)" : "var(--border-default)"}`,
-                  transition: "background 0.2s, border-color 0.2s",
-                }}
-              >
+              <span className="cm-newparcel-step-dot">
                 {done ? <Icon name="check" size={16} /> : i + 1}
               </span>
-              <span
-                style={{
-                  fontSize: "var(--fs-xs)",
-                  fontWeight: active ? 700 : 600,
-                  fontFamily: "var(--font-display)",
-                  color: active
-                    ? "var(--text-strong)"
-                    : done
-                      ? "var(--text-body)"
-                      : "var(--text-faint)",
-                  whiteSpace: "nowrap",
-                  maxWidth: "100%",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {label}
-              </span>
+              <span className="cm-newparcel-step-label">{label}</span>
             </button>
           );
         })}

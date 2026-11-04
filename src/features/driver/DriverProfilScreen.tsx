@@ -93,7 +93,7 @@ export function DriverProfilScreen() {
   const vehicleValid = plateNumber.trim().length >= 2 && model.trim().length >= 1 && type.trim().length >= 1
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 900 }}>
       <ProfileHeader
         user={user}
         onPhotoChange={setPhotoDataUrl}

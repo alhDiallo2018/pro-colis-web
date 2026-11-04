@@ -1,0 +1,207 @@
+/* Palette dédiée aux écrans transit — inspiration Citymapper / Transit. */
+
+.transit-panel {
+  padding: 20px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  display: grid;
+  gap: 18px;
+}
+
+.transit-panel-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.transit-panel-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+
+.transit-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.transit-note-error { color: var(--red-500, #ef4444); }
+
+/* ─── Sélecteur ligne ─────────────────────────────────────────── */
+
+.transit-picker { display: grid; gap: 18px; }
+
+.transit-picker-step { display: grid; gap: 10px; }
+.transit-picker-step-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.transit-picker-search {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+  font-size: 15px;
+}
+.transit-picker-search:focus { outline: 2px solid var(--teal-500); outline-offset: 1px; }
+
+.transit-operators { display: flex; gap: 10px; flex-wrap: wrap; }
+.transit-operator {
+  display: inline-flex; gap: 10px; align-items: center;
+  min-height: 56px; padding: 8px 14px 8px 8px;
+  background: var(--surface-card);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.transit-operator[aria-pressed='true'] {
+  border-color: #111; background: var(--surface-sunken);
+}
+.transit-operator-label {
+  font-family: var(--font-display); font-weight: 700; font-size: 14px;
+}
+
+.transit-lines-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 10px;
+  max-height: 440px;
+  overflow: auto;
+  padding: 2px;
+}
+.transit-line-group {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+}
+.transit-line-route-text {
+  font-family: var(--font-display); font-weight: 600; font-size: 14px;
+  color: var(--text-body); line-height: 1.3;
+}
+.transit-line-directions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.transit-line-direction {
+  min-height: 32px; padding: 4px 12px; border-radius: 8px;
+  border: 1px solid var(--border-subtle); background: var(--surface-sunken);
+  font-family: var(--font-display); font-weight: 600; font-size: 12px;
+  cursor: pointer;
+}
+.transit-line-direction:hover { background: #e5e7eb; }
+
+.transit-picker-selected {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+}
+.transit-picker-selected-body { min-width: 0; }
+.transit-picker-route {
+  font-family: var(--font-display); font-weight: 700; font-size: 15px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.transit-picker-direction { font-size: 12px; color: var(--text-muted); }
+
+/* ─── Cartes voyages (LiveJourneys refonte) ──────────────────── */
+
+.transit-live-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 12px;
+}
+.transit-live-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+.transit-live-card:hover { border-color: #111; transform: translateY(-1px); }
+.transit-live-card-head {
+  display: flex; gap: 10px; align-items: center; justify-content: space-between;
+}
+.transit-live-card-head-left { display: flex; gap: 8px; align-items: center; }
+.transit-live-driver { font-family: var(--font-display); font-weight: 700; font-size: 15px; }
+.transit-live-meta {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  font-size: 12px; color: var(--text-muted);
+}
+.transit-live-meta strong {
+  color: var(--text-body); font-family: var(--font-display); font-size: 14px;
+}
+
+/* ─── Carte Citymapper (TripStops + Track) ───────────────────── */
+
+.transit-map {
+  height: 380px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface-sunken);
+}
+.transit-map-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  gap: 16px;
+}
+.transit-stops-rail {
+  max-height: 480px; overflow: auto;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+@media (max-width: 760px) {
+  .transit-map-split { grid-template-columns: minmax(0, 1fr); }
+  .transit-map { height: 280px; }
+  .transit-stops-rail { max-height: 360px; }
+}
+
+/* ─── Track my parcel ──────────────────────────────────────── */
+
+.transit-track-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+.transit-track-progress {
+  display: grid; gap: 4px; margin-top: 8px;
+}
+.transit-track-bar {
+  position: relative;
+  height: 8px;
+  background: var(--surface-sunken);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.transit-track-bar-fill {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: linear-gradient(90deg, var(--teal-500), var(--green-500));
+  transition: width 400ms ease;
+}
+.transit-track-progress-labels {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}

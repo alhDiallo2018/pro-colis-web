@@ -287,7 +287,13 @@ export function ScoresPage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Scores chauffeurs</h1>
+          <p className="cm-page-head-sub">Niveaux de réputation, points et transactions</p>
+        </div>
+      </div>
       <QueryState
         isLoading={dashQuery.isLoading}
         isError={dashQuery.isError}

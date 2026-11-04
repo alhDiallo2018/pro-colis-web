@@ -73,12 +73,15 @@ export function WalletDetailPage() {
       : null
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 720 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 720 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Wallet de {driverName}</h1>
+          <p className="cm-page-head-sub">Solde, rechargements, débits et transactions</p>
+        </div>
+      </div>
       <Card padding="lg">
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-            Wallet de {driverName}
-          </div>
           <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: 32, color: balance >= 0 ? 'var(--green-600)' : 'var(--red-500)', marginTop: 4 }}>
             {formatFcfa(balance)}
           </div>

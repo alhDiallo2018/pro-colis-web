@@ -79,7 +79,7 @@
 }
 
 .experience-stack a {
-  color: var(--teal-700);
+  color: var(--text-link);
   text-underline-offset: 3px;
 }
 .experience-stack summary {

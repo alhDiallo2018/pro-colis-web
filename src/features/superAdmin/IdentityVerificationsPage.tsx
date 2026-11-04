@@ -42,7 +42,17 @@ export function IdentityVerificationsPage() {
   const pagination = query.data?.pagination
 
   return (
-    <Panel title="Vérifications d'identité (chauffeurs)">
+    <div className="cm-detail-page">
+    <div className="cm-page-head">
+      <div className="cm-page-head-body">
+        <h1>Vérifications d'identité</h1>
+        <p className="cm-page-head-sub">
+          Pièces envoyées par les chauffeurs, à valider ou refuser
+          {summary?.pending != null && summary.pending > 0 && <> · <strong style={{ color: 'var(--amber-700)' }}>{summary.pending}</strong> en attente</>}
+        </p>
+      </div>
+    </div>
+    <Panel title="Dossiers chauffeurs">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         {summary && (
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -218,6 +228,7 @@ export function IdentityVerificationsPage() {
         </Dialog>
       )}
     </Panel>
+    </div>
   )
 }
 

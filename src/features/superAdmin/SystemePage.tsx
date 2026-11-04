@@ -82,7 +82,13 @@ export function SystemePage() {
     setEvents((current) => (current.includes(event) ? current.filter((e) => e !== event) : [...current, event]))
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Système</h1>
+          <p className="cm-page-head-sub">Santé plateforme, webhooks et monitoring</p>
+        </div>
+      </div>
       <Panel title="Santé de l'API">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
           <StatBox

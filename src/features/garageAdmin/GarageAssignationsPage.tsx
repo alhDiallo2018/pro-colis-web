@@ -14,8 +14,17 @@ export function GarageAssignationsPage() {
   const pending = (parcelsQ.data?.parcels ?? []).filter((p) => !p.driverId && !['delivered', 'cancelled'].includes(p.status))
 
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto' }}>
-      <Panel title={`À assigner · ${pending.length}`} flush>
+    <div className="cm-detail-page" style={{ maxWidth: 920 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Assignations</h1>
+          <p className="cm-page-head-sub">
+            Colis de la zone à attribuer à un chauffeur
+            {pending.length > 0 && <> · <strong>{pending.length}</strong> en attente</>}
+          </p>
+        </div>
+      </div>
+      <Panel title="Colis non assignés" flush>
         <QueryState
           isLoading={parcelsQ.isLoading}
           isError={parcelsQ.isError}

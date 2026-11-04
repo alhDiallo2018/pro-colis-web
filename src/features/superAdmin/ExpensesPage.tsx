@@ -112,9 +112,16 @@ export function ExpensesPage() {
   }
 
   return (
+    <div className="cm-detail-page">
+    <div className="cm-page-head">
+      <div className="cm-page-head-body">
+        <h1>Dépenses</h1>
+        <p className="cm-page-head-sub">Dépenses de la plateforme</p>
+      </div>
+      <Button icon="add" onClick={openCreate}>Nouvelle dépense</Button>
+    </div>
     <Panel
-      title="Dépenses"
-      action={<Button icon="add" onClick={openCreate}>Nouvelle dépense</Button>}
+      title="Historique"
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         {summary && (
@@ -333,6 +340,7 @@ export function ExpensesPage() {
         </Dialog>
       )}
     </Panel>
+    </div>
   )
 }
 

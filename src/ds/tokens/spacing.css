@@ -58,3 +58,13 @@
   --header-h: 56px;        /* @kind other */
   --tabbar-h: 64px;        /* @kind other */
 }
+
+/* Ombres plus profondes en dark : le halo bleu pâle devient invisible
+   sur slate-900. On passe au noir avec plus d'opacité pour garder
+   l'élévation des cartes et des sheets. */
+[data-theme="dark"] {
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.40);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.55);
+}

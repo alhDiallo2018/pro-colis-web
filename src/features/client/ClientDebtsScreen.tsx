@@ -23,9 +23,12 @@ export function ClientDebtsScreen() {
   })
 
   return (
-    <div style={{ maxWidth: 820, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', margin: 0 }}>Mes dettes</h1>
+    <div className="cm-detail-page" style={{ maxWidth: 820 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Mes dettes</h1>
+          <p className="cm-page-head-sub">Pénalités d'annulation à régulariser pour continuer à envoyer des colis</p>
+        </div>
         <Button variant="secondary" icon="refresh" loading={query.isFetching} onClick={() => query.refetch()}>Actualiser</Button>
       </div>
       <QueryState isLoading={query.isLoading} isError={query.isError} error={query.error} onRetry={() => query.refetch()}>

@@ -55,7 +55,7 @@ export function Button({
   // `tone="danger"` recolors a non-solid variant (ghost/secondary) toward the danger palette.
   const v =
     tone === 'danger' && variant !== 'danger'
-      ? { ...baseV, fg: 'var(--color-danger)', hb: 'var(--red-50)' }
+      ? { ...baseV, fg: 'var(--color-danger)', hb: 'var(--color-danger-soft)' }
       : baseV
   const [hover, setHover] = useState(false)
   const [press, setPress] = useState(false)
@@ -86,7 +86,7 @@ export function Button({
         fontSize: s.fs,
         letterSpacing: '0.01em',
         color: isDisabled ? 'var(--text-faint)' : v.fg,
-        background: isDisabled ? 'var(--slate-200)' : hover ? v.hb : v.bg,
+        background: isDisabled ? 'var(--border-subtle)' : hover ? v.hb : v.bg,
         border: `1px solid ${isDisabled ? 'transparent' : v.bd}`,
         borderRadius: 'var(--radius-md)',
         boxShadow: isDisabled ? 'none' : press ? 'none' : v.sh,

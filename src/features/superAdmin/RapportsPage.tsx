@@ -13,7 +13,13 @@ export function RapportsPage() {
   const [exportKind, setExportKind] = useState<'parcels' | 'users'>('parcels')
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Rapports d'activité</h1>
+          <p className="cm-page-head-sub">Journaux quotidiens, mensuels et exports CSV</p>
+        </div>
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>Jeu de données exporté</span>
         <SegmentedControl

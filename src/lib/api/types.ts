@@ -198,6 +198,8 @@ export interface DriverLocation {
   available: boolean
   latitude?: number | null
   longitude?: number | null
+  /** Précision horizontale GPS en mètres (rayon de confiance). */
+  accuracy?: number | null
   /** ISO timestamp de la dernière position reçue depuis l'appareil du chauffeur. */
   updatedAt?: string | null
 }

@@ -70,7 +70,7 @@ export function TripDetailScreen() {
   const hasOffer = trip.offers?.some((offer) => offer.clientId === user?.id) ?? false
 
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 760 }}>
       {/* ===== BACK ===== */}
       <div>
         <Button variant="ghost" size="sm" icon="arrow_back" onClick={() => navigate(-1)}>

@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/ds'
-import { MarketingHeader } from '@/features/marketing/MarketingHeader'
+import { MarketingLayout } from '@/features/marketing/MarketingLayout'
 import { confirmPaydunyaPayment } from '@/lib/api/paydunya'
 import { formatFcfa } from '@/lib/format'
 import { useAuthStore } from '@/store/auth'
@@ -31,22 +31,22 @@ function uiStateFor(status: string | undefined): UiState {
 const UI: Record<UiState, { icon: string; color: string; bg: string; title: string; text: string }> = {
   success: {
     icon: 'check_circle',
-    color: 'var(--green-600)',
-    bg: 'var(--green-50)',
+    color: 'var(--color-success)',
+    bg: 'var(--color-success-soft)',
     title: 'Paiement confirmé',
     text: 'Votre paiement a bien été reçu. Un reçu vous a été envoyé et votre opération est validée.',
   },
   pending: {
     icon: 'hourglass_top',
-    color: 'var(--amber-500)',
-    bg: 'var(--amber-50)',
+    color: 'var(--color-warning)',
+    bg: 'var(--color-warning-soft)',
     title: 'Paiement en cours de vérification',
     text: 'Nous vérifions votre paiement auprès de PayDunya. Cette page se met à jour automatiquement.',
   },
   failed: {
     icon: 'cancel',
-    color: 'var(--red-400)',
-    bg: 'var(--red-50)',
+    color: 'var(--color-danger)',
+    bg: 'var(--color-danger-soft)',
     title: 'Paiement non abouti',
     text: "Le paiement a été annulé ou a échoué. Aucun montant n'a été débité. Vous pouvez réessayer.",
   },
@@ -80,9 +80,7 @@ export function PaymentStatusPage() {
   const goHome = () => navigate(user ? homeForRole(user.role) : '/login')
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-body)', color: 'var(--text-body)' }}>
-      <MarketingHeader />
-
+    <MarketingLayout variant="document">
       <div
         style={{
           background: 'var(--surface-card)',
@@ -91,6 +89,8 @@ export function PaymentStatusPage() {
           boxShadow: 'var(--shadow-md)',
           padding: '40px 28px',
           textAlign: 'center',
+          maxWidth: 640,
+          margin: '0 auto',
         }}
       >
         <span
@@ -176,6 +176,6 @@ export function PaymentStatusPage() {
           {support.email}
         </a>
       </p>
-    </div>
+    </MarketingLayout>
   )
 }

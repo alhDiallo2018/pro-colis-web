@@ -33,7 +33,17 @@ export function ChauffeursPage() {
   const drivers = query.data?.users ?? []
   const stale = query.isFetching || search.trim() !== term
   const base = actor?.role === 'super_admin' ? '/admin' : '/support-admin'
-  return <Panel title={`Chauffeurs · ${query.data?.pagination.total ?? 0}`} flush>
+  return <div className="cm-detail-page">
+    <div className="cm-page-head">
+      <div className="cm-page-head-body">
+        <h1>Chauffeurs</h1>
+        <p className="cm-page-head-sub">
+          Annuaire des chauffeurs de la plateforme
+          {query.data?.pagination.total != null && <> · <strong>{query.data.pagination.total}</strong></>}
+        </p>
+      </div>
+    </div>
+    <Panel title="Annuaire" flush>
     <div style={{ padding: '14px 18px' }}>
       <Input label="Rechercher un chauffeur" placeholder="Nom, e-mail ou téléphone" icon="search"
         value={search} onChange={event => setSearch(event.target.value)} />
@@ -61,4 +71,5 @@ export function ChauffeursPage() {
       <Button variant="secondary" disabled={stale || page >= (query.data?.pagination.totalPages ?? 1)} onClick={() => setPage(value => value + 1)}>Suivant</Button>
     </div>
   </Panel>
+  </div>
 }

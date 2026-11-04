@@ -1,0 +1,197 @@
+/* ============================================================
+   AuthShell — split-screen auth layout with Citymapper flavor
+   Pairs with marketing.css topbar (reused on login/register).
+   ============================================================ */
+
+.auth-root {
+  min-height: 100dvh;
+  background: var(--surface-card);
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-split {
+  flex: 1;
+  display: grid;
+  grid-template-columns: var(--auth-brand-width, 480px) 1fr;
+  min-height: 0;
+}
+@media (max-width: 920px) { .auth-split { grid-template-columns: 1fr; } }
+
+.auth-brand {
+  position: relative;
+  background: linear-gradient(135deg, var(--teal-700) 0%, var(--deep-700) 55%, var(--deep-800) 100%);
+  color: #fff;
+  padding: clamp(32px, 4vw, 56px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+  overflow: hidden;
+  isolation: isolate;
+}
+@media (max-width: 920px) { .auth-brand { display: none; } }
+
+.auth-brand-shape {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+}
+.auth-brand-shape--a {
+  right: -120px; top: -100px;
+  width: 460px; height: 460px;
+  background: radial-gradient(closest-side, rgba(252, 162, 2, 0.22), transparent 70%);
+}
+.auth-brand-shape--b {
+  left: -80px; bottom: -120px;
+  width: 340px; height: 340px;
+  background: radial-gradient(closest-side, rgba(15, 169, 88, 0.18), transparent 70%);
+}
+.auth-brand-shape--c {
+  right: 20%; top: 40%;
+  width: 180px; height: 180px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.auth-brand-body {
+  position: relative;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(32px, 5vw, 64px) clamp(20px, 4vw, 48px);
+  background: var(--surface-card);
+  overflow-y: auto;
+}
+
+.auth-form-inner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Common auth header patterns */
+.auth-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.auth-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(24px, 3.5vw, 30px);
+  letter-spacing: -0.015em;
+  color: var(--text-strong);
+  line-height: 1.1;
+}
+.auth-lead {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.auth-footer-row {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 16px 0 0;
+}
+.auth-footer-row a,
+.auth-footer-row button {
+  color: var(--text-link);
+  font-weight: 700;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+}
+.auth-footer-row a:hover,
+.auth-footer-row button:hover { text-decoration: underline; }
+
+.auth-brand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  margin-bottom: 4px;
+}
+.auth-brand-icon .material-symbols-rounded { font-size: 40px; }
+
+/* Van illustration — big delivery vehicle at the bottom of the brand panel. */
+.auth-brand-vehicle {
+  margin-top: auto;
+  padding-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+.auth-brand-vehicle svg {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.3));
+}
+
+/* Mobile fallback: show a smaller van ABOVE the form when brand panel is hidden */
+.auth-mobile-vehicle {
+  display: none;
+  justify-content: center;
+  padding: 8px 0 16px;
+}
+.auth-mobile-vehicle svg {
+  width: 160px;
+  height: auto;
+}
+@media (max-width: 920px) {
+  .auth-mobile-vehicle { display: flex; }
+}
+
+.auth-brand-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(22px, 2.6vw, 28px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.auth-brand-lead {
+  margin: 0;
+  font-size: 14.5px;
+  opacity: 0.9;
+  line-height: 1.55;
+}
+
+.auth-brand-perks {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.auth-brand-perks-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.95;
+}
+.auth-brand-perks-item .material-symbols-rounded {
+  font-size: 20px;
+  color: var(--amber-300);
+}

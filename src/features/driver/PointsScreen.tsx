@@ -77,7 +77,13 @@ export function DriverPointsScreen() {
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 720 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Points & portefeuille</h1>
+          <p className="cm-page-head-sub">Solde, retraits et historique des points</p>
+        </div>
+      </div>
       {/* Points balance card */}
       <div
         style={{

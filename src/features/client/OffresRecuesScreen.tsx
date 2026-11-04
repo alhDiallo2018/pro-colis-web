@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Avatar, Badge, Button, Card, Dialog, Icon, Select, Toast } from '@/ds'
+import { Avatar, Badge, Button, Dialog, Icon, Select, Toast } from '@/ds'
 import { QueryState } from '@/components/QueryState'
 import { NegotiationChat } from '@/components/NegotiationChat'
 import { NegotiationTurn } from '@/components/NegotiationTurn'
@@ -15,23 +15,59 @@ const STATUS_META: Record<string, { label: string; tone: 'amber' | 'primary' | '
   rejected: { label: 'Refusée', tone: 'red' },
 }
 
+const AVAILABILITY_LABELS: Record<string, string> = {
+  available: 'disponible',
+  busy: 'occupé',
+  offline: 'hors ligne',
+}
+
 export function OffresRecuesScreen() {
   const query = useReceivedBids()
   const [parcelFilter, setParcelFilter] = useState('')
   const [sort, setSort] = useState('recent')
   const allBids = query.data ?? []
   const parcels = [...new Map(allBids.map(b => [b.parcelId, b.parcel?.trackingNumber ?? b.parcelId])).entries()]
-  const bids = allBids.filter(b => !parcelFilter || b.parcelId === parcelFilter).sort((a, b) => sort === 'price'
-    ? Number(a.lastPrice ?? a.price) - Number(b.lastPrice ?? b.price)
-    : Date.parse(b.lastMessageAt ?? b.updatedAt ?? b.createdAt ?? '') - Date.parse(a.lastMessageAt ?? a.updatedAt ?? a.createdAt ?? ''))
+  const bids = allBids
+    .filter(b => !parcelFilter || b.parcelId === parcelFilter)
+    .sort((a, b) => sort === 'price'
+      ? Number(a.lastPrice ?? a.price) - Number(b.lastPrice ?? b.price)
+      : Date.parse(b.lastMessageAt ?? b.updatedAt ?? b.createdAt ?? '') - Date.parse(a.lastMessageAt ?? a.updatedAt ?? a.createdAt ?? ''))
   const [chatTarget, setChatTarget] = useState<Bid | null>(null)
 
+  const pending = allBids.filter(b => b.status === 'pending' || b.status === 'countered').length
+
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-      <h1>Comparer les offres</h1>
-      <p>Choisissez un colis pour comparer son dernier prix, le chauffeur et la dernière réponse.</p>
-      <Select label="Colis à comparer" value={parcelFilter} onChange={e => setParcelFilter(e.target.value)} options={[{ value:'',label:'Tous mes colis' }, ...parcels.map(([value,label]) => ({value,label}))]} />
-      <Select label="Trier les offres" value={sort} onChange={e => setSort(e.target.value)} options={[{value:'recent',label:'Dernière réponse'},{value:'price',label:'Prix croissant'}]} />
+    <div className="cm-detail-page" style={{ maxWidth: 760 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Offres reçues</h1>
+          <p className="cm-page-head-sub">
+            Comparez les offres de chauffeurs pour vos colis
+            {pending > 0 && <> · <strong>{pending}</strong> en attente de réponse</>}
+          </p>
+        </div>
+      </div>
+
+      <div className="cm-filter-box">
+        <Select
+          aria-label="Colis à comparer"
+          icon="package_2"
+          value={parcelFilter}
+          onChange={e => setParcelFilter(e.target.value)}
+          options={[{ value: '', label: 'Tous mes colis' }, ...parcels.map(([value, label]) => ({ value, label }))]}
+        />
+        <Select
+          aria-label="Trier les offres"
+          icon="sort"
+          value={sort}
+          onChange={e => setSort(e.target.value)}
+          options={[
+            { value: 'recent', label: 'Dernière réponse' },
+            { value: 'price', label: 'Prix croissant' },
+          ]}
+        />
+      </div>
+
       <QueryState
         isLoading={query.isLoading}
         isError={query.isError}
@@ -43,7 +79,7 @@ export function OffresRecuesScreen() {
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-card)' }}>
           {bids.map((bid) => (
-            <BidRow key={bid.id} bid={bid} onNegotiate={() => setChatTarget(bid)} />
+            <BidCard key={bid.id} bid={bid} onNegotiate={() => setChatTarget(bid)} />
           ))}
         </div>
       </QueryState>
@@ -55,13 +91,9 @@ export function OffresRecuesScreen() {
 
 function ChatDialog({ bid, onClose }: { bid: Bid | null; onClose: () => void }) {
   const acceptBid = useAcceptBid(bid?.parcelId ?? '')
-
   if (!bid) return null
   const driverName = bid.driverName ?? 'Chauffeur'
-
-  const handleAccept = (_price: number, _message?: string) => {
-    acceptBid.mutate(bid.id)
-  }
+  const handleAccept = (_price: number, _message?: string) => { acceptBid.mutate(bid.id) }
 
   return (
     <Dialog
@@ -79,18 +111,11 @@ function ChatDialog({ bid, onClose }: { bid: Bid | null; onClose: () => void }) 
     >
       <div style={{ height: 'min(70vh, 520px)', display: 'flex', flexDirection: 'column' }}>
         <NegotiationChat
-        peerId={bid.driverId}
-        peerName={driverName}
-        parcelId={bid.parcelId}
-        bidId={bid.id}
-        parcelInfo={
-          bid.parcel
-            ? {
-                trackingNumber: bid.parcel.trackingNumber,
-                receiverName: bid.parcel.receiverName,
-              }
-            : undefined
-          }
+          peerId={bid.driverId}
+          peerName={driverName}
+          parcelId={bid.parcelId}
+          bidId={bid.id}
+          parcelInfo={bid.parcel ? { trackingNumber: bid.parcel.trackingNumber, receiverName: bid.parcel.receiverName } : undefined}
           onAcceptBid={handleAccept}
           isOwner
           canAccept={bid.canClientAccept ?? bid.lastOfferBy !== 'client'}
@@ -109,12 +134,13 @@ function Bubble({ side, who, text }: { side: 'left' | 'right'; who: string; text
         <div
           style={{
             padding: '8px 12px',
-            borderRadius: 12,
-            borderTopLeftRadius: isLeft ? 3 : 12,
-            borderTopRightRadius: isLeft ? 12 : 3,
-            background: isLeft ? 'var(--surface-sunken)' : 'var(--teal-500)',
+            borderRadius: 14,
+            borderTopLeftRadius: isLeft ? 4 : 14,
+            borderTopRightRadius: isLeft ? 14 : 4,
+            background: isLeft ? 'var(--surface-sunken)' : 'var(--teal-600)',
             color: isLeft ? 'var(--text-body)' : '#fff',
             fontSize: 'var(--fs-sm)',
+            lineHeight: 1.5,
           }}
         >
           {text}
@@ -124,51 +150,55 @@ function Bubble({ side, who, text }: { side: 'left' | 'right'; who: string; text
   )
 }
 
-function BidRow({ bid, onNegotiate }: { bid: Bid; onNegotiate: () => void }) {
+function BidCard({ bid, onNegotiate }: { bid: Bid; onNegotiate: () => void }) {
   const accept = useAcceptBid(bid.parcelId)
   const status = STATUS_META[bid.status] ?? STATUS_META.pending
   const isActive = bid.status === 'pending' || bid.status === 'countered'
   const error = accept.error instanceof ApiError ? accept.error.message : null
 
-  // Le camp qui vient de poser un prix ne peut pas l'accepter lui-même :
-  // l'API renvoie 409, on masque donc le bouton côté client dans ce cas.
   const lastOfferBy = bid.lastOfferBy ?? 'driver'
   const lastPrice = bid.lastPrice ?? bid.price
   const lastMessage = bid.lastMessage ?? bid.responseMessage ?? bid.message
   const canAccept = bid.canClientAccept ?? lastOfferBy === 'driver'
 
+  const availabilityLabel = AVAILABILITY_LABELS[bid.driverAvailability ?? ''] ?? 'à confirmer'
+  const responseDate = bid.lastMessageAt || bid.respondedAt || bid.createdAt
+  const responseText = responseDate ? new Date(responseDate).toLocaleString('fr-FR') : 'non renseignée'
+
   return (
-    <Card>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+    <section className="cm-bid-card">
+      <header className="cm-bid-card-head">
         <Avatar name={bid.driverName ?? 'Chauffeur'} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--text-strong)' }}>{bid.driverName ?? 'Chauffeur'}</div>
+          <p className="cm-bid-card-name">{bid.driverName ?? 'Chauffeur'}</p>
           {bid.parcel?.trackingNumber && (
-            <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            <p className="cm-bid-card-sub">
               {bid.parcel.trackingNumber}
               {bid.parcel.receiverName ? ` · ${bid.parcel.receiverName}` : ''}
-            </div>
+            </p>
           )}
         </div>
         <Badge tone={status.tone}>{status.label}</Badge>
-      </div>
+      </header>
 
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 12 }}>
-        <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
+      <div className="cm-bid-card-price-row">
+        <span className="cm-bid-card-price-label">
           {bid.status === 'countered' ? 'Dernier prix' : 'Proposition'}
         </span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 20, color: 'var(--teal-600)' }}>{formatFcfa(lastPrice)}</span>
+        <span className="cm-bid-card-price">{formatFcfa(lastPrice)}</span>
       </div>
 
-      <p style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
-        Véhicule : {bid.driverVehicleType ?? 'à confirmer'} · Disponibilité actuelle : {({ available: 'disponible', busy: 'occupé', offline: 'hors ligne' })[bid.driverAvailability ?? ''] ?? 'à confirmer'}
-        {bid.driverRating != null && <> · Note : {bid.driverRating}/5</>}
-        <br />Dernière réponse : {bid.lastMessageAt || bid.respondedAt || bid.createdAt ? new Date((bid.lastMessageAt ?? bid.respondedAt ?? bid.createdAt)!).toLocaleString('fr-FR') : 'non renseignée'}
-      </p>
-      {/* Le dernier commentaire accompagne le dernier prix : c'est le couple
-          qu'on relit au moment d'accepter, sans rouvrir le fil. */}
+      <div className="cm-bid-card-meta">
+        <strong>Véhicule :</strong> {bid.driverVehicleType ?? 'à confirmer'}
+        {' · '}
+        <strong>Disponibilité :</strong> {availabilityLabel}
+        {bid.driverRating != null && <> · <strong>Note :</strong> {bid.driverRating}/5</>}
+        <br />
+        <strong>Dernière réponse :</strong> {responseText}
+      </div>
+
       {lastMessage && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+        <div style={{ padding: '0 18px 12px' }}>
           <Bubble
             side={lastOfferBy === 'client' ? 'right' : 'left'}
             who={lastOfferBy === 'client' ? 'Vous (contre-proposition)' : (bid.driverName ?? 'Chauffeur')}
@@ -177,35 +207,44 @@ function BidRow({ bid, onNegotiate }: { bid: Bid; onNegotiate: () => void }) {
         </div>
       )}
 
-      {bid.audioUrl && <audio controls src={bid.audioUrl} style={{ width: '100%', maxWidth: 320, height: 38, marginTop: 12 }} />}
+      {bid.audioUrl && (
+        <div style={{ padding: '0 18px 12px' }}>
+          <audio controls src={bid.audioUrl} style={{ width: '100%', maxWidth: 320, height: 38 }} />
+        </div>
+      )}
 
       {error && (
-        <div style={{ marginTop: 12 }}>
+        <div style={{ padding: '0 18px 12px' }}>
           <Toast tone="error" message={error} />
         </div>
       )}
 
       {isActive ? (
-        <div style={{ display: 'flex', gap: 10, marginTop: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="cm-bid-card-actions">
           <Button variant="secondary" size="sm" icon="forum" onClick={onNegotiate}>
             Négocier
           </Button>
           {canAccept ? (
-            <Button block size="sm" icon="check" loading={accept.isPending} onClick={() => accept.mutate(bid.id)}>
-              Accepter {formatFcfa(lastPrice)}
-            </Button>
+            <div className="cm-bid-card-actions-grow">
+              <Button block size="sm" icon="check" loading={accept.isPending} onClick={() => accept.mutate(bid.id)}>
+                Accepter {formatFcfa(lastPrice)}
+              </Button>
+            </div>
           ) : (
             <NegotiationTurn waitingFor="driver" />
           )}
         </div>
       ) : bid.status === 'accepted' ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 14, color: 'var(--green-700)', fontWeight: 600, fontSize: 'var(--fs-sm)' }}>
+        <div className="cm-bid-card-closed cm-bid-card-closed--ok">
           <Icon name="check_circle" size={18} />
           Vous avez accepté cette offre.
         </div>
       ) : (
-        <div style={{ marginTop: 14, color: 'var(--text-faint)', fontStyle: 'italic', fontSize: 'var(--fs-sm)' }}>Offre refusée.</div>
+        <div className="cm-bid-card-closed">
+          <Icon name="cancel" size={16} />
+          Offre refusée.
+        </div>
       )}
-    </Card>
+    </section>
   )
 }

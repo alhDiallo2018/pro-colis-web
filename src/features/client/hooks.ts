@@ -15,11 +15,11 @@ import type { ApiParcelStatus } from '@/lib/api/types'
 
 /**
  * Intervalle de rafraîchissement du suivi (polling), configurable via
- * `VITE_TRACKING_REFRESH_MS`. Défaut raisonnable : 15 s. Le backend n'expose
- * pas encore la position GPS en SSE/WebSocket, d'où le polling du endpoint
- * de tracking.
+ * `VITE_TRACKING_REFRESH_MS`. Défaut aligné sur l'app mobile : 5 s. Le backend
+ * n'expose pas encore la position GPS en SSE/WebSocket, d'où le polling du
+ * endpoint de tracking.
  */
-const TRACKING_REFRESH_MS = Number(import.meta.env.VITE_TRACKING_REFRESH_MS) || 15_000
+const TRACKING_REFRESH_MS = Number(import.meta.env.VITE_TRACKING_REFRESH_MS) || 5_000
 
 /** Statuts terminaux : le suivi (et donc le polling) s'arrête. */
 const TERMINAL_STATUSES: readonly ApiParcelStatus[] = ['delivered', 'cancelled']

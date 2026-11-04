@@ -94,14 +94,18 @@ export function ItineraireScreen() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 120px)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '8px 0 10px', marginBottom: 4 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ color: 'var(--green-500)', fontSize: 14 }}>●</span> {departure}
-        </span>
-        <span className="material-symbols-rounded" style={{ fontSize: 18, color: 'var(--text-faint)' }}>arrow_forward</span>
-        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ color: 'var(--red-400)', fontSize: 14 }}>●</span> {arrival}
-        </span>
+      <div className="cm-od-band" style={{ marginBottom: 12 }}>
+        <div>
+          <div className="cm-od-band-label">Départ</div>
+          <div className="cm-od-band-city">{departure}</div>
+        </div>
+        <div className="cm-od-band-sep">
+          <span className="material-symbols-rounded" style={{ fontSize: 18 }}>local_shipping</span>
+        </div>
+        <div>
+          <div className="cm-od-band-label" style={{ textAlign: 'right' }}>Arrivée</div>
+          <div className="cm-od-band-city cm-od-band-city--right">{arrival}</div>
+        </div>
       </div>
 
       <div style={{ flex: 1, borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border-subtle)', minHeight: 300 }}>

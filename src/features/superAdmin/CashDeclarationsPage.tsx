@@ -114,7 +114,13 @@ export function CashDeclarationsPage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Déclarations d'encaissement</h1>
+          <p className="cm-page-head-sub">Espèces déclarées par les chauffeurs, en attente de validation</p>
+        </div>
+      </div>
       <section
         style={{
           position: 'relative',

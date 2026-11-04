@@ -46,36 +46,24 @@ export function SuperAdminDashboard() {
   })).filter((row) => row.count > 0)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-      <div
-        style={{
-          background: 'var(--gradient-brand)',
-          borderRadius: 'var(--radius-lg)',
-          padding: 20,
-          color: '#fff',
-          boxShadow: 'var(--shadow-brand)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 16,
-          flexWrap: 'wrap',
-        }}
-      >
-        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 46, height: 46, borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.18)', flex: 'none' }}>
-          <Icon name="admin_panel_settings" size={24} fill />
-        </span>
-        <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: 11, opacity: 0.85, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>
-            Bonjour {user?.fullName?.split(' ')[0] ?? ''} — plateforme
-          </div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22 }}>
-            {stats ? `${stats.totalUsers} comptes · ${stats.totalZones} zones` : 'Chargement…'}
-          </div>
+    <div className="cm-page">
+      <section className="cm-hero" aria-label="Super admin">
+        <p className="cm-hero-eyebrow">Super admin · {user?.fullName?.split(' ')[0] ?? ''}</p>
+        <h1 className="cm-hero-greeting">
+          {stats ? (
+            <><span className="cm-hero-greeting-accent">{stats.totalUsers}</span> comptes<br />sur {stats.totalZones} zones</>
+          ) : (
+            'Chargement…'
+          )}
+        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginTop: 4 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.14)', padding: '8px 14px', borderRadius: 999 }}>
+            <Icon name="payments" size={16} />
+            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: 15 }}>{stats ? formatFcfa(stats.totalRevenue) : '—'}</span>
+            <span style={{ fontSize: 12, opacity: 0.85 }}>encaissés (total)</span>
+          </span>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 11, opacity: 0.85, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Encaissé (total)</div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 20 }}>{stats ? formatFcfa(stats.totalRevenue) : '—'}</div>
-        </div>
-      </div>
+      </section>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
         <StatBox icon="package_2" tone="primary" value={stats?.totalParcels ?? parcels.data?.pagination?.total ?? allParcels.length} label="Colis" />

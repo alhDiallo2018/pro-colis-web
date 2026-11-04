@@ -77,15 +77,11 @@ export default function BroadcastsPage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22, color: 'var(--text-strong)', margin: '0 0 4px' }}>
-            Bandeaux d'information
-          </h2>
-          <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>
-            Diffusez un message ciblé dans la barre supérieure des utilisateurs.
-          </p>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Bandeaux d'information</h1>
+          <p className="cm-page-head-sub">Diffusez un message ciblé dans la barre supérieure des utilisateurs</p>
         </div>
         <Button
           icon="add"

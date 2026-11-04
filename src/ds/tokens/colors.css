@@ -133,3 +133,59 @@
   --status-delivered-fg:  var(--green-800); --status-delivered-bg: var(--green-100); --status-delivered-dot: var(--green-600);
   --status-cancelled-fg:  var(--red-500);   --status-cancelled-bg: var(--red-50);    --status-cancelled-dot:  var(--red-400);
 }
+
+/* ============================================================
+   DARK THEME — activé via <html data-theme="dark"> (SettingsScreen).
+   On ne surcharge que les alias sémantiques : les échelles brutes
+   (teal-500, amber-400, etc.) gardent leurs valeurs pour que les
+   remplissages de marque restent cohérents sur les deux thèmes.
+   ============================================================ */
+[data-theme="dark"] {
+  /* Text — passe au clair, contraste AA sur fond sombre. */
+  --text-strong:  var(--slate-0);
+  --text-body:    var(--slate-200);
+  --text-muted:   var(--slate-400);
+  --text-faint:   var(--slate-500);
+  --text-inverse: var(--slate-900);
+  --text-link:    var(--teal-300);
+
+  /* Surfaces — élévation croissante page < card < sunken. */
+  --surface-page:    var(--slate-900);
+  --surface-card:    var(--slate-800);
+  --surface-sunken:  var(--slate-700);
+  --surface-inverse: var(--slate-0);
+
+  /* Borders — paliers progressifs lisibles sur card. */
+  --border-subtle:  #2A3333;
+  --border-default: var(--slate-700);
+  --border-strong:  var(--slate-600);
+
+  /* Primary — légèrement remonté pour rester lisible comme texte
+     accent sur card sombre, et correct en fond de bouton. */
+  --color-primary:        var(--teal-500);
+  --color-primary-hover:  var(--teal-400);
+  --color-primary-active: var(--teal-300);
+  --color-primary-soft:   rgba(1, 137, 130, 0.18);
+
+  --color-accent-soft:    rgba(252, 162, 2, 0.18);
+  --color-express-soft:   rgba(229, 36, 15, 0.18);
+
+  /* Feedback soft — overlays teintés (plus de patchs quasi-blancs). */
+  --color-success-soft: rgba(15, 169, 88, 0.18);
+  --color-warning-soft: rgba(233, 140, 0, 0.20);
+  --color-danger-soft:  rgba(229, 36, 15, 0.18);
+  --color-info-soft:    rgba(12, 110, 125, 0.22);
+
+  /* Statuts colis — fond teinté foncé + fg éclairci. */
+  --status-pending-fg:    #FBD477; --status-pending-bg:    rgba(252, 162, 2, 0.18);
+  --status-free-fg:       #9DBDFF; --status-free-bg:       rgba(37, 99, 235, 0.22);
+  --status-proposal-fg:   #C4B5FD; --status-proposal-bg:   rgba(139, 92, 246, 0.22);
+  --status-negotiating-fg:#FFB38A; --status-negotiating-bg:rgba(255, 87, 34, 0.22);
+  --status-confirmed-fg:  var(--teal-200); --status-confirmed-bg: rgba(1, 137, 130, 0.22);
+  --status-pickup-fg:     #C4B5FD;         --status-pickup-bg:    rgba(124, 58, 237, 0.22);
+  --status-transit-fg:    var(--green-200); --status-transit-bg:  rgba(15, 169, 88, 0.20);
+  --status-arrived-fg:    #7FD1DD;         --status-arrived-bg:   rgba(12, 110, 125, 0.24);
+  --status-delivering-fg: #FFB38A;         --status-delivering-bg:rgba(234, 88, 12, 0.22);
+  --status-delivered-fg:  var(--green-200); --status-delivered-bg: rgba(15, 169, 88, 0.26);
+  --status-cancelled-fg:  #F6967F;         --status-cancelled-bg: rgba(229, 36, 15, 0.20);
+}

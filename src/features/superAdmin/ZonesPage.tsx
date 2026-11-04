@@ -99,7 +99,17 @@ export function ZonesPage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Zones</h1>
+          <p className="cm-page-head-sub">
+            Villes et périmètres opérationnels
+            {zones.length > 0 && <> · <strong>{zones.length}</strong> zones</>}
+            {pendingCount > 0 && <> · <strong style={{ color: 'var(--amber-700)' }}>{pendingCount}</strong> en attente</>}
+          </p>
+        </div>
+      </div>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <Input
           icon="search"

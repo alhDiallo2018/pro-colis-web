@@ -43,10 +43,13 @@ export function ClientAnnoncesScreen() {
   const filteredEmpty = hasAny && annonces.length === 0
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-      <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>
-        Trajets proposés par les chauffeurs. Appuyez sur une annonce pour voir les détails et faire une offre.
-      </p>
+    <div className="cm-detail-page" style={{ maxWidth: 1000 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Trajets proposés</h1>
+          <p className="cm-page-head-sub">Faites une offre sur les annonces publiées par les chauffeurs</p>
+        </div>
+      </div>
 
       <section className="transport-panel"><h2>Trouvez le trajet de votre colis</h2><div className="transport-choices">{[{value:'',label:'Tous les services'},{value:'trip',label:'Trajets'},{value:'shuttle',label:'Navettes'},{value:'gp',label:'GP'}].map(t=><button className="transport-choice" aria-pressed={service===t.value} key={t.value} onClick={()=>{setService(t.value);setPage(1)}}>{t.label}</button>)}</div><div className="transport-fields"><GarageSearchSelect label="Retrait du colis" zones={[...(zones.data??[]),...extra]} value={pickup} onChange={id=>{setPickup(id);setPage(1)}} onAddNew={z=>setExtra(old=>[...old,z])}/><GarageSearchSelect label="Remise du colis" zones={[...(zones.data??[]),...extra]} value={dropoff} onChange={id=>{setDropoff(id);setPage(1)}} onAddNew={z=>setExtra(old=>[...old,z])}/><Input label="Poids (kg)" type="number" min={0.01} value={weight} onChange={e=>{setWeight(e.target.value);setPage(1)}}/><Input label="Numéro de ligne" value={line} onChange={e=>{setLine(e.target.value);setPage(1)}}/></div>{Boolean(pickup)!==Boolean(dropoff)&&<p>Précisez le retrait et la remise pour filtrer les trajets compatibles.</p>}<a href="/client/vehicules">Voir les véhicules en direct sur la carte</a></section>
       {hasAny && (

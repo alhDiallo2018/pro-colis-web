@@ -49,7 +49,17 @@ export function WithdrawalsPage() {
   const pagination = withdrawals.data?.pagination
 
   return (
-    <Panel title="Retraits chauffeurs">
+    <div className="cm-detail-page">
+    <div className="cm-page-head">
+      <div className="cm-page-head-body">
+        <h1>Retraits chauffeurs</h1>
+        <p className="cm-page-head-sub">
+          Demandes de retrait à valider et historique
+          {pagination?.total != null && <> · <strong>{pagination.total}</strong></>}
+        </p>
+      </div>
+    </div>
+    <Panel title="Historique">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         <div className="pc-filters">
           <SegmentedControl
@@ -246,6 +256,7 @@ export function WithdrawalsPage() {
         )}
       </div>
     </Panel>
+    </div>
   )
 }
 

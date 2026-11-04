@@ -9,8 +9,17 @@ export function HistoriqueScreen() {
   const history = (query.data?.parcels ?? []).filter((p) => p.status === 'delivered' || p.status === 'cancelled')
 
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto' }}>
-      <Panel title="Historique des courses" flush>
+    <div className="cm-detail-page" style={{ maxWidth: 920 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Historique des courses</h1>
+          <p className="cm-page-head-sub">
+            Livraisons terminées et annulées
+            {history.length > 0 && <> · <strong>{history.length}</strong> entrée{history.length > 1 ? 's' : ''}</>}
+          </p>
+        </div>
+      </div>
+      <Panel title="Toutes les courses" flush>
         <QueryState
           isLoading={query.isLoading}
           isError={query.isError}

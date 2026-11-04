@@ -1,7 +1,7 @@
 import { HelpGuides } from '@/features/experience/HelpGuides'
 import { useState } from 'react'
 import { Card, Icon } from '@/ds'
-import { MarketingHeader } from '@/features/marketing/MarketingHeader'
+import { MarketingLayout } from '@/features/marketing/MarketingLayout'
 import { usePublicConfig, useSupportContact } from '@/lib/usePublicConfig'
 
 interface FaqItem { question: string; answer: string }
@@ -91,14 +91,7 @@ export function HelpScreen() {
     )
 
     return (
-        <div style={{
-            maxWidth: 900,
-            margin: '0 auto',
-            padding: '24px 20px 64px',
-            fontFamily: 'var(--font-body)',
-            color: 'var(--text-body)',
-        }}>
-            <MarketingHeader />
+        <MarketingLayout variant="document">
             <HelpGuides guides={publicConfig.data?.help?.guides} />
 
             {/* En-tête */}
@@ -368,6 +361,6 @@ export function HelpScreen() {
                     </div>
                 </div>
             </Card>
-        </div>
+        </MarketingLayout>
     )
 }

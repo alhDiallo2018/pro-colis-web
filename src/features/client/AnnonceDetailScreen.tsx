@@ -11,15 +11,6 @@ import { ApiError } from '@/lib/api/client'
 import { useAuthStore } from '@/store/auth'
 import { formatDate, formatFcfa, formatWeight } from '@/lib/format'
 
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderTop: '1px solid var(--border-subtle)' }}>
-      <span style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>{label}</span>
-      <span style={{ color: 'var(--text-strong)', fontSize: 'var(--fs-sm)', fontWeight: 600, textAlign: 'right' }}>{value}</span>
-    </div>
-  )
-}
-
 export function AnnonceDetailScreen() {
   const { advertisementId } = useParams<{ advertisementId: string }>()
   const navigate = useNavigate()
@@ -33,10 +24,10 @@ export function AnnonceDetailScreen() {
   const [chatOpen, setChatOpen] = useState(false)
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 640 }}>
+      <div className="cm-detail-head">
         <IconButton icon="arrow_back" aria-label="Retour" onClick={() => navigate(-1)} />
-        <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>Détail de l’annonce</h1>
+        <h1>Détail de l’annonce</h1>
       </div>
 
       <QueryState
@@ -50,75 +41,92 @@ export function AnnonceDetailScreen() {
       >
         {ad && (
           <>
+            {/* ---- Driver hero ---- */}
+            <section className="cm-driver-hero" aria-label="Chauffeur">
+              <Avatar name={driverName} src={ad.driver?.profilePhoto ?? undefined} size="lg" />
+              <div className="cm-driver-hero-body">
+                <p className="cm-driver-hero-name">{driverName}</p>
+                <p className="cm-driver-hero-sub">
+                  {ad.driver?.zoneName ?? ad.driver?.city ?? 'Indépendant'}
+                  {ad.driver?.phone && (
+                    <>
+                      {' · '}
+                      <span style={{ fontFamily: 'var(--font-mono)' }}>{ad.driver.phone}</span>
+                    </>
+                  )}
+                </p>
+              </div>
+              {ad.driver?.rating != null && (
+                <span className="cm-driver-hero-rating">
+                  <Icon name="star" size={15} />
+                  {Number(ad.driver.rating).toFixed(1)}
+                </span>
+              )}
+            </section>
+
+            {/* ---- Journey OD band ---- */}
+            <section className="cm-od-band" aria-label="Trajet proposé">
+              <div>
+                <div className="cm-od-band-label">Départ</div>
+                <div className="cm-od-band-city">{locationLabel(ad, 'departure')}</div>
+              </div>
+              <div className="cm-od-band-sep">
+                <Icon name="local_shipping" size={18} />
+              </div>
+              <div>
+                <div className="cm-od-band-label" style={{ textAlign: 'right' }}>Arrivée</div>
+                <div className="cm-od-band-city cm-od-band-city--right">{locationLabel(ad, 'arrival')}</div>
+              </div>
+            </section>
+
+            {/* ---- Meta ---- */}
             <Card>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                <Avatar name={driverName} src={ad.driver?.profilePhoto ?? undefined} size="lg" />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-title)', color: 'var(--text-strong)' }}>{driverName}</div>
-                  <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>{ad.driver?.zoneName ?? ad.driver?.city ?? 'Indépendant'}</div>
-                  {ad.driver?.phone && <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>{ad.driver.phone}</div>}
-                </div>
-                {ad.driver?.rating != null && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <Icon name="star" size={18} style={{ color: 'var(--amber-500)' }} />
-                    <span style={{ fontWeight: 700 }}>{Number(ad.driver.rating).toFixed(1)}</span>
-                  </span>
+              <div className="cm-meta-list">
+                {ad.departureAt && (
+                  <MetaRow icon="event" label="Départ prévu" value={formatDate(ad.departureAt)} />
                 )}
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 12,
-                  padding: '12px 16px',
-                  background: 'var(--teal-50)',
-                  border: '1px solid var(--teal-100)',
-                  borderRadius: 'var(--radius-md)',
-                }}
-              >
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--teal-700)' }}>{locationLabel(ad, 'departure')}</span>
-                <span style={{ flex: 1, height: 0, borderTop: '2px dashed var(--teal-300)', maxWidth: 90 }} />
-                <Icon name="local_shipping" size={18} style={{ color: 'var(--teal-500)' }} />
-                <span style={{ flex: 1, height: 0, borderTop: '2px dashed var(--teal-300)', maxWidth: 90 }} />
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--teal-700)' }}>{locationLabel(ad, 'arrival')}</span>
-              </div>
-
-              <div style={{ marginTop: 12 }}>
-                {ad.departureAt && <Row label="Départ prévu" value={formatDate(ad.departureAt)} />}
-                {ad.availableWeight != null && <Row label="Capacité disponible" value={formatWeight(ad.availableWeight)} />}
-                <Row label="Prix proposé" value={ad.proposedPrice != null ? formatFcfa(ad.proposedPrice) : 'À négocier'} />
-                <Row label="Annonce publiée" value={formatDate(ad.createdAt)} />
+                {ad.availableWeight != null && (
+                  <MetaRow icon="scale" label="Capacité disponible" value={formatWeight(ad.availableWeight)} />
+                )}
+                <MetaRow
+                  icon="payments"
+                  label="Prix proposé"
+                  value={ad.proposedPrice != null ? formatFcfa(ad.proposedPrice) : 'À négocier'}
+                />
+                <MetaRow icon="schedule" label="Annonce publiée" value={formatDate(ad.createdAt)} />
               </div>
 
               {ad.description && (
-                <p style={{ margin: '14px 0 0', fontSize: 'var(--fs-sm)', color: 'var(--text-body)', whiteSpace: 'pre-wrap' }}>{ad.description}</p>
+                <p style={{ margin: '14px 0 0', fontSize: 'var(--fs-sm)', color: 'var(--text-body)', whiteSpace: 'pre-wrap' }}>
+                  {ad.description}
+                </p>
               )}
               {ad.audioUrl && <audio controls src={ad.audioUrl} style={{ width: '100%', maxWidth: 360, height: 40, marginTop: 12 }} />}
             </Card>
 
-            <TripStops ad={ad}/>{ad.itinerary && <LiveJourneys advertisementId={ad.id}/>}
+            <TripStops ad={ad}/>
+            {ad.itinerary && <LiveJourneys advertisementId={ad.id}/>}
+
             {myOffer ? (
-              <Card style={{ background: 'var(--teal-50)', border: '1px solid var(--teal-100)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <Icon name="check_circle" size={22} style={{ color: 'var(--teal-600)' }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--text-strong)' }}>Offre envoyee — {formatFcfa(myOffer.price)}</div>
-                    {myOffer.message && <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>{myOffer.message}</div>}
+              <section className="cm-offer-sent" aria-label="Votre offre">
+                <div className="cm-offer-sent-head">
+                  <span className="cm-offer-sent-icon">
+                    <Icon name="check_circle" size={22} />
+                  </span>
+                  <div className="cm-offer-sent-body">
+                    <p className="cm-offer-sent-title">Offre envoyée — {formatFcfa(myOffer.price)}</p>
+                    {myOffer.message && <p className="cm-offer-sent-sub">{myOffer.message}</p>}
                   </div>
                   <Badge tone={myOffer.status === 'accepted' ? 'green' : myOffer.status === 'rejected' ? 'red' : 'amber'}>
-                    {myOffer.status === 'accepted' ? 'Acceptee' : myOffer.status === 'rejected' ? 'Refusee' : 'En attente'}
+                    {myOffer.status === 'accepted' ? 'Acceptée' : myOffer.status === 'rejected' ? 'Refusée' : 'En attente'}
                   </Badge>
                 </div>
                 {ad.driverId && (
-                  <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
-                    <Button block size="lg" icon="forum" onClick={() => setChatOpen(true)}>
-                      Suivi offre
-                    </Button>
-                  </div>
+                  <Button block size="lg" icon="forum" onClick={() => setChatOpen(true)}>
+                    Suivi offre
+                  </Button>
                 )}
-              </Card>
+              </section>
             ) : (
               <Button block size="lg" icon="gavel" onClick={() => setOffering(true)}>
                 Faire une offre
@@ -140,7 +148,7 @@ export function AnnonceDetailScreen() {
                 onClose={() => setChatOpen(false)}
                 icon="forum"
                 iconTone="primary"
-                title={`Negocier avec ${driverName}`}
+                title={`Négocier avec ${driverName}`}
                 style={{ maxWidth: 640 }}
                 actions={
                   <Button variant="secondary" block onClick={() => setChatOpen(false)}>
@@ -153,17 +161,17 @@ export function AnnonceDetailScreen() {
                     peerId={ad.driverId}
                     peerName={driverName}
                     parcelId={myOffer?.parcelId ?? undefined}
-                  parcelInfo={{
-                    trackingNumber: myOffer?.parcel?.trackingNumber,
-                    departureCity: locationLabel(ad, 'departure'),
-                    arrivalCity: locationLabel(ad, 'arrival'),
-                    description: ad.description || `Annonce — ${formatFcfa(myOffer?.price)} propose`,
-                    weight: myOffer?.parcel?.weight ?? null,
-                    type: myOffer?.parcel?.type,
-                    photoUrls: myOffer?.parcel?.photoUrls,
-                    videoUrls: myOffer?.parcel?.videoUrls,
-                    audioUrls: myOffer?.parcel?.audioUrls,
-                  }}
+                    parcelInfo={{
+                      trackingNumber: myOffer?.parcel?.trackingNumber,
+                      departureCity: locationLabel(ad, 'departure'),
+                      arrivalCity: locationLabel(ad, 'arrival'),
+                      description: ad.description || `Annonce — ${formatFcfa(myOffer?.price)} proposé`,
+                      weight: myOffer?.parcel?.weight ?? null,
+                      type: myOffer?.parcel?.type,
+                      photoUrls: myOffer?.parcel?.photoUrls,
+                      videoUrls: myOffer?.parcel?.videoUrls,
+                      audioUrls: myOffer?.parcel?.audioUrls,
+                    }}
                   />
                 </div>
               </Dialog>
@@ -171,6 +179,18 @@ export function AnnonceDetailScreen() {
           </>
         )}
       </QueryState>
+    </div>
+  )
+}
+
+function MetaRow({ icon, label, value }: { icon: string; label: string; value: React.ReactNode }) {
+  return (
+    <div className="cm-meta-row">
+      <span className="cm-meta-row-label">
+        <Icon name={icon} size={16} style={{ color: 'var(--text-faint)' }} />
+        {label}
+      </span>
+      <span className="cm-meta-row-value">{value}</span>
     </div>
   )
 }
@@ -254,13 +274,13 @@ function OfferDialog({
     >
       <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <p style={{ margin: 0, fontSize: 13.5, color: 'var(--text-muted)' }}>
-          Proposez votre prix a <strong style={{ color: 'var(--text-strong)' }}>{driverName}</strong>
+          Proposez votre prix à <strong style={{ color: 'var(--text-strong)' }}>{driverName}</strong>
           {proposedPrice != null ? ` (il propose ${formatFcfa(proposedPrice)})` : ''}.
         </p>
         {detail.data?.itinerary && parcelOptions.length===1 && <p>Aucun colis compatible. Créez un colis avec un retrait et une remise dans le sens de ce trajet.</p>}
         {(parcels.length > 0 || detail.data?.itinerary) && (
-            <Select
-            label="Colis concerne"
+          <Select
+            label="Colis concerné"
             options={parcelOptions}
             value={parcelId}
             onChange={(e) => setParcelId(e.target.value)}
@@ -285,7 +305,7 @@ function OfferDialog({
         />
         {driverId && (
           <Button variant="secondary" size="sm" icon="forum" onClick={() => setChatOpen(true)}>
-            Negocier avec {driverName}
+            Négocier avec {driverName}
           </Button>
         )}
         {error && <Toast tone="error" message={error} />}
@@ -297,7 +317,7 @@ function OfferDialog({
           onClose={() => setChatOpen(false)}
           icon="forum"
           iconTone="primary"
-          title={`Negocier avec ${driverName}`}
+          title={`Négocier avec ${driverName}`}
           style={{ maxWidth: 640 }}
           actions={
             <Button variant="secondary" block onClick={() => setChatOpen(false)}>
@@ -317,7 +337,7 @@ function OfferDialog({
                       description: selectedParcel.description,
                       receiverName: selectedParcel.receiverName,
                     }
-                  : { description: proposedPrice != null ? `Prix propose par le chauffeur : ${formatFcfa(proposedPrice)}` : 'Prix a negocier' }
+                  : { description: proposedPrice != null ? `Prix proposé par le chauffeur : ${formatFcfa(proposedPrice)}` : 'Prix à négocier' }
               }
             />
           </div>

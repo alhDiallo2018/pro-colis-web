@@ -53,35 +53,32 @@ export function SupportDashboard() {
   const summary = assistances.data?.summary
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-      <div
-        style={{
-          background: 'var(--gradient-brand)',
-          borderRadius: 'var(--radius-lg)',
-          padding: 20,
-          color: '#fff',
-          boxShadow: 'var(--shadow-brand)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 16,
-          flexWrap: 'wrap',
-        }}
-      >
-        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 46, height: 46, borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.18)', flex: 'none' }}>
-          <Icon name="support_agent" size={24} fill />
-        </span>
-        <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: 11, opacity: 0.85, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>
-            Bonjour {user?.fullName?.split(' ')[0] ?? ''}
-          </div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22 }}>
-            {unread > 0 ? `${unread} conversation${unread > 1 ? 's' : ''} à traiter` : 'Aucune conversation en attente'}
-          </div>
-        </div>
-        <Button variant="amber" icon="forum" onClick={() => navigate('/support-admin/conversations')}>
-          Ouvrir le support
-        </Button>
-      </div>
+    <div className="cm-page">
+      <section className="cm-hero" aria-label="Support">
+        <p className="cm-hero-eyebrow">Support · {user?.fullName?.split(' ')[0] ?? ''}</p>
+        <h1 className="cm-hero-greeting">
+          {unread > 0 ? (
+            <><span className="cm-hero-greeting-accent">{unread}</span> conversation{unread > 1 ? 's' : ''}<br />à traiter</>
+          ) : (
+            <>Aucune conversation<br />en attente</>
+          )}
+        </h1>
+        <button
+          type="button"
+          className="cm-hero-search"
+          onClick={() => navigate('/support-admin/conversations')}
+          aria-label="Ouvrir le support"
+        >
+          <span className="cm-hero-search-icon">
+            <Icon name="support_agent" size={22} />
+          </span>
+          <span className="cm-hero-search-body">
+            <span className="cm-hero-search-title">Ouvrir le support</span>
+            <span className="cm-hero-search-sub">Inbox et conversations</span>
+          </span>
+          <Icon name="arrow_forward" size={22} style={{ color: 'var(--text-muted)' }} />
+        </button>
+      </section>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
         <StatBox icon="forum" tone="primary" value={list.length} label="Conversations" />

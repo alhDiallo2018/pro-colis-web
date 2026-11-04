@@ -48,8 +48,14 @@ export function ClassementPage() {
   const openDetail = (userId: string) => navigate(`/admin/reputation/scores/${userId}`)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-      <Panel title="Classement des chauffeurs" flush>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Classement</h1>
+          <p className="cm-page-head-sub">Chauffeurs les mieux notés sur la plateforme</p>
+        </div>
+      </div>
+      <Panel title="Chauffeurs classés" flush>
         <QueryState
           isLoading={query.isLoading}
           isError={query.isError}

@@ -77,7 +77,13 @@ export function ScoreDetailPage() {
       : null
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 720 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 720 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Score de {driverName}</h1>
+          <p className="cm-page-head-sub">Détail des points, niveau et transactions</p>
+        </div>
+      </div>
       <Card padding="lg">
         <div style={{ textAlign: 'center' }}>
           <div

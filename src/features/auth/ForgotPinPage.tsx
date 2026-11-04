@@ -60,61 +60,45 @@ export function ForgotPinPage() {
 
   return (
     <AuthShell
+      mode="forgot"
       brand={
         <>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 84,
-              height: 84,
-              borderRadius: 24,
-              background: 'rgba(255,255,255,0.16)',
-              marginBottom: 24,
-            }}
-          >
-            <span className="material-symbols-rounded fill" style={{ fontSize: 46 }}>
-              lock_reset
-            </span>
+          <div className="auth-brand-icon">
+            <span className="material-symbols-rounded fill" aria-hidden="true">lock_reset</span>
           </div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30, lineHeight: 1.15, letterSpacing: '-0.02em', margin: '0 0 12px' }}>
-            Reprenez la main
-            <br />
-            sur votre compte.
-          </h2>
-          <p style={{ fontSize: 15, opacity: 0.9, lineHeight: 1.55, margin: 0, maxWidth: 320 }}>
-            Nous envoyons un code de vérification sur le numéro ou l’email associé à votre compte.
+          <h2 className="auth-brand-title">Reprenez la main sur votre compte.</h2>
+          <p className="auth-brand-lead">
+            Nous envoyons un code de vérification sur le numéro ou l'email associé à votre compte.
           </p>
         </>
       }
     >
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 16 }}>
         <IconButton icon="arrow_back" aria-label="Retour" onClick={backToLogin} />
       </div>
 
       {done ? (
         <>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30, color: 'var(--text-strong)', margin: '0 0 8px', letterSpacing: '-0.01em' }}>
-            Code PIN mis à jour
-          </h1>
-          <p style={{ fontSize: 15, color: 'var(--text-muted)', margin: '0 0 32px' }}>
-            Vos autres sessions ont été déconnectées. Connectez-vous avec votre nouveau code.
-          </p>
+          <div className="auth-header">
+            <h1 className="auth-title">Code PIN mis à jour</h1>
+            <p className="auth-lead">
+              Vos autres sessions ont été déconnectées. Connectez-vous avec votre nouveau code.
+            </p>
+          </div>
           <Button block size="lg" iconTrailing="arrow_forward" onClick={backToLogin}>
             Se connecter
           </Button>
         </>
       ) : (
         <>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30, color: 'var(--text-strong)', margin: '0 0 8px', letterSpacing: '-0.01em' }}>
-            Code PIN oublié
-          </h1>
-          <p style={{ fontSize: 15, color: 'var(--text-muted)', margin: '0 0 32px' }}>
-            {step === 'identifier'
-              ? 'Entrez l’identifiant de votre compte pour recevoir un code de vérification.'
-              : 'Saisissez le code reçu, puis choisissez un nouveau code PIN.'}
-          </p>
+          <div className="auth-header">
+            <h1 className="auth-title">Code PIN oublié</h1>
+            <p className="auth-lead">
+              {step === 'identifier'
+                ? 'Entrez l’identifiant de votre compte pour recevoir un code de vérification.'
+                : 'Saisissez le code reçu, puis choisissez un nouveau code PIN.'}
+            </p>
+          </div>
 
           {step === 'identifier' ? (
             <form
@@ -209,11 +193,9 @@ export function ForgotPinPage() {
         </>
       )}
 
-      <p style={{ textAlign: 'center', fontSize: 14, color: 'var(--text-muted)', margin: '28px 0 0' }}>
+      <p className="auth-footer-row">
         Vous vous souvenez de votre code ?{' '}
-        <span style={{ color: 'var(--text-link)', fontWeight: 700, cursor: 'pointer' }} onClick={backToLogin}>
-          Se connecter
-        </span>
+        <button type="button" onClick={backToLogin}>Se connecter</button>
       </p>
     </AuthShell>
   )

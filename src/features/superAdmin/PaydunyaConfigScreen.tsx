@@ -79,7 +79,13 @@ export function PaydunyaConfigScreen() {
   const configured = config?.configured ?? false
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 720 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>PayDunya</h1>
+          <p className="cm-page-head-sub">Configuration du fournisseur de paiement</p>
+        </div>
+      </div>
       <Panel title="Configuration PayDunya">
         <p style={{ margin: '0 0 16px', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
           PayDunya est le fournisseur de paiement mobile (Orange Money, Wave, carte bancaire).

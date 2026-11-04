@@ -52,35 +52,26 @@ export function ClientLibreServiceScreen() {
   const filteredEmpty = hasParcels && parcels.length === 0
 
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+    <div className="cm-detail-page" style={{ maxWidth: 920 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Mes annonces libre service</h1>
+          <p className="cm-page-head-sub">
+            Colis publiés en attente d'une offre
+            {parcels.length > 0 && <> · <strong>{parcels.length}</strong></>}
+          </p>
+        </div>
+      </div>
       {hasParcels && (
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 10,
-            alignItems: 'flex-end',
-            background: 'var(--surface-card)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-lg)',
-            padding: 14,
-            boxShadow: 'var(--shadow-xs)',
-          }}
-        >
-          <div style={{ flex: '1 1 220px', minWidth: 180 }}>
-            <Input
-              icon="search"
-              placeholder="Rechercher (suivi, ville, destinataire…)"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div style={{ flex: '0 1 200px' }}>
-            <Select icon="category" options={TYPE_FILTERS} value={type} onChange={(e) => setType(e.target.value)} />
-          </div>
-          <div style={{ flex: '0 1 190px' }}>
-            <Select icon="sort" options={SORTS} value={sort} onChange={(e) => setSort(e.target.value)} />
-          </div>
+        <div className="cm-filter-box">
+          <Input
+            icon="search"
+            placeholder="Rechercher (suivi, ville, destinataire…)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Select icon="category" options={TYPE_FILTERS} value={type} onChange={(e) => setType(e.target.value)} />
+          <Select icon="sort" options={SORTS} value={sort} onChange={(e) => setSort(e.target.value)} />
         </div>
       )}
 

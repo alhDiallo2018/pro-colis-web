@@ -40,12 +40,10 @@ export function DriverProfileScreen() {
   }
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 640 }}>
+      <div className="cm-detail-head">
         <IconButton icon="arrow_back" aria-label="Retour" onClick={() => navigate(-1)} />
-        <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
-          Fiche chauffeur
-        </h1>
+        <h1>Fiche chauffeur</h1>
       </div>
 
       <QueryState

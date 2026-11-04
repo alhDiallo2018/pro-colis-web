@@ -124,17 +124,24 @@ export function VehicleDocumentsScreen() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 720 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 720 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Mes documents</h1>
+          <p className="cm-page-head-sub">Véhicule, permis, assurance et pièce d'identité</p>
+        </div>
+      </div>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 'var(--radius-md)',
+        display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', borderRadius: 'var(--cm-radius-chip)',
         background: isVerified ? 'var(--green-50)' : 'var(--amber-50)',
         border: `1px solid ${isVerified ? 'var(--green-200)' : 'var(--amber-200)'}`,
         color: isVerified ? 'var(--green-700)' : 'var(--amber-700)',
+        fontWeight: 700,
       }}>
         <span className="material-symbols-rounded" style={{ fontSize: 22 }}>
           {isVerified ? 'verified' : 'gpp_maybe'}
         </span>
-        <div style={{ fontSize: 13.5, fontWeight: 600 }}>
+        <div style={{ fontSize: 13.5 }}>
           {isVerified
             ? 'Identité vérifiée — vous pouvez enchérir et publier des annonces.'
             : 'Identité non vérifiée. Envoyez vos documents ci-dessous : un administrateur les validera.'}

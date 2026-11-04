@@ -65,11 +65,12 @@ export function GarageParcelDetailPage() {
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 720 }}>
+      <div className="cm-detail-head">
         <Button variant="ghost" size="sm" icon="arrow_back" onClick={() => navigate('/garage/colis')}>
           Retour
         </Button>
+        <h1>Colis {parcel.trackingNumber}</h1>
         {!['delivered', 'cancelled'].includes(parcel.status) && (
           <Button
             variant="danger"

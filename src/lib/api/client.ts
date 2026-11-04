@@ -1,5 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig, type AxiosInstance } from 'axios'
 import { authStore, useAuthStore } from '@/store/auth'
+import { installOfflineInterceptor, isOfflineEligible, offlineAccess } from '@/lib/offlineAccess'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
@@ -37,7 +38,8 @@ const isPublicAuth = (url = '') => publicAuthRoutes.has(url.split('?')[0])
 
 api.interceptors.request.use((config: AuthRequest) => {
   const state = authStore.get()
-  if (typeof navigator !== 'undefined' && !navigator.onLine) throw new ApiError('Hors connexion : reconnectez-vous pour effectuer cette opération.', 'OFFLINE', 0)
+  if (typeof navigator !== 'undefined' && !navigator.onLine && !isOfflineEligible(config))
+    throw new ApiError('Hors connexion : reconnectez-vous pour effectuer cette opération.', 'OFFLINE', 0)
   if (config._retried && config._authSessionId !== state.sessionId) {
     throw new ApiError('Session modifiée', 'SESSION_CHANGED', 0)
   }
@@ -135,6 +137,10 @@ api.interceptors.response.use(
     return api(original)
   },
 )
+
+installOfflineInterceptor(api)
+useAuthStore.subscribe((state) => offlineAccess.useSession(state.sessionId))
+offlineAccess.useSession(authStore.get().sessionId)
 
 /**
  * Unwrap the API success envelope `{ success, message, ...data }` and return

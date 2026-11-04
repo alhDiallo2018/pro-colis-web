@@ -37,8 +37,13 @@ export function SupportInboxScreen() {
     catch (cause) { setError(cause instanceof Error ? cause.message : 'Opération impossible') }
     finally { await qc.invalidateQueries({ queryKey: ['support-chat'] }); setBusy(false) }
   }
-  return <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-    <h2 style={{ margin: 0 }}>Boîte support partagée</h2>
+  return <div className="cm-detail-page">
+    <div className="cm-page-head">
+      <div className="cm-page-head-body">
+        <h1>Boîte support partagée</h1>
+        <p className="cm-page-head-sub">Prenez en charge, affectez et clôturez les demandes</p>
+      </div>
+    </div>
     <UserSearchSelect label="Contacter un utilisateur" placeholder="Rechercher par nom, e-mail ou téléphone" disabled={busy}
       onChange={user => { if (user) void act(async () => {
         const chat = await support.openSupportChat(user.id)

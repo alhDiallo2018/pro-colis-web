@@ -661,7 +661,13 @@ function SystemConfigPanel() {
 
 export function ConfigConsommationPage() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Configuration de la consommation</h1>
+          <p className="cm-page-head-sub">Commissions, débits et simulateur</p>
+        </div>
+      </div>
       <SimulatorPanel />
       <CommissionListPanel />
       <SystemConfigPanel />

@@ -21,7 +21,13 @@ export function DriverParametresScreen() {
   const status = (user.driverStatus ?? 'offline') as DriverStatus
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 720 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Paramètres</h1>
+          <p className="cm-page-head-sub">Disponibilité, sécurité et notifications</p>
+        </div>
+      </div>
       {/* Availability */}
       <Card padding="lg">
         <h3 style={{ margin: '0 0 4px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>Disponibilité</h3>

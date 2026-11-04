@@ -149,12 +149,17 @@ export function NotificationsScreen() {
     if (!notification.isRead) markReadMutation.mutate(notification.id)
   }
 
+  const unread = notifications.filter((n) => !n.isRead).length
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h2)', color: 'var(--text-strong)' }}>
-          Notifications
-        </h2>
+    <div className="cm-detail-page" style={{ maxWidth: 720 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Notifications</h1>
+          <p className="cm-page-head-sub">
+            Mises à jour de vos colis et offres
+            {unread > 0 && <> · <strong>{unread}</strong> non lue{unread > 1 ? 's' : ''}</>}
+          </p>
+        </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {notifications.some((n) => !n.isRead) && (
             <Button
@@ -164,7 +169,7 @@ export function NotificationsScreen() {
               loading={markAllMutation.isPending}
               onClick={() => markAllMutation.mutate()}
             >
-              Tout marquer comme lu
+              Tout marquer lu
             </Button>
           )}
           {notifications.length > 0 && (

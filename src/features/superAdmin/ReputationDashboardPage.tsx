@@ -31,7 +31,13 @@ export function ReputationDashboardPage() {
     i === 0 ? 'var(--amber-600)' : i === 1 ? 'var(--slate-500)' : i === 2 ? 'var(--amber-700)' : 'var(--text-muted)'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Réputation des chauffeurs</h1>
+          <p className="cm-page-head-sub">Classements, niveaux et notes moyennes</p>
+        </div>
+      </div>
       <QueryState
         isLoading={dashQuery.isLoading}
         isError={dashQuery.isError}

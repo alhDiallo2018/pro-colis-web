@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Input, ParcelCard, SegmentedControl, Select } from '@/ds'
+import { Button, Icon, Input, ParcelCard, Select } from '@/ds'
 import { QueryState } from '@/components/QueryState'
 import { useSentParcels, useReceivedParcels } from './hooks'
 import { formatDate, formatFcfa, formatWeight, toStatusKey } from '@/lib/format'
@@ -30,9 +30,9 @@ const SORTS = [
   { value: 'price_asc', label: 'Prix croissant' },
 ]
 
-const SENDER_TABS = [
-  { value: 'sent', label: '📦 Envoyés' },
-  { value: 'received', label: '📥 Reçus' },
+const SENDER_TABS: { value: string; label: string; icon: string }[] = [
+  { value: 'sent', label: 'Envoyés', icon: 'outbox' },
+  { value: 'received', label: 'Reçus', icon: 'inbox' },
 ]
 
 export function MesColisScreen() {
@@ -43,7 +43,6 @@ export function MesColisScreen() {
   const [type, setType] = useState('')
   const [sort, setSort] = useState('recent')
 
-  // Force refresh when switching tabs to avoid stale cache
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ['client', 'parcels', tab] })
   }, [tab])
@@ -73,50 +72,91 @@ export function MesColisScreen() {
     })
   }, [all, status, search, type, sort])
 
+  const statusCounts: Record<string, number> = useMemo(() => {
+    const counts: Record<string, number> = { '': all.length }
+    for (const g of STATUS_GROUPS) {
+      if (!g.value) continue
+      counts[g.value] = all.filter((p) => g.match.includes(p.status)).length
+    }
+    return counts
+  }, [all])
+
   const hasParcels = all.length > 0
   const filteredEmpty = hasParcels && parcels.length === 0
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-      {/* Sent/Received tabs */}
-      <SegmentedControl
-        block
-        size="sm"
-        options={SENDER_TABS}
-        value={tab}
-        onChange={setTab}
-      />
+    <div className="cm-detail-page" style={{ maxWidth: 1100 }}>
+      {/* ---- Header ---- */}
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Mes colis</h1>
+          <p className="cm-page-head-sub">
+            {tab === 'sent' ? 'Colis que vous avez envoyés' : 'Colis qui vous sont destinés'}
+            {' · '}
+            <strong>{parcels.length}</strong> {parcels.length > 1 ? 'résultats' : 'résultat'}
+          </p>
+        </div>
+        <Button icon="add" onClick={() => navigate('/client/nouveau')}>
+          Créer un colis
+        </Button>
+      </div>
 
-      <SegmentedControl
-        block
-        size="sm"
-        options={STATUS_GROUPS.map((g) => ({ value: g.value, label: g.label }))}
-        value={status}
-        onChange={setStatus}
-      />
+      {/* ---- Tabs envoyés/reçus ---- */}
+      <div className="cm-chip-row">
+        {SENDER_TABS.map((t) => (
+          <button
+            key={t.value}
+            type="button"
+            className="cm-chip"
+            aria-pressed={tab === t.value}
+            onClick={() => setTab(t.value)}
+          >
+            <Icon name={t.icon} size={15} />
+            {t.label}
+          </button>
+        ))}
+      </div>
 
+      {/* ---- Status filter chips ---- */}
+      <div className="cm-chip-row">
+        {STATUS_GROUPS.map((g) => (
+          <button
+            key={g.value || 'all'}
+            type="button"
+            className="cm-chip"
+            aria-pressed={status === g.value}
+            onClick={() => setStatus(g.value)}
+          >
+            {g.label}
+            <span className="cm-chip-count">{statusCounts[g.value] ?? 0}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* ---- Filter box ---- */}
       {hasParcels && (
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 10,
-            background: 'var(--surface-card)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-lg)',
-            padding: 14,
-            boxShadow: 'var(--shadow-xs)',
-          }}
-        >
-          <div style={{ flex: '1 1 220px', minWidth: 180 }}>
-            <Input aria-label="Rechercher un colis" icon="search" placeholder="Rechercher (suivi, ville, nom…)" value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
-          <div style={{ flex: '0 1 200px' }}>
-            <Select aria-label="Type de colis" icon="category" options={TYPE_FILTERS} value={type} onChange={(e) => setType(e.target.value)} />
-          </div>
-          <div style={{ flex: '0 1 190px' }}>
-            <Select aria-label="Trier les colis" icon="sort" options={SORTS} value={sort} onChange={(e) => setSort(e.target.value)} />
-          </div>
+        <div className="cm-filter-box">
+          <Input
+            aria-label="Rechercher un colis"
+            icon="search"
+            placeholder="Rechercher (suivi, ville, nom…)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Select
+            aria-label="Type de colis"
+            icon="category"
+            options={TYPE_FILTERS}
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+          />
+          <Select
+            aria-label="Trier les colis"
+            icon="sort"
+            options={SORTS}
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+          />
         </div>
       )}
 

@@ -157,9 +157,16 @@ export function AssistancesPage() {
   const resolve = (a: Assistance) => update.mutate({ id: a.id, payload: { status: 'resolved' } })
 
   return (
+    <div className="cm-detail-page">
+    <div className="cm-page-head">
+      <div className="cm-page-head-body">
+        <h1>Assistances</h1>
+        <p className="cm-page-head-sub">Tickets support ouverts et historique</p>
+      </div>
+      <Button icon="add" onClick={openCreate}>Nouvelle assistance</Button>
+    </div>
     <Panel
-      title="Assistances"
-      action={<Button icon="add" onClick={openCreate}>Nouvelle assistance</Button>}
+      title="Tickets"
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         {summary && (
@@ -424,6 +431,7 @@ export function AssistancesPage() {
         </Dialog>
       )}
     </Panel>
+    </div>
   )
 }
 

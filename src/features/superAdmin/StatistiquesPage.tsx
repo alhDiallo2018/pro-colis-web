@@ -23,7 +23,13 @@ export function StatistiquesPage() {
   ) as [string, number | string][]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Statistiques</h1>
+          <p className="cm-page-head-sub">Indicateurs de volume, activité et revenus</p>
+        </div>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
         <StatBox icon="package_2" tone="primary" value={parcels.data?.pagination?.total ?? parcels.data?.parcels.length ?? '—'} label="Colis au total" delta={12} />
         <StatBox icon="local_shipping" tone="green" value={drivers.data?.length ?? '—'} label="Chauffeurs" delta={4} />

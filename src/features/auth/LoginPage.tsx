@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Button, IconButton, Input, Toast } from '@/ds'
+import { Button, Input, Toast } from '@/ds'
 import { GoogleAuth } from './GoogleAuth'
 import { AuthShell } from './AuthShell'
 import { useLogin } from './useAuth'
@@ -17,8 +17,6 @@ export function LoginPage() {
   const [pin, setPin] = useState('')
   const prevPinRef = useRef('')
 
-  // Les deux modes (bouton et sixieme chiffre du PIN) doivent reprendre la
-  // meme destination. Aucun retour n'est consomme tant que la connexion echoue.
   const onLoginSuccess = (session: AuthSession) => {
     navigate(loginDestination(location.state, session.user.role), { replace: true })
   }
@@ -36,98 +34,94 @@ export function LoginPage() {
 
   return (
     <AuthShell
+      mode="login"
       brand={
         <>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 84,
-              height: 84,
-              borderRadius: 24,
-              background: 'rgba(255,255,255,0.16)',
-              marginBottom: 24,
-            }}
-          >
-            <span className="material-symbols-rounded fill" style={{ fontSize: 46 }}>
-              local_shipping
-            </span>
+          <div className="auth-brand-icon">
+            <span className="material-symbols-rounded fill" aria-hidden="true">local_shipping</span>
           </div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30, lineHeight: 1.15, letterSpacing: '-0.02em', margin: '0 0 12px' }}>
-            Pilotez vos colis
-            <br />
-            depuis le web.
-          </h2>
-          <p style={{ fontSize: 15, opacity: 0.9, lineHeight: 1.55, margin: 0, maxWidth: 320 }}>
+          <h2 className="auth-brand-title">Pilotez vos colis depuis le web.</h2>
+          <p className="auth-brand-lead">
             Connectez-vous pour créer des colis, comparer les offres et suivre vos livraisons en temps réel.
           </p>
+          <div className="auth-brand-perks">
+            {[
+              { icon: 'verified', text: 'Chauffeurs vérifiés & notés' },
+              { icon: 'bolt', text: 'Premières offres en moins de 45 min' },
+              { icon: 'qr_code_2', text: 'Suivi en temps réel + code PIN' },
+            ].map(p => (
+              <div key={p.icon} className="auth-brand-perks-item">
+                <span className="material-symbols-rounded" aria-hidden="true">{p.icon}</span>
+                {p.text}
+              </div>
+            ))}
+          </div>
         </>
       }
     >
-      <div style={{ marginBottom: 24 }}>
-        <IconButton icon="arrow_back" aria-label="Retour" onClick={() => navigate('/')} />
+      <div className="auth-header">
+        <h1 className="auth-title">Bon retour 👋</h1>
+        <p className="auth-lead">Entrez votre identifiant et votre code PIN.</p>
+        <p style={{ margin: 0, fontSize: 13.5 }}>
+          <Link to="/installer" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
+            Installer ProColis sur iPhone ou iPad
+          </Link>
+        </p>
       </div>
-
-      <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30, color: 'var(--text-strong)', margin: '0 0 8px', letterSpacing: '-0.01em' }}>
-        Bon retour 👋
-      </h1>
-      <p><Link to="/installer" style={{ color: 'var(--color-primary)' }}>Installer ProColis sur iPhone ou iPad</Link></p>
-      <p style={{ fontSize: 15, color: 'var(--text-muted)', margin: '0 0 32px' }}>
-        Entrez votre identifiant et votre code PIN.
-      </p>
 
       <GoogleAuth onSuccess={onLoginSuccess} onFlowChange={setGoogleActive} />
 
-      {!googleActive && <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-        <Input
-          label="Identifiant"
-          icon="person"
-          placeholder="Email ou téléphone"
-          value={identifier}
-          onChange={(e) => setIdentifier(e.target.value)}
-          autoComplete="username"
-        />
-        <Input
-          label="Code PIN"
-          icon="lock"
-          type="password"
-          inputMode="numeric"
-          mono
-          placeholder="6 chiffres"
-          value={pin}
-          onChange={(e) => {
-            const val = e.target.value.replace(/\D/g, '').slice(0, 6)
-            setPin(val)
-            if (prevPinRef.current.length === 5 && val.length === 6 && identifier.trim()) {
-              login.mutate(
-                { identifier: identifier.trim(), pin: val },
-                { onSuccess: onLoginSuccess },
-              )
-            }
-            prevPinRef.current = val
-          }}
-          autoComplete="current-password"
-        />
+      {!googleActive && (
+        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <Input
+            label="Identifiant"
+            icon="person"
+            placeholder="Email ou téléphone"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            autoComplete="username"
+          />
+          <Input
+            label="Code PIN"
+            icon="lock"
+            type="password"
+            inputMode="numeric"
+            mono
+            placeholder="6 chiffres"
+            value={pin}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, '').slice(0, 6)
+              setPin(val)
+              if (prevPinRef.current.length === 5 && val.length === 6 && identifier.trim()) {
+                login.mutate(
+                  { identifier: identifier.trim(), pin: val },
+                  { onSuccess: onLoginSuccess },
+                )
+              }
+              prevPinRef.current = val
+            }}
+            autoComplete="current-password"
+          />
 
-        {error && <Toast tone="error" message={error} />}
+          {error && <Toast tone="error" message={error} />}
 
-        <Button type="submit" block size="lg" iconTrailing="arrow_forward" loading={login.isPending} disabled={!identifier.trim() || !pinValid}>
-          Se connecter
-        </Button>
-      </form>}
+          <Button type="submit" block size="lg" iconTrailing="arrow_forward" loading={login.isPending} disabled={!identifier.trim() || !pinValid}>
+            Se connecter
+          </Button>
+        </form>
+      )}
 
-      <p style={{ textAlign: 'center', fontSize: 14, margin: '20px 0 0' }}>
-        <span style={{ color: 'var(--text-link)', fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/pin-oublie', { state: location.state })}>
+      <p className="auth-footer-row">
+        <button type="button" onClick={() => navigate('/pin-oublie', { state: location.state })}>
           Code PIN oublié ?
-        </span>
+        </button>
       </p>
 
-      <p style={{ textAlign: 'center', fontSize: 14, color: 'var(--text-muted)', margin: '28px 0 0' }}>
+      <p className="auth-footer-row" style={{ marginTop: 20 }}>
         Pas encore de compte ?{' '}
-        <span style={{ color: 'var(--text-link)', fontWeight: 700, cursor: 'pointer' }} onClick={() => navigate('/register', { state: location.state })}>
+        <button type="button" onClick={() => navigate('/register', { state: location.state })}>
           Créer un compte
-        </span>
+        </button>
       </p>
     </AuthShell>
   )

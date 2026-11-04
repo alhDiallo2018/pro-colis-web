@@ -85,7 +85,13 @@ export function DriverDetailPage() {
   const debitMutation = useDebitWallet(userId!)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Fiche chauffeur</h1>
+          <p className="cm-page-head-sub">Détail complet : réputation, portefeuille, missions</p>
+        </div>
+      </div>
       {errorToast && (
         <Toast tone="error" message={errorToast} onClose={() => setErrorToast(null)} />
       )}

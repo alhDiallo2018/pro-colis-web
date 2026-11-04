@@ -45,7 +45,7 @@ export function StaffProfilScreen() {
   const byStatus = Object.entries(garage?.parcelsByStatus ?? {}).filter(([, count]) => count > 0)
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 900 }}>
       <ProfileHeader
         user={user}
         onPhotoChange={setPhotoDataUrl}

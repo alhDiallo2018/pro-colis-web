@@ -101,7 +101,13 @@ export function BrevoConfigScreen() {
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 720 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Brevo · Email & SMS</h1>
+          <p className="cm-page-head-sub">Configuration du fournisseur de messages transactionnels</p>
+        </div>
+      </div>
       <ManualMessagePanel />
       <Panel title="Configuration Brevo (Email & SMS)">
         <p style={{ margin: '0 0 20px', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>

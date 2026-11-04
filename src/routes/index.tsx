@@ -1,11 +1,20 @@
-import { QualityScreen, WorkspaceScreen, OfflineHistory, LiveJourneys, ClientDebtsScreen, DriverDebtsScreen, LoginPage, RegisterPage, ForgotPinPage, LandingPage, InstallPage, AProposPage, ContactPage, MentionsLegalesPage, ConfidentialitePage, CGUPage, ConditionsTransportPage, PaiementPage, RemboursementPage, ReclamationsPage, ColisInterditsPage, HelpScreen, PaymentStatusPage, ClientDashboard, MesColisScreen, ParcelDetailScreen, NewParcelScreen, OffresRecuesScreen, ClientAnnoncesScreen, AnnonceDetailScreen, DriverProfileScreen, SuiviScreen, ProfilScreen, TripDetailScreen, ConfirmDeliveryScreen, DriverDashboard, LibreServiceScreen, MissionsScreen, RevenusScreen, HistoriqueScreen, MonGarageScreen, DriverProfilScreen, DriverParametresScreen, DriverPointsScreen, MesAnnoncesScreen, VehicleDocumentsScreen, ItineraireScreen, MessagesScreen, AdminSupportScreen, SupportDashboard, SupportConversationsScreen, ModerationScreen, StaffProfilScreen, LogsScreen, AuditLogsScreen, IncidentsScreen, TicketsScreen, LeadsScreen, CoverageScreen, SuperAdminDashboard, ColisPage, ChauffeursPage, UtilisateursPage, ZonesPage, StatistiquesPage, RapportsPage, SystemePage, ConfigConsommationPage, FinanceDashboardPage, WalletsPage, PaymentsPage, CashDeclarationsPage, PaymentNotificationsPage, ReputationDashboardPage, ScoresPage, ClassementPage, DriverDetailPage, BrevoConfigScreen, PaydunyaConfigScreen, BroadcastsPage, WalletDetailPage, ScoreDetailPage, WithdrawalsPage, AssistancesPage, ExpensesPage, IdentityVerificationsPage, NotificationsScreen, GarageDashboard, GarageColisPage, GarageChauffeursPage, GarageAssignationsPage, GarageRapportsPage, GarageParcelDetailPage } from './screens';
+import { QualityScreen, WorkspaceScreen, OfflineHistory, LiveJourneys, ClientDebtsScreen, ClientWalletScreen, SettingsScreen, DriverDebtsScreen, LoginPage, RegisterPage, ForgotPinPage, LandingPage, InstallPage, AProposPage, ContactPage, MentionsLegalesPage, ConfidentialitePage, CGUPage, ConditionsTransportPage, PaiementPage, RemboursementPage, ReclamationsPage, ColisInterditsPage, HelpScreen, PaymentStatusPage, ClientDashboard, MesColisScreen, ParcelDetailScreen, NewParcelScreen, OffresRecuesScreen, ClientAnnoncesScreen, AnnonceDetailScreen, DriverProfileScreen, SuiviScreen, ProfilScreen, TripDetailScreen, ConfirmDeliveryScreen, DriverDashboard, LibreServiceScreen, MissionsScreen, RevenusScreen, HistoriqueScreen, MonGarageScreen, DriverProfilScreen, DriverParametresScreen, DriverPointsScreen, MesAnnoncesScreen, VehicleDocumentsScreen, ItineraireScreen, MessagesScreen, AdminSupportScreen, SupportDashboard, SupportConversationsScreen, ModerationScreen, StaffProfilScreen, LogsScreen, AuditLogsScreen, IncidentsScreen, TicketsScreen, LeadsScreen, CoverageScreen, SuperAdminDashboard, ColisPage, ChauffeursPage, UtilisateursPage, ZonesPage, StatistiquesPage, RapportsPage, SystemePage, ConfigConsommationPage, FinanceDashboardPage, WalletsPage, PaymentsPage, CashDeclarationsPage, PaymentNotificationsPage, ReputationDashboardPage, ScoresPage, ClassementPage, DriverDetailPage, BrevoConfigScreen, PaydunyaConfigScreen, BroadcastsPage, WalletDetailPage, ScoreDetailPage, WithdrawalsPage, AssistancesPage, ExpensesPage, IdentityVerificationsPage, NotificationsScreen, GarageDashboard, GarageColisPage, GarageChauffeursPage, GarageAssignationsPage, GarageRapportsPage, GarageParcelDetailPage } from './screens';
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RequireAuth, RequireRole } from "./guards";
 import { DashboardLayout, type NavSection } from "@/layouts/DashboardLayout";
 import { NavButton, NotifButton } from "@/components/actions";
 
 import { SupportChatWrapper } from "@/features/shared/SupportChatWrapper";
+import { MarketingLayout } from "@/features/marketing/MarketingLayout";
 import { RoleHomeRedirect } from "./RoleHomeRedirect";
+
+function PublicTrackPage() {
+  return (
+    <MarketingLayout variant="document">
+      <SuiviScreen />
+    </MarketingLayout>
+  );
+}
 import { SupportShell } from "./SupportShell";
 import { AvailabilityToggle } from "@/features/driver/AvailabilityToggle";
 import { ManualMessagePanel } from "@/features/superAdmin/ManualMessagePanel";
@@ -37,7 +46,9 @@ const CLIENT_NAV: NavSection[] = [
     heading: "Mon compte",
     items: [
       { label: "Messages", icon: "forum", to: "/client/messages" },
+      { label: "Portefeuille", icon: "account_balance_wallet", to: "/client/portefeuille" },
       { label: "Mes dettes", icon: "receipt_long", to: "/client/dettes" },
+      { label: "Paramètres", icon: "settings", to: "/client/parametres" },
       {
         label: "Historique hors connexion",
         icon: "offline_pin",
@@ -239,8 +250,8 @@ export const router = createBrowserRouter([
       </RequireAuth>
     ),
   },
-  { path: "/track", element: <SuiviScreen /> },
-  { path: "/track/:trackingNumber", element: <SuiviScreen /> },
+  { path: "/track", element: <PublicTrackPage /> },
+  { path: "/track/:trackingNumber", element: <PublicTrackPage /> },
   { path: "/payment-status", element: <PaymentStatusPage /> },
   { path: "/payment-status.php", element: <PaymentStatusPage /> },
   { path: "/a-propos", element: <AProposPage /> },
@@ -291,6 +302,8 @@ export const router = createBrowserRouter([
       { path: "colis/:parcelId/confirm", element: <ConfirmDeliveryScreen /> },
       { path: "suivi", element: <SuiviScreen /> },
       { path: "messages", element: <MessagesScreen /> },
+      { path: "portefeuille", element: <ClientWalletScreen /> },
+      { path: "parametres", element: <SettingsScreen /> },
       { path: "dettes", element: <ClientDebtsScreen /> },
       { path: "profil", element: <ProfilScreen /> },
       { path: "notifications", element: <NotificationsScreen /> },

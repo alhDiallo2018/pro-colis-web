@@ -11,6 +11,8 @@ export interface MapPoint {
 export interface TrackingMapProps {
   /** Position réelle du chauffeur (se déplace à chaque nouvelle position). */
   driver?: MapPoint | null
+  /** Précision horizontale GPS en mètres (cercle d'incertitude). */
+  accuracy?: number | null
   /** Point de départ du colis. */
   departure?: MapPoint | null
   /** Point de destination du colis. */
@@ -23,6 +25,7 @@ export interface TrackingMapProps {
 const DRIVER_COLOR = '#0d9488'
 const DEPARTURE_COLOR = '#10b981'
 const DESTINATION_COLOR = '#ef4444'
+const ROUTE_COLOR = '#14b8a6'
 
 const DEFAULT_CENTER = { lat: 14.6928, lng: -17.4467 } // Dakar (fallback de cadrage)
 const DEFAULT_ZOOM = 12
@@ -64,13 +67,19 @@ function fitPoints(map: google.maps.Map, points: MapPoint[]): void {
 /**
  * Carte de suivi en lecture seule : départ, destination et position réelle du
  * chauffeur. Réutilise le chargement Google Maps partagé (`loadGoogleMaps`).
- * Le marqueur chauffeur se déplace quand `driver` change, sans recréer la carte.
+ * Le marqueur chauffeur se déplace quand `driver` change, sans recréer la
+ * carte, et la caméra suit automatiquement la nouvelle position (aligné sur
+ * l'expérience mobile). Un cercle de précision matérialise honnêtement
+ * l'incertitude du GPS, et une polyline relie départ → chauffeur → arrivée.
  */
-export function TrackingMap({ driver, departure, destination, height = 220, style }: TrackingMapProps) {
+export function TrackingMap({ driver, accuracy, departure, destination, height = 220, style }: TrackingMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
   const driverMarkerRef = useRef<google.maps.Marker | null>(null)
+  const accuracyCircleRef = useRef<google.maps.Circle | null>(null)
+  const routePolylineRef = useRef<google.maps.Polyline | null>(null)
   const readyRef = useRef(false)
+  const firstFitDoneRef = useRef(false)
   const [failed, setFailed] = useState(false)
 
   // Création de la carte et des marqueurs statiques (départ / destination).
@@ -98,27 +107,28 @@ export function TrackingMap({ driver, departure, destination, height = 220, styl
       if (destination) {
         new google.maps.Marker({ map, position: destination, icon: pinIcon(DESTINATION_COLOR) })
       }
-      if (driver) {
-        driverMarkerRef.current = new google.maps.Marker({
-          map,
-          position: driver,
-          icon: dotIcon(DRIVER_COLOR),
-          zIndex: 10,
-        })
-      }
-
-      fitPoints(map, [departure, destination, driver].filter((p): p is MapPoint => !!p))
       readyRef.current = true
+      // La création des éléments dépendants du chauffeur (marker, cercle de
+      // précision, polyline) est déléguée aux effets dédiés ci-dessous, pour
+      // éviter la duplication et garantir que la première mise à jour profite
+      // aussi du centrage initial.
     })
     return () => {
       cancelled = true
       readyRef.current = false
+      firstFitDoneRef.current = false
+      driverMarkerRef.current?.setMap(null)
+      driverMarkerRef.current = null
+      accuracyCircleRef.current?.setMap(null)
+      accuracyCircleRef.current = null
+      routePolylineRef.current?.setMap(null)
+      routePolylineRef.current = null
     }
-    // Monté une seule fois : `driver` est suivi par l'effet dédié ci-dessous.
+    // Monté une seule fois : le reste est suivi par les effets dédiés ci-dessous.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Déplacement du marqueur chauffeur quand de nouvelles coordonnées arrivent.
+  // Déplacement du marqueur chauffeur + caméra suiveuse à chaque polling.
   useEffect(() => {
     if (!readyRef.current) return
     const map = mapRef.current
@@ -126,10 +136,18 @@ export function TrackingMap({ driver, departure, destination, height = 220, styl
     if (!driver) {
       driverMarkerRef.current?.setMap(null)
       driverMarkerRef.current = null
+      // Pas de chauffeur : on cadre au moins départ/destination.
+      if (!firstFitDoneRef.current) {
+        fitPoints(map, [departure, destination].filter((p): p is MapPoint => !!p))
+        firstFitDoneRef.current = true
+      }
       return
     }
     if (driverMarkerRef.current) {
       driverMarkerRef.current.setPosition(driver)
+      // Caméra suiveuse : on recentre doucement sur la nouvelle position du
+      // chauffeur, sans changer le niveau de zoom choisi par l'utilisateur.
+      map.panTo(driver)
     } else {
       driverMarkerRef.current = new google.maps.Marker({
         map,
@@ -137,7 +155,67 @@ export function TrackingMap({ driver, departure, destination, height = 220, styl
         icon: dotIcon(DRIVER_COLOR),
         zIndex: 10,
       })
+    }
+    // Premier cadrage : englobe tous les points connus.
+    if (!firstFitDoneRef.current) {
       fitPoints(map, [departure, destination, driver].filter((p): p is MapPoint => !!p))
+      firstFitDoneRef.current = true
+    }
+  }, [driver, departure, destination])
+
+  // Cercle de précision GPS : apparaît quand l'API expose `accuracy`, sinon
+  // rien n'est affiché (on ne fabrique pas de rayon fictif).
+  useEffect(() => {
+    if (!readyRef.current) return
+    const map = mapRef.current
+    if (!map) return
+    const validAccuracy = driver && typeof accuracy === 'number' && Number.isFinite(accuracy) && accuracy > 0
+    if (!validAccuracy) {
+      accuracyCircleRef.current?.setMap(null)
+      accuracyCircleRef.current = null
+      return
+    }
+    if (accuracyCircleRef.current) {
+      accuracyCircleRef.current.setCenter(driver)
+      accuracyCircleRef.current.setRadius(accuracy as number)
+    } else {
+      accuracyCircleRef.current = new google.maps.Circle({
+        map,
+        center: driver,
+        radius: accuracy as number,
+        strokeColor: DRIVER_COLOR,
+        strokeOpacity: 0.45,
+        strokeWeight: 1,
+        fillColor: DRIVER_COLOR,
+        fillOpacity: 0.12,
+        clickable: false,
+      })
+    }
+  }, [driver, accuracy])
+
+  // Polyline départ → chauffeur → arrivée, redessinée à chaque mise à jour.
+  useEffect(() => {
+    if (!readyRef.current) return
+    const map = mapRef.current
+    if (!map) return
+    const route = [departure, driver, destination].filter((p): p is MapPoint => !!p)
+    if (route.length < 2) {
+      routePolylineRef.current?.setMap(null)
+      routePolylineRef.current = null
+      return
+    }
+    if (routePolylineRef.current) {
+      routePolylineRef.current.setPath(route)
+    } else {
+      routePolylineRef.current = new google.maps.Polyline({
+        map,
+        path: route,
+        strokeColor: ROUTE_COLOR,
+        strokeOpacity: 0.85,
+        strokeWeight: 4,
+        geodesic: true,
+        clickable: false,
+      })
     }
   }, [driver, departure, destination])
 

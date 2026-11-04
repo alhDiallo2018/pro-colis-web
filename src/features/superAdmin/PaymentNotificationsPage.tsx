@@ -113,7 +113,13 @@ export function PaymentNotificationsPage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Notifications de paiement</h1>
+          <p className="cm-page-head-sub">Flux temps réel des encaissements plateforme</p>
+        </div>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
         <StatBox icon="notifications_active" tone="amber" value={newPayments.length} label="Nouveaux paiements" />
         <StatBox icon="today" tone="primary" value={todayPayments.length} label="Paiements aujourd'hui" />

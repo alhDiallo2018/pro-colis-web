@@ -23,7 +23,16 @@ export function GarageColisPage() {
   const parcels = query.data?.parcels ?? []
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Colis de la zone</h1>
+          <p className="cm-page-head-sub">
+            Suivi des envois dans votre périmètre
+            {query.data?.pagination && <> · <strong>{query.data.pagination.total}</strong> colis</>}
+          </p>
+        </div>
+      </div>
       <SegmentedControl size="sm" options={FILTERS} value={status} onChange={setStatus} />
       <Panel title={`Colis de la zone${query.data?.pagination ? ` · ${query.data.pagination.total}` : ''}`} flush>
         <QueryState

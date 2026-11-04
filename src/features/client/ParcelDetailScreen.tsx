@@ -1,7 +1,8 @@
 import { ParcelExperience } from '@/features/experience/ParcelExperience'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Avatar, Badge, Button, Card, Icon, IconButton, Stepper, StatusBadge, Tag, Textarea, Toast } from '@/ds'
+import { Avatar, Badge, Button, Card, Icon, IconButton, Stepper, Tag, Textarea, Toast } from '@/ds'
+import { PARCEL_STATUS } from '@/ds'
 import { QueryState } from '@/components/QueryState'
 import { ParcelMedia } from '@/components/ParcelMedia'
 import { QrCode } from '@/components/QrCode'
@@ -13,19 +14,10 @@ import { isParcelEditable } from './parcelEditable'
 import { createPaydunyaPayment } from '@/lib/api/paydunya'
 import { estimate } from '@/lib/api/commission'
 import { buildSteps } from './parcelSteps'
-import { formatFcfa, formatWeight, toStatusKey } from '@/lib/format'
+import { formatDate, formatFcfa, formatWeight, toStatusKey } from '@/lib/format'
 
 // Statuses where the parcel is in a driver's hands and the recipient may be asked for the code.
 const IN_TRANSIT_STATUSES = ['confirmed', 'picked_up', 'in_transit', 'arrived', 'out_for_delivery']
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderTop: '1px solid var(--border-subtle)' }}>
-      <span style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>{label}</span>
-      <span style={{ color: 'var(--text-strong)', fontSize: 'var(--fs-sm)', fontWeight: 600, textAlign: 'right' }}>{value}</span>
-    </div>
-  )
-}
 
 export function ParcelDetailScreen() {
   const { parcelId } = useParams<{ parcelId: string }>()
@@ -40,7 +32,6 @@ export function ParcelDetailScreen() {
   const [cancelling, setCancelling] = useState(false)
   const cancellable = !!parcel && parcel.status !== 'delivered' && parcel.status !== 'cancelled'
 
-  // Refetch after returning from PayDunya payment
   useEffect(() => {
     const paymentStatus = searchParams.get('payment')
     if (paymentStatus === 'success' || paymentStatus === 'cancelled') {
@@ -48,25 +39,26 @@ export function ParcelDetailScreen() {
     }
   }, [refetch, searchParams])
 
+  const statusKey = parcel ? toStatusKey(parcel.status) : null
+  const statusMeta = statusKey ? PARCEL_STATUS[statusKey] : null
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div className="cm-detail-page">
+      <div className="cm-detail-head">
         <IconButton icon="arrow_back" aria-label="Retour" onClick={() => navigate(-1)} />
-        <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
-          Suivi du colis
-        </h1>
-        {/* Corriger reste possible tant qu'aucun chauffeur ni paiement
-            n'engage la course — au-delà, l'API refuse et l'action disparaît. */}
-        {parcel && isParcelEditable(parcel) && (
-          <Button size="sm" variant="secondary" icon="edit" style={{ marginLeft: 'auto' }} onClick={() => setEditing(true)}>
-            Modifier
-          </Button>
-        )}
-        {cancellable && (
-          <Button size="sm" variant="secondary" tone="danger" icon="cancel" style={{ marginLeft: isParcelEditable(parcel) ? 0 : 'auto' }} onClick={() => setCancelling(true)}>
-            Annuler le colis
-          </Button>
-        )}
+        <h1>Suivi du colis</h1>
+        <div className="cm-detail-head-actions">
+          {parcel && isParcelEditable(parcel) && (
+            <Button size="sm" variant="secondary" icon="edit" onClick={() => setEditing(true)}>
+              Modifier
+            </Button>
+          )}
+          {cancellable && (
+            <Button size="sm" variant="secondary" tone="danger" icon="cancel" onClick={() => setCancelling(true)}>
+              Annuler
+            </Button>
+          )}
+        </div>
       </div>
 
       <EditParcelDialog parcel={editing ? (parcel ?? null) : null} onClose={() => setEditing(false)} />
@@ -75,27 +67,71 @@ export function ParcelDetailScreen() {
       <QueryState isLoading={query.isLoading} isError={query.isError} error={query.error} onRetry={() => query.refetch()}>
         {parcel && (
           <>
-            <Card>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--text-body)' }}>
-                  {parcel.trackingNumber}
+            {/* ---- Hero journey ---- */}
+            <section className="cm-journey-hero" aria-label="Résumé du colis">
+              <div className="cm-journey-hero-top">
+                <span className="cm-journey-hero-track">
+                  <Icon name="qr_code_2" size={14} /> {parcel.trackingNumber}
                 </span>
-                <StatusBadge status={toStatusKey(parcel.status)} />
+                {statusMeta && (
+                  <span className="cm-journey-hero-status">
+                    <Icon name={statusMeta.icon} size={14} />
+                    {statusMeta.label}
+                  </span>
+                )}
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
-                {parcel.isUrgent && <Tag express />}
-                {parcel.type && <Tag icon="category">{parcel.type}</Tag>}
-                {parcel.isInsured && <Tag tone="primary" icon="verified_user">Assuré</Tag>}
+
+              <div className="cm-journey-hero-od">
+                <div>
+                  <div className="cm-journey-hero-city-label">Départ</div>
+                  <div className="cm-journey-hero-city">
+                    {parcel.departureCity ?? parcel.departureZoneName ?? '—'}
+                  </div>
+                </div>
+                <div className="cm-journey-hero-separator">
+                  <Icon name="local_shipping" size={20} />
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div className="cm-journey-hero-city-label">Arrivée</div>
+                  <div className="cm-journey-hero-city">
+                    {parcel.arrivalCity ?? parcel.arrivalZoneName ?? '—'}
+                  </div>
+                </div>
               </div>
-              <Row label="Départ" value={parcel.departureCity ?? parcel.departureZoneName ?? '—'} />
-              <Row label="Arrivée" value={parcel.arrivalCity ?? parcel.arrivalZoneName ?? '—'} />
-              <Row label="Destinataire" value={parcel.receiverName} />
-              <Row label="Poids" value={parcel.weight != null ? formatWeight(parcel.weight) : '—'} />
-              <Row label="Prix" value={formatFcfa(parcel.price)} />
-              <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 14, borderTop: '1px solid var(--border-subtle)', marginTop: 8 }}>
-                <QrCode value={`${window.location.origin}/track/${parcel.trackingNumber}`} size={150} caption="Scanner pour suivre ce colis" />
+
+              <div className="cm-journey-hero-meta">
+                {parcel.weight != null && (
+                  <span><Icon name="scale" size={14} /> {formatWeight(parcel.weight)}</span>
+                )}
+                {parcel.price != null && (
+                  <span><Icon name="payments" size={14} /> {formatFcfa(parcel.price)}</span>
+                )}
+                {parcel.receiverName && (
+                  <span><Icon name="person" size={14} /> {parcel.receiverName}</span>
+                )}
+                {parcel.estimatedDeliveryDate && (
+                  <span><Icon name="schedule" size={14} /> ETA · {formatDate(parcel.estimatedDeliveryDate)}</span>
+                )}
               </div>
-            </Card>
+
+              {(parcel.isUrgent || parcel.type || parcel.isInsured) && (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {parcel.isUrgent && <Tag express />}
+                  {parcel.type && <Tag icon="category">{parcel.type}</Tag>}
+                  {parcel.isInsured && <Tag tone="primary" icon="verified_user">Assuré</Tag>}
+                </div>
+              )}
+            </section>
+
+            {/* ---- QR partage ---- */}
+            <div className="cm-qr-card">
+              <QrCode
+                value={`${window.location.origin}/track/${parcel.trackingNumber}`}
+                size={150}
+                caption="Scanner pour suivre ce colis"
+              />
+            </div>
+
             <ParcelExperience key={`${parcel.id}-${parcel.status}`} parcelId={parcel.id} />
 
             {parcel.price && parcel.price > 0 && parcel.paymentStatus !== 'completed' && (
@@ -103,79 +139,55 @@ export function ParcelDetailScreen() {
             )}
 
             {showCode && (
-              <Card style={{ background: 'var(--teal-50)', border: '1px solid var(--teal-100)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span
-                    style={{
-                      width: 44,
-                      height: 44,
-                      flex: 'none',
-                      borderRadius: '50%',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: 'var(--teal-500)',
-                      color: '#fff',
-                    }}
-                  >
+              <section className="cm-receive-code" aria-label="Code de réception">
+                <div className="cm-receive-code-row">
+                  <span className="cm-receive-code-icon">
                     <Icon name="verified_user" size={22} />
                   </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--text-strong)' }}>Code de réception</div>
-                    <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
-                      Communiquez ce code au livreur à la réception pour confirmer votre accusé de réception.
-                    </div>
+                  <div className="cm-receive-code-body">
+                    <p className="cm-receive-code-title">Code de réception</p>
+                    <p className="cm-receive-code-sub">
+                      Communiquez ce code au livreur à la remise pour confirmer votre accusé de réception.
+                    </p>
                   </div>
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontWeight: 700,
-                      fontSize: 26,
-                      letterSpacing: '0.18em',
-                      color: 'var(--teal-700)',
-                    }}
-                  >
+                  <span className="cm-receive-code-value">
                     {deliveryCode.data ?? '••••'}
                   </span>
                 </div>
                 {deliveryCode.data && (
-                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: 14 }}>
+                  <div className="cm-receive-code-qr">
                     <QrCode value={deliveryCode.data} size={140} caption="À faire scanner par le livreur" />
                   </div>
                 )}
-              </Card>
+              </section>
             )}
 
-            {/* Une proposition en cours prime sur la carte « Chauffeur » : le
-                colis n'est pas encore pris en charge, il est en attente de
-                réponse ou en négociation. */}
             {parcel.proposal && <ProposalStatusCard parcel={parcel} />}
 
             {(parcel.driverName || parcel.driver) && (
               <>
-                <Card>
-                  <h2 style={{ margin: '0 0 12px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
-                    Chauffeur
-                  </h2>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <Avatar name={parcel.driverName ?? parcel.driver?.fullName ?? ''} src={parcel.driver?.profilePhoto ?? undefined} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--text-strong)' }}>
-                        {parcel.driverName ?? parcel.driver?.fullName}
-                      </div>
-                      {(parcel.driverPhone ?? parcel.driver?.phone) && (
-                        <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                          {parcel.driverPhone ?? parcel.driver?.phone}
-                        </div>
-                      )}
-                    </div>
-                    {parcel.status === 'pending' ? (
-                      <Badge tone="amber" icon="schedule">En attente de confirmation</Badge>
-                    ) : (
-                      <Badge tone="green" icon="check_circle">Prise en charge confirmée</Badge>
+                <section className="cm-driver-hero" aria-label="Chauffeur attribué">
+                  <Avatar
+                    name={parcel.driverName ?? parcel.driver?.fullName ?? ''}
+                    src={parcel.driver?.profilePhoto ?? undefined}
+                    size="lg"
+                  />
+                  <div className="cm-driver-hero-body">
+                    <p className="cm-driver-hero-name">
+                      {parcel.driverName ?? parcel.driver?.fullName}
+                    </p>
+                    {(parcel.driverPhone ?? parcel.driver?.phone) && (
+                      <p className="cm-driver-hero-sub" style={{ fontFamily: 'var(--font-mono)' }}>
+                        {parcel.driverPhone ?? parcel.driver?.phone}
+                      </p>
                     )}
                   </div>
-                </Card>
+                  {parcel.status === 'pending' ? (
+                    <Badge tone="amber" icon="schedule">En attente de confirmation</Badge>
+                  ) : (
+                    <Badge tone="green" icon="check_circle">Prise en charge confirmée</Badge>
+                  )}
+                </section>
 
                 {parcel.status === 'delivered' && (
                   <StarRatingPanel parcelId={parcel.id} driverId={parcel.driverId ?? parcel.driver?.id} />
@@ -187,7 +199,7 @@ export function ParcelDetailScreen() {
               (parcel.videoUrls?.length ?? 0) > 0 ||
               (parcel.audioUrls?.length ?? 0) > 0) && (
               <Card>
-                <h2 style={{ margin: '0 0 12px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
+                <h2 style={{ margin: '0 0 12px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
                   Photos & note vocale
                 </h2>
                 <ParcelMedia parcel={parcel} />
@@ -195,7 +207,7 @@ export function ParcelDetailScreen() {
             )}
 
             <Card>
-              <h2 style={{ margin: '0 0 12px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
+              <h2 style={{ margin: '0 0 12px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
                 Historique
               </h2>
               <Stepper steps={buildSteps(parcel)} />
@@ -232,7 +244,7 @@ function PaydunyaPayCard({ parcelId, amount, trackingNumber }: { parcelId: strin
 
   return (
     <Card>
-      <h2 style={{ margin: '0 0 8px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
+      <h2 style={{ margin: '0 0 8px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
         Paiement
       </h2>
       <p style={{ margin: '0 0 14px', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', wordBreak: 'break-word' }}>
@@ -278,7 +290,7 @@ function StarRatingPanel({ parcelId, driverId }: { parcelId: string; driverId?: 
       <Card>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Icon name="check_circle" size={24} style={{ color: 'var(--teal-600)' }} />
-          <span style={{ fontWeight: 600, color: 'var(--text-strong)' }}>Merci pour votre évaluation !</span>
+          <span style={{ fontWeight: 700, color: 'var(--text-strong)' }}>Merci pour votre évaluation !</span>
         </div>
       </Card>
     )
@@ -289,7 +301,7 @@ function StarRatingPanel({ parcelId, driverId }: { parcelId: string; driverId?: 
 
   return (
     <Card>
-      <h2 style={{ margin: '0 0 8px', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
+      <h2 style={{ margin: '0 0 8px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--fs-h3)', color: 'var(--text-strong)' }}>
         Évaluer le chauffeur
       </h2>
       <p style={{ margin: '0 0 14px', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>

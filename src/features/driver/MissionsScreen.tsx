@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Button, Dialog, Input, StatusBadge, Textarea, Toast } from '@/ds'
-import { Panel } from '@/components/Panel'
+import { Button, Dialog, Icon, Input, StatusBadge, Textarea, Toast } from '@/ds'
 import { QueryState } from '@/components/QueryState'
 import { ParcelMedia } from '@/components/ParcelMedia'
 import { ParcelDetailDialog } from '@/components/ParcelDetailDialog'
@@ -20,7 +19,6 @@ import { useAuthStore } from '@/store/auth'
 import type { ApiParcelStatus, Parcel } from '@/lib/api/types'
 import type { DriverStep } from '@/lib/api/roles'
 
-/** The next lifecycle action for a parcel in the driver's hands. */
 const NEXT_STEP: Partial<Record<ApiParcelStatus, { step: DriverStep; label: string; icon: string }>> = {
   pending: { step: 'confirm', label: 'Confirmer la prise en charge', icon: 'check_circle' },
   confirmed: { step: 'pickup', label: 'Marquer ramassé', icon: 'package_2' },
@@ -45,175 +43,170 @@ export function MissionsScreen() {
   const [negotiateTarget, setNegotiateTarget] = useState<{ parcel: Parcel; bidId: string; canAccept: boolean } | null>(null)
   const parcels = (query.data?.parcels ?? []).filter((p) => p.status !== 'cancelled')
 
+  const activeCount = parcels.filter((p) => p.status !== 'delivered').length
+
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 'var(--gap-card)' }}>
-      {/* Les propositions directes précèdent les missions : elles demandent une
-          réponse, alors que les missions ne demandent qu'un avancement. */}
+    <div className="cm-detail-page" style={{ maxWidth: 960 }}>
       <CommissionDebtNotice />
       {respondToBid.error instanceof ApiError && (
         <Toast tone="error" message={respondToBid.error.message} />
       )}
       <ProposalsPanel />
-      <Panel title="Mes missions" flush>
-        <QueryState
-          isLoading={query.isLoading}
-          isError={query.isError}
-          error={query.error}
-          isEmpty={parcels.length === 0}
-          emptyTitle="Aucune mission"
-          emptyMessage="Vos colis assignés apparaîtront ici une fois vos offres acceptées."
-          onRetry={() => query.refetch()}
-        >
+
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Mes missions</h1>
+          <p className="cm-page-head-sub">
+            Faites avancer vos courses étape par étape
+            {parcels.length > 0 && <> · <strong>{activeCount}</strong> en cours sur <strong>{parcels.length}</strong></>}
+          </p>
+        </div>
+      </div>
+
+      <QueryState
+        isLoading={query.isLoading}
+        isError={query.isError}
+        error={query.error}
+        isEmpty={parcels.length === 0}
+        emptyTitle="Aucune mission"
+        emptyMessage="Vos colis assignés apparaîtront ici une fois vos offres acceptées."
+        onRetry={() => query.refetch()}
+      >
+        <div className="cm-list-stack">
           {parcels.map((p) => {
             const next = NEXT_STEP[p.status]
             const hasMedia = Boolean(p.photoUrls?.length || p.videoUrls?.length || p.audioUrls?.length)
             const activeBid = p.bids?.find((b) => b.driverId === driverId && (b.status === 'pending' || b.status === 'negotiating' || b.status === 'countered'))
-            const hasActiveBid = !p.driverId && activeBid
+            const hasActiveBid = !p.driverId && !!activeBid
+
             return (
-              <div key={p.id} style={{ padding: '14px 18px', borderBottom: '1px solid var(--slate-100)', cursor: 'pointer' }} onClick={() => setDetailTarget(p)}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, color: 'var(--text-strong)' }}>
-                    {p.departureCity ?? p.departureZoneName ?? '—'}
-                    <span className="material-symbols-rounded" style={{ fontSize: 16, color: 'var(--text-faint)' }}>
-                      arrow_right_alt
-                    </span>
-                    {p.arrivalCity ?? p.arrivalZoneName ?? '—'}
+              <div key={p.id} className="cm-mission-row" onClick={() => setDetailTarget(p)}>
+                <div className="cm-mission-row-top">
+                  <div className="cm-mission-row-body">
+                    <div className="cm-mission-row-route">
+                      {p.departureCity ?? p.departureZoneName ?? '—'}
+                      <Icon name="arrow_right_alt" size={16} style={{ color: 'var(--text-faint)' }} />
+                      {p.arrivalCity ?? p.arrivalZoneName ?? '—'}
+                    </div>
+                    <div className="cm-mission-row-meta">
+                      <span style={{ fontFamily: 'var(--font-mono)' }}>{p.trackingNumber}</span>
+                      {p.receiverName && <> · <strong>{p.receiverName}</strong></>}
+                      {(activeBid?.lastPrice ?? p.price) != null && <> · {formatFcfa(activeBid?.lastPrice ?? p.price)}</>}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                    <span style={{ fontFamily: 'var(--font-mono)' }}>{p.trackingNumber}</span> · {p.receiverName}
-                    {(activeBid?.lastPrice ?? p.price) != null && ` · ${formatFcfa(activeBid?.lastPrice ?? p.price)}`}
-                  </div>
-                </div>
-                <StatusBadge status={toStatusKey(p.status)} size="sm" />
-                {p.status !== 'delivered' && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    icon="cancel"
-                    title="Annuler la mission"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation()
-                      setCancelTarget(p)
-                    }}
-                  >
-                    Annuler
-                  </Button>
-                )}
-                {/* Le jalon d'encaissement peut être franchi bien avant la fin
-                    de la course (expéditeur payeur) : le rappel reste visible
-                    tant que la déclaration n'est pas faite. */}
-                {needsCashDeclaration(p) && (
-                  <Button
-                    size="sm"
-                    variant="amber"
-                    icon="payments"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation()
-                      setCashTarget(p)
-                    }}
-                  >
-                    Déclarer l’encaissement
-                  </Button>
-                )}
-                {hasActiveBid && activeBid ? (
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <Button
-                      size="sm"
-                      icon="close"
-                      variant="danger"
-                      loading={respondToBid.isPending && respondToBid.variables?.action === 'reject' && respondToBid.variables?.bidId === activeBid.id}
-                      onClick={(e: React.MouseEvent) => {
-                        e.stopPropagation()
-                        respondToBid.mutate({ bidId: activeBid.id, action: 'reject' })
-                      }}
-                    >
-                      Refuser
-                    </Button>
-                    <Button
-                      size="sm"
-                      icon="forum"
-                      variant="amber"
-                      onClick={(e: React.MouseEvent) => {
-                        e.stopPropagation()
-                        setNegotiateTarget({
-                          parcel: p,
-                          bidId: activeBid.id,
-                          canAccept: activeBid.canDriverAccept ?? activeBid.lastOfferBy === 'client',
-                        })
-                      }}
-                    >
-                      Négocier
-                    </Button>
-                    {/* Accepter n'a de sens que si le dernier prix vient du
-                        client : sinon le chauffeur validerait sa propre offre
-                        (l'API renvoie 409). */}
-                    {(activeBid.canDriverAccept ?? activeBid.lastOfferBy === 'client') ? (
-                      !fin.canAcceptNewDeliveries ? (
+
+                  <StatusBadge status={toStatusKey(p.status)} size="sm" />
+
+                  <div className="cm-mission-row-actions">
+                    {p.status !== 'delivered' && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        icon="cancel"
+                        title="Annuler la mission"
+                        onClick={(e: React.MouseEvent) => { e.stopPropagation(); setCancelTarget(p) }}
+                      >
+                        Annuler
+                      </Button>
+                    )}
+                    {needsCashDeclaration(p) && (
+                      <Button
+                        size="sm"
+                        variant="amber"
+                        icon="payments"
+                        onClick={(e: React.MouseEvent) => { e.stopPropagation(); setCashTarget(p) }}
+                      >
+                        Déclarer l'encaissement
+                      </Button>
+                    )}
+                    {hasActiveBid && activeBid ? (
+                      <>
                         <Button
                           size="sm"
-                          icon="lock"
-                          variant="secondary"
-                          disabled
-                          title={fin.hasDebt ? commissionDebtMessage(fin.commissionDebt, fin.debtLimit) : fin.isError ? 'État financier indisponible' : 'Chargement…'}
+                          icon="close"
+                          variant="danger"
+                          loading={respondToBid.isPending && respondToBid.variables?.action === 'reject' && respondToBid.variables?.bidId === activeBid.id}
+                          onClick={(e: React.MouseEvent) => { e.stopPropagation(); respondToBid.mutate({ bidId: activeBid.id, action: 'reject' }) }}
                         >
-                          {fin.isLoading ? 'Chargement…' : fin.isError ? 'Indisponible' : 'Dette à régler'}
+                          Refuser
                         </Button>
-                      ) : (
                         <Button
                           size="sm"
-                          icon="check"
-                          variant="primary"
-                          loading={respondToBid.isPending && respondToBid.variables?.action === 'accept' && respondToBid.variables?.bidId === activeBid.id}
+                          icon="forum"
+                          variant="amber"
                           onClick={(e: React.MouseEvent) => {
                             e.stopPropagation()
-                            respondToBid.mutate({ bidId: activeBid.id, action: 'accept' })
+                            setNegotiateTarget({
+                              parcel: p,
+                              bidId: activeBid.id,
+                              canAccept: activeBid.canDriverAccept ?? activeBid.lastOfferBy === 'client',
+                            })
                           }}
                         >
-                          Accepter
+                          Négocier
                         </Button>
-                      )
+                        {(activeBid.canDriverAccept ?? activeBid.lastOfferBy === 'client') ? (
+                          !fin.canAcceptNewDeliveries ? (
+                            <Button
+                              size="sm"
+                              icon="lock"
+                              variant="secondary"
+                              disabled
+                              title={fin.hasDebt ? commissionDebtMessage(fin.commissionDebt, fin.debtLimit) : fin.isError ? 'État financier indisponible' : 'Chargement…'}
+                            >
+                              {fin.isLoading ? 'Chargement…' : fin.isError ? 'Indisponible' : 'Dette à régler'}
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              icon="check"
+                              variant="primary"
+                              loading={respondToBid.isPending && respondToBid.variables?.action === 'accept' && respondToBid.variables?.bidId === activeBid.id}
+                              onClick={(e: React.MouseEvent) => { e.stopPropagation(); respondToBid.mutate({ bidId: activeBid.id, action: 'accept' }) }}
+                            >
+                              Accepter
+                            </Button>
+                          )
+                        ) : (
+                          <NegotiationTurn waitingFor="client" />
+                        )}
+                      </>
+                    ) : next ? (
+                      <Button
+                        size="sm"
+                        icon={next.icon}
+                        loading={advance.isPending && advance.variables?.parcelId === p.id}
+                        onClick={(e: React.MouseEvent) => {
+                          e.stopPropagation()
+                          if (next.step === 'deliver') setDeliverTarget(p)
+                          else advance.mutate({ parcelId: p.id, step: next.step })
+                        }}
+                      >
+                        {next.label}
+                      </Button>
                     ) : (
-                      <NegotiationTurn waitingFor="client" />
+                      <span style={{ fontSize: 12.5, color: 'var(--text-faint)', fontStyle: 'italic', minWidth: 96, textAlign: 'right' }}>
+                        {p.status === 'delivered' ? 'Terminé' : '—'}
+                      </span>
                     )}
                   </div>
-                ) : next ? (
-                  <Button
-                    size="sm"
-                    icon={next.icon}
-                    loading={advance.isPending && advance.variables?.parcelId === p.id}
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation()
-                      if (next.step === 'deliver') setDeliverTarget(p)
-                      else advance.mutate({ parcelId: p.id, step: next.step })
-                    }}
-                  >
-                    {next.label}
-                  </Button>
-                ) : (
-                  <span style={{ fontSize: 12.5, color: 'var(--text-faint)', fontStyle: 'italic', minWidth: 96, textAlign: 'right' }}>
-                    {p.status === 'delivered' ? 'Terminé' : '—'}
-                  </span>
-                )}
                 </div>
                 {hasMedia && (
-                  <div style={{ marginTop: 12 }}>
+                  <div>
                     <ParcelMedia parcel={p} size={72} />
                   </div>
                 )}
               </div>
             )
           })}
-        </QueryState>
-      </Panel>
+        </div>
+      </QueryState>
 
       <DeliveryDialog
         parcel={deliverTarget}
         onClose={() => setDeliverTarget(null)}
         onDelivered={(p) => {
           setDeliverTarget(null)
-          // Sur une course en espèces, l'encaissement se déclare avant de
-          // parler commission : c'est l'argent reçu qui la rend exigible.
           if (needsCashDeclaration(p)) setCashTarget(p)
           else if (p.paymentMethod === 'cash' && p.price && p.price > 0) setCommissionTarget(p)
         }}
@@ -309,7 +302,7 @@ function DeliveryDialog({ parcel, onClose, onDelivered }: { parcel: Parcel | nul
       <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <p style={{ margin: 0, fontSize: 13.5, color: 'var(--text-muted)' }}>
           Demandez à <strong style={{ color: 'var(--text-strong)' }}>{parcel.receiverName}</strong> son code de livraison à 4 chiffres
-          (visible sur son suivi de colis) pour valider l’accusé de réception.
+          (visible sur son suivi de colis) pour valider l'accusé de réception.
         </p>
         <Input
           label="Code de livraison (OTP)"

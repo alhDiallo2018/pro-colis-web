@@ -1,5 +1,7 @@
 import type { CreateParcelPayload } from "./api/parcels";
-import { api } from "./api/client";
+// Import dynamique pour casser le cycle
+// parcelSubmission → api/client → store/auth → formDraft → parcelSubmission,
+// qui laissait `useAuthStore` en TDZ au moment où `client.ts` s'abonnait.
 export interface PendingMedia {
   id: string;
   kind: "photo" | "video" | "audio";
@@ -84,7 +86,10 @@ export function creationEvent(
     | "creation_failed"
     | "creation_completed",
 ) {
-  void api
-    .post("/experience/events", { attemptId, event, platform: "web" })
-    .catch(() => {});
+  void (async () => {
+    const { api } = await import("./api/client");
+    api
+      .post("/experience/events", { attemptId, event, platform: "web" })
+      .catch(() => {});
+  })();
 }

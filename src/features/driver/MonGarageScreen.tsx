@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Avatar, Card, EmptyState, type AvatarStatus } from '@/ds'
+import { Avatar, EmptyState, type AvatarStatus } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { useAuthStore } from '@/store/auth'
@@ -34,24 +34,16 @@ export function MonGarageScreen() {
   const team = (colleagues.data ?? []).filter((d) => d.id !== user?.id)
 
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <Card padding="lg">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 56, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-soft)', color: 'var(--color-primary)', flex: 'none' }}>
-            <span className="material-symbols-rounded fill" style={{ fontSize: 30 }}>garage</span>
-          </span>
-          <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'var(--fs-h2)', color: 'var(--text-strong)' }}>
-              {zone?.name ?? user?.zoneName ?? 'Ma zone'}
-            </div>
-            {/* Une zone n'a pas de téléphone : l'ancien garage en portait un,
-                le point de contact est désormais l'administrateur. */}
-            <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', marginTop: 2 }}>
-              {[zone?.city, zone?.region].filter(Boolean).join(', ') || '—'}
-            </div>
-          </div>
+    <div className="cm-detail-page" style={{ maxWidth: 760 }}>
+      <section className="cm-driver-hero" aria-label="Zone du chauffeur">
+        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 56, borderRadius: 16, background: 'linear-gradient(135deg, var(--teal-500), var(--teal-700))', color: '#fff', flex: 'none' }}>
+          <span className="material-symbols-rounded fill" style={{ fontSize: 30 }}>garage</span>
+        </span>
+        <div className="cm-driver-hero-body">
+          <p className="cm-driver-hero-name">{zone?.name ?? user?.zoneName ?? 'Ma zone'}</p>
+          <p className="cm-driver-hero-sub">{[zone?.city, zone?.region].filter(Boolean).join(', ') || '—'}</p>
         </div>
-      </Card>
+      </section>
 
       <Panel title={`Chauffeurs de la zone · ${team.length}`} flush>
         <QueryState

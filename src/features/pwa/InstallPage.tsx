@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom'
-import { MarketingHeader } from '@/features/marketing/MarketingHeader'
+import { MarketingLayout } from '@/features/marketing/MarketingLayout'
 import { usePwa } from './context'
 
 export function InstallPage() {
   const { installed } = usePwa()
   return (
-    <main className="pwa-page">
-      <MarketingHeader />
+    <MarketingLayout variant="document">
+      <main className="pwa-page">
       <div className="pwa-install-layout">
         <section className="pwa-intro" aria-labelledby="install-title">
           <p className="pwa-eyebrow">IPHONE & IPAD</p>
@@ -41,6 +41,7 @@ export function InstallPage() {
         </section>
       </div>
       <p className="pwa-other-devices">Sur Android ou ordinateur, utilisez l’option d’installation du menu de votre navigateur lorsqu’elle est disponible.</p>
-    </main>
+      </main>
+    </MarketingLayout>
   )
 }

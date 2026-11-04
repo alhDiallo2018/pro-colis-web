@@ -103,8 +103,14 @@ export function RevenusScreen() {
   const weekTotal = weekBars.reduce((sum, value) => sum + value, 0)
 
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
+    <div className="cm-detail-page" style={{ maxWidth: 920 }}>
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Mes revenus</h1>
+          <p className="cm-page-head-sub">Paiements encaissés et évolution hebdomadaire</p>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
         <StatBox icon="payments" tone="green" value={formatFcfa(total)} label="Revenus encaissés" />
         <StatBox icon="receipt_long" tone="primary" value={count} label="Paiements" />
         <StatBox icon="trending_up" tone="amber" value={comparison ?? '—'} label="vs semaine dernière" />

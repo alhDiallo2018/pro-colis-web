@@ -38,28 +38,26 @@ export function SupportChatScreen() {
   const chat = thread.data?.conversation;
   if (!id)
     return (
-      <div
-        style={{
-          maxWidth: 480,
-          margin: "40px auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: 16,
-        }}
-      >
-        <h2>Contacter le support</h2>
-        <p>
-          Un agent disponible prendra votre demande en charge. Vos échanges
-          restent accessibles si un autre agent prend le relais.
-        </p>
+      <div className="cm-detail-page" style={{ maxWidth: 480 }}>
+        <div className="cm-page-head">
+          <div className="cm-page-head-body">
+            <h1>Contacter le support</h1>
+            <p className="cm-page-head-sub">
+              Un agent prendra votre demande en charge. Vos échanges restent accessibles si un autre agent prend le relais.
+            </p>
+          </div>
+        </div>
         <Button
           disabled={open.isPending}
+          icon="support_agent"
           onClick={() => open.mutate("commercial")}
         >
           Aide commerciale
         </Button>
         <Button
+          variant="secondary"
           disabled={open.isPending}
+          icon="build"
           onClick={() => open.mutate("technique")}
         >
           Aide technique

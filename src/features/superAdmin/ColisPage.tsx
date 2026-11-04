@@ -80,7 +80,16 @@ export function ColisPage() {
     )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="cm-detail-page">
+      <div className="cm-page-head">
+        <div className="cm-page-head-body">
+          <h1>Colis de la plateforme</h1>
+          <p className="cm-page-head-sub">
+            Suivi global, modération et recherche
+            {listQuery.data?.pagination && !searching && <> · <strong>{listQuery.data.pagination.total}</strong></>}
+          </p>
+        </div>
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <SegmentedControl size="sm" options={FILTERS} value={status} onChange={setStatus} />
         <div style={{ flex: 1, minWidth: 220 }}>
