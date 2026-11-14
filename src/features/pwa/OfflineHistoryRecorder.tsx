@@ -1,4 +1,4 @@
-import { prefix, readHistory } from './history-store'
+import { readHistory, writeHistory } from './history-store'
 import { useEffect } from 'react'
 import { useAuthStore } from '@/store/auth'
 import { queryClient } from '@/lib/queryClient'
@@ -35,19 +35,15 @@ export function OfflineHistoryRecorder() {
           price: p.price,
         }),
       )
-      try {
-        localStorage.setItem(
-          prefix + owner,
-          JSON.stringify({
-            savedAt: new Date().toISOString(),
-            entries: [...entries.values()]
-              .sort((a, b) => Date.parse(b.updatedAt ?? '') - Date.parse(a.updatedAt ?? ''))
-              .slice(0, 300),
-          }),
-        )
-      } catch {
-        console.warn('[PWA] Historique local non sauvegardé : stockage indisponible')
-      }
+      // Écriture dual-backend (LS pour la lecture synchrone au boot, IDB pour
+      // la durée + les gros volumes). `writeHistory` retourne une Promise
+      // mais on la laisse voler : l'historique n'est pas un verrou métier.
+      void writeHistory(owner, {
+        savedAt: new Date().toISOString(),
+        entries: [...entries.values()]
+          .sort((a, b) => Date.parse(b.updatedAt ?? '') - Date.parse(a.updatedAt ?? ''))
+          .slice(0, 300),
+      })
     })
   }, [owner, session])
   return null

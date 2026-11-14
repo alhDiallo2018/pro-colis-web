@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Button } from '@/ds'
 import { isAppleMobile, isStandalone, PwaContext } from './context'
+import { flushBackgroundQueue } from './pwaSync'
 import './pwa.css'
 
 export function PwaProvider({ children }: { children: ReactNode }) {
@@ -14,11 +15,21 @@ export function PwaProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const media = window.matchMedia('(display-mode: standalone)')
     const syncInstalled = () => setInstalled(isStandalone())
-    const syncOnline = () => setOnline(navigator.onLine)
+    const syncOnline = () => {
+      const nowOnline = navigator.onLine
+      setOnline(nowOnline)
+      // Fallback Background Sync pour les navigateurs sans SyncManager
+      // (Safari macOS + iOS, Firefox) : on rejoue dès le retour en ligne.
+      if (nowOnline) {
+        void flushBackgroundQueue()
+      }
+    }
     media.addEventListener('change', syncInstalled)
     window.addEventListener('appinstalled', syncInstalled)
     window.addEventListener('online', syncOnline)
     window.addEventListener('offline', syncOnline)
+    // Rejeu au boot : couvre le cas où l'onglet a été tué pendant la coupure.
+    if (navigator.onLine) void flushBackgroundQueue()
     return () => {
       media.removeEventListener('change', syncInstalled)
       window.removeEventListener('appinstalled', syncInstalled)
@@ -51,6 +62,18 @@ export function PwaProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // Le SW relaie un clic sur notification push vers l'onglet actif. Le
+    // routage reste côté UI : le SW ne connaît pas React Router, et un simple
+    // `location.assign` suffit à ouvrir la bonne vue en respectant l'historique.
+    const onSwMessage = (event: MessageEvent) => {
+      const payload = event.data as { type?: string; target?: string } | null
+      if (!payload || payload.type !== 'PUSH_NOTIFICATION_CLICK') return
+      const target = typeof payload.target === 'string' ? payload.target : '/app/notifications'
+      if (window.location.pathname + window.location.search !== target) {
+        window.location.assign(target)
+      }
+    }
+
     navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
       .then((result) => {
         if (disposed) return
@@ -61,9 +84,11 @@ export function PwaProvider({ children }: { children: ReactNode }) {
       })
       .catch((error) => console.error('[PWA] Installation du service worker impossible', error))
     document.addEventListener('visibilitychange', checkUpdate)
+    navigator.serviceWorker.addEventListener('message', onSwMessage)
     return () => {
       disposed = true
       document.removeEventListener('visibilitychange', checkUpdate)
+      navigator.serviceWorker.removeEventListener('message', onSwMessage)
       registration?.removeEventListener('updatefound', onUpdateFound)
       installing?.removeEventListener('statechange', onStateChange)
     }

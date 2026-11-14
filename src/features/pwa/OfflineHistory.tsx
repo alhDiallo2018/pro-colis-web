@@ -1,15 +1,25 @@
-import { prefix, readHistory } from './history-store'
+import { prefix, readHistory, readHistoryDurable } from './history-store'
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/store/auth'
 import { formatDate, formatFcfa } from '@/lib/format'
 import { Button, Icon } from '@/ds'
+import { deleteOffline } from '@/lib/offlineDb'
 import './pwa.css'
 export { OfflineHistoryRecorder } from './OfflineHistoryRecorder'
 
 export function OfflineHistory() {
   const user = useAuthStore((s) => s.user)
   const [snapshot, setSnapshot] = useState(() => (user ? readHistory(user.id) : null))
-  useEffect(() => setSnapshot(user ? readHistory(user.id) : null), [user])
+  // Au mount, on tente une lecture IDB : elle peut contenir plus que ce que
+  // localStorage a pu garder (entrées évincées par quota). Fallback silencieux
+  // sur la snapshot synchrone déjà affichée.
+  useEffect(() => {
+    if (!user) return setSnapshot(null)
+    setSnapshot(readHistory(user.id))
+    void readHistoryDurable(user.id).then((durable) => {
+      if (durable) setSnapshot(durable)
+    })
+  }, [user])
 
   return (
     <div className="cm-detail-page" style={{ maxWidth: 820 }}>
@@ -39,7 +49,10 @@ export function OfflineHistory() {
               variant="secondary"
               icon="delete_outline"
               onClick={() => {
-                if (user) localStorage.removeItem(prefix + user.id)
+                if (user) {
+                  localStorage.removeItem(prefix + user.id)
+                  void deleteOffline(prefix + user.id)
+                }
                 setSnapshot(null)
               }}
             >

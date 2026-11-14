@@ -54,3 +54,34 @@ export async function getPreferences(): Promise<NotificationPreference[]> {
 export async function updatePreferences(preferences: NotificationPreference[]): Promise<void> {
   await api.put('/notifications/preferences', { preferences })
 }
+
+// --- Web Push (PWA) ---------------------------------------------------------
+
+export interface WebPushSubscriptionPayload {
+  endpoint: string
+  keys: { p256dh: string; auth: string }
+  expirationTime?: number | null
+}
+
+/** Clé publique VAPID. 503 côté API signifie Web Push non configuré. */
+export async function getWebPushPublicKey(): Promise<string | null> {
+  try {
+    const { data } = await api.get('/notifications/web-push/public-key')
+    return (data.publicKey ?? data.data?.publicKey ?? null) as string | null
+  } catch (error) {
+    // 503 = Web Push désactivé côté serveur. On traite ça comme "pas de clé"
+    // (le hook passe alors en dégradé silencieux) sans masquer les autres
+    // erreurs réseau utiles au diagnostic.
+    const status = (error as { status?: number })?.status
+    if (status === 503) return null
+    throw error
+  }
+}
+
+export async function subscribeWebPush(payload: WebPushSubscriptionPayload): Promise<void> {
+  await api.post('/notifications/web-push/subscribe', payload)
+}
+
+export async function unsubscribeWebPush(endpoint: string): Promise<void> {
+  await api.post('/notifications/web-push/unsubscribe', { endpoint })
+}

@@ -9,6 +9,7 @@ import {
   savePreferences,
 } from '@/lib/notifications'
 import { getPreferences, updatePreferences } from '@/lib/api/notifications'
+import { useWebPush } from '@/features/pwa/useWebPush'
 
 const EVENT_LABELS: Record<NotificationEventType, { label: string; icon: string }> = {
   parcel_created: { label: 'Colis créé', icon: 'package_2' },
@@ -39,6 +40,8 @@ export function NotificationPreferencesSheet({ userEmail, userPhone }: Notificat
   const [prefs, setPrefs] = useState<NotificationPreference[]>(() => loadPreferences())
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
+  const webPush = useWebPush()
+  const [pushBusy, setPushBusy] = useState(false)
 
   // Source de vérité : le serveur. Repli sur les défauts locaux si le serveur est vide.
   useEffect(() => {
@@ -101,6 +104,68 @@ export function NotificationPreferencesSheet({ userEmail, userPhone }: Notificat
           message="Ajoutez votre email ou téléphone dans votre profil pour activer les notifications email et SMS."
           style={{ marginBottom: 16 }}
         />
+      )}
+
+      {/* Notifications push navigateur — bloc masqué sur les plateformes qui
+          ne supportent pas Web Push (Safari macOS non PWA, vieux Firefox). */}
+      {webPush.supported && webPush.status !== 'loading' && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '12px 0',
+            borderTop: '1px solid var(--border-subtle)',
+            borderBottom: '1px solid var(--border-subtle)',
+            marginBottom: 12,
+          }}
+        >
+          <span
+            className="material-symbols-rounded"
+            style={{ fontSize: 22, color: 'var(--text-muted)' }}
+            aria-hidden
+          >
+            notifications_active
+          </span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--text-strong)' }}>
+              Notifications push (navigateur)
+            </div>
+            <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
+              {webPush.status === 'subscribed' && 'Actives sur cet appareil.'}
+              {webPush.status === 'denied' &&
+                'Bloquées dans les paramètres du navigateur — autorisez-les pour activer.'}
+              {webPush.status === 'server-disabled' &&
+                'Indisponibles : le service push du serveur n’est pas configuré.'}
+              {(webPush.status === 'default' || webPush.status === 'granted') &&
+                'Recevez un message même quand l’onglet est fermé.'}
+              {webPush.status === 'error' && (webPush.error || 'Erreur push.')}
+            </div>
+          </div>
+          {webPush.status === 'subscribed' ? (
+            <Button
+              variant="secondary"
+              loading={pushBusy}
+              onClick={async () => {
+                setPushBusy(true)
+                try { await webPush.disable() } finally { setPushBusy(false) }
+              }}
+            >
+              Désactiver
+            </Button>
+          ) : (
+            <Button
+              disabled={webPush.status === 'denied' || webPush.status === 'server-disabled'}
+              loading={pushBusy}
+              onClick={async () => {
+                setPushBusy(true)
+                try { await webPush.enable() } finally { setPushBusy(false) }
+              }}
+            >
+              Activer
+            </Button>
+          )}
+        </div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

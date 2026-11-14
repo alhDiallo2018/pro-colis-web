@@ -6,6 +6,7 @@ import * as identityApi from '@/lib/api/identity'
 import * as notificationsApi from '@/lib/api/notifications'
 import { useAuthStore } from '@/store/auth'
 import { queryClient } from '@/lib/queryClient'
+import { useAppBadge } from '@/features/pwa/useAppBadge'
 
 /** Met à jour le profil du rôle courant et rafraîchit la session. */
 export function useUpdateMyProfile() {
@@ -63,11 +64,16 @@ export function useMyIdentityStatus(enabled = true) {
 }
 
 export function useUnreadNotificationsCount() {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['notifications', 'unread'],
     queryFn: () => notificationsApi.unreadCount(),
     staleTime: 30_000,
   })
+  // Badging API : l'icône installée reflète le même compteur que le header.
+  // Idempotent côté navigateur : plusieurs composants peuvent appeler ce hook
+  // sans multiplier les écritures.
+  useAppBadge(query.data ?? 0)
+  return query
 }
 
 /* ---------------------------------------------------------------- adresses */

@@ -2,6 +2,9 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AuthSession, User } from '@/lib/api/types'
 import { clearAllFormDrafts } from '@/lib/formDraft'
+import { clearSyncQueue } from '@/features/pwa/pwaSync'
+import { clearOfflineDbForSession } from '@/lib/offlineDb'
+import { clearAppBadge } from '@/features/pwa/useAppBadge'
 
 interface AuthState {
   user: User | null
@@ -32,6 +35,15 @@ export const useAuthStore = create<AuthState>()(
         // les laisse pas derrière soi sur un poste partagé.
         clearAllFormDrafts()
         try { for (let i=localStorage.length-1;i>=0;i--) { const key=localStorage.key(i); if (key?.startsWith('procolis-offline-history:')) localStorage.removeItem(key) } } catch { /* Stockage privé indisponible. */ }
+        // Purge aussi la file Background Sync : des POST signés avec l'ancien
+        // compte ne doivent pas repartir sous une nouvelle session.
+        void clearSyncQueue()
+        // Purge la base IDB durable : historique, snapshots de missions,
+        // données attachées au compte précédent.
+        void clearOfflineDbForSession()
+        // Un badge laissé après déconnexion induirait en erreur : il
+        // afficherait le compteur d'un autre compte sur le même poste.
+        clearAppBadge()
         set({ user: null, accessToken: null, refreshToken: null, sessionId: null })
       },
     }),
