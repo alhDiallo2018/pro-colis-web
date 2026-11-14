@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@/ds'
+import '@/i18n'
 import App from './App.tsx'
 import { initErrorReporting } from '@/lib/observability/faro'
 

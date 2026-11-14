@@ -33,6 +33,10 @@ export async function driverAdvance(parcelId: string, step: DriverStep): Promise
 export interface DeliverPayload {
   otp: string
   recipientNote?: string
+  /** URL d'une photo preuve uploadée au préalable (optionnelle). */
+  proofImage?: string
+  /** URL d'une signature uploadée au préalable (optionnelle). */
+  signature?: string
 }
 
 /** Confirm delivery — requires the recipient's OTP code (proof of receipt). */

@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { Button, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
 import * as roles from '@/lib/api/roles'
+import { uploadParcelPhoto } from '@/lib/api/uploads'
 import { queryClient } from '@/lib/queryClient'
 import { useAuthStore } from '@/store/auth'
 import { DeclareCashDialog } from '@/features/driver/DeclareCashDialog'
@@ -20,9 +21,16 @@ export function ConfirmDeliveryScreen() {
   const [error, setError] = useState<string | null>(null)
   const [delivered, setDelivered] = useState<Parcel | null>(null)
   const [cashOpen, setCashOpen] = useState(false)
+  const [proofImage, setProofImage] = useState<string | null>(null)
+  const [proofUploading, setProofUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const deliver = useMutation({
-    mutationFn: (otp: string) => roles.driverDeliver(parcelId!, { otp }),
+    mutationFn: (otp: string) =>
+      roles.driverDeliver(parcelId!, {
+        otp,
+        ...(proofImage ? { proofImage } : {}),
+      }),
     onSuccess: (parcel) => {
       setSuccess(true)
       setDelivered(parcel)
@@ -75,6 +83,20 @@ export function ConfirmDeliveryScreen() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [pushKey])
+
+  const handleProofFile = async (file: File) => {
+    if (!parcelId) return
+    setProofUploading(true)
+    setError(null)
+    try {
+      const url = await uploadParcelPhoto(file, file.name || 'preuve.jpg', parcelId)
+      setProofImage(url)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Impossible d'uploader la photo")
+    } finally {
+      setProofUploading(false)
+    }
+  }
 
   if (success) {
     return (
@@ -167,9 +189,47 @@ export function ConfirmDeliveryScreen() {
           <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 18, color: 'var(--text-strong)', margin: '0 0 8px' }}>
             Code du destinataire
           </h2>
-          <p style={{ fontSize: 13.5, color: 'var(--text-muted)', margin: '0 0 28px', lineHeight: 1.45 }}>
+          <p style={{ fontSize: 13.5, color: 'var(--text-muted)', margin: '0 0 20px', lineHeight: 1.45 }}>
             Demandez au destinataire le code PIN à 4 chiffres reçu par SMS pour valider la remise.
           </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 16 }}>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) void handleProofFile(file)
+                e.target.value = ''
+              }}
+            />
+            {proofImage ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <img
+                  src={proofImage}
+                  alt="Preuve de livraison"
+                  style={{ width: 44, height: 44, borderRadius: 'var(--radius-sm)', objectFit: 'cover', border: '1px solid var(--border-subtle)' }}
+                />
+                <Button variant="ghost" size="sm" icon="close" onClick={() => setProofImage(null)} disabled={submitting}>
+                  Retirer la photo
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                icon="photo_camera"
+                onClick={() => fileInputRef.current?.click()}
+                loading={proofUploading}
+                disabled={submitting}
+              >
+                Ajouter une photo (optionnel)
+              </Button>
+            )}
+          </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 18 }}>
             {[0, 1, 2, 3].map((i) => (

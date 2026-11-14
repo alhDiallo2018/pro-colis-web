@@ -4,6 +4,7 @@ import { useMediaQuery } from '@/lib/useMediaQuery'
 import { useAuthStore } from '@/store/auth'
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useModalFocus } from '@/lib/useModalFocus'
 import './dashboard.css'
 import { SupportFAB } from '@/components/SupportFAB'
@@ -15,11 +16,15 @@ export interface NavItem {
   icon: string
   to: string
   end?: boolean
+  /** Clé i18n ; si fournie, prime sur `label`. Format `nav.*`. */
+  labelKey?: string
 }
 
 export interface NavSection {
   heading?: string
   items: NavItem[]
+  /** Clé i18n pour le heading. Si fournie, prime sur `heading`. Format `nav.*`. */
+  headingKey?: string
 }
 
 export interface DashboardLayoutProps {
@@ -38,6 +43,7 @@ export interface DashboardLayoutProps {
 const LOGO = 'SEND'
 
 export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex }: DashboardLayoutProps) {
+  const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const logout = useLogout()
   const location = useLocation()
@@ -124,9 +130,11 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
         </Link>
 
         <nav aria-label="Navigation principale" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto' }}>
-          {nav.map((section, i) => (
+          {nav.map((section, i) => {
+            const heading = section.headingKey ? t(section.headingKey) : section.heading
+            return (
             <div key={i}>
-              {section.heading && (
+              {heading && (
                 <div
                   style={{
                     fontSize: 10.5,
@@ -137,7 +145,7 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
                     padding: '14px 12px 6px',
                   }}
                 >
-                  {section.heading}
+                  {heading}
                 </div>
               )}
               {section.items.map((n) => (
@@ -164,13 +172,14 @@ export function DashboardLayout({ nav, roleLabel, actions, banner, greetOnIndex 
                   {({ isActive }) => (
                     <>
                       <Icon name={n.icon} size={21} fill={isActive} />
-                      {n.label}
+                      {n.labelKey ? t(n.labelKey) : n.label}
                     </>
                   )}
                 </NavLink>
               ))}
             </div>
-          ))}
+            )
+          })}
         </nav>
 
         <div
