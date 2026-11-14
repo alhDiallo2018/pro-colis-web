@@ -6,6 +6,7 @@ import { NegotiationChat } from '@/components/NegotiationChat'
 import { useAuthStore } from '@/store/auth'
 import * as support from '@/lib/api/supportChat'
 import { useIsMobile } from '@/lib/useMediaQuery'
+import { CloseConversationDialog } from './CloseConversationDialog'
 
 export function SupportInboxScreen() {
   const userId = useAuthStore(state => state.user?.id)
@@ -16,6 +17,7 @@ export function SupportInboxScreen() {
   const [selected, setSelected] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false)
   const chats = useQuery({ queryKey: ['support-chat', 'queue'], queryFn: support.supportChats, refetchInterval: 5000 })
   const thread = useQuery({ queryKey: ['support-chat', selected], queryFn: () => support.supportThread(selected!), enabled: !!selected, refetchInterval: 4000 })
   const conversation = thread.data?.conversation
@@ -75,7 +77,7 @@ export function SupportInboxScreen() {
             {!requester && (!conversation.assignedTo || conversation.status === 'closed') &&
               <Button disabled={busy} onClick={() => act(() => support.claimSupportChat(selected))}>Prendre en charge</Button>}
             {mine && conversation.status === 'open' && <Button variant="secondary" disabled={busy}
-              onClick={() => act(() => support.closeSupportChat(selected))}>Clôturer</Button>}
+              onClick={() => setCloseDialogOpen(true)}>Clôturer</Button>}
           </div>
           {canTransfer && <div style={{ display: 'grid', gap: 8 }}>
             {agents.isError ? <p role="alert">Liste des supports indisponible. <Button onClick={() => agents.refetch()}>Réessayer</Button></p> :
@@ -94,5 +96,15 @@ export function SupportInboxScreen() {
         {thread.isError && <p role="alert">Conversation indisponible. <Button onClick={() => thread.refetch()}>Réessayer</Button></p>}
       </div> : <p>Sélectionnez une demande ou recherchez un utilisateur pour démarrer un échange.</p>}
     </div>
+    <CloseConversationDialog
+      open={closeDialogOpen}
+      busy={busy}
+      onCancel={() => setCloseDialogOpen(false)}
+      onConfirm={async options => {
+        if (!selected) return
+        await act(() => support.closeSupportChat(selected, options))
+        setCloseDialogOpen(false)
+      }}
+    />
   </div>
 }

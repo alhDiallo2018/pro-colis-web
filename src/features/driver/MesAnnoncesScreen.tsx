@@ -163,8 +163,10 @@ function AdCard({
   rejecting: boolean
   onChat: (offer: AdvertisementOffer) => void
 }) {
+  const navigate = useNavigate()
   const status = ad.status || 'open'
   const s = AD_STATUS_LABELS[status] ?? AD_STATUS_LABELS.open
+  const hasStops = (ad.itinerary?.stops?.length ?? 0) > 0
 
   return (
     <section className="cm-ad-card">
@@ -175,7 +177,19 @@ function AdCard({
           <Icon name="arrow_right_alt" size={18} style={{ color: 'var(--text-faint)' }} />
           {locationLabel(ad, 'arrival')}
         </div>
-        <Badge tone={s.tone}>{s.label}</Badge>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {hasStops && (
+            <>
+              <Button size="sm" variant="ghost" icon="receipt_long" onClick={() => navigate(`/driver/annonces/${ad.id}/manifest`)}>
+                Manifeste
+              </Button>
+              <Button size="sm" variant="ghost" icon="pin_drop" onClick={() => navigate(`/driver/annonces/${ad.id}/arrets-atteints`)}>
+                Arrêts atteints
+              </Button>
+            </>
+          )}
+          <Badge tone={s.tone}>{s.label}</Badge>
+        </div>
       </header>
 
       <div className="cm-ad-card-body">

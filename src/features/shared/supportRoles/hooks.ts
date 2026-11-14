@@ -111,3 +111,21 @@ export function useNetworkCoverage() {
     enabled,
   })
 }
+
+// --- SLA cross-tier (support + super_admin) ---
+
+function useHasSlaAccess() {
+  const role = useAuthStore((state) => state.user?.role)
+  return role === 'support' || role === 'support_technique' || role === 'super_admin'
+}
+
+export function useSupportSlaOverview() {
+  const enabled = useHasSlaAccess()
+  return useQuery({
+    queryKey: ['support-roles', 'sla-overview'],
+    queryFn: () => supportRolesApi.supportSlaOverview(),
+    enabled,
+    // Vue de supervision : on la rafraîchit régulièrement comme l'inbox.
+    refetchInterval: 60_000,
+  })
+}

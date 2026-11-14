@@ -47,6 +47,8 @@ import { GarageSearchSelect } from "@/components/GarageSearchSelect";
 import { DraftRestoreBanner } from "@/components/DraftRestoreBanner";
 import { useFormDraft } from "@/lib/useFormDraft";
 import { LocationInput } from "@/components/LocationInput";
+import { ParcelTemplatesDialog } from "@/components/ParcelTemplatesDialog";
+import type { ParcelTemplate, ParcelTemplateData } from "@/lib/parcelTemplateStore";
 import { ALL_COUNTRIES } from "@/components/CountryCodePicker";
 import {
   CONTACT_PICKER_PROPERTIES,
@@ -227,6 +229,7 @@ export function NewParcelScreen() {
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [debtPaymentLoading, setDebtPaymentLoading] = useState(false);
   const [debtPaymentError, setDebtPaymentError] = useState<string | null>(null);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
 
   const {
     register,
@@ -446,6 +449,53 @@ export function NewParcelScreen() {
     setMode(m);
     setDriverError(null);
     if (m === "free") setValue("driverId", "");
+  };
+
+  // Snapshot du formulaire courant — utilisé pour « Enregistrer comme modèle »
+  // dans la boîte de dialogue des templates. On ne capture que les champs
+  // textuels (comme sur mobile) : les pièces jointes restent hors modèle.
+  const templateDraft: ParcelTemplateData = {
+    departureZoneId: formValues.departureZoneId ?? null,
+    arrivalZoneId: formValues.arrivalZoneId ?? null,
+    receiverName: formValues.receiverName ?? "",
+    receiverPhone: formValues.receiverPhone ?? "",
+    receiverEmail: formValues.receiverEmail ?? "",
+    receiverAddress: formValues.receiverAddress ?? "",
+    description: formValues.description ?? "",
+    weight: formValues.weight != null ? String(formValues.weight) : "",
+    type: formValues.type ?? "",
+    insurance: Boolean(formValues.isInsured),
+    urgent: Boolean(formValues.isUrgent),
+    price: formValues.price != null ? String(formValues.price) : "",
+    priceEdited: formValues.price != null,
+    mode,
+    driverId: formValues.driverId ?? null,
+  };
+
+  const applyTemplate = (template: ParcelTemplate) => {
+    const data = template.data ?? {};
+    const trySetString = (field: keyof FormInput, value: string | undefined) => {
+      if (value == null) return;
+      setValue(field, value as never);
+    };
+    trySetString("receiverName", data.receiverName);
+    trySetString("receiverPhone", data.receiverPhone);
+    trySetString("receiverEmail", data.receiverEmail);
+    trySetString("receiverAddress", data.receiverAddress);
+    trySetString("description", data.description);
+    if (data.departureZoneId) setValue("departureZoneId", data.departureZoneId);
+    if (data.arrivalZoneId) setValue("arrivalZoneId", data.arrivalZoneId);
+    if (data.type) setValue("type", data.type);
+    if (data.weight && Number.isFinite(Number(data.weight))) setValue("weight", data.weight as never);
+    if (data.price && Number.isFinite(Number(data.price))) setValue("price", data.price as never);
+    setValue("isUrgent", Boolean(data.urgent) as never);
+    setValue("isInsured", Boolean(data.insurance) as never);
+    if (data.mode === "free" || data.mode === "driver") {
+      setMode(data.mode);
+      if (data.mode === "driver" && data.driverId) setValue("driverId", data.driverId);
+      else setValue("driverId", "");
+    }
+    setTemplatesOpen(false);
   };
 
   const chooseRecipientFromContacts = async () => {
@@ -776,6 +826,29 @@ export function NewParcelScreen() {
       )}
 
       <Stepper current={step} maxStep={maxStep} onJump={goTo} />
+
+      {user?.id && (
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            icon="bookmarks"
+            onClick={() => setTemplatesOpen(true)}
+          >
+            Mes modèles
+          </Button>
+        </div>
+      )}
+
+      {templatesOpen && user?.id && (
+        <ParcelTemplatesDialog
+          ownerId={user.id}
+          currentDraft={templateDraft}
+          onClose={() => setTemplatesOpen(false)}
+          onApply={applyTemplate}
+        />
+      )}
 
       <form
         onSubmit={onFormSubmit}

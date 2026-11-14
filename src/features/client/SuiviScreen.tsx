@@ -12,10 +12,30 @@ import { PARCEL_STATUS } from '@/ds'
 import { ApiError } from '@/lib/api/client'
 import type { DriverLocation, Parcel, ParcelZoneRef } from '@/lib/api/types'
 
+/**
+ * Extrait un numéro de suivi d'un texte libre reçu via Web Share Target
+ * (`?text=` ou `?url=`). Les clients de la messagerie Android partagent souvent
+ * « Mon colis PC-XXXX-XXXX arrive demain » ou l'URL `/track/PC-XXXX-XXXX`.
+ */
+function extractTrackingFromShared(...candidates: (string | null | undefined)[]): string | undefined {
+  const re = /PC-[A-Z0-9]{4,6}-[A-Z0-9]{4,6}/i
+  for (const raw of candidates) {
+    if (!raw) continue
+    const match = raw.match(re)
+    if (match) return match[0].toUpperCase()
+  }
+  return undefined
+}
+
 export function SuiviScreen() {
   const params = useParams<{ trackingNumber: string }>()
   const [searchParams] = useSearchParams()
-  const trackingNumber = params.trackingNumber ?? searchParams.get('tracking') ?? undefined
+  const sharedTracking = extractTrackingFromShared(
+    searchParams.get('text'),
+    searchParams.get('url'),
+    searchParams.get('title'),
+  )
+  const trackingNumber = params.trackingNumber ?? searchParams.get('tracking') ?? sharedTracking ?? undefined
   const [input, setInput] = useState(trackingNumber ?? '')
   const [tracking, setTracking] = useState(trackingNumber?.trim().toUpperCase() ?? '')
   const query = useTrackParcel(tracking, !!tracking)

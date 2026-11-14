@@ -220,3 +220,33 @@ export async function networkCoverage(): Promise<NetworkCoverage> {
   const { data } = await api.get('/support-commercial/coverage')
   return data.coverage ?? data.data?.coverage
 }
+
+// ============================================================
+// Support admin — SLA cross-tier (vue consolidée)
+// ============================================================
+
+/**
+ * Agrégats SLA remontés par `GET /support-admin/sla-overview` et partagés
+ * entre `support` et `super_admin`. Mobile affiche quatre pastilles ; le web
+ * s'aligne sur les mêmes champs — les moyennes servent de ligne de contexte.
+ */
+export interface SupportSlaOverview {
+  technicalAtRisk: number
+  technicalBreached: number
+  commercialDelayed: number
+  chatExceeded: number
+  chatAvgFirstResponseMinutes: number | null
+  technicalAvgResolutionHours: number | null
+}
+
+export async function supportSlaOverview(): Promise<SupportSlaOverview | null> {
+  try {
+    const { data } = await api.get('/support-admin/sla-overview')
+    return (data.data ?? data) as SupportSlaOverview
+  } catch (error) {
+    // L'API répond 404 quand l'agrégat n'est pas encore disponible : mobile
+    // masque la carte dans ce cas, on fait pareil côté web.
+    if ((error as { status?: number })?.status === 404) return null
+    throw error
+  }
+}

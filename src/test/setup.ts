@@ -1,4 +1,8 @@
 import '@testing-library/jest-dom/vitest'
+// jsdom ne fournit pas `indexedDB`. Les composants PWA (file d'attente offline)
+// l'ouvrent dès `online` → fallback mémoire pour que les tests soient
+// deterministes sans monter un navigateur complet.
+import 'fake-indexeddb/auto'
 
 /**
  * Vitest sous Node ne fournit pas toujours un Storage complet. Ce double garde

@@ -92,6 +92,48 @@ export async function create(payload: CreateParcelPayload): Promise<Parcel> {
   return data.parcel;
 }
 
+export interface BulkCreateRowResult {
+  success: boolean;
+  message?: string;
+  parcelId?: string;
+  trackingNumber?: string;
+}
+
+export interface BulkCreateResponse {
+  results: BulkCreateRowResult[];
+  createdCount: number;
+  failedCount: number;
+}
+
+export interface BulkParcelPayload {
+  receiverName: string;
+  receiverPhone: string;
+  description: string;
+  weight: number;
+  receiverAddress?: string | null;
+}
+
+/**
+ * `POST /client/parcels/bulk-create` — ordre préservé. Un 404 doit être
+ * traité par l'appelant comme signal de fallback séquentiel.
+ */
+export async function bulkCreate(parcels: BulkParcelPayload[]): Promise<BulkCreateResponse> {
+  const { data } = await api.post("/client/parcels/bulk-create", { parcels });
+  const results: BulkCreateRowResult[] = Array.isArray(data?.results)
+    ? data.results.map((r: Record<string, unknown>) => ({
+        success: r.success === true,
+        message: typeof r.message === "string" ? r.message : undefined,
+        parcelId: typeof r.parcelId === "string" ? r.parcelId : undefined,
+        trackingNumber: typeof r.trackingNumber === "string" ? r.trackingNumber : undefined,
+      }))
+    : [];
+  return {
+    results,
+    createdCount: typeof data?.createdCount === "number" ? data.createdCount : results.filter((r) => r.success).length,
+    failedCount: typeof data?.failedCount === "number" ? data.failedCount : results.filter((r) => !r.success).length,
+  };
+}
+
 /**
  * Champs qu'un client peut corriger tant que le colis n'est pas engagé.
  * Miroir de `PARCEL_EDITABLE_*_FIELDS` côté API : tout autre champ est ignoré

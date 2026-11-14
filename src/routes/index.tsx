@@ -1,4 +1,4 @@
-import { QualityScreen, WorkspaceScreen, OfflineHistory, LiveJourneys, ClientDebtsScreen, ClientWalletScreen, SettingsScreen, DriverDebtsScreen, LoginPage, RegisterPage, ForgotPinPage, LandingPage, InstallPage, AProposPage, ContactPage, MentionsLegalesPage, ConfidentialitePage, CGUPage, ConditionsTransportPage, PaiementPage, RemboursementPage, ReclamationsPage, ColisInterditsPage, HelpScreen, PaymentStatusPage, ClientDashboard, MesColisScreen, ParcelDetailScreen, NewParcelScreen, OffresRecuesScreen, ClientAnnoncesScreen, AnnonceDetailScreen, DriverProfileScreen, SuiviScreen, ProfilScreen, TripDetailScreen, ConfirmDeliveryScreen, DriverDashboard, LibreServiceScreen, MissionsScreen, RevenusScreen, HistoriqueScreen, MonGarageScreen, DriverProfilScreen, DriverParametresScreen, DriverPointsScreen, MesAnnoncesScreen, VehicleDocumentsScreen, ItineraireScreen, MessagesScreen, AdminSupportScreen, SupportDashboard, SupportConversationsScreen, ModerationScreen, StaffProfilScreen, LogsScreen, AuditLogsScreen, IncidentsScreen, TicketsScreen, LeadsScreen, CoverageScreen, SuperAdminDashboard, ColisPage, ChauffeursPage, UtilisateursPage, ZonesPage, StatistiquesPage, RapportsPage, SystemePage, ConfigConsommationPage, FinanceDashboardPage, WalletsPage, PaymentsPage, CashDeclarationsPage, PaymentNotificationsPage, ReputationDashboardPage, ScoresPage, ClassementPage, DriverDetailPage, BrevoConfigScreen, PaydunyaConfigScreen, BroadcastsPage, WalletDetailPage, ScoreDetailPage, WithdrawalsPage, AssistancesPage, ExpensesPage, IdentityVerificationsPage, NotificationsScreen, GarageDashboard, GarageColisPage, GarageChauffeursPage, GarageAssignationsPage, GarageRapportsPage, GarageParcelDetailPage } from './screens';
+import { QualityScreen, WorkspaceScreen, OfflineHistory, LiveJourneys, ClientDebtsScreen, ClientWalletScreen, ClientApiKeysScreen, SettingsScreen, DriverDebtsScreen, LoginPage, RegisterPage, ForgotPinPage, LandingPage, InstallPage, AProposPage, ContactPage, MentionsLegalesPage, ConfidentialitePage, CGUPage, ConditionsTransportPage, PaiementPage, RemboursementPage, ReclamationsPage, ColisInterditsPage, HelpScreen, PaymentStatusPage, ClientDashboard, MesColisScreen, ParcelDetailScreen, NewParcelScreen, OffresRecuesScreen, ClientAnnoncesScreen, AnnonceDetailScreen, DriverProfileScreen, SuiviScreen, ProfilScreen, TripDetailScreen, ConfirmDeliveryScreen, DriverDashboard, LibreServiceScreen, MissionsScreen, HandoverConfirmScreen, RevenusScreen, HistoriqueScreen, MonGarageScreen, DriverProfilScreen, DriverParametresScreen, DriverPointsScreen, MesAnnoncesScreen, VehicleDocumentsScreen, ItineraireScreen, AdvertisementManifestScreen, AdvertisementReachedStopsScreen, OperationsHubPage, MessagesScreen, AdminSupportScreen, SupportDashboard, SupportConversationsScreen, ModerationScreen, StaffProfilScreen, LogsScreen, AuditLogsScreen, IncidentsScreen, TicketsScreen, LeadsScreen, CoverageScreen, SuperAdminDashboard, ColisPage, ChauffeursPage, UtilisateursPage, ZonesPage, StatistiquesPage, RapportsPage, SystemePage, ConfigConsommationPage, FinanceDashboardPage, WalletsPage, PaymentsPage, CashDeclarationsPage, PaymentNotificationsPage, ReputationDashboardPage, ScoresPage, ClassementPage, DriverDetailPage, BrevoConfigScreen, PaydunyaConfigScreen, BroadcastsPage, WalletDetailPage, ScoreDetailPage, WithdrawalsPage, AssistancesPage, ExpensesPage, IdentityVerificationsPage, NotificationsScreen, GarageDashboard, GarageColisPage, GarageChauffeursPage, GarageAssignationsPage, GarageRapportsPage, GarageParcelDetailPage, PilotMetricsPage } from './screens';
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RequireAuth, RequireRole } from "./guards";
 import { DashboardLayout, type NavSection } from "@/layouts/DashboardLayout";
@@ -48,6 +48,7 @@ const CLIENT_NAV: NavSection[] = [
       { label: "Messages", icon: "forum", to: "/client/messages" },
       { label: "Portefeuille", icon: "account_balance_wallet", to: "/client/portefeuille" },
       { label: "Mes dettes", icon: "receipt_long", to: "/client/dettes" },
+      { label: "Clés API", icon: "vpn_key", to: "/client/api-keys" },
       { label: "Paramètres", icon: "settings", to: "/client/parametres" },
       {
         label: "Historique hors connexion",
@@ -66,7 +67,9 @@ const DRIVER_NAV: NavSection[] = [
       { label: "Accueil", icon: "dashboard", to: "/driver", end: true },
       { label: "Colis à prendre", icon: "sell", to: "/driver/libre" },
       { label: "Mes missions", icon: "local_shipping", to: "/driver/missions" },
+      { label: "Recevoir un transfert", icon: "swap_horiz", to: "/driver/handovers/confirmer" },
       { label: "Mes annonces", icon: "campaign", to: "/driver/annonces" },
+      { label: "Importer des trajets", icon: "upload_file", to: "/driver/annonces#route-import" },
       { label: "Itinéraire", icon: "map", to: "/driver/itinerary" },
       { label: "Messages", icon: "forum", to: "/driver/messages" },
     ],
@@ -131,6 +134,7 @@ const SUPER_NAV: NavSection[] = [
       { label: "Colis", icon: "package_2", to: "/admin/colis" },
       { label: "Chauffeurs", icon: "local_shipping", to: "/admin/chauffeurs" },
       { label: "Utilisateurs", icon: "group", to: "/admin/users" },
+      { label: "Métriques pilote", icon: "monitoring", to: "/admin/pilot-metrics" },
       {
         label: "Envoyer un message",
         icon: "mail",
@@ -222,6 +226,7 @@ const SUPER_NAV: NavSection[] = [
   {
     heading: "Supervision",
     items: [
+      { label: "Hub opérationnel", icon: "hub", to: "/admin/operations" },
       { label: "Journaux techniques", icon: "terminal", to: "/admin/logs" },
       { label: "Incidents", icon: "bolt", to: "/admin/incidents" },
       { label: "Journal d'audit", icon: "history", to: "/admin/audit" },
@@ -305,6 +310,7 @@ export const router = createBrowserRouter([
       { path: "portefeuille", element: <ClientWalletScreen /> },
       { path: "parametres", element: <SettingsScreen /> },
       { path: "dettes", element: <ClientDebtsScreen /> },
+      { path: "api-keys", element: <ClientApiKeysScreen /> },
       { path: "profil", element: <ProfilScreen /> },
       { path: "notifications", element: <NotificationsScreen /> },
     ],
@@ -333,6 +339,7 @@ export const router = createBrowserRouter([
       { path: "hors-ligne", element: <OfflineHistory /> },
       { path: "annonces", element: <MesAnnoncesScreen /> },
       { path: "missions", element: <MissionsScreen /> },
+      { path: "handovers/confirmer", element: <HandoverConfirmScreen /> },
       { path: "revenus", element: <RevenusScreen /> },
       { path: "points", element: <DriverPointsScreen /> },
       { path: "messages", element: <MessagesScreen /> },
@@ -344,6 +351,8 @@ export const router = createBrowserRouter([
       { path: "notifications", element: <NotificationsScreen /> },
       { path: "documents", element: <VehicleDocumentsScreen /> },
       { path: "itinerary", element: <ItineraireScreen /> },
+      { path: "annonces/:advertisementId/manifest", element: <AdvertisementManifestScreen /> },
+      { path: "annonces/:advertisementId/arrets-atteints", element: <AdvertisementReachedStopsScreen /> },
       { path: "parcels/:parcelId/confirm", element: <ConfirmDeliveryScreen /> },
     ],
   },
@@ -431,6 +440,8 @@ export const router = createBrowserRouter([
       { path: "reputation/classement", element: <ClassementPage /> },
       { path: "notifications-brevo", element: <BrevoConfigScreen /> },
       { path: "envoyer-message", element: <ManualMessagePanel /> },
+      { path: "pilot-metrics", element: <PilotMetricsPage /> },
+      { path: "operations", element: <OperationsHubPage /> },
       { path: "paydunya", element: <PaydunyaConfigScreen /> },
       { path: "broadcasts", element: <BroadcastsPage /> },
       { path: "chauffeurs/:userId", element: <DriverDetailPage /> },

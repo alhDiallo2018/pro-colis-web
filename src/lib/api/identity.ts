@@ -59,6 +59,18 @@ export async function rejectVerification(id: string, reason: string): Promise<Id
   return data.verification ?? data.data
 }
 
+/** Admin — demander un complément d'informations à l'utilisateur (le statut reste pending). */
+export async function requestInfoVerification(id: string, message: string): Promise<IdentityVerification> {
+  const { data } = await api.post(`/super-admin/identity-verifications/${id}/request-info`, { message })
+  return (data.data?.verification ?? data.verification ?? data.data) as IdentityVerification
+}
+
+/** Admin — supprimer définitivement une vérification. */
+export async function deleteVerification(id: string): Promise<{ id: string }> {
+  const { data } = await api.delete(`/super-admin/identity-verifications/${id}`)
+  return (data.data ?? { id }) as { id: string }
+}
+
 export interface MyIdentityStatus {
   /** `approved` seulement si tous les documents le sont, `rejected` dès qu'un l'est. */
   status: IdentityStatus

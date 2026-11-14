@@ -1,9 +1,17 @@
 import { act, cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { PwaProvider } from './PwaProvider'
 import { InstallPage } from './InstallPage'
+
+// `InstallPage` monte le MarketingFooter qui consomme `usePublicConfig` via
+// React Query : sans provider, le rendu casse avant d'avoir pu tester la PWA.
+function withQuery(children: React.ReactNode) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+}
 
 beforeEach(() => {
   vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })))
@@ -13,7 +21,7 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
 
 it('propose le guide Safari sur iPhone et permet de masquer le bandeau', async () => {
-  render(<PwaProvider><MemoryRouter><InstallPage /></MemoryRouter></PwaProvider>)
+  render(withQuery(<PwaProvider><MemoryRouter><InstallPage /></MemoryRouter></PwaProvider>))
   expect(screen.getByRole('link', { name: /ProColis sur votre iPhone/ })).toHaveAttribute('href', '/installer')
   expect(screen.getByText('Touchez Partager')).toBeInTheDocument()
   await userEvent.click(screen.getByRole('button', { name: /Masquer l’aide/ }))
@@ -31,7 +39,7 @@ it('reconnaît un iPad en mode ordinateur', () => {
 
 it('ne propose plus l’installation en mode standalone', () => {
   vi.mocked(window.matchMedia).mockReturnValue({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() } as unknown as MediaQueryList)
-  render(<PwaProvider><MemoryRouter><InstallPage /></MemoryRouter></PwaProvider>)
+  render(withQuery(<PwaProvider><MemoryRouter><InstallPage /></MemoryRouter></PwaProvider>))
   expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
   expect(screen.getByRole('link', { name: /Ouvrir mon espace/ })).toHaveAttribute('href', '/app')
 })

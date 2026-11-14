@@ -62,10 +62,11 @@ function RouteCsvImport({ onImported }: { onImported: () => void }) {
     } finally { setBusy(false) }
   }
 
+  const openByHash = typeof window !== 'undefined' && window.location.hash === '#route-import'
   return (
-    <details className="transit-panel" style={{ padding: 14 }}>
+    <details id="route-import" className="transit-panel" style={{ padding: 14 }} open={openByHash}>
       <summary style={{ cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700 }}>
-        Import CSV manuel
+        Importer mes trajets (CSV)
       </summary>
       <p className="transit-note" style={{ marginTop: 10 }}>
         Fichier de 128 Ko maximum. Aperçu obligatoire avant publication.

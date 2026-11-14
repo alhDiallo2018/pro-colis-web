@@ -508,3 +508,17 @@ export function useRejectVerification() {
     onSuccess: invalidateVerifications,
   })
 }
+
+export function useRequestInfoVerification() {
+  return useMutation({
+    mutationFn: ({ id, message }: { id: string; message: string }) => identityApi.requestInfoVerification(id, message),
+    onSuccess: invalidateVerifications,
+  })
+}
+
+export function useDeleteVerification() {
+  return useMutation({
+    mutationFn: (id: string) => identityApi.deleteVerification(id),
+    onSuccess: invalidateVerifications,
+  })
+}

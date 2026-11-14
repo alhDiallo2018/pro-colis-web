@@ -12,6 +12,8 @@ import { DriverCancelDialog } from './DriverCancelDialog'
 import { needsCashDeclaration } from './cashDeclaration'
 import { useAdvanceParcel, useDeliverParcel, useDriverFinancialState, useDriverParcels, useRespondToBid } from './hooks'
 import { CommissionDebtNotice } from './CommissionDebtNotice'
+import { HandoverInitiateDialog } from './HandoverInitiateDialog'
+import { canHandoverParcel } from '@/lib/api/handovers'
 import { ApiError } from '@/lib/api/client'
 import { commissionDebtMessage } from '@/lib/commissionDebt'
 import { formatFcfa, toStatusKey } from '@/lib/format'
@@ -40,6 +42,7 @@ export function MissionsScreen() {
   const [commissionTarget, setCommissionTarget] = useState<Parcel | null>(null)
   const [cashTarget, setCashTarget] = useState<Parcel | null>(null)
   const [cancelTarget, setCancelTarget] = useState<Parcel | null>(null)
+  const [handoverTarget, setHandoverTarget] = useState<Parcel | null>(null)
   const [negotiateTarget, setNegotiateTarget] = useState<{ parcel: Parcel; bidId: string; canAccept: boolean } | null>(null)
   const parcels = (query.data?.parcels ?? []).filter((p) => p.status !== 'cancelled')
 
@@ -117,6 +120,17 @@ export function MissionsScreen() {
                         onClick={(e: React.MouseEvent) => { e.stopPropagation(); setCashTarget(p) }}
                       >
                         Déclarer l'encaissement
+                      </Button>
+                    )}
+                    {canHandoverParcel(p.status) && p.driverId === driverId && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        icon="swap_horiz"
+                        title="Transférer à un autre chauffeur"
+                        onClick={(e: React.MouseEvent) => { e.stopPropagation(); setHandoverTarget(p) }}
+                      >
+                        Transférer
                       </Button>
                     )}
                     {hasActiveBid && activeBid ? (
@@ -222,6 +236,7 @@ export function MissionsScreen() {
         }}
       />
       <PayCommissionDialog parcel={commissionTarget} onClose={() => setCommissionTarget(null)} />
+      {handoverTarget && <HandoverInitiateDialog parcel={handoverTarget} onClose={() => setHandoverTarget(null)} />}
 
       {negotiateTarget && (
         <Dialog

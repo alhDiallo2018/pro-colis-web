@@ -7,6 +7,7 @@ import * as assistancesApi from '@/lib/api/assistances'
 import { useAuthStore } from '@/store/auth'
 import { usePlatformStats, useMyStats } from './profile/hooks'
 import { SupportRoleSummary } from './supportRoles/SupportRoleSummary'
+import { SlaCrossTierCard } from './supportRoles/SlaCrossTierCard'
 import { formatDateTime } from '@/lib/format'
 import type { SupportConversation } from '@/lib/api/messages'
 
@@ -88,6 +89,10 @@ export function SupportDashboard() {
         <StatBox icon="pending_actions" tone="amber" value={summary?.inProgress ?? '—'} label="En cours" />
         <StatBox icon="task_alt" tone="green" value={summary?.resolved ?? '—'} label="Résolues" />
       </div>
+
+      {/* Vue consolidée des SLA (support + super admin). Se masque si l'API
+          ne renvoie pas encore d'agrégat — on ne fabrique jamais de métriques. */}
+      <SlaCrossTierCard />
 
       {/* Bloc métier propre au mandat de l'agent (tickets ou pipeline). */}
       <SupportRoleSummary />

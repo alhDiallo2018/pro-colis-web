@@ -71,8 +71,26 @@ export async function claimSupportChat(id: string): Promise<SupportChat> {
   const { data } = await api.post(`/support/chat/conversations/${id}/claim`);
   return data.conversation;
 }
-export async function closeSupportChat(id: string): Promise<void> {
-  await api.post(`/support/chat/conversations/${id}/close`);
+export const SUPPORT_CLOSE_CATEGORIES = [
+  "resolved",
+  "duplicate",
+  "spam",
+  "no_answer",
+] as const;
+export type SupportCloseCategory = (typeof SUPPORT_CLOSE_CATEGORIES)[number];
+export interface SupportCloseOptions {
+  reason?: string;
+  category?: SupportCloseCategory;
+}
+export async function closeSupportChat(
+  id: string,
+  options: SupportCloseOptions = {},
+): Promise<void> {
+  const payload: SupportCloseOptions = {};
+  if (options.category) payload.category = options.category;
+  const reason = options.reason?.trim();
+  if (reason) payload.reason = reason;
+  await api.post(`/support/chat/conversations/${id}/close`, payload);
 }
 
 export async function mySupportChat(): Promise<SupportChat | null> {

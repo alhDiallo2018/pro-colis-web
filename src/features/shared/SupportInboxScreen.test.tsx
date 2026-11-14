@@ -6,7 +6,7 @@ import { SupportInboxScreen } from './SupportInboxScreen'
 import { useAuthStore } from '@/store/auth'
 import * as api from '@/lib/api/supportChat'
 
-vi.mock('@/lib/api/supportChat', () => ({ supportChats: vi.fn(), supportThread: vi.fn(), openSupportChat: vi.fn(), claimSupportChat: vi.fn(), closeSupportChat: vi.fn(), availableSupportAgents: vi.fn(), transferSupportChat: vi.fn() }))
+vi.mock('@/lib/api/supportChat', () => ({ supportChats: vi.fn(), supportThread: vi.fn(), openSupportChat: vi.fn(), claimSupportChat: vi.fn(), closeSupportChat: vi.fn(), availableSupportAgents: vi.fn(), transferSupportChat: vi.fn(), SUPPORT_CLOSE_CATEGORIES: ['resolved', 'duplicate', 'spam', 'no_answer'] }))
 vi.mock('@/lib/useMediaQuery', () => ({ useIsMobile: () => false }))
 vi.mock('@/components/NegotiationChat', () => ({ NegotiationChat: ({ readOnly }: { readOnly: boolean }) => <div>{readOnly ? 'Lecture seule' : 'Réponse autorisée'}</div> }))
 vi.mock('@/components/UserSearchSelect', () => ({ UserSearchSelect: ({ onChange }: { onChange: (user: { id: string }) => void }) => <button onClick={() => onChange({ id: 'client' })}>Contacter un client</button> }))
@@ -87,6 +87,19 @@ it('un support non affecté ne peut pas transférer mais le super admin le peut'
   expect(screen.queryByLabelText('Affecter à un support disponible')).not.toBeInTheDocument()
   useAuthStore.setState({ user: { ...agent, role: 'super_admin' } })
   expect(await screen.findByLabelText('Affecter à un support disponible')).toBeInTheDocument()
+})
+
+it('clôture avec motif structuré (category + reason) passé à l’API', async () => {
+  vi.mocked(api.closeSupportChat).mockResolvedValue(undefined)
+  const user = userEvent.setup(); mount()
+  await user.click(await screen.findByRole('button', { name: /Client test/ }))
+  await user.click(await screen.findByRole('button', { name: 'Clôturer' }))
+  const dialog = await screen.findByRole('dialog')
+  const dialogUtils = await import('@testing-library/dom').then(m => m.within(dialog))
+  await user.selectOptions(dialogUtils.getByLabelText('Motif'), 'duplicate')
+  await user.type(dialogUtils.getByLabelText(/Commentaire/i), 'Doublon de #42')
+  await user.click(dialogUtils.getByRole('button', { name: 'Clôturer' }))
+  await waitFor(() => expect(api.closeSupportChat).toHaveBeenCalledWith('chat', { category: 'duplicate', reason: 'Doublon de #42' }))
 })
 
 it('un conflit de transfert actualise l’affectation sans envoyer de message', async () => {

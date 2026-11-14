@@ -2,6 +2,8 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Button } from '@/ds'
 import { isAppleMobile, isStandalone, PwaContext } from './context'
 import { flushBackgroundQueue } from './pwaSync'
+import { precacheByRole } from './precacheByRole'
+import { useAuthStore } from '@/store/auth'
 import './pwa.css'
 
 export function PwaProvider({ children }: { children: ReactNode }) {
@@ -11,6 +13,12 @@ export function PwaProvider({ children }: { children: ReactNode }) {
   const [online, setOnline] = useState(navigator.onLine)
   const [waiting, setWaiting] = useState<ServiceWorker | null>(null)
   const [updating, setUpdating] = useState(false)
+  // Précache des écrans du rôle dès l'ouverture de session (via SW cache).
+  const userRole = useAuthStore((s) => s.user?.role)
+  const sessionId = useAuthStore((s) => s.sessionId)
+  useEffect(() => {
+    precacheByRole(userRole, sessionId)
+  }, [userRole, sessionId])
 
   useEffect(() => {
     const media = window.matchMedia('(display-mode: standalone)')

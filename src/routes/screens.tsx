@@ -30,6 +30,11 @@ export const ClientWalletScreen = lazy(() =>
     default: module.ClientWalletScreen,
   })),
 );
+export const ClientApiKeysScreen = lazy(() =>
+  import("@/features/client/ClientApiKeysScreen").then((module) => ({
+    default: module.ClientApiKeysScreen,
+  })),
+);
 export const SettingsScreen = lazy(() =>
   import("@/features/shared/SettingsScreen").then((module) => ({
     default: module.SettingsScreen,
@@ -200,6 +205,11 @@ export const MissionsScreen = lazy(() =>
     default: module.MissionsScreen,
   })),
 );
+export const HandoverConfirmScreen = lazy(() =>
+  import("@/features/driver/HandoverConfirmScreen").then((module) => ({
+    default: module.HandoverConfirmScreen,
+  })),
+);
 export const RevenusScreen = lazy(() =>
   import("@/features/driver/RevenusScreen").then((module) => ({
     default: module.RevenusScreen,
@@ -243,6 +253,16 @@ export const VehicleDocumentsScreen = lazy(() =>
 export const ItineraireScreen = lazy(() =>
   import("@/features/driver/ItineraireScreen").then((module) => ({
     default: module.ItineraireScreen,
+  })),
+);
+export const AdvertisementManifestScreen = lazy(() =>
+  import("@/features/driver/AdvertisementManifestScreen").then((module) => ({
+    default: module.AdvertisementManifestScreen,
+  })),
+);
+export const AdvertisementReachedStopsScreen = lazy(() =>
+  import("@/features/driver/AdvertisementReachedStopsScreen").then((module) => ({
+    default: module.AdvertisementReachedStopsScreen,
   })),
 );
 export const MessagesScreen = lazy(() =>
@@ -328,6 +348,16 @@ export const UtilisateursPage = lazy(() =>
 export const ZonesPage = lazy(() =>
   import("@/features/superAdmin/ZonesPage").then((module) => ({
     default: module.ZonesPage,
+  })),
+);
+export const PilotMetricsPage = lazy(() =>
+  import("@/features/superAdmin/PilotMetricsPage").then((module) => ({
+    default: module.PilotMetricsPage,
+  })),
+);
+export const OperationsHubPage = lazy(() =>
+  import("@/features/superAdmin/OperationsHubPage").then((module) => ({
+    default: module.OperationsHubPage,
   })),
 );
 export const StatistiquesPage = lazy(() =>

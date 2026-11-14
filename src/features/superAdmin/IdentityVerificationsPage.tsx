@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Dialog, Input, SegmentedControl } from '@/ds'
+import { Button, Dialog, Input, SegmentedControl, Textarea, Toast } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
 import { DetailList, DetailRow, DetailSection } from '@/components/DetailList'
@@ -7,6 +7,8 @@ import {
   useIdentityVerifications,
   useApproveVerification,
   useRejectVerification,
+  useRequestInfoVerification,
+  useDeleteVerification,
 } from '@/features/superAdmin/hooks'
 import { formatDateTime } from '@/lib/format'
 import { useIsMobile } from '@/lib/useMediaQuery'
@@ -32,9 +34,14 @@ export function IdentityVerificationsPage() {
   const query = useIdentityVerifications(params)
   const approve = useApproveVerification()
   const reject = useRejectVerification()
+  const requestInfo = useRequestInfoVerification()
+  const remove = useDeleteVerification()
 
   const [rejectDialog, setRejectDialog] = useState<IdentityVerification | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [requestInfoDialog, setRequestInfoDialog] = useState<IdentityVerification | null>(null)
+  const [infoMessage, setInfoMessage] = useState('')
+  const [deleteDialog, setDeleteDialog] = useState<IdentityVerification | null>(null)
   const [detail, setDetail] = useState<IdentityVerification | null>(null)
 
   const items = query.data?.verifications ?? []
@@ -113,9 +120,15 @@ export function IdentityVerificationsPage() {
                         <Button size="sm" icon="check" onClick={() => approve.mutate(v.id)} loading={approve.isPending}>Approuver</Button>
                       )}
                       {v.status === 'pending' && (
-                        <Button size="sm" variant="ghost" tone="danger" icon="close"
-                          onClick={() => { setRejectDialog(v); setRejectReason('') }}>Rejeter</Button>
+                        <>
+                          <Button size="sm" variant="ghost" icon="help"
+                            onClick={() => { setRequestInfoDialog(v); setInfoMessage('') }}>Compléter</Button>
+                          <Button size="sm" variant="ghost" tone="danger" icon="close"
+                            onClick={() => { setRejectDialog(v); setRejectReason('') }}>Rejeter</Button>
+                        </>
                       )}
+                      <Button size="sm" variant="ghost" tone="danger" icon="delete"
+                        onClick={() => setDeleteDialog(v)} aria-label="Supprimer" title="Supprimer" />
                     </div>
                   </div>
                 )
@@ -159,7 +172,7 @@ export function IdentityVerificationsPage() {
                       <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={v.rejectionReason}>{v.rejectionReason}</div>
                     )}
                   </span>
-                  <span style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }} onClick={(ev) => ev.stopPropagation()}>
+                  <span style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }} onClick={(ev) => ev.stopPropagation()}>
                     <Button size="sm" icon="visibility" variant="ghost" onClick={() => setDetail(v)} aria-label="Détails" title="Détails" />
                     {v.status !== 'approved' && (
                       <Button size="sm" icon="check" onClick={() => approve.mutate(v.id)} loading={approve.isPending}>
@@ -167,11 +180,19 @@ export function IdentityVerificationsPage() {
                       </Button>
                     )}
                     {v.status === 'pending' && (
-                      <Button size="sm" variant="ghost" tone="danger" icon="close"
-                        onClick={() => { setRejectDialog(v); setRejectReason('') }}>
-                        Rejeter
-                      </Button>
+                      <>
+                        <Button size="sm" variant="ghost" icon="help"
+                          onClick={() => { setRequestInfoDialog(v); setInfoMessage('') }}
+                          aria-label="Demander un complément" title="Demander un complément" />
+                        <Button size="sm" variant="ghost" tone="danger" icon="close"
+                          onClick={() => { setRejectDialog(v); setRejectReason('') }}>
+                          Rejeter
+                        </Button>
+                      </>
                     )}
+                    <Button size="sm" variant="ghost" tone="danger" icon="delete"
+                      onClick={() => setDeleteDialog(v)}
+                      aria-label="Supprimer la vérification" title="Supprimer" />
                   </span>
                 </div>
               )
@@ -196,6 +217,8 @@ export function IdentityVerificationsPage() {
           onClose={() => setDetail(null)}
           onApprove={detail.status !== 'approved' ? () => approve.mutate(detail.id, { onSuccess: () => setDetail(null) }) : undefined}
           onReject={detail.status === 'pending' ? () => { setRejectDialog(detail); setRejectReason(''); setDetail(null) } : undefined}
+          onRequestInfo={detail.status === 'pending' ? () => { setRequestInfoDialog(detail); setInfoMessage(''); setDetail(null) } : undefined}
+          onDelete={() => { setDeleteDialog(detail); setDetail(null) }}
         />
       )}
 
@@ -227,6 +250,87 @@ export function IdentityVerificationsPage() {
           </div>
         </Dialog>
       )}
+
+      {requestInfoDialog && (
+        <Dialog
+          open
+          title="Demander un complément"
+          onClose={() => setRequestInfoDialog(null)}
+          actions={
+            <>
+              <Button variant="ghost" onClick={() => setRequestInfoDialog(null)}>Annuler</Button>
+              <Button
+                icon="send"
+                loading={requestInfo.isPending}
+                disabled={infoMessage.trim().length < 5}
+                onClick={() =>
+                  requestInfo.mutate(
+                    { id: requestInfoDialog.id, message: infoMessage.trim() },
+                    { onSuccess: () => { setRequestInfoDialog(null); setInfoMessage('') } }
+                  )
+                }
+              >
+                Envoyer
+              </Button>
+            </>
+          }
+        >
+          <div className="pc-form" style={{ gap: 10 }}>
+            <Textarea
+              label="Message au chauffeur"
+              value={infoMessage}
+              onChange={(e) => setInfoMessage(e.target.value)}
+              placeholder="Ex : la photo du recto est floue, merci de la reprendre…"
+            />
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+              La vérification reste en attente — le chauffeur reçoit une notification pour fournir les compléments.
+            </p>
+            {requestInfo.isError && (
+              <Toast tone="error" message={(requestInfo.error as Error)?.message ?? 'Envoi impossible.'} />
+            )}
+          </div>
+        </Dialog>
+      )}
+
+      {deleteDialog && (
+        <Dialog
+          open
+          icon="delete"
+          iconTone="danger"
+          title="Supprimer la vérification ?"
+          onClose={() => setDeleteDialog(null)}
+          actions={
+            <>
+              <Button variant="ghost" onClick={() => setDeleteDialog(null)}>Annuler</Button>
+              <Button
+                tone="danger"
+                icon="delete"
+                loading={remove.isPending}
+                onClick={() =>
+                  remove.mutate(deleteDialog.id, {
+                    onSuccess: () => setDeleteDialog(null),
+                  })
+                }
+              >
+                Supprimer définitivement
+              </Button>
+            </>
+          }
+        >
+          <div className="pc-form" style={{ gap: 10 }}>
+            <p style={{ margin: 0, fontSize: 13.5, color: 'var(--text-muted)' }}>
+              Cette action supprime la pièce et son historique.{' '}
+              {deleteDialog.status === 'approved' && (
+                <>Si c'est la dernière vérification approuvée du chauffeur, son compte repassera en non vérifié.{' '}</>
+              )}
+              Elle est irréversible.
+            </p>
+            {remove.isError && (
+              <Toast tone="error" message={(remove.error as Error)?.message ?? 'Suppression impossible.'} />
+            )}
+          </div>
+        </Dialog>
+      )}
     </Panel>
     </div>
   )
@@ -238,11 +342,15 @@ function VerificationDetailDialog({
   onClose,
   onApprove,
   onReject,
+  onRequestInfo,
+  onDelete,
 }: {
   verification: IdentityVerification
   onClose: () => void
   onApprove?: () => void
   onReject?: () => void
+  onRequestInfo?: () => void
+  onDelete?: () => void
 }) {
   const v = verification
   const st = STATUS_META[v.status] ?? { label: v.status, color: 'var(--text-muted)', bg: 'var(--surface-sunken)' }
@@ -255,6 +363,8 @@ function VerificationDetailDialog({
       actions={
         <>
           <Button variant="ghost" onClick={onClose}>Fermer</Button>
+          {onDelete && <Button variant="ghost" tone="danger" icon="delete" onClick={onDelete}>Supprimer</Button>}
+          {onRequestInfo && <Button variant="ghost" icon="help" onClick={onRequestInfo}>Compléter</Button>}
           {onReject && <Button variant="ghost" tone="danger" icon="close" onClick={onReject}>Rejeter</Button>}
           {onApprove && <Button icon="check" onClick={onApprove}>Approuver</Button>}
         </>

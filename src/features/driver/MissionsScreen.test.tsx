@@ -22,7 +22,19 @@ vi.mock('@/components/ParcelDetailDialog', () => ({ ParcelDetailDialog: () => nu
 vi.mock('@/components/NegotiationChat', () => ({ NegotiationChat: () => null }))
 vi.mock('@/components/NegotiationTurn', () => ({ NegotiationTurn: () => null }))
 vi.mock('@/components/ParcelMedia', () => ({ ParcelMedia: () => null }))
-vi.mock('@/store/auth', () => ({ useAuthStore: () => ({ user: { id: 'driver-1' } }) }))
+vi.mock('@/store/auth', () => {
+  // `@/lib/api/client` s'abonne au store à l'import. Un simple callable ne suffit
+  // plus : on reproduit la surface Zustand (`subscribe`/`getState`) utilisée.
+  const useAuthStore = Object.assign(() => ({ user: { id: 'driver-1' } }), {
+    subscribe: () => () => {},
+    getState: () => ({ user: { id: 'driver-1' }, sessionId: null, accessToken: null }),
+    setState: () => {},
+  })
+  return {
+    useAuthStore,
+    authStore: { get: () => ({ user: { id: 'driver-1' }, sessionId: null, accessToken: null }) },
+  }
+})
 
 const mockParcels = vi.mocked(useDriverParcels)
 const mockFin = vi.mocked(useDriverFinancialState)

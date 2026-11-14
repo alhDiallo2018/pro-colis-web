@@ -8,6 +8,7 @@ import * as usersApi from '@/lib/api/users'
 import * as adsApi from '@/lib/api/advertisements'
 import * as ratingsApi from '@/lib/api/ratings'
 import * as cancellationApi from '@/lib/api/cancellation'
+import * as businessApiKeysApi from '@/lib/api/business-api-keys'
 import type { ListParams } from '@/lib/api/types'
 import { useAuthStore } from '@/store/auth'
 import { queryClient } from '@/lib/queryClient'
@@ -269,5 +270,48 @@ export function useRespondToProposal() {
       queryClient.invalidateQueries({ queryKey: ['client', 'parcel', variables.parcelId] })
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
     },
+  })
+}
+
+// --- Clés API self-service (business shipper) ---
+
+function invalidateBusinessApiKeys() {
+  queryClient.invalidateQueries({ queryKey: ['client', 'business-api-keys'] })
+}
+
+export function useBusinessApiKeys() {
+  return useQuery({
+    queryKey: ['client', 'business-api-keys'],
+    queryFn: () => businessApiKeysApi.listBusinessApiKeys(),
+  })
+}
+
+export function useCreateBusinessApiKey() {
+  return useMutation({
+    mutationFn: (payload: businessApiKeysApi.CreateBusinessApiKeyPayload) =>
+      businessApiKeysApi.createBusinessApiKey(payload),
+    onSuccess: invalidateBusinessApiKeys,
+  })
+}
+
+export function useRotateBusinessApiKey() {
+  return useMutation({
+    mutationFn: (keyId: string) => businessApiKeysApi.rotateBusinessApiKey(keyId),
+    onSuccess: invalidateBusinessApiKeys,
+  })
+}
+
+export function useUpdateBusinessApiKey() {
+  return useMutation({
+    mutationFn: ({ keyId, payload }: { keyId: string; payload: businessApiKeysApi.UpdateBusinessApiKeyPayload }) =>
+      businessApiKeysApi.updateBusinessApiKey(keyId, payload),
+    onSuccess: invalidateBusinessApiKeys,
+  })
+}
+
+export function useDeactivateBusinessApiKey() {
+  return useMutation({
+    mutationFn: (keyId: string) => businessApiKeysApi.deactivateBusinessApiKey(keyId),
+    onSuccess: invalidateBusinessApiKeys,
   })
 }

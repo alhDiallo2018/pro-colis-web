@@ -12,6 +12,7 @@ import {
   type ShipmentDraft,
 } from "./api";
 import { formatFcfa } from "@/lib/format";
+import { CsvBulkImportDialog } from "@/features/client/CsvBulkImportDialog";
 import "./experience.css";
 
 export function WorkspaceScreen() {
@@ -40,6 +41,7 @@ export function WorkspaceScreen() {
   const navigate = useNavigate();
   const [text, setText] = useState("");
   const [preview, setPreview] = useState<ShipmentDraft[]>([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [departure, setDeparture] = useState("");
   const [arrival, setArrival] = useState("");
   const [consent, setConsent] = useState(false);
@@ -92,6 +94,20 @@ export function WorkspaceScreen() {
         </Card>
       )}
       {query.isLoading && <p role="status">Chargement…</p>}
+      <Card>
+        <h2>Import groupé direct (CSV)</h2>
+        <p>
+          Importez un fichier CSV pour publier plusieurs colis d&apos;un seul coup.
+          Aucune relecture ligne-par-ligne : le rapport affiche directement les succès et échecs.
+        </p>
+        <Button icon="upload_file" onClick={() => setBulkOpen(true)}>
+          Importer un CSV
+        </Button>
+        <p style={{ fontSize: "var(--fs-xs)", color: "var(--text-muted)" }}>
+          Format : <code>destinataire;téléphone;description;poids(kg);adresse(optionnelle)</code>
+        </p>
+      </Card>
+      <CsvBulkImportDialog open={bulkOpen} onClose={() => setBulkOpen(false)} />
       <Card>
         <h2>Préparer plusieurs colis</h2>
         <p>
