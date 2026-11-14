@@ -9,6 +9,7 @@ export const ROLE_HOME: Record<Role, string> = {
   support: '/support-admin',
   support_technique: '/support-admin',
   support_commercial: '/support-admin',
+  shuttle_operator: '/shuttle',
 }
 
 export function homeForRole(role: Role | undefined | null): string {

@@ -360,6 +360,26 @@ export const OperationsHubPage = lazy(() =>
     default: module.OperationsHubPage,
   })),
 );
+export const ShuttleOverviewPage = lazy(() =>
+  import("@/features/shuttleOperator/ShuttleOverviewPage").then((module) => ({
+    default: module.ShuttleOverviewPage,
+  })),
+);
+export const ShuttleLinesPage = lazy(() =>
+  import("@/features/shuttleOperator/ShuttleLinesPage").then((module) => ({
+    default: module.ShuttleLinesPage,
+  })),
+);
+export const ShuttleVehiclesPage = lazy(() =>
+  import("@/features/shuttleOperator/ShuttleVehiclesPage").then((module) => ({
+    default: module.ShuttleVehiclesPage,
+  })),
+);
+export const ShuttleSchedulesPage = lazy(() =>
+  import("@/features/shuttleOperator/ShuttleSchedulesPage").then((module) => ({
+    default: module.ShuttleSchedulesPage,
+  })),
+);
 export const StatistiquesPage = lazy(() =>
   import("@/features/superAdmin/StatistiquesPage").then((module) => ({
     default: module.StatistiquesPage,

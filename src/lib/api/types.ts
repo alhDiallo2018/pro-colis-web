@@ -10,6 +10,8 @@ export type Role =
   | 'support'
   | 'support_technique'
   | 'support_commercial'
+  /** Opérateur de transport collectif (Tata/AFTU/DDD). */
+  | 'shuttle_operator'
 
 /** Les trois rôles qui partagent l'espace /support-admin. */
 export const SUPPORT_ROLES = ['support', 'support_technique', 'support_commercial'] as const

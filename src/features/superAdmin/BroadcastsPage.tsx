@@ -33,6 +33,7 @@ function roleLabel(r: Broadcast['targetRoles'][number]) {
     support: 'Support',
     support_technique: 'Support technique',
     support_commercial: 'Support commercial',
+    shuttle_operator: 'Opérateur transport',
   }[r]
 }
 

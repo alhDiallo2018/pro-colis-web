@@ -1,4 +1,4 @@
-import { QualityScreen, WorkspaceScreen, OfflineHistory, LiveJourneys, ClientDebtsScreen, ClientWalletScreen, ClientApiKeysScreen, SettingsScreen, DriverDebtsScreen, LoginPage, RegisterPage, ForgotPinPage, LandingPage, InstallPage, AProposPage, ContactPage, MentionsLegalesPage, ConfidentialitePage, CGUPage, ConditionsTransportPage, PaiementPage, RemboursementPage, ReclamationsPage, ColisInterditsPage, HelpScreen, PaymentStatusPage, ClientDashboard, MesColisScreen, ParcelDetailScreen, NewParcelScreen, OffresRecuesScreen, ClientAnnoncesScreen, AnnonceDetailScreen, DriverProfileScreen, SuiviScreen, ProfilScreen, TripDetailScreen, ConfirmDeliveryScreen, DriverDashboard, LibreServiceScreen, MissionsScreen, HandoverConfirmScreen, RevenusScreen, HistoriqueScreen, MonGarageScreen, DriverProfilScreen, DriverParametresScreen, DriverPointsScreen, MesAnnoncesScreen, VehicleDocumentsScreen, ItineraireScreen, AdvertisementManifestScreen, AdvertisementReachedStopsScreen, OperationsHubPage, MessagesScreen, AdminSupportScreen, SupportDashboard, SupportConversationsScreen, ModerationScreen, StaffProfilScreen, LogsScreen, AuditLogsScreen, IncidentsScreen, TicketsScreen, LeadsScreen, CoverageScreen, SuperAdminDashboard, ColisPage, ChauffeursPage, UtilisateursPage, ZonesPage, StatistiquesPage, RapportsPage, SystemePage, ConfigConsommationPage, FinanceDashboardPage, WalletsPage, PaymentsPage, CashDeclarationsPage, PaymentNotificationsPage, ReputationDashboardPage, ScoresPage, ClassementPage, DriverDetailPage, BrevoConfigScreen, PaydunyaConfigScreen, BroadcastsPage, WalletDetailPage, ScoreDetailPage, WithdrawalsPage, AssistancesPage, ExpensesPage, IdentityVerificationsPage, NotificationsScreen, GarageDashboard, GarageColisPage, GarageChauffeursPage, GarageAssignationsPage, GarageRapportsPage, GarageParcelDetailPage, PilotMetricsPage } from './screens';
+import { QualityScreen, WorkspaceScreen, OfflineHistory, LiveJourneys, ClientDebtsScreen, ClientWalletScreen, ClientApiKeysScreen, SettingsScreen, DriverDebtsScreen, LoginPage, RegisterPage, ForgotPinPage, LandingPage, InstallPage, AProposPage, ContactPage, MentionsLegalesPage, ConfidentialitePage, CGUPage, ConditionsTransportPage, PaiementPage, RemboursementPage, ReclamationsPage, ColisInterditsPage, HelpScreen, PaymentStatusPage, ClientDashboard, MesColisScreen, ParcelDetailScreen, NewParcelScreen, OffresRecuesScreen, ClientAnnoncesScreen, AnnonceDetailScreen, DriverProfileScreen, SuiviScreen, ProfilScreen, TripDetailScreen, ConfirmDeliveryScreen, DriverDashboard, LibreServiceScreen, MissionsScreen, HandoverConfirmScreen, RevenusScreen, HistoriqueScreen, MonGarageScreen, DriverProfilScreen, DriverParametresScreen, DriverPointsScreen, MesAnnoncesScreen, VehicleDocumentsScreen, ItineraireScreen, AdvertisementManifestScreen, AdvertisementReachedStopsScreen, OperationsHubPage, ShuttleOverviewPage, ShuttleLinesPage, ShuttleVehiclesPage, ShuttleSchedulesPage, MessagesScreen, AdminSupportScreen, SupportDashboard, SupportConversationsScreen, ModerationScreen, StaffProfilScreen, LogsScreen, AuditLogsScreen, IncidentsScreen, TicketsScreen, LeadsScreen, CoverageScreen, SuperAdminDashboard, ColisPage, ChauffeursPage, UtilisateursPage, ZonesPage, StatistiquesPage, RapportsPage, SystemePage, ConfigConsommationPage, FinanceDashboardPage, WalletsPage, PaymentsPage, CashDeclarationsPage, PaymentNotificationsPage, ReputationDashboardPage, ScoresPage, ClassementPage, DriverDetailPage, BrevoConfigScreen, PaydunyaConfigScreen, BroadcastsPage, WalletDetailPage, ScoreDetailPage, WithdrawalsPage, AssistancesPage, ExpensesPage, IdentityVerificationsPage, NotificationsScreen, GarageDashboard, GarageColisPage, GarageChauffeursPage, GarageAssignationsPage, GarageRapportsPage, GarageParcelDetailPage, PilotMetricsPage } from './screens';
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RequireAuth, RequireRole } from "./guards";
 import { DashboardLayout, type NavSection } from "@/layouts/DashboardLayout";
@@ -89,6 +89,18 @@ const DRIVER_NAV: NavSection[] = [
       { label: "Ma zone", labelKey: "nav.driverGarage", icon: "garage", to: "/driver/garage" },
       { label: "Profil", labelKey: "nav.driverProfile", icon: "person", to: "/driver/profil" },
       { label: "Paramètres", labelKey: "nav.driverSettings", icon: "settings", to: "/driver/parametres" },
+    ],
+  },
+];
+
+const SHUTTLE_NAV: NavSection[] = [
+  {
+    items: [
+      { label: "Tableau de bord", icon: "dashboard", to: "/shuttle", end: true },
+      { label: "Lignes de transit", icon: "route", to: "/shuttle/lignes" },
+      { label: "Flotte", icon: "directions_bus", to: "/shuttle/vehicules" },
+      { label: "Horaires", icon: "schedule", to: "/shuttle/horaires" },
+      { label: "Messages", icon: "forum", to: "/shuttle/messages" },
     ],
   },
 ];
@@ -344,6 +356,30 @@ export const router = createBrowserRouter([
       { path: "annonces/:advertisementId/manifest", element: <AdvertisementManifestScreen /> },
       { path: "annonces/:advertisementId/arrets-atteints", element: <AdvertisementReachedStopsScreen /> },
       { path: "parcels/:parcelId/confirm", element: <ConfirmDeliveryScreen /> },
+    ],
+  },
+
+  // Shuttle operator (opérateur de transport collectif)
+  {
+    path: "/shuttle",
+    element: (
+      <RequireRole roles={["shuttle_operator"]}>
+        <DashboardLayout
+          nav={SHUTTLE_NAV}
+          roleLabel="Opérateur"
+          greetOnIndex
+          banner={<BroadcastBanner />}
+          actions={<NotifButton />}
+        />
+      </RequireRole>
+    ),
+    children: [
+      { index: true, element: <ShuttleOverviewPage /> },
+      { path: "lignes", element: <ShuttleLinesPage /> },
+      { path: "vehicules", element: <ShuttleVehiclesPage /> },
+      { path: "horaires", element: <ShuttleSchedulesPage /> },
+      { path: "messages", element: <MessagesScreen /> },
+      { path: "notifications", element: <NotificationsScreen /> },
     ],
   },
 

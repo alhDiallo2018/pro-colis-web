@@ -18,6 +18,9 @@ const PROFILE_PATH: Record<Role, string> = {
   support: '/super-admin/profile',
   support_technique: '/support-technique/profile',
   support_commercial: '/support-commercial/profile',
+  // Pas d'endpoint profil dédié à l'opérateur côté API aujourd'hui ;
+  // retomber sur le profil client (edition `fullName`, `email`, etc.).
+  shuttle_operator: '/client/profile',
 }
 
 /** Met à jour le profil de l'utilisateur courant selon son rôle. */

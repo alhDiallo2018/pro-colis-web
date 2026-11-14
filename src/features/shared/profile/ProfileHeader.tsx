@@ -13,6 +13,7 @@ const ROLE_LABEL: Record<Role, string> = {
   support: 'Support',
   support_technique: 'Support technique',
   support_commercial: 'Support commercial',
+  shuttle_operator: 'Opérateur de transport',
 }
 
 const KYC_BADGE: Record<IdentityStatus, { label: string; tone: 'green' | 'amber' | 'red'; icon: string }> = {

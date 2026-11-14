@@ -88,6 +88,13 @@ const PRELOADS: Partial<Record<UserRole, Array<() => Promise<unknown>>>> = {
     () => import('@/features/shared/supportRoles/LeadsScreen'),
     () => import('@/features/shared/supportRoles/CoverageScreen'),
   ],
+  shuttle_operator: [
+    () => import('@/features/shuttleOperator/ShuttleOverviewPage'),
+    () => import('@/features/shuttleOperator/ShuttleLinesPage'),
+    () => import('@/features/shuttleOperator/ShuttleVehiclesPage'),
+    () => import('@/features/shuttleOperator/ShuttleSchedulesPage'),
+    () => import('@/features/shared/MessagesScreen'),
+  ],
 }
 
 let lastPrecachedFor: string | null = null

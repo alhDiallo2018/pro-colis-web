@@ -18,6 +18,7 @@ const ROLE_LABEL: Record<Role, string> = {
   support: 'Support',
   support_technique: 'Support technique',
   support_commercial: 'Support commercial',
+  shuttle_operator: 'Opérateur transport',
 }
 
 const STATUS_TONE: Record<UserStatus, 'green' | 'red' | 'neutral'> = {
