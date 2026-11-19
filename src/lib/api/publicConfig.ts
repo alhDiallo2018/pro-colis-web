@@ -57,6 +57,85 @@ export interface PublicConfig {
     technicalDirectorName: string
     technicalDirectorEmail: string
   }
+  /** Timings (polling, timeouts, fenêtres métier) pilotés par l'administrateur.
+   *  Optionnel : les clients conservent des fallbacks statiques si l'API tourne
+   *  sur une version antérieure ou si la config n'est pas encore chargée. */
+  timings?: Partial<TimingsConfig>
+  /** Phase 1 externalisation : paramètres d'authentification administrables.
+   *  Permet au web de borner la saisie OTP sans valeur magique en dur. */
+  auth?: {
+    otpExpiryMinutes: number
+    otpMaxAttempts: number
+  }
+  /** Phase 1 externalisation : tarification internationale CEDEAO. Les paires
+   *  desservies, la limite de poids et les documents requis proviennent de la
+   *  config admin (`international.*`). */
+  international?: {
+    maxWeightKg: number
+    countryPairs: string[]
+    requiredDocuments: Record<string, string[]>
+  }
+  /** Phase 1 externalisation : devise d'affichage par défaut + liste autorisée.
+   *  Remplace les `currency = 'XOF'` codés en dur dans les écrans. */
+  currency?: {
+    default: string
+    supported: string[]
+  }
+}
+
+/** Timings pilotables en runtime depuis l'admin (SystemConfig `timings.*`).
+ *  Les valeurs par défaut sont dupliquées côté web dans `DEFAULT_TIMINGS` pour
+ *  garantir un boot fonctionnel avant la première réponse `/public/config`. */
+export interface TimingsConfig {
+  // Polling
+  parcelStatusPollMs: number
+  parcelsListPollMs: number
+  announcementsFeedPollMs: number
+  journeyPositionsPollMs: number
+  operationsDashboardPollMs: number
+  driverDiscoveryPollMs: number
+  // Timeouts
+  apiRequestTimeoutMs: number
+  geolocationTimeoutMs: number
+  googleAuthTimeoutMs: number
+  // GPS
+  locationUploadIntervalSec: number
+  locationFreshnessSec: number
+  // Messaging
+  messageEditWindowMs: number
+  broadcastSnoozeHours: number
+  // Discovery
+  positionTtlMs: number
+  // Webhooks (internes API — exposés en lecture pour les tableaux de bord)
+  webhookRetryBackoffBaseMs: number
+  webhookPollIntervalMs: number
+  webhookMaxAttempts: number
+  // PWA
+  pwaSyncMaxAttempts: number
+}
+
+/** Fallback statique : valeurs utilisées tant que `/public/config` n'a pas
+ *  répondu (boot, offline, ancienne version d'API). Doit rester synchronisé
+ *  avec `TIMINGS_DEFAULTS` dans `src/utils/timings-config.js` côté API. */
+export const DEFAULT_TIMINGS: TimingsConfig = {
+  parcelStatusPollMs: 60_000,
+  parcelsListPollMs: 15_000,
+  announcementsFeedPollMs: 5_000,
+  journeyPositionsPollMs: 15_000,
+  operationsDashboardPollMs: 60_000,
+  driverDiscoveryPollMs: 60_000,
+  apiRequestTimeoutMs: 30_000,
+  geolocationTimeoutMs: 15_000,
+  googleAuthTimeoutMs: 15_000,
+  locationUploadIntervalSec: 10,
+  locationFreshnessSec: 60,
+  messageEditWindowMs: 900_000,
+  broadcastSnoozeHours: 2,
+  positionTtlMs: 600_000,
+  webhookRetryBackoffBaseMs: 30_000,
+  webhookPollIntervalMs: 15_000,
+  webhookMaxAttempts: 6,
+  pwaSyncMaxAttempts: 10,
 }
 
 export async function getPublicConfig(): Promise<PublicConfig> {

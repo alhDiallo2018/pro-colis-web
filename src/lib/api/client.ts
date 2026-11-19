@@ -1,8 +1,14 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig, type AxiosInstance } from 'axios'
 import { authStore, useAuthStore } from '@/store/auth'
 import { installOfflineInterceptor, isOfflineEligible, offlineAccess } from '@/lib/offlineAccess'
+import { getTimings } from '@/lib/usePublicConfig'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+
+/** Timeout par défaut au démarrage : la valeur effective est réinjectée dans
+ *  les instances axios dès que `/public/config` répond (via l'intercepteur de
+ *  requête ci-dessous). Fallback = 30 s, cohérent avec l'historique. */
+const DEFAULT_REQUEST_TIMEOUT_MS = 30_000
 
 /** Standard error envelope from the API: { success:false, message, error:{ code, details } }. */
 export class ApiError extends Error {
@@ -19,8 +25,8 @@ export class ApiError extends Error {
 }
 
 /** Transport sans intercepteur pour ne jamais boucler sur /auth/refresh. */
-const bare = axios.create({ baseURL: BASE_URL, timeout: 30_000 })
-export const api: AxiosInstance = axios.create({ baseURL: BASE_URL, timeout: 30_000 })
+const bare = axios.create({ baseURL: BASE_URL, timeout: DEFAULT_REQUEST_TIMEOUT_MS })
+export const api: AxiosInstance = axios.create({ baseURL: BASE_URL, timeout: DEFAULT_REQUEST_TIMEOUT_MS })
 
 type AuthRequest = InternalAxiosRequestConfig & {
   _retried?: boolean
@@ -40,6 +46,12 @@ api.interceptors.request.use((config: AuthRequest) => {
   const state = authStore.get()
   if (typeof navigator !== 'undefined' && !navigator.onLine && !isOfflineEligible(config))
     throw new ApiError('Hors connexion : reconnectez-vous pour effectuer cette opération.', 'OFFLINE', 0)
+  // Applique le timeout admin si la requête ne précise pas la sienne. Les
+  // appels qui ont besoin d'un timeout ad hoc (uploads longs, exports) ne
+  // sont donc pas écrasés.
+  if (config.timeout === undefined || config.timeout === DEFAULT_REQUEST_TIMEOUT_MS) {
+    config.timeout = getTimings().apiRequestTimeoutMs || DEFAULT_REQUEST_TIMEOUT_MS
+  }
   if (config._retried && config._authSessionId !== state.sessionId) {
     throw new ApiError('Session modifiée', 'SESSION_CHANGED', 0)
   }

@@ -5,8 +5,22 @@ import * as identityApi from '@/lib/api/identity'
 import * as uploadsApi from '@/lib/api/uploads'
 import * as vehiclesApi from '@/lib/api/vehicles'
 import type { Vehicle } from '@/lib/api/vehicles'
+import { useReferenceData } from '@/lib/useReferenceData'
 
-const DOC_TYPES = [
+// Icones materielles par code de document. Le referentiel admin ne stocke pas
+// d'icone ; on map ici les codes connus et on retombe sur `description` pour
+// tout nouveau type ajoute dynamiquement.
+const DOC_ICONS: Record<string, string> = {
+  driver_license: 'badge',
+  vehicle_registration: 'article',
+  insurance: 'verified_user',
+  id_card: 'perm_identity',
+  national_id: 'perm_identity',
+}
+
+// Fallback utilise tant que le referentiel n'est pas charge (identique au
+// comportement historique de l'ecran).
+const DOC_TYPES_FALLBACK = [
   { type: 'driver_license', label: 'Permis de conduire', icon: 'badge' },
   { type: 'vehicle_registration', label: 'Carte grise', icon: 'article' },
   { type: 'insurance', label: 'Assurance', icon: 'verified_user' },
@@ -31,6 +45,18 @@ export function VehicleDocumentsScreen() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [pendingSlot, setPendingSlot] = useState<{ docType: string; side: 'front' | 'back' } | null>(null)
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
+
+  // Liste pilotee par l'admin : `appliesTo=driver` cache les documents
+  // administratifs reserves au back-office (ex: contrat employeur).
+  const docTypesQ = useReferenceData('document-types', { filter: 'driver' })
+  const DOC_TYPES =
+    docTypesQ.data && docTypesQ.data.length > 0
+      ? docTypesQ.data.map((item) => ({
+          type: item.code,
+          label: item.label,
+          icon: DOC_ICONS[item.code] ?? 'description',
+        }))
+      : DOC_TYPES_FALLBACK
 
   const loadIdentity = useCallback(async () => {
     setLoading(true)

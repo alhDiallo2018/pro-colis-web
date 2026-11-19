@@ -15,7 +15,16 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') event.waitUntil(self.skipWaiting())
+  // L'UI pousse les timings publics (`timings.pwaSyncMaxAttempts`…) dès que
+  // `/public/config` répond. Le SW persiste la valeur en IDB pour la relire
+  // à chaque tour de sync, y compris après kill/revive du worker.
+  if (event.data?.type === 'TIMINGS' && event.data.timings) {
+    event.waitUntil(persistSyncConfig(event.data.timings).catch(() => {}))
+  }
 })
+
+// Limite d'abandon par défaut — surchargée dès que l'UI envoie `TIMINGS`.
+const DEFAULT_PWA_SYNC_MAX_ATTEMPTS = 10
 
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
@@ -129,7 +138,10 @@ self.addEventListener('sync', (event) => {
 async function flushBackgroundSyncQueue() {
   try {
     const db = await openSyncDatabase()
-    const jobs = await readAllSyncJobs(db)
+    const [jobs, maxAttempts] = await Promise.all([
+      readAllSyncJobs(db),
+      readSyncMaxAttempts(db),
+    ])
     if (jobs.length === 0) return
 
     for (const job of jobs) {
@@ -156,10 +168,10 @@ async function flushBackgroundSyncQueue() {
           await deleteSyncJob(db, job.id)
         } else {
           // 5xx : on garde le job pour la prochaine passe.
-          await incrementSyncAttempt(db, job.id)
+          await incrementSyncAttempt(db, job.id, maxAttempts)
         }
       } catch {
-        await incrementSyncAttempt(db, job.id)
+        await incrementSyncAttempt(db, job.id, maxAttempts)
       }
     }
   } catch (error) {
@@ -172,15 +184,50 @@ async function flushBackgroundSyncQueue() {
 
 function openSyncDatabase() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open('procolis-sync', 1)
+    // v2 ajoute le store `config` (K-V) pour stocker les timings publics
+    // reçus de l'UI (ex. `pwaSyncMaxAttempts`). Compatible ascendant : les
+    // bases v1 existantes sont migrées sans perte de données queue.
+    const request = indexedDB.open('procolis-sync', 2)
     request.onerror = () => reject(request.error)
     request.onupgradeneeded = () => {
       const db = request.result
       if (!db.objectStoreNames.contains('queue')) {
         db.createObjectStore('queue', { keyPath: 'id' })
       }
+      if (!db.objectStoreNames.contains('config')) {
+        db.createObjectStore('config')
+      }
     }
     request.onsuccess = () => resolve(request.result)
+  })
+}
+
+async function persistSyncConfig(timings) {
+  const db = await openSyncDatabase()
+  if (!db.objectStoreNames.contains('config')) return
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction('config', 'readwrite')
+    tx.objectStore('config').put(timings, 'timings')
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
+async function readSyncMaxAttempts(db) {
+  if (!db.objectStoreNames.contains('config')) return DEFAULT_PWA_SYNC_MAX_ATTEMPTS
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction('config', 'readonly')
+      const request = tx.objectStore('config').get('timings')
+      request.onerror = () => resolve(DEFAULT_PWA_SYNC_MAX_ATTEMPTS)
+      request.onsuccess = () => {
+        const value = request.result?.pwaSyncMaxAttempts
+        const n = Number(value)
+        resolve(Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_PWA_SYNC_MAX_ATTEMPTS)
+      }
+    } catch {
+      resolve(DEFAULT_PWA_SYNC_MAX_ATTEMPTS)
+    }
   })
 }
 
@@ -203,7 +250,7 @@ function deleteSyncJob(db, id) {
   })
 }
 
-function incrementSyncAttempt(db, id) {
+function incrementSyncAttempt(db, id, maxAttempts = DEFAULT_PWA_SYNC_MAX_ATTEMPTS) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction('queue', 'readwrite')
     const store = tx.objectStore('queue')
@@ -212,10 +259,10 @@ function incrementSyncAttempt(db, id) {
       const job = getRequest.result
       if (!job) return resolve()
       job.attempts = (job.attempts || 0) + 1
-      // Abandon après 10 tentatives : au-delà, un échec est persistant
-      // (payload invalide, permissions révoquées) — garder le job empêcherait
-      // le reste de la file d'avancer.
-      if (job.attempts >= 10) {
+      // Abandon après `maxAttempts` : au-delà, un échec est persistant (payload
+      // invalide, permissions révoquées). La valeur est pilotée par l'admin
+      // (`timings.pwaSyncMaxAttempts`), défaut 10.
+      if (job.attempts >= maxAttempts) {
         store.delete(id)
       } else {
         store.put(job)

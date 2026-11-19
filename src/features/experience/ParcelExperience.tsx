@@ -5,15 +5,20 @@ import { Button, Card, Select, Textarea, Toast } from "@/ds";
 import { api } from "@/lib/api/client";
 import { uploadChatPhoto } from "@/lib/api/uploads";
 import { formatFcfa } from "@/lib/format";
+import { getTimings } from "@/lib/usePublicConfig";
 import { experience, downloadReceipt, ticketStatus } from "./api";
 import "./experience.css";
 
 export function ParcelExperience({ parcelId }: { parcelId: string }) {
   const queryClient = useQueryClient();
+  // Snapshot synchrone : lit la dernière valeur primée via `App.tsx`
+  // (`useSyncTimingsCache`). Pas de query React Query supplémentaire côté
+  // composant — évite de consommer un `api.get` mocké dans les tests.
+  const { parcelStatusPollMs } = getTimings();
   const query = useQuery({
     queryKey: ["experience", parcelId],
     queryFn: () => experience(parcelId),
-    refetchInterval: 60_000,
+    refetchInterval: parcelStatusPollMs,
     retry: false,
   });
   const [open, setOpen] = useState(false);

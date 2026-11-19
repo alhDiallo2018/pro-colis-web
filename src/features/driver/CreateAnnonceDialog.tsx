@@ -11,6 +11,7 @@ import { GarageSearchSelect } from '@/components/GarageSearchSelect'
 import { VoiceRecorder } from '@/components/VoiceRecorder'
 import { DraftRestoreBanner } from '@/components/DraftRestoreBanner'
 import { useFormDraft } from '@/lib/useFormDraft'
+import { useReferenceData } from '@/lib/useReferenceData'
 import type { Zone } from '@/lib/api/types'
 
 interface Props {
@@ -39,7 +40,15 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
   const vehicleQ = useQuery({queryKey:['driver','vehicle'],queryFn:vehiclesApi.getMine})
   const vehicle=vehicleQ.data
   const category=(vehicle?.type??'').toLowerCase()
-  const serviceType=['bus','tata','horaire','minibus','autobus'].includes(category)?'shuttle':category==='gp'?'gp':'trip'
+  // Les codes "shuttle" sont desormais pilotes par le referentiel admin
+  // `vehicle-types?category=shuttle` : un super-admin peut ajouter un nouveau
+  // code (ex. `taxi_brousse`) sans redeploiement. En l'absence de reponse, on
+  // bascule sur les bus/tata connus pour que l'ecran reste fonctionnel.
+  const shuttleTypesQ = useReferenceData('vehicle-types', { filter: 'shuttle' })
+  const shuttleCodes =
+    shuttleTypesQ.data?.map((v) => v.code.toLowerCase()) ??
+    ['bus', 'tata', 'horaire', 'minibus', 'autobus']
+  const serviceType=shuttleCodes.includes(category)?'shuttle':category==='gp'?'gp':'trip'
   const [stops,setStops]=useState<Stop[]>([]),[duration,setDuration]=useState(60),[line,setLine]=useState('')
   const zonesQ = useQuery({ queryKey: ['zones', 'public'], queryFn: () => zonesApi.listPublic(), staleTime: 5 * 60_000 })
   const zones = zonesQ.data ?? []

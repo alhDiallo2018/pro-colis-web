@@ -12,9 +12,12 @@ import {
 import { uploadChatPhoto } from '@/lib/api/uploads'
 import { formatDate, formatDateTime, formatFcfa } from '@/lib/format'
 import { useIsMobile } from '@/lib/useMediaQuery'
+import { useReferenceData } from '@/lib/useReferenceData'
 import type { Expense, ExpenseStatus, ExpensePayload } from '@/lib/api/expenses'
 
-const CATEGORIES = ['Loyer', 'Salaires', 'Marketing', 'Transport', 'Fournitures', 'Maintenance', 'Commissions', 'Autre']
+// Fallback si le referentiel n'est pas encore charge : on conserve l'ancienne
+// liste pour que la modale reste utilisable au premier affichage.
+const CATEGORIES_FALLBACK = ['Loyer', 'Salaires', 'Marketing', 'Transport', 'Fournitures', 'Maintenance', 'Commissions', 'Autre']
 
 const STATUS_META: Record<ExpenseStatus, { label: string; color: string; bg: string }> = {
   paid: { label: 'Payé', color: 'var(--green-700)', bg: 'var(--green-50)' },
@@ -45,6 +48,12 @@ export function ExpensesPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const limit = 20
+  // Liste pilotee par l'admin via /admin/reference/expense-categories.
+  const categoriesQ = useReferenceData('expense-categories')
+  const CATEGORIES =
+    categoriesQ.data && categoriesQ.data.length > 0
+      ? categoriesQ.data.map((item) => item.label)
+      : CATEGORIES_FALLBACK
 
   const params = { page, limit, ...(status ? { status } : {}), ...(search ? { search } : {}) }
   const expenses = useExpenses(params)

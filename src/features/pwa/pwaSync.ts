@@ -21,9 +21,14 @@ export interface SyncJob {
 }
 
 const DB_NAME = 'procolis-sync'
-const DB_VERSION = 1
+// v2 : ajoute le store `config` partagé avec `pwa/sw.js` (voir `openSyncDatabase`).
+const DB_VERSION = 2
 const STORE = 'queue'
+const CONFIG_STORE = 'config'
 const SYNC_TAG = 'procolis-sync'
+/** Nombre d'essais max par défaut avant purge d'un job — surchargé par la
+ *  config admin `timings.pwaSyncMaxAttempts`. */
+const DEFAULT_MAX_SYNC_ATTEMPTS = 10
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -34,9 +39,55 @@ function openDb(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORE)) {
         db.createObjectStore(STORE, { keyPath: 'id' })
       }
+      if (!db.objectStoreNames.contains(CONFIG_STORE)) {
+        db.createObjectStore(CONFIG_STORE)
+      }
     }
     request.onsuccess = () => resolve(request.result)
   })
+}
+
+async function readMaxSyncAttempts(db: IDBDatabase): Promise<number> {
+  if (!db.objectStoreNames.contains(CONFIG_STORE)) return DEFAULT_MAX_SYNC_ATTEMPTS
+  return new Promise<number>((resolve) => {
+    try {
+      const tx = db.transaction(CONFIG_STORE, 'readonly')
+      const req = tx.objectStore(CONFIG_STORE).get('timings')
+      req.onerror = () => resolve(DEFAULT_MAX_SYNC_ATTEMPTS)
+      req.onsuccess = () => {
+        const n = Number((req.result as { pwaSyncMaxAttempts?: unknown } | undefined)?.pwaSyncMaxAttempts)
+        resolve(Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_MAX_SYNC_ATTEMPTS)
+      }
+    } catch {
+      resolve(DEFAULT_MAX_SYNC_ATTEMPTS)
+    }
+  })
+}
+
+/** Pousse les timings publics vers le store IDB partagé + le SW actif. À
+ *  appeler dès que `/public/config` répond côté UI (`PwaProvider`). */
+export async function persistPwaTimings(timings: Record<string, unknown> | undefined): Promise<void> {
+  if (!timings) return
+  try {
+    const db = await openDb()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(CONFIG_STORE, 'readwrite')
+      tx.objectStore(CONFIG_STORE).put(timings, 'timings')
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+    db.close()
+  } catch {
+    /* IDB indisponible (mode privé Firefox) : on tolère, le SW gardera son
+     * défaut statique. */
+  }
+  try {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'TIMINGS', timings })
+    }
+  } catch {
+    /* noop */
+  }
 }
 
 function nextId(): string {
@@ -103,12 +154,15 @@ export async function flushBackgroundQueue(): Promise<{ sent: number; failed: nu
   if (!navigator.onLine) return { sent: 0, failed: 0 }
 
   const db = await openDb()
-  const jobs: SyncJob[] = await new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readonly')
-    const req = tx.objectStore(STORE).getAll()
-    req.onerror = () => reject(req.error)
-    req.onsuccess = () => resolve((req.result as SyncJob[]) || [])
-  })
+  const [jobs, maxAttempts] = await Promise.all<[Promise<SyncJob[]>, Promise<number>]>([
+    new Promise<SyncJob[]>((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readonly')
+      const req = tx.objectStore(STORE).getAll()
+      req.onerror = () => reject(req.error)
+      req.onsuccess = () => resolve((req.result as SyncJob[]) || [])
+    }),
+    readMaxSyncAttempts(db),
+  ])
 
   let sent = 0
   let failed = 0
@@ -133,11 +187,11 @@ export async function flushBackgroundQueue(): Promise<{ sent: number; failed: nu
         sent += 1
       } else {
         failed += 1
-        await bumpAttempts(db, job.id)
+        await bumpAttempts(db, job.id, maxAttempts)
       }
     } catch {
       failed += 1
-      await bumpAttempts(db, job.id)
+      await bumpAttempts(db, job.id, maxAttempts)
     }
   }
 
@@ -154,7 +208,7 @@ async function removeJob(db: IDBDatabase, id: string): Promise<void> {
   })
 }
 
-async function bumpAttempts(db: IDBDatabase, id: string): Promise<void> {
+async function bumpAttempts(db: IDBDatabase, id: string, maxAttempts = DEFAULT_MAX_SYNC_ATTEMPTS): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite')
     const store = tx.objectStore(STORE)
@@ -163,10 +217,9 @@ async function bumpAttempts(db: IDBDatabase, id: string): Promise<void> {
       const job = getReq.result as SyncJob | undefined
       if (!job) return
       const attempts = (job.attempts || 0) + 1
-      // 10 tentatives suffisent à couvrir une panne multi-heure ; au-delà
-      // le payload est vraisemblablement invalide — on purge pour éviter
-      // qu'un job mort bloque les suivants.
-      if (attempts >= 10) store.delete(id)
+      // `maxAttempts` est piloté par l'admin (`timings.pwaSyncMaxAttempts`) —
+      // au-delà, on purge pour éviter qu'un payload invalide bloque la file.
+      if (attempts >= maxAttempts) store.delete(id)
       else store.put({ ...job, attempts })
     }
     tx.oncomplete = () => resolve()

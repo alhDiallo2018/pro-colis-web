@@ -19,7 +19,7 @@ import { isCommissionDebtError } from '@/lib/commissionDebt'
 import * as commissionApi from '@/lib/api/commission'
 import * as cancellationApi from '@/lib/api/cancellation'
 import { queryClient } from '@/lib/queryClient'
-import { usePublicConfig } from '@/lib/usePublicConfig'
+import { usePublicConfig, usePollingConfig } from '@/lib/usePublicConfig'
 import { useAuthStore } from '@/store/auth'
 import { useMutation, useQuery } from '@tanstack/react-query'
 
@@ -221,20 +221,25 @@ export function useDriverParcels(params: ListParams = {}) {
 
 // ✅ useDriverFreeParcels - Le filtrage par zone est fait dans le composant
 export function useDriverFreeParcels(params: ListParams = {}) {
+  // Durée pendant laquelle React Query conserve les résultats sans refetch :
+  // la valeur `parcelsListPollMs × 8` (≈ 2 min) préserve le comportement
+  // historique tout en restant piloté par l'admin.
+  const { parcelsListPollMs } = usePollingConfig()
   return useQuery({
     queryKey: ['parcels', 'free', params],
     queryFn: () => parcelsApi.listFree(params),
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: parcelsListPollMs * 8,
     retry: 2,
   })
 }
 
 export function useDriverBidsSent() {
+  const { parcelsListPollMs } = usePollingConfig()
   return useQuery({
     queryKey: ['driver', 'bids', 'sent'],
     queryFn: () => roles.driverBidsSent(),
-    refetchInterval: 15000,
-    staleTime: 10000,
+    refetchInterval: parcelsListPollMs,
+    staleTime: Math.max(1_000, Math.floor(parcelsListPollMs * 0.66)),
   })
 }
 
@@ -303,11 +308,12 @@ export function useDriverCancelParcel(parcelId: string) {
  * pas dans `useDriverParcels`, qui ne liste que les colis déjà pris en charge.
  */
 export function useDriverProposals() {
+  const { parcelsListPollMs } = usePollingConfig()
   return useQuery({
     queryKey: ['driver', 'proposals'],
     queryFn: () => proposalsApi.listForDriver(),
-    refetchInterval: 15000,
-    staleTime: 10000,
+    refetchInterval: parcelsListPollMs,
+    staleTime: Math.max(1_000, Math.floor(parcelsListPollMs * 0.66)),
   })
 }
 

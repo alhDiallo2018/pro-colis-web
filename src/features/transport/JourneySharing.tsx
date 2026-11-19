@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/ds'
 import { api } from '@/lib/api/client'
 import { useAuthStore } from '@/store/auth'
+import { getTimings } from '@/lib/usePublicConfig'
 /** Une session de navigateur ne suit qu'un départ. Les callbacks GPS restent
  * attachés au compte d'origine ; aucun point en mémoire n'est redaté. */
 export function JourneySharing({ advertisementId }: { advertisementId?: string }) {
@@ -58,6 +59,11 @@ export function JourneySharing({ advertisementId }: { advertisementId?: string }
       const ticket = ++generation
       setError('')
       setActive(true)
+      // Timings admin : l'intervalle minimal entre deux uploads et la
+      // fraîcheur maximale acceptée côté client suivent la politique serveur.
+      const { locationUploadIntervalSec, locationFreshnessSec } = getTimings()
+      const uploadIntervalMs = Math.max(1_000, locationUploadIntervalSec * 1_000)
+      const freshnessMs = Math.max(5_000, locationFreshnessSec * 1_000)
       watch = navigator.geolocation.watchPosition(
         async (p) => {
           if (
@@ -66,11 +72,11 @@ export function JourneySharing({ advertisementId }: { advertisementId?: string }
             !sameSession() ||
             busy ||
             p.timestamp <= last ||
-            Date.now() - p.timestamp > 60000 ||
+            Date.now() - p.timestamp > freshnessMs ||
             p.coords.accuracy > 1000
           )
             return
-          if (last && p.timestamp - last < 10000) return
+          if (last && p.timestamp - last < uploadIntervalMs) return
           busy = true
           try {
             const fix = {
@@ -113,7 +119,14 @@ export function JourneySharing({ advertisementId }: { advertisementId?: string }
           setError(e.message)
           stop()
         },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 },
+        // Timeout GPS administrable : la valeur d'origine (20 s) laisse le
+        // temps à la puce de converger ; la config admin peut remonter si
+        // besoin en zones à mauvaise couverture.
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: Math.max(5_000, getTimings().geolocationTimeoutMs + 5_000),
+        },
       )
     }
     startRef.current = start
@@ -124,7 +137,8 @@ export function JourneySharing({ advertisementId }: { advertisementId?: string }
     document.addEventListener('visibilitychange', hidden)
     window.addEventListener('offline', hidden)
     const watchdog = setInterval(() => {
-      if (!stopped && last && Date.now() - last > 60000) {
+      const freshnessWatchdogMs = Math.max(5_000, getTimings().locationFreshnessSec * 1_000)
+      if (!stopped && last && Date.now() - last > freshnessWatchdogMs) {
         setError('GPS interrompu : réactivez le partage.')
         stop()
       }

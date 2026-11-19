@@ -20,6 +20,7 @@ import {
   type WebhookDeliveryRow,
 } from '@/lib/api/admin-operations'
 import { formatDateTime } from '@/lib/format'
+import { usePollingConfig } from '@/lib/usePublicConfig'
 
 type TabKey = 'integrations' | 'webhooks' | 'stops' | 'handovers' | 'fraud'
 
@@ -177,10 +178,11 @@ function FraudTab() {
 }
 
 function FraudScoresView() {
+  const { operationsDashboardPollMs } = usePollingConfig()
   const query = useQuery({
     queryKey: ['admin', 'operations', 'fraud-scores'],
     queryFn: () => fetchFraudScores(),
-    refetchInterval: 60_000,
+    refetchInterval: operationsDashboardPollMs,
   })
   const rows = query.data ?? []
   return (
@@ -217,10 +219,11 @@ function FraudScoresView() {
 }
 
 function FraudAlertsView({ status, onResolve }: { status: 'open' | 'resolved'; onResolve: ((a: FraudAlert) => void) | null }) {
+  const { operationsDashboardPollMs } = usePollingConfig()
   const query = useQuery({
     queryKey: ['admin', 'operations', 'fraud-alerts', status],
     queryFn: () => fetchFraudAlerts(status),
-    refetchInterval: 60_000,
+    refetchInterval: operationsDashboardPollMs,
   })
   const rows = query.data ?? []
   const columns: Column<FraudAlert>[] = [
@@ -275,10 +278,11 @@ function statusTone(status: string): 'green' | 'amber' | 'red' | 'neutral' {
 }
 
 function IntegrationsTab() {
+  const { operationsDashboardPollMs } = usePollingConfig()
   const query = useQuery({
     queryKey: ['admin', 'operations', 'integrations'],
     queryFn: getIntegrationsHealth,
-    refetchInterval: 60_000,
+    refetchInterval: operationsDashboardPollMs,
   })
   return (
     <QueryState isLoading={query.isLoading} isError={query.isError} error={query.error} onRetry={() => query.refetch()}>
@@ -341,10 +345,11 @@ function IntegrationsView({ data, refetching, onRefresh }: { data: IntegrationsH
 }
 
 function WebhooksTab() {
+  const { operationsDashboardPollMs } = usePollingConfig()
   const query = useQuery({
     queryKey: ['admin', 'operations', 'webhooks-recent'],
     queryFn: () => getRecentWebhooks(50),
-    refetchInterval: 60_000,
+    refetchInterval: operationsDashboardPollMs,
   })
   const rows = query.data ?? []
   return (
@@ -373,10 +378,11 @@ function WebhooksTab() {
 }
 
 function StopEventsTab() {
+  const { operationsDashboardPollMs } = usePollingConfig()
   const query = useQuery({
     queryKey: ['admin', 'operations', 'stop-events-recent'],
     queryFn: () => getRecentStopEvents(50),
-    refetchInterval: 60_000,
+    refetchInterval: operationsDashboardPollMs,
   })
   const rows = query.data ?? []
   return (
@@ -404,10 +410,11 @@ function StopEventsTab() {
 }
 
 function HandoversTab() {
+  const { operationsDashboardPollMs } = usePollingConfig()
   const query = useQuery({
     queryKey: ['admin', 'operations', 'handovers-recent'],
     queryFn: () => getRecentHandovers(50),
-    refetchInterval: 60_000,
+    refetchInterval: operationsDashboardPollMs,
   })
   const rows = query.data ?? []
   return (

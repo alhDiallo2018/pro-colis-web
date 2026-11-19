@@ -493,6 +493,21 @@ export const IdentityVerificationsPage = lazy(() =>
     default: module.IdentityVerificationsPage,
   })),
 );
+export const RefVehicleTypesPage = lazy(() =>
+  import("@/features/superAdmin/ReferenceDataPage").then((module) => ({
+    default: module.VehicleTypesPage,
+  })),
+);
+export const RefDocumentTypesPage = lazy(() =>
+  import("@/features/superAdmin/ReferenceDataPage").then((module) => ({
+    default: module.DocumentTypesPage,
+  })),
+);
+export const RefExpenseCategoriesPage = lazy(() =>
+  import("@/features/superAdmin/ReferenceDataPage").then((module) => ({
+    default: module.ExpenseCategoriesPage,
+  })),
+);
 export const NotificationsScreen = lazy(() =>
   import("@/features/shared/NotificationsScreen").then((module) => ({
     default: module.NotificationsScreen,

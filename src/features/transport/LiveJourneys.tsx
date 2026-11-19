@@ -7,6 +7,7 @@ import { getTransitLineLive, type TransitLiveAdvertisement, type TransitLineSumm
 import { TransitLinePicker } from './TransitLinePicker'
 import { TransportMap } from './TransportMap'
 import { useFreshFeed } from './useFreshFeed'
+import { usePollingConfig } from '@/lib/usePublicConfig'
 import './transport.css'
 import './transit.css'
 
@@ -77,10 +78,11 @@ function TransitLineLive({
   // Si l'utilisateur veut un sens non représenté par cette ligne (les retours peuvent
   // manquer du catalogue), on signale plutôt que de query avec un mauvais id.
   const mismatched = direction !== line.direction
+  const { journeyPositionsPollMs } = usePollingConfig()
   const query = useQuery({
     queryKey: ['transit-line-live', line.id],
     queryFn: () => getTransitLineLive(line.id),
-    refetchInterval: 15000,
+    refetchInterval: journeyPositionsPollMs,
     enabled: !mismatched,
   })
 
@@ -180,7 +182,13 @@ function LiveCard({
 function LegacyAdFocused({
   advertisementId, now, navigate,
 }: { advertisementId: string; now: number; navigate: ReturnType<typeof useNavigate> }) {
-  const feed = useFreshFeed<{ journeys: LiveJourney[] }>('/client/journeys/live', { advertisementId })
+  const { announcementsFeedPollMs } = usePollingConfig()
+  const feed = useFreshFeed<{ journeys: LiveJourney[] }>(
+    '/client/journeys/live',
+    { advertisementId },
+    true,
+    announcementsFeedPollMs,
+  )
   const fresh = useMemo(
     () => (feed.data?.journeys ?? []).filter((j) => freshJourney(j, now)),
     [feed.data, now],

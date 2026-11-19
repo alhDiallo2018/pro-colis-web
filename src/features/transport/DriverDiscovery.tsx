@@ -4,6 +4,7 @@ import type { User, Zone } from '@/lib/api/types'
 import { vehicleTypes } from './domain'
 import { TransportMap } from './TransportMap'
 import { useFreshFeed } from './useFreshFeed'
+import { usePollingConfig } from '@/lib/usePublicConfig'
 export interface NearbyDriver extends User {
   distanceKm: number
   vehicleCapacity: number
@@ -28,6 +29,7 @@ export function DriverDiscovery({ zone, weight, onWeight, value, onChange, vehic
     [verified, setVerified] = useState(false),
     [error, setError] = useState(''),
     [now, setNow] = useState(Date.now())
+  const { parcelsListPollMs, geolocationTimeoutMs, positionTtlMs } = usePollingConfig()
   const callback = useRef(onChange)
   callback.current = onChange
   const latitude = gps?.latitude ?? zone?.latitude,
@@ -51,7 +53,7 @@ export function DriverDiscovery({ zone, weight, onWeight, value, onChange, vehic
       verifiedOnly: verified ? 'true' : 'false',
     },
     enabled,
-    15000,
+    parcelsListPollMs,
   )
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000)
@@ -59,8 +61,8 @@ export function DriverDiscovery({ zone, weight, onWeight, value, onChange, vehic
   }, [])
   useEffect(() => setGps(null), [zone?.id])
   const drivers = useMemo(
-    () => (feed.data?.drivers ?? []).filter((d) => now - Date.parse(d.locationUpdatedAt) < 600000),
-    [feed.data, now],
+    () => (feed.data?.drivers ?? []).filter((d) => now - Date.parse(d.locationUpdatedAt) < positionTtlMs),
+    [feed.data, now, positionTtlMs],
   )
   // Une sélection disparue des résultats frais ne peut être confirmée comme disponible.
   useEffect(() => {
@@ -90,7 +92,7 @@ export function DriverDiscovery({ zone, weight, onWeight, value, onChange, vehic
         setError(
           'Localisation refusée ou indisponible. La recherche reste possible depuis votre lieu de retrait.',
         ),
-      { maximumAge: 0, timeout: 15000 },
+      { maximumAge: 0, timeout: geolocationTimeoutMs },
     )
   }
   return (

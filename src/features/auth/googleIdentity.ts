@@ -1,6 +1,8 @@
 /** GIS recoit uniquement l'identifiant public du client OAuth. Le JWT retourne
  * est transmis a l'API : aucune identite n'est deduite de son contenu cote web.
  */
+import { getTimings } from '@/lib/usePublicConfig'
+
 interface IdentitySdk {
   initialize: (config: { client_id: string; callback: (response: { credential: string }) => void; auto_select: boolean; ux_mode: 'popup' }) => void
   renderButton: (element: HTMLElement, config: { type: 'standard'; theme: 'outline'; size: 'large'; text: 'continue_with'; shape: 'rectangular'; locale: string; width: number }) => void
@@ -20,7 +22,8 @@ function loadIdentity(): Promise<IdentitySdk> {
     script.src = 'https://accounts.google.com/gsi/client'
     script.async = true
     script.defer = true
-    const timeout = window.setTimeout(() => finish(), 15000)
+    // Timeout administrable (`timings.googleAuthTimeoutMs`) — fallback 15 s.
+    const timeout = window.setTimeout(() => finish(), getTimings().googleAuthTimeoutMs)
     const finish = (sdk?: IdentitySdk) => {
       window.clearTimeout(timeout)
       script.onload = null

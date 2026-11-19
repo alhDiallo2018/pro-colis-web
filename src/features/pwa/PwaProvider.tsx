@@ -1,10 +1,24 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useContext, useEffect, useState, type ReactNode } from 'react'
 import { Button } from '@/ds'
+import { QueryClientContext } from '@tanstack/react-query'
 import { isAppleMobile, isStandalone, PwaContext } from './context'
-import { flushBackgroundQueue } from './pwaSync'
+import { flushBackgroundQueue, persistPwaTimings } from './pwaSync'
 import { precacheByRole } from './precacheByRole'
 import { useAuthStore } from '@/store/auth'
+import { usePublicConfig } from '@/lib/usePublicConfig'
 import './pwa.css'
+
+/** Ne consomme React Query que si un `QueryClientProvider` est présent au-
+ *  dessus : certains tests PWA montent uniquement `PwaProvider` sans Query. */
+function TimingsBridge() {
+  const { data: publicConfig } = usePublicConfig()
+  useEffect(() => {
+    if (publicConfig?.timings) {
+      void persistPwaTimings(publicConfig.timings as Record<string, unknown>)
+    }
+  }, [publicConfig?.timings])
+  return null
+}
 
 export function PwaProvider({ children }: { children: ReactNode }) {
   const [installed, setInstalled] = useState(isStandalone)
@@ -19,6 +33,13 @@ export function PwaProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     precacheByRole(userRole, sessionId)
   }, [userRole, sessionId])
+
+  // Propage les timings admin vers le SW (`pwaSyncMaxAttempts`…). Persistance
+  // en IDB : le SW relit la valeur à chaque réveil, même après kill.
+  // `TimingsBridge` est monté conditionnellement : sans `QueryClientProvider`
+  // dans l'arbre (cas des tests PWA minimaux), `usePublicConfig` throw — on
+  // préserve ces tests tant que l'app en prod monte toujours le provider.
+  const hasQueryClient = useContext(QueryClientContext) != null
 
   useEffect(() => {
     const media = window.matchMedia('(display-mode: standalone)')
@@ -118,6 +139,7 @@ export function PwaProvider({ children }: { children: ReactNode }) {
 
   return (
     <PwaContext.Provider value={{ installed, appleMobile }}>
+      {hasQueryClient && <TimingsBridge />}
       {!online && <div className="pwa-notice" role="status">Vous êtes hors connexion. Votre profil et votre historique sauvegardé restent accessibles depuis le menu. Les opérations et le GPS nécessitent Internet.</div>}
       {waiting && online && (
         <div className="pwa-notice" role="status">
