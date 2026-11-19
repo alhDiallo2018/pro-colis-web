@@ -508,6 +508,26 @@ export const RefExpenseCategoriesPage = lazy(() =>
     default: module.ExpenseCategoriesPage,
   })),
 );
+export const RefParcelCategoriesPage = lazy(() =>
+  import("@/features/superAdmin/ReferenceDataPage").then((module) => ({
+    default: module.ParcelCategoriesPage,
+  })),
+);
+export const RefPaymentMethodsPage = lazy(() =>
+  import("@/features/superAdmin/ReferenceDataPage").then((module) => ({
+    default: module.PaymentMethodsPage,
+  })),
+);
+export const RefDriverStatusesPage = lazy(() =>
+  import("@/features/superAdmin/ReferenceDataPage").then((module) => ({
+    default: module.DriverStatusesPage,
+  })),
+);
+export const RefIncidentSeveritiesPage = lazy(() =>
+  import("@/features/superAdmin/ReferenceDataPage").then((module) => ({
+    default: module.IncidentSeveritiesPage,
+  })),
+);
 export const NotificationsScreen = lazy(() =>
   import("@/features/shared/NotificationsScreen").then((module) => ({
     default: module.NotificationsScreen,

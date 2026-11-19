@@ -90,6 +90,43 @@ export async function persistPwaTimings(timings: Record<string, unknown> | undef
   }
 }
 
+/**
+ * Phase 6 — Pousse le branding + les fallbacks de notifications publics vers
+ * le store IDB partagé + le SW actif. À appeler dès que `/public/config`
+ * répond côté UI (`BrandingBridge`).
+ *
+ * Le SW relit ces valeurs à chaque event `push` (titre/corps par défaut,
+ * icône, badge, priorités haute). Persistance IDB nécessaire : un push peut
+ * arriver alors que le SW a été tué et redémarré sans contexte React.
+ */
+export async function persistPwaBranding(
+  branding: Record<string, unknown> | undefined,
+  notifications: Record<string, unknown> | undefined,
+): Promise<void> {
+  if (!branding && !notifications) return
+  try {
+    const db = await openDb()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(CONFIG_STORE, 'readwrite')
+      if (branding) tx.objectStore(CONFIG_STORE).put(branding, 'branding')
+      if (notifications) tx.objectStore(CONFIG_STORE).put(notifications, 'notifications')
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+    db.close()
+  } catch {
+    /* IDB indisponible (mode privé Firefox) : on tolère, le SW gardera ses
+     * défauts statiques. */
+  }
+  try {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'BRANDING', branding, notifications })
+    }
+  } catch {
+    /* noop */
+  }
+}
+
 function nextId(): string {
   // `crypto.randomUUID` est préféré ; fallback déterministe pour les tests.
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()

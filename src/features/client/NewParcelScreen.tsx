@@ -46,6 +46,7 @@ import type { User, Zone } from "@/lib/api/types";
 import { GarageSearchSelect } from "@/components/GarageSearchSelect";
 import { DraftRestoreBanner } from "@/components/DraftRestoreBanner";
 import { useFormDraft } from "@/lib/useFormDraft";
+import { useLimits, getLimits } from "@/lib/usePublicConfig";
 import { LocationInput } from "@/components/LocationInput";
 import { ParcelTemplatesDialog } from "@/components/ParcelTemplatesDialog";
 import type { ParcelTemplate, ParcelTemplateData } from "@/lib/parcelTemplateStore";
@@ -131,6 +132,7 @@ export function NewParcelScreen() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const user = useAuthStore((s) => s.user);
+  const limits = useLimits();
   const zones = useZones();
   const drivers = useDrivers();
   const createParcel = useCreateParcel();
@@ -1077,7 +1079,7 @@ export function NewParcelScreen() {
               <Textarea
                 label={required("Description")}
                 placeholder="Contenu du colis, instructions…"
-                maxLength={280}
+                maxLength={limits.parcelDescriptionMaxChars}
                 error={errors.description?.message}
                 {...register("description")}
               />
@@ -1773,8 +1775,8 @@ function loadImage(src: string): Promise<HTMLImageElement> {
  */
 async function compressImage(
   file: File,
-  maxDim = 1600,
-  quality = 0.8,
+  maxDim: number = getLimits().imageMaxDimension,
+  quality: number = getLimits().imageJpegQuality,
 ): Promise<string> {
   const original = await readAsDataUrl(file);
   if (!file.type.startsWith("image/")) return original;

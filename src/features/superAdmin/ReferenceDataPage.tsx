@@ -17,13 +17,24 @@ import {
 } from '@/lib/useReferenceData'
 import type {
   DocumentTypeItem,
+  DriverStatusItem,
   ExpenseCategoryItem,
+  IncidentSeverityItem,
+  ParcelCategoryItem,
+  PaymentMethodItem,
   ReferencePayload,
   ReferenceType,
   VehicleTypeItem,
 } from '@/lib/api/reference-data'
 
-type AnyItem = VehicleTypeItem | DocumentTypeItem | ExpenseCategoryItem
+type AnyItem =
+  | VehicleTypeItem
+  | DocumentTypeItem
+  | ExpenseCategoryItem
+  | ParcelCategoryItem
+  | PaymentMethodItem
+  | DriverStatusItem
+  | IncidentSeverityItem
 
 interface ColumnDef {
   key: string
@@ -36,7 +47,19 @@ interface Config {
   title: string
   subtitle: string
   // Champs additionnels (hors common) exposes dans la modale.
-  extraFields: Array<'category' | 'appliesTo' | 'isRequired' | 'maxWeightKg' | 'maxVolumeM3'>
+  extraFields: Array<
+    | 'category'
+    | 'appliesTo'
+    | 'isRequired'
+    | 'maxWeightKg'
+    | 'maxVolumeM3'
+    | 'icon'
+    | 'isFragile'
+    | 'provider'
+    | 'channel'
+    | 'color'
+    | 'slaHours'
+  >
   // Colonnes specifiques affichees dans le tableau avant les colonnes communes.
   extraColumns: ColumnDef[]
 }
@@ -85,6 +108,116 @@ const CONFIG: Record<ReferenceType, Config> = {
     extraFields: [],
     extraColumns: [],
   },
+  'parcel-categories': {
+    title: 'Catégories de colis',
+    subtitle: 'Document, fragile, périssable, électronique… affichées à la création d\'un colis.',
+    extraFields: ['icon', 'isFragile', 'maxWeightKg'],
+    extraColumns: [
+      {
+        key: 'icon',
+        label: 'Icône',
+        render: (item) => (item as ParcelCategoryItem).icon ?? '—',
+      },
+      {
+        key: 'isFragile',
+        label: 'Fragile',
+        render: (item) => ((item as ParcelCategoryItem).isFragile ? 'Oui' : 'Non'),
+      },
+      {
+        key: 'maxWeightKg',
+        label: 'Poids max.',
+        render: (item) => {
+          const value = (item as ParcelCategoryItem).maxWeightKg
+          return value != null ? `${value} kg` : '—'
+        },
+      },
+    ],
+  },
+  'payment-methods': {
+    title: 'Moyens de paiement',
+    subtitle: 'Wave, Orange Money, cash, virement… proposés aux clients et chauffeurs.',
+    extraFields: ['provider', 'channel'],
+    extraColumns: [
+      {
+        key: 'provider',
+        label: 'Fournisseur',
+        render: (item) => (item as PaymentMethodItem).provider ?? '—',
+      },
+      {
+        key: 'channel',
+        label: 'Canal',
+        render: (item) => (item as PaymentMethodItem).channel,
+      },
+    ],
+  },
+  'driver-statuses': {
+    title: 'Statuts chauffeur',
+    subtitle: 'Disponible, occupé, hors ligne, en congé… affichés dans le profil.',
+    extraFields: ['color'],
+    extraColumns: [
+      {
+        key: 'color',
+        label: 'Couleur',
+        render: (item) => {
+          const color = (item as DriverStatusItem).color
+          if (!color) return '—'
+          return (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span
+                aria-hidden
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 6,
+                  background: color,
+                  border: '1px solid var(--border)',
+                }}
+              />
+              <code>{color}</code>
+            </span>
+          )
+        },
+      },
+    ],
+  },
+  'incident-severities': {
+    title: 'Niveaux de sévérité incident',
+    subtitle: 'Low / medium / high / critical avec SLA de réponse en heures.',
+    extraFields: ['color', 'slaHours'],
+    extraColumns: [
+      {
+        key: 'color',
+        label: 'Couleur',
+        render: (item) => {
+          const color = (item as IncidentSeverityItem).color
+          if (!color) return '—'
+          return (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span
+                aria-hidden
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 6,
+                  background: color,
+                  border: '1px solid var(--border)',
+                }}
+              />
+              <code>{color}</code>
+            </span>
+          )
+        },
+      },
+      {
+        key: 'slaHours',
+        label: 'SLA',
+        render: (item) => {
+          const h = (item as IncidentSeverityItem).slaHours
+          return h != null ? `${h} h` : '—'
+        },
+      },
+    ],
+  },
 }
 
 interface Props {
@@ -102,6 +235,13 @@ type FormState = {
   isRequired: boolean
   maxWeightKg: string
   maxVolumeM3: string
+  // Phase 5
+  icon: string
+  isFragile: boolean
+  provider: string
+  channel: string
+  color: string
+  slaHours: string
 }
 
 function emptyForm(): FormState {
@@ -116,6 +256,12 @@ function emptyForm(): FormState {
     isRequired: true,
     maxWeightKg: '',
     maxVolumeM3: '',
+    icon: '',
+    isFragile: false,
+    provider: '',
+    channel: 'in_app',
+    color: '',
+    slaHours: '',
   }
 }
 
@@ -133,6 +279,18 @@ function buildPayload(form: FormState, type: ReferenceType): ReferencePayload {
   } else if (type === 'document-types') {
     base.appliesTo = form.appliesTo.trim() || 'driver'
     base.isRequired = form.isRequired
+  } else if (type === 'parcel-categories') {
+    base.icon = form.icon.trim() || null
+    base.isFragile = form.isFragile
+    base.maxWeightKg = form.maxWeightKg ? Number(form.maxWeightKg) : null
+  } else if (type === 'payment-methods') {
+    base.provider = form.provider.trim() || null
+    base.channel = form.channel.trim() || 'in_app'
+  } else if (type === 'driver-statuses') {
+    base.color = form.color.trim() || null
+  } else if (type === 'incident-severities') {
+    base.color = form.color.trim() || null
+    base.slaHours = form.slaHours ? Number(form.slaHours) : null
   }
   return base
 }
@@ -176,6 +334,13 @@ export function ReferenceDataPage({ type }: Props) {
   function openEdit(item: AnyItem) {
     const vt = item as VehicleTypeItem
     const dt = item as DocumentTypeItem
+    const pc = item as ParcelCategoryItem
+    const pm = item as PaymentMethodItem
+    const ds = item as DriverStatusItem
+    const is_ = item as IncidentSeverityItem
+    // On lit `maxWeightKg` sur VehicleType ou ParcelCategory (meme nom de
+    // champ, deux entites). Idem pour `color` (statuts / severites).
+    const maxWeight = vt.maxWeightKg ?? pc.maxWeightKg
     setForm({
       id: item.id,
       code: item.code,
@@ -185,8 +350,14 @@ export function ReferenceDataPage({ type }: Props) {
       category: vt.category ?? '',
       appliesTo: dt.appliesTo ?? 'driver',
       isRequired: dt.isRequired ?? true,
-      maxWeightKg: vt.maxWeightKg != null ? String(vt.maxWeightKg) : '',
+      maxWeightKg: maxWeight != null ? String(maxWeight) : '',
       maxVolumeM3: vt.maxVolumeM3 != null ? String(vt.maxVolumeM3) : '',
+      icon: pc.icon ?? '',
+      isFragile: pc.isFragile ?? false,
+      provider: pm.provider ?? '',
+      channel: pm.channel ?? 'in_app',
+      color: ds.color ?? is_.color ?? '',
+      slaHours: is_.slaHours != null ? String(is_.slaHours) : '',
     })
     setDialogOpen(true)
   }
@@ -373,6 +544,57 @@ export function ReferenceDataPage({ type }: Props) {
                 onChange={(e) => setForm((f) => ({ ...f, maxVolumeM3: e.target.value }))}
               />
             )}
+            {config.extraFields.includes('icon') && (
+              <Input
+                label="Icône (emoji ou nom Material Symbols)"
+                value={form.icon}
+                onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))}
+                placeholder="inventory_2"
+              />
+            )}
+            {config.extraFields.includes('isFragile') && (
+              <Switch
+                label="Catégorie fragile (manutention particulière)"
+                checked={form.isFragile}
+                onChange={(v) => setForm((f) => ({ ...f, isFragile: v }))}
+              />
+            )}
+            {config.extraFields.includes('provider') && (
+              <Input
+                label="Fournisseur technique — optionnel"
+                value={form.provider}
+                onChange={(e) => setForm((f) => ({ ...f, provider: e.target.value }))}
+                placeholder="orange, wave, paydunya…"
+              />
+            )}
+            {config.extraFields.includes('channel') && (
+              <Select
+                label="Canal"
+                value={form.channel || 'in_app'}
+                onChange={(e) => setForm((f) => ({ ...f, channel: e.target.value }))}
+                options={[
+                  { value: 'in_app', label: 'En ligne (dans l\'application)' },
+                  { value: 'external', label: 'Externe (virement, portail)' },
+                  { value: 'cash', label: 'Espèces' },
+                ]}
+              />
+            )}
+            {config.extraFields.includes('color') && (
+              <Input
+                label="Couleur (hex ou nom CSS) — optionnel"
+                value={form.color}
+                onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+                placeholder="#22c55e"
+              />
+            )}
+            {config.extraFields.includes('slaHours') && (
+              <Input
+                label="SLA de réponse (heures) — optionnel"
+                type="number"
+                value={form.slaHours}
+                onChange={(e) => setForm((f) => ({ ...f, slaHours: e.target.value }))}
+              />
+            )}
 
             <Input
               label="Ordre d'affichage"
@@ -428,4 +650,16 @@ export function DocumentTypesPage() {
 }
 export function ExpenseCategoriesPage() {
   return <ReferenceDataPage type="expense-categories" />
+}
+export function ParcelCategoriesPage() {
+  return <ReferenceDataPage type="parcel-categories" />
+}
+export function PaymentMethodsPage() {
+  return <ReferenceDataPage type="payment-methods" />
+}
+export function DriverStatusesPage() {
+  return <ReferenceDataPage type="driver-statuses" />
+}
+export function IncidentSeveritiesPage() {
+  return <ReferenceDataPage type="incident-severities" />
 }

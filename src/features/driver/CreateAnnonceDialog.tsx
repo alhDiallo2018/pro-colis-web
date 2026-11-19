@@ -12,6 +12,7 @@ import { VoiceRecorder } from '@/components/VoiceRecorder'
 import { DraftRestoreBanner } from '@/components/DraftRestoreBanner'
 import { useFormDraft } from '@/lib/useFormDraft'
 import { useReferenceData } from '@/lib/useReferenceData'
+import { useLimits } from '@/lib/usePublicConfig'
 import type { Zone } from '@/lib/api/types'
 
 interface Props {
@@ -36,6 +37,7 @@ interface DraftPayload {
 
 /** Modal for a driver to publish a trip advertisement (annonce de trajet). */
 export function CreateAnnonceDialog({ open, onClose }: Props) {
+  const limits = useLimits()
   const createAd = useCreateAdvertisement()
   const vehicleQ = useQuery({queryKey:['driver','vehicle'],queryFn:vehiclesApi.getMine})
   const vehicle=vehicleQ.data
@@ -201,7 +203,7 @@ export function CreateAnnonceDialog({ open, onClose }: Props) {
           <Input label="Poids dispo. (kg)" icon="weight" type="number" inputMode="decimal" mono placeholder={String(vehicle?.capacity??'')} value={weight} onChange={(e) => setWeight(e.target.value)} />
           <p className="transport-note"><strong>Prix à négocier</strong><br/>Publiez votre trajet sans tarif. Vous conviendrez du prix après avoir reçu l’offre du client et les détails de son colis.</p>
         </div>
-        <Textarea label="Description (optionnel)" placeholder="Ex : véhicule climatisé, départ confirmé." maxLength={200} value={description} onChange={(e) => setDescription(e.target.value)} />
+        <Textarea label="Description (optionnel)" placeholder="Ex : véhicule climatisé, départ confirmé." maxLength={limits.annonceDescriptionMaxChars} value={description} onChange={(e) => setDescription(e.target.value)} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, color: 'var(--text-body)' }}>Note vocale (optionnel)</div>
           <VoiceRecorder onUploaded={setAudioUrl} existingUrl={audioUrl} />

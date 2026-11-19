@@ -2,8 +2,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   getPublicConfig,
   DEFAULT_TIMINGS,
+  DEFAULT_LIMITS,
+  DEFAULT_BRANDING,
+  DEFAULT_NOTIFICATIONS,
   type PublicConfig,
   type TimingsConfig,
+  type LimitsConfig,
+  type BrandingConfig,
+  type NotificationsConfig,
 } from '@/lib/api/publicConfig'
 
 /** Configuration publique partagée (commission, points, support et aide).
@@ -156,9 +162,74 @@ export function useSyncTimingsCache(): void {
   if (data?.timings) primeTimingsCache(data.timings)
 }
 
+/** Phase 4 externalisation : snapshot courant des limites de formulaires et
+ *  imports (CSV, longueurs max, dimensions photo, pagination). Fusion
+ *  defaults + overrides reçus de l'API. Même pattern que `useTimings`. */
+export function useLimits(): LimitsConfig {
+  const { data } = usePublicConfig()
+  return { ...DEFAULT_LIMITS, ...(data?.limits ?? {}) }
+}
+
+/** Accès synchrone au dernier snapshot connu des limites, sans dépendre d'un
+ *  rendu React. Pour les modules hors-React (helpers CSV, compressPhoto).
+ *  Doit être amorcé via `primeLimitsCache()` (`LimitsBootstrap` dans `App.tsx`). */
+let cachedLimits: LimitsConfig = { ...DEFAULT_LIMITS }
+export function getLimits(): LimitsConfig {
+  return cachedLimits
+}
+export function primeLimitsCache(limits: Partial<LimitsConfig> | undefined) {
+  cachedLimits = { ...DEFAULT_LIMITS, ...(limits ?? {}) }
+}
+
+/** Hook à monter une fois (dans `App.tsx`) pour pousser automatiquement les
+ *  limites reçues dans le cache sync dès qu'elles arrivent. */
+export function useSyncLimitsCache(): void {
+  const { data } = usePublicConfig()
+  if (data?.limits) primeLimitsCache(data.limits)
+}
+
+/** Phase 6 externalisation : branding PWA + Web (nom, couleurs, logo,
+ *  favicon). Fusion `DEFAULT_BRANDING` + overrides. Null-safe : si
+ *  `/public/config` n'a pas répondu, les defaults historiques (ProColis /
+ *  turquoise #018982) évitent le flash of unstyled content. */
+export function useBranding(): BrandingConfig {
+  const { data } = usePublicConfig()
+  return { ...DEFAULT_BRANDING, ...(data?.branding ?? {}) }
+}
+
+/** Phase 6 externalisation : fallbacks de notifications. Consommé côté UI
+ *  pour afficher un titre/corps cohérent avec la config admin (ex. écran de
+ *  paramètres notifications, aperçu). Le SW lit la même source via IDB. */
+export function useNotificationsConfig(): NotificationsConfig {
+  const { data } = usePublicConfig()
+  return { ...DEFAULT_NOTIFICATIONS, ...(data?.notifications ?? {}) }
+}
+
+/** Accès synchrone au dernier snapshot branding, sans dépendre d'un rendu
+ *  React. Pour les helpers imperatifs (ex. applyBranding au boot avant même
+ *  le premier render). */
+let cachedBranding: BrandingConfig = { ...DEFAULT_BRANDING }
+export function getBranding(): BrandingConfig {
+  return cachedBranding
+}
+export function primeBrandingCache(branding: Partial<BrandingConfig> | undefined) {
+  cachedBranding = { ...DEFAULT_BRANDING, ...(branding ?? {}) }
+}
+
+let cachedNotifications: NotificationsConfig = { ...DEFAULT_NOTIFICATIONS }
+export function getNotificationsConfig(): NotificationsConfig {
+  return cachedNotifications
+}
+export function primeNotificationsCache(notifications: Partial<NotificationsConfig> | undefined) {
+  cachedNotifications = { ...DEFAULT_NOTIFICATIONS, ...(notifications ?? {}) }
+}
+
 /** Permet aux tests d'injecter un snapshot complet via React Query sans
  *  passer par l'API réelle. */
 export function seedPublicConfig(queryClient: ReturnType<typeof useQueryClient>, config: PublicConfig) {
   queryClient.setQueryData(['public', 'config'], config)
   if (config.timings) primeTimingsCache(config.timings)
+  if (config.limits) primeLimitsCache(config.limits)
+  if (config.branding) primeBrandingCache(config.branding)
+  if (config.notifications) primeNotificationsCache(config.notifications)
 }

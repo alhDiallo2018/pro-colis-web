@@ -1,6 +1,7 @@
 import { Button, Input } from '@/ds'
 import { GarageSearchSelect } from '@/components/GarageSearchSelect'
 import type { Zone } from '@/lib/api/types'
+import { useLimits } from '@/lib/usePublicConfig'
 import type { Stop } from './domain'
 export function TripEditor({
   stops,
@@ -13,6 +14,7 @@ export function TripEditor({
   zones: Zone[]
   onAddNew: (z: Zone) => void
 }) {
+  const limits = useLimits()
   return (
     <div className="transport-panel">
       <strong>Arrêts intermédiaires</strong>
@@ -51,7 +53,7 @@ export function TripEditor({
       ))}
       <Button
         variant="secondary"
-        disabled={stops.length >= 38}
+        disabled={stops.length >= limits.maxStopsPerRoute}
         onClick={() =>
           onChange([
             ...stops,

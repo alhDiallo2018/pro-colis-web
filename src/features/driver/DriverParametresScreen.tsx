@@ -1,20 +1,48 @@
+import { useMemo } from 'react'
 import { Card, SegmentedControl, Toast } from '@/ds'
 import { useAuthStore } from '@/store/auth'
 import { useUpdateDriverStatus } from './hooks'
 import type { DriverStatus } from '@/lib/api/types'
+import { useDriverStatuses } from '@/lib/useReferenceData'
 import { NotificationPreferencesSheet } from '@/components/NotificationPreferences'
 import { SecurityCard } from '@/features/shared/profile/SecurityCard'
 import { DangerZoneCard } from '@/features/shared/profile/DangerZoneCard'
 
-const STATUS_OPTIONS = [
+// Fallback cote client : si le referentiel n'est pas (encore) accessible
+// (hors ligne, API indisponible), on garde les trois statuts historiques
+// pour que l'ecran reste exploitable. L'icone Material Symbols est
+// resolue ici car le referentiel n'expose pas de glyphe en phase 5.
+const STATUS_FALLBACK: Array<{ value: string; label: string; icon: string }> = [
   { value: 'available', label: 'Disponible', icon: 'check_circle' },
   { value: 'busy', label: 'Occupé', icon: 'pending' },
   { value: 'offline', label: 'Hors ligne', icon: 'do_not_disturb_on' },
 ]
 
+// La seule connaissance metier qu'on garde cote code, c'est l'icone a
+// afficher pour chaque code : le referentiel ne stocke que le label et la
+// couleur, le SegmentedControl attend un glyph pour chaque option.
+const ICON_BY_CODE: Record<string, string> = {
+  available: 'check_circle',
+  busy: 'pending',
+  offline: 'do_not_disturb_on',
+  on_leave: 'event_busy',
+}
+
 export function DriverParametresScreen() {
   const user = useAuthStore((s) => s.user)
   const updateStatus = useUpdateDriverStatus()
+  // Phase 5 : les statuts sont servis par `/reference/driver-statuses`.
+  const statusesQ = useDriverStatuses()
+
+  const options = useMemo(() => {
+    const rows = statusesQ.data ?? []
+    if (!rows.length) return STATUS_FALLBACK
+    return rows.map((row) => ({
+      value: row.code,
+      label: row.label,
+      icon: ICON_BY_CODE[row.code] ?? 'radio_button_checked',
+    }))
+  }, [statusesQ.data])
 
   if (!user) return null
 
@@ -35,7 +63,7 @@ export function DriverParametresScreen() {
           Votre statut détermine si vous recevez de nouvelles missions.
         </p>
         <SegmentedControl
-          options={STATUS_OPTIONS}
+          options={options}
           value={status}
           onChange={(v) => updateStatus.mutate(v as DriverStatus)}
         />

@@ -13,6 +13,7 @@ import {
 } from "./api";
 import { formatFcfa } from "@/lib/format";
 import { CsvBulkImportDialog } from "@/features/client/CsvBulkImportDialog";
+import { useLimits } from "@/lib/usePublicConfig";
 import "./experience.css";
 
 export function WorkspaceScreen() {
@@ -38,6 +39,7 @@ export function WorkspaceScreen() {
   });
   const contactRequest = useRef(crypto.randomUUID());
   const zones = useZones();
+  const limits = useLimits();
   const navigate = useNavigate();
   const [text, setText] = useState("");
   const [preview, setPreview] = useState<ShipmentDraft[]>([]);
@@ -125,8 +127,9 @@ export function WorkspaceScreen() {
               e.target.value = "";
               if (!file) return;
               setPreview([]);
-              if (file.size > 2 * 1024 * 1024) {
-                setError("Fichier limité à 2 Mo.");
+              if (file.size > limits.csvMaxBytes) {
+                const limitMb = Math.round(limits.csvMaxBytes / (1024 * 1024));
+                setError(`Fichier limité à ${limitMb} Mo.`);
                 return;
               }
               void act(async () => {
@@ -278,7 +281,11 @@ export function WorkspaceScreen() {
                 }
                 required={field === "name" || field === "phone"}
                 maxLength={
-                  field === "address" ? 500 : field === "phone" ? 30 : 100
+                  field === "address"
+                    ? limits.addressMaxChars
+                    : field === "phone"
+                      ? limits.phoneMaxChars
+                      : 100
                 }
                 value={contact[field]}
                 onChange={(e) => {

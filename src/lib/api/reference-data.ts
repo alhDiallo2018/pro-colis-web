@@ -1,12 +1,22 @@
-// Client HTTP des referentiels editables (phase 2).
+// Client HTTP des referentiels editables (phase 2 + phase 5).
 //
-// Trois listes dynamiques sont servies par l'API : vehicle-types,
-// document-types, expense-categories. Chaque liste expose une route publique
-// (`/reference/...`) pour les ecrans et une route admin (`/admin/reference/...`)
-// pour la gestion. Les types miroitent `prisma/schema.prisma`.
+// Sept listes dynamiques sont servies par l'API :
+//  - phase 2 : vehicle-types, document-types, expense-categories
+//  - phase 5 : parcel-categories, payment-methods, driver-statuses,
+//    incident-severities
+// Chaque liste expose une route publique (`/reference/...`) pour les ecrans
+// et une route admin (`/admin/reference/...`) pour la gestion. Les types
+// miroitent `prisma/schema.prisma`.
 import { api } from './client'
 
-export type ReferenceType = 'vehicle-types' | 'document-types' | 'expense-categories'
+export type ReferenceType =
+  | 'vehicle-types'
+  | 'document-types'
+  | 'expense-categories'
+  | 'parcel-categories'
+  | 'payment-methods'
+  | 'driver-statuses'
+  | 'incident-severities'
 
 /** Enveloppe lecture : chaque entite partage ces champs communs. */
 export interface ReferenceItemBase {
@@ -32,6 +42,26 @@ export interface DocumentTypeItem extends ReferenceItemBase {
 
 export type ExpenseCategoryItem = ReferenceItemBase
 
+export interface ParcelCategoryItem extends ReferenceItemBase {
+  icon: string | null
+  maxWeightKg: number | null
+  isFragile: boolean
+}
+
+export interface PaymentMethodItem extends ReferenceItemBase {
+  provider: string | null
+  channel: string
+}
+
+export interface DriverStatusItem extends ReferenceItemBase {
+  color: string | null
+}
+
+export interface IncidentSeverityItem extends ReferenceItemBase {
+  color: string | null
+  slaHours: number | null
+}
+
 export interface ReferencePayload {
   code: string
   label: string
@@ -43,6 +73,13 @@ export interface ReferencePayload {
   maxVolumeM3?: number | null
   appliesTo?: string
   isRequired?: boolean
+  // Phase 5
+  icon?: string | null
+  isFragile?: boolean
+  provider?: string | null
+  channel?: string
+  color?: string | null
+  slaHours?: number | null
 }
 
 // --- Lecture publique (cache cote API 5 min) ---
@@ -62,6 +99,26 @@ export async function listPublicExpenseCategories(): Promise<ExpenseCategoryItem
   return data.data ?? []
 }
 
+export async function listPublicParcelCategories(): Promise<ParcelCategoryItem[]> {
+  const { data } = await api.get('/reference/parcel-categories')
+  return data.data ?? []
+}
+
+export async function listPublicPaymentMethods(channel?: string): Promise<PaymentMethodItem[]> {
+  const { data } = await api.get('/reference/payment-methods', { params: channel ? { channel } : undefined })
+  return data.data ?? []
+}
+
+export async function listPublicDriverStatuses(): Promise<DriverStatusItem[]> {
+  const { data } = await api.get('/reference/driver-statuses')
+  return data.data ?? []
+}
+
+export async function listPublicIncidentSeverities(): Promise<IncidentSeverityItem[]> {
+  const { data } = await api.get('/reference/incident-severities')
+  return data.data ?? []
+}
+
 // --- Admin : liste paginee + CRUD ---
 
 export interface AdminListParams {
@@ -71,6 +128,7 @@ export interface AdminListParams {
   search?: string
   category?: string
   appliesTo?: string
+  channel?: string
 }
 
 export interface Paginated<T> {
@@ -89,6 +147,14 @@ export const listAdminDocumentTypes = (params?: AdminListParams) =>
   adminList<DocumentTypeItem>('document-types', params)
 export const listAdminExpenseCategories = (params?: AdminListParams) =>
   adminList<ExpenseCategoryItem>('expense-categories', params)
+export const listAdminParcelCategories = (params?: AdminListParams) =>
+  adminList<ParcelCategoryItem>('parcel-categories', params)
+export const listAdminPaymentMethods = (params?: AdminListParams) =>
+  adminList<PaymentMethodItem>('payment-methods', params)
+export const listAdminDriverStatuses = (params?: AdminListParams) =>
+  adminList<DriverStatusItem>('driver-statuses', params)
+export const listAdminIncidentSeverities = (params?: AdminListParams) =>
+  adminList<IncidentSeverityItem>('incident-severities', params)
 
 export async function createReferenceItem<T>(type: ReferenceType, payload: ReferencePayload): Promise<T> {
   const { data } = await api.post(`/admin/reference/${type}`, payload)

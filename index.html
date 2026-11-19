@@ -10,7 +10,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#018982" />
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <!--
+      Phase 6 — manifest dynamique servi par l'API (`/api/v1/manifest.webmanifest`).
+      Permet à l'admin de changer nom / thème / icônes sans redéploiement. Le
+      fichier `public/manifest.webmanifest` reste sur disque comme filet de
+      sécurité : on peut rediriger `/manifest.webmanifest` vers lui via Caddy
+      si l'API est indisponible (rollback rapide).
+    -->
+    <link rel="manifest" href="/api/v1/manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
 
     <!--

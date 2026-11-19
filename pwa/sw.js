@@ -21,10 +21,26 @@ self.addEventListener('message', (event) => {
   if (event.data?.type === 'TIMINGS' && event.data.timings) {
     event.waitUntil(persistSyncConfig(event.data.timings).catch(() => {}))
   }
+  // Phase 6 — branding + fallbacks notifications. Même pattern que TIMINGS :
+  // stockage IDB pour relire au prochain push, y compris après que le SW
+  // ait été tué par le navigateur (économie batterie).
+  if (event.data?.type === 'BRANDING') {
+    event.waitUntil(persistBrandingConfig(event.data).catch(() => {}))
+  }
 })
 
 // Limite d'abandon par défaut — surchargée dès que l'UI envoie `TIMINGS`.
 const DEFAULT_PWA_SYNC_MAX_ATTEMPTS = 10
+// Phase 6 — défauts notifications utilisés tant que l'UI n'a pas poussé la
+// config admin. Doivent rester synchronisés avec `NOTIFICATIONS_DEFAULTS`
+// côté API (`src/utils/branding-config.js`).
+const DEFAULT_NOTIFICATION_FALLBACK = Object.freeze({
+  fallbackTitle: 'ProColis',
+  fallbackBody: 'Nouvelle activité',
+  defaultIconUrl: '/icons/icon-192.png',
+  defaultBadgeUrl: '/icons/icon-192.png',
+  highPriorityValues: ['high', 'urgent'],
+})
 
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
@@ -44,43 +60,55 @@ self.addEventListener('activate', (event) => {
 // l'évènement laisserait l'utilisateur sans feedback alors qu'un service tiers
 // a pourtant livré quelque chose.
 self.addEventListener('push', (event) => {
-  const fallback = { title: 'ProColis', body: 'Nouvelle activité', data: {} }
-  let payload = fallback
-  try {
-    const raw = event.data?.text?.()
-    if (raw) {
-      const parsed = JSON.parse(raw)
-      payload = { ...fallback, ...parsed, data: parsed.data || {} }
+  event.waitUntil((async () => {
+    // Phase 6 — chargement asynchrone des fallbacks pilotés par l'admin. Un
+    // `showNotification` peut être appelé avant toute réponse de `/public/config`
+    // (abonnement initial), d'où les defaults internes.
+    const fallbackCfg = await readNotificationFallback().catch(() => DEFAULT_NOTIFICATION_FALLBACK)
+    const fallback = {
+      title: fallbackCfg.fallbackTitle || DEFAULT_NOTIFICATION_FALLBACK.fallbackTitle,
+      body: fallbackCfg.fallbackBody || DEFAULT_NOTIFICATION_FALLBACK.fallbackBody,
+      data: {},
     }
-  } catch {
-    // Payload non-JSON : rare, on affiche quand même la notification par défaut.
-  }
-
-  const title = payload.title || fallback.title
-  const options = {
-    body: payload.body || '',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
-    data: payload.data || {},
-    // Un `tag` identique écrase la notification précédente du même type :
-    // évite l'empilement quand plusieurs évènements du même parcel tombent
-    // en rafale.
-    tag: payload.data?.type || undefined,
-    renotify: false,
-    requireInteraction: payload.priority === 'high' || payload.priority === 'urgent',
-  }
-
-  event.waitUntil(
-    (async () => {
-      await self.registration.showNotification(title, options)
-      // Badging : si le payload contient un compteur, on l'applique au niveau
-      // de l'application installée. Les navigateurs qui ne supportent pas
-      // l'API ignorent silencieusement.
-      if (typeof payload.badge === 'number' && 'setAppBadge' in self.navigator) {
-        try { await self.navigator.setAppBadge(payload.badge) } catch { /* support partiel */ }
+    let payload = fallback
+    try {
+      const raw = event.data?.text?.()
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        payload = { ...fallback, ...parsed, data: parsed.data || {} }
       }
-    })(),
-  )
+    } catch {
+      // Payload non-JSON : rare, on affiche quand même la notification par défaut.
+    }
+
+    const highPriority = Array.isArray(fallbackCfg.highPriorityValues) && fallbackCfg.highPriorityValues.length > 0
+      ? fallbackCfg.highPriorityValues
+      : DEFAULT_NOTIFICATION_FALLBACK.highPriorityValues
+
+    const title = payload.title || fallback.title
+    const options = {
+      body: payload.body || '',
+      icon: fallbackCfg.defaultIconUrl || DEFAULT_NOTIFICATION_FALLBACK.defaultIconUrl,
+      badge: fallbackCfg.defaultBadgeUrl || DEFAULT_NOTIFICATION_FALLBACK.defaultBadgeUrl,
+      data: payload.data || {},
+      // Un `tag` identique écrase la notification précédente du même type :
+      // évite l'empilement quand plusieurs évènements du même parcel tombent
+      // en rafale.
+      tag: payload.data?.type || undefined,
+      renotify: false,
+      // Phase 6 : la liste des priorités considérées "haute" est pilotée par
+      // l'admin (`notifications.highPriorityValues`). Défaut = ['high', 'urgent'].
+      requireInteraction: typeof payload.priority === 'string' && highPriority.includes(payload.priority),
+    }
+
+    await self.registration.showNotification(title, options)
+    // Badging : si le payload contient un compteur, on l'applique au niveau
+    // de l'application installée. Les navigateurs qui ne supportent pas
+    // l'API ignorent silencieusement.
+    if (typeof payload.badge === 'number' && 'setAppBadge' in self.navigator) {
+      try { await self.navigator.setAppBadge(payload.badge) } catch { /* support partiel */ }
+    }
+  })())
 })
 
 self.addEventListener('notificationclick', (event) => {
@@ -211,6 +239,51 @@ async function persistSyncConfig(timings) {
     tx.oncomplete = () => resolve()
     tx.onerror = () => reject(tx.error)
   })
+}
+
+/**
+ * Phase 6 — persiste branding + fallbacks notifications. Deux clés distinctes
+ * dans le même store `config` pour éviter qu'une mise à jour des timings
+ * écrase le branding (et inversement).
+ */
+async function persistBrandingConfig(message) {
+  const db = await openSyncDatabase()
+  if (!db.objectStoreNames.contains('config')) return
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction('config', 'readwrite')
+    if (message.branding) tx.objectStore('config').put(message.branding, 'branding')
+    if (message.notifications) tx.objectStore('config').put(message.notifications, 'notifications')
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
+/**
+ * Phase 6 — lit les fallbacks notifications depuis IDB. Retourne les defaults
+ * internes si la config n'a pas encore été poussée (premier démarrage du SW,
+ * ou navigateur sans IDB en mode privé).
+ */
+async function readNotificationFallback() {
+  try {
+    const db = await openSyncDatabase()
+    if (!db.objectStoreNames.contains('config')) return DEFAULT_NOTIFICATION_FALLBACK
+    return await new Promise((resolve) => {
+      try {
+        const tx = db.transaction('config', 'readonly')
+        const request = tx.objectStore('config').get('notifications')
+        request.onerror = () => resolve(DEFAULT_NOTIFICATION_FALLBACK)
+        request.onsuccess = () => {
+          const value = request.result
+          if (!value || typeof value !== 'object') return resolve(DEFAULT_NOTIFICATION_FALLBACK)
+          resolve({ ...DEFAULT_NOTIFICATION_FALLBACK, ...value })
+        }
+      } catch {
+        resolve(DEFAULT_NOTIFICATION_FALLBACK)
+      }
+    })
+  } catch {
+    return DEFAULT_NOTIFICATION_FALLBACK
+  }
 }
 
 async function readSyncMaxAttempts(db) {

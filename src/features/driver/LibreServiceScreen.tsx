@@ -8,15 +8,9 @@ import { useMemo, useState } from 'react'
 import { OfferDialog } from './OfferDialog'
 import { CommissionDebtNotice } from './CommissionDebtNotice'
 import { useDriverBidsSent, useDriverFreeParcels } from './hooks'
+import { useLimits } from '@/lib/usePublicConfig'
 
 type ExtraFilter = 'none' | 'express' | 'light' | 'today'
-
-const EXTRA_FILTERS: { value: ExtraFilter; label: string; icon: string }[] = [
-  { value: 'none', label: 'Tous', icon: 'filter_list' },
-  { value: 'express', label: 'Express', icon: 'bolt' },
-  { value: 'light', label: '< 10 kg', icon: 'feather' },
-  { value: 'today', label: "Aujourd'hui", icon: 'today' },
-]
 
 function isSameDay(iso?: string) {
   if (!iso) return false
@@ -26,6 +20,14 @@ function isSameDay(iso?: string) {
 }
 
 export function LibreServiceScreen() {
+  const limits = useLimits()
+  const lightKg = limits.parcelWeightLightKg
+  const EXTRA_FILTERS: { value: ExtraFilter; label: string; icon: string }[] = [
+    { value: 'none', label: 'Tous', icon: 'filter_list' },
+    { value: 'express', label: 'Express', icon: 'bolt' },
+    { value: 'light', label: `< ${lightKg} kg`, icon: 'feather' },
+    { value: 'today', label: "Aujourd'hui", icon: 'today' },
+  ]
   const query = useDriverFreeParcels()
   const bidsQuery = useDriverBidsSent()
   const [offerTarget, setOfferTarget] = useState<Parcel | null>(null)
@@ -43,7 +45,7 @@ export function LibreServiceScreen() {
 
   const parcels = useMemo(() => {
     if (extraFilter === 'express') return zoneFiltered.filter((p) => p.isUrgent)
-    if (extraFilter === 'light') return zoneFiltered.filter((p) => (p.weight ?? Infinity) < 10)
+    if (extraFilter === 'light') return zoneFiltered.filter((p) => (p.weight ?? Infinity) < lightKg)
     if (extraFilter === 'today') return zoneFiltered.filter((p) => isSameDay(p.createdAt))
     return zoneFiltered
   }, [zoneFiltered, extraFilter])
@@ -51,7 +53,7 @@ export function LibreServiceScreen() {
   const filterCounts: Record<ExtraFilter, number> = {
     none: zoneFiltered.length,
     express: zoneFiltered.filter((p) => p.isUrgent).length,
-    light: zoneFiltered.filter((p) => (p.weight ?? Infinity) < 10).length,
+    light: zoneFiltered.filter((p) => (p.weight ?? Infinity) < lightKg).length,
     today: zoneFiltered.filter((p) => isSameDay(p.createdAt)).length,
   }
 

@@ -61,6 +61,10 @@ export interface PublicConfig {
    *  Optionnel : les clients conservent des fallbacks statiques si l'API tourne
    *  sur une version antérieure ou si la config n'est pas encore chargée. */
   timings?: Partial<TimingsConfig>
+  /** Phase 4 externalisation : limites de formulaires et imports (CSV,
+   *  longueurs max, dimensions photo, pagination). Les hot paths conservent
+   *  un fallback compile-time (`DEFAULT_LIMITS`). */
+  limits?: Partial<LimitsConfig>
   /** Phase 1 externalisation : paramètres d'authentification administrables.
    *  Permet au web de borner la saisie OTP sans valeur magique en dur. */
   auth?: {
@@ -81,6 +85,44 @@ export interface PublicConfig {
     default: string
     supported: string[]
   }
+  /** Phase 6 externalisation : branding PWA + Web (nom, couleurs, logo,
+   *  favicon, icônes notification). Optionnel pour tolérer une API ancienne.
+   *  Les clients conservent des fallbacks statiques (`DEFAULT_BRANDING`). */
+  branding?: BrandingConfig
+  /** Phase 6 externalisation : fallbacks de notifications (titre/corps,
+   *  icône/badge, priorités déclenchant `requireInteraction`). */
+  notifications?: NotificationsConfig
+}
+
+/** Branding PWA + Web administrable depuis SystemConfig (`branding.*`).
+ *  Consommé par `applyBranding()` (CSS variables + meta theme-color + favicon)
+ *  et par `GET /manifest.webmanifest`. Toutes les URLs peuvent être relatives
+ *  (`/icons/...`) ou absolues (`https://...`). */
+export interface BrandingConfig {
+  appName: string
+  shortName: string
+  themeColor: string
+  backgroundColor: string
+  logoUrl: string
+  logoDarkUrl: string | null
+  faviconUrl: string
+  iconUrl: string
+  badgeUrl: string
+  primaryColor: string
+  secondaryColor: string | null
+}
+
+/** Fallbacks notifications administrables depuis SystemConfig
+ *  (`notifications.*`). Consommé par `pwa/sw.js` via le pont IndexedDB
+ *  (`BrandingBridge`). */
+export interface NotificationsConfig {
+  fallbackTitle: string
+  fallbackBody: string
+  defaultIconUrl: string
+  defaultBadgeUrl: string
+  /** Valeurs de `payload.priority` qui déclenchent `requireInteraction`
+   *  (notification persistante jusqu'au clic). */
+  highPriorityValues: string[]
 }
 
 /** Timings pilotables en runtime depuis l'admin (SystemConfig `timings.*`).
@@ -136,6 +178,89 @@ export const DEFAULT_TIMINGS: TimingsConfig = {
   webhookPollIntervalMs: 15_000,
   webhookMaxAttempts: 6,
   pwaSyncMaxAttempts: 10,
+}
+
+/** Limites administrables (longueurs de champ, tailles d'import, dimensions
+ *  photo, pagination zones) pilotées en runtime depuis l'admin (SystemConfig
+ *  `limits.*`). Les valeurs par défaut sont dupliquées dans `DEFAULT_LIMITS`
+ *  pour garantir un boot fonctionnel avant la première réponse `/public/config`. */
+export interface LimitsConfig {
+  // CSV / imports
+  csvMaxLines: number
+  csvMaxBytes: number
+  routesCsvMaxBytes: number
+  maxStopsPerRoute: number
+  maxDeparturesPerPublish: number
+  // Colis
+  parcelWeightLightKg: number
+  parcelPhotosMax: number
+  parcelDescriptionMaxChars: number
+  parcelDescriptionLongMaxChars: number
+  addressMaxChars: number
+  phoneMaxChars: number
+  // Annonces / cash / messages courts
+  annonceDescriptionMaxChars: number
+  cashJustificationMaxChars: number
+  disputeDescriptionMaxChars: number
+  // Médias
+  imageMaxDimension: number
+  imageJpegQuality: number
+  // Pagination API (zones)
+  zonePageSize: number
+  zoneMaxPages: number
+}
+
+/** Fallback statique : valeurs utilisées tant que `/public/config` n'a pas
+ *  répondu (boot, offline, ancienne version d'API). Doit rester synchronisé
+ *  avec `LIMITS_DEFAULTS` dans `src/utils/limits-config.js` côté API. */
+export const DEFAULT_LIMITS: LimitsConfig = {
+  csvMaxLines: 50,
+  csvMaxBytes: 2_097_152,
+  routesCsvMaxBytes: 131_072,
+  maxStopsPerRoute: 38,
+  maxDeparturesPerPublish: 100,
+  parcelWeightLightKg: 10,
+  parcelPhotosMax: 4,
+  parcelDescriptionMaxChars: 280,
+  parcelDescriptionLongMaxChars: 100_000,
+  addressMaxChars: 500,
+  phoneMaxChars: 30,
+  annonceDescriptionMaxChars: 200,
+  cashJustificationMaxChars: 200,
+  disputeDescriptionMaxChars: 2000,
+  imageMaxDimension: 1600,
+  imageJpegQuality: 0.8,
+  zonePageSize: 100,
+  zoneMaxPages: 20,
+}
+
+/** Fallback statique : valeurs utilisées tant que `/public/config` n'a pas
+ *  répondu. Doit rester synchronisé avec `BRANDING_DEFAULTS` dans
+ *  `src/utils/branding-config.js` côté API. Les hot paths évitent le flash of
+ *  unstyled content en lisant ces valeurs au premier render. */
+export const DEFAULT_BRANDING: BrandingConfig = {
+  appName: 'ProColis',
+  shortName: 'ProColis',
+  themeColor: '#018982',
+  backgroundColor: '#FFFFFF',
+  logoUrl: '/icons/icon-192.png',
+  logoDarkUrl: null,
+  faviconUrl: '/favicon.ico',
+  iconUrl: '/icons/icon-192.png',
+  badgeUrl: '/icons/icon-72.png',
+  primaryColor: '#018982',
+  secondaryColor: null,
+}
+
+/** Fallback statique : valeurs utilisées tant que `/public/config` n'a pas
+ *  répondu. Doit rester synchronisé avec `NOTIFICATIONS_DEFAULTS` dans
+ *  `src/utils/branding-config.js` côté API. */
+export const DEFAULT_NOTIFICATIONS: NotificationsConfig = {
+  fallbackTitle: 'ProColis',
+  fallbackBody: 'Nouvelle activité',
+  defaultIconUrl: '/icons/icon-192.png',
+  defaultBadgeUrl: '/icons/icon-72.png',
+  highPriorityValues: ['high', 'urgent'],
 }
 
 export async function getPublicConfig(): Promise<PublicConfig> {

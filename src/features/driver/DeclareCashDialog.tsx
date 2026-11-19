@@ -9,6 +9,7 @@ import { queryClient } from '@/lib/queryClient'
 import { formatFcfa } from '@/lib/format'
 import type { Parcel } from '@/lib/api/types'
 import { payableAmount, resolvedCollectionPoint } from './cashDeclaration'
+import { useLimits } from '@/lib/usePublicConfig'
 
 /**
  * Déclaration d'encaissement en espèces — pendant web de
@@ -27,6 +28,7 @@ export function DeclareCashDialog({
   onClose: () => void
   onDeclared?: (parcel: Parcel) => void
 }) {
+  const limits = useLimits()
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
   const [proof, setProof] = useState<File | null>(null)
@@ -199,7 +201,7 @@ export function DeclareCashDialog({
         <Textarea
           label="Note (optionnel)"
           rows={3}
-          maxLength={200}
+          maxLength={limits.cashJustificationMaxChars}
           placeholder="Ex : payé en billets, remis au garage d’arrivée."
           value={note}
           onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNote(e.target.value)}

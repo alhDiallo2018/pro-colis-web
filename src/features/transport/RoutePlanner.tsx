@@ -7,12 +7,13 @@ import { queryClient } from '@/lib/queryClient'
 import { getTransitDraft, getTransitLine, type TransitLineSummary } from '@/lib/api/transit'
 import { TransitLinePicker } from './TransitLinePicker'
 import { departures, type RouteTemplate, type Schedule } from './domain'
+import { useLimits } from '@/lib/usePublicConfig'
 import './transport.css'
 import './transit.css'
 
-const CSV_MAX_BYTES = 128 * 1024
-
 function RouteCsvImport({ onImported }: { onImported: () => void }) {
+  const limits = useLimits()
+  const csvMaxBytes = limits.routesCsvMaxBytes
   const inputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<Record<string, unknown>[]>([])
@@ -34,8 +35,9 @@ function RouteCsvImport({ onImported }: { onImported: () => void }) {
     if (!f) return
     setError('')
     setPreview([])
-    if (f.size > CSV_MAX_BYTES) {
-      setError('Choisissez un fichier CSV de 128 Ko maximum.')
+    if (f.size > csvMaxBytes) {
+      const limitKb = Math.round(csvMaxBytes / 1024)
+      setError(`Choisissez un fichier CSV de ${limitKb} Ko maximum.`)
       setFile(null)
       return
     }
@@ -69,7 +71,7 @@ function RouteCsvImport({ onImported }: { onImported: () => void }) {
         Importer mes trajets (CSV)
       </summary>
       <p className="transit-note" style={{ marginTop: 10 }}>
-        Fichier de 128 Ko maximum. Aperçu obligatoire avant publication.
+        Fichier de {Math.round(csvMaxBytes / 1024)} Ko maximum. Aperçu obligatoire avant publication.
       </p>
       <input ref={inputRef} type="file" accept=".csv,text/csv" onChange={onPick} disabled={busy} />
       {preview.length > 0 && (
@@ -102,6 +104,8 @@ export function RoutePlanner() {
 }
 
 function Planner({ owner }: { owner: string }) {
+  const limits = useLimits()
+  const maxDepartures = limits.maxDeparturesPerPublish
   const key = `procolis-route-schedule:${owner}`
   const [pending, setPending] = useState<Pending | null>(() => {
     try { return JSON.parse(localStorage.getItem(key) || 'null') } catch { return null }
@@ -309,7 +313,7 @@ function Planner({ owner }: { owner: string }) {
             <div className="transport-fields">
               <Input label="Premier départ" type="datetime-local"
                 value={first} onChange={(e) => setFirst(e.target.value)} />
-              <Input label="Nombre de départs (1–100)" type="number" min={1} max={100}
+              <Input label={`Nombre de départs (1–${maxDepartures})`} type="number" min={1} max={maxDepartures}
                 value={String(count)} onChange={(e) => setCount(Number(e.target.value))} />
               <Input label="Intervalle (minutes)" type="number" min={1}
                 value={String(interval)} onChange={(e) => setInterval(Number(e.target.value))} />

@@ -5,12 +5,13 @@ import { Button, Card, Select, Textarea, Toast } from "@/ds";
 import { api } from "@/lib/api/client";
 import { uploadChatPhoto } from "@/lib/api/uploads";
 import { formatFcfa } from "@/lib/format";
-import { getTimings } from "@/lib/usePublicConfig";
+import { getTimings, useLimits } from "@/lib/usePublicConfig";
 import { experience, downloadReceipt, ticketStatus } from "./api";
 import "./experience.css";
 
 export function ParcelExperience({ parcelId }: { parcelId: string }) {
   const queryClient = useQueryClient();
+  const limits = useLimits();
   // Snapshot synchrone : lit la dernière valeur primée via `App.tsx`
   // (`useSyncTimingsCache`). Pas de query React Query supplémentaire côté
   // composant — évite de consommer un `api.get` mocké dans les tests.
@@ -215,16 +216,16 @@ export function ParcelExperience({ parcelId }: { parcelId: string }) {
               label="Décrivez le problème"
               required
               minLength={10}
-              maxLength={3000}
+              maxLength={limits.parcelDescriptionLongMaxChars}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
             />
             <label>
-              Photos ({photos.length}/4)
+              Photos ({photos.length}/{limits.parcelPhotosMax})
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
-                disabled={busy || photos.length >= 4}
+                disabled={busy || photos.length >= limits.parcelPhotosMax}
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;

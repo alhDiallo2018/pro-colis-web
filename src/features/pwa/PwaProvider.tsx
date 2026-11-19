@@ -2,7 +2,7 @@ import { useContext, useEffect, useState, type ReactNode } from 'react'
 import { Button } from '@/ds'
 import { QueryClientContext } from '@tanstack/react-query'
 import { isAppleMobile, isStandalone, PwaContext } from './context'
-import { flushBackgroundQueue, persistPwaTimings } from './pwaSync'
+import { flushBackgroundQueue, persistPwaBranding, persistPwaTimings } from './pwaSync'
 import { precacheByRole } from './precacheByRole'
 import { useAuthStore } from '@/store/auth'
 import { usePublicConfig } from '@/lib/usePublicConfig'
@@ -17,6 +17,16 @@ function TimingsBridge() {
       void persistPwaTimings(publicConfig.timings as Record<string, unknown>)
     }
   }, [publicConfig?.timings])
+  // Phase 6 — propage branding + fallbacks notifications vers le SW. Le même
+  // pattern IDB que les timings est réutilisé : le SW relit après kill/revive.
+  useEffect(() => {
+    if (publicConfig?.branding || publicConfig?.notifications) {
+      void persistPwaBranding(
+        publicConfig.branding as Record<string, unknown> | undefined,
+        publicConfig.notifications as Record<string, unknown> | undefined,
+      )
+    }
+  }, [publicConfig?.branding, publicConfig?.notifications])
   return null
 }
 

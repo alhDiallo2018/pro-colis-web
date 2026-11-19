@@ -1,4 +1,4 @@
-import { QualityScreen, WorkspaceScreen, OfflineHistory, LiveJourneys, ClientDebtsScreen, ClientWalletScreen, ClientApiKeysScreen, SettingsScreen, DriverDebtsScreen, LoginPage, RegisterPage, ForgotPinPage, LandingPage, InstallPage, AProposPage, ContactPage, MentionsLegalesPage, ConfidentialitePage, CGUPage, ConditionsTransportPage, PaiementPage, RemboursementPage, ReclamationsPage, ColisInterditsPage, HelpScreen, PaymentStatusPage, ClientDashboard, MesColisScreen, ParcelDetailScreen, NewParcelScreen, OffresRecuesScreen, ClientAnnoncesScreen, AnnonceDetailScreen, DriverProfileScreen, SuiviScreen, ProfilScreen, TripDetailScreen, ConfirmDeliveryScreen, DriverDashboard, LibreServiceScreen, MissionsScreen, HandoverConfirmScreen, RevenusScreen, HistoriqueScreen, MonGarageScreen, DriverProfilScreen, DriverParametresScreen, DriverPointsScreen, MesAnnoncesScreen, VehicleDocumentsScreen, ItineraireScreen, AdvertisementManifestScreen, AdvertisementReachedStopsScreen, OperationsHubPage, ShuttleOverviewPage, ShuttleLinesPage, ShuttleVehiclesPage, ShuttleSchedulesPage, ShuttleLivePage, MessagesScreen, AdminSupportScreen, SupportDashboard, SupportConversationsScreen, ModerationScreen, StaffProfilScreen, LogsScreen, AuditLogsScreen, IncidentsScreen, TicketsScreen, LeadsScreen, CoverageScreen, SuperAdminDashboard, ColisPage, ChauffeursPage, UtilisateursPage, ZonesPage, StatistiquesPage, RapportsPage, SystemePage, ConfigConsommationPage, FinanceDashboardPage, WalletsPage, PaymentsPage, CashDeclarationsPage, PaymentNotificationsPage, ReputationDashboardPage, ScoresPage, ClassementPage, DriverDetailPage, BrevoConfigScreen, PaydunyaConfigScreen, BroadcastsPage, WalletDetailPage, ScoreDetailPage, WithdrawalsPage, AssistancesPage, ExpensesPage, IdentityVerificationsPage, NotificationsScreen, GarageDashboard, GarageColisPage, GarageChauffeursPage, GarageAssignationsPage, GarageRapportsPage, GarageParcelDetailPage, PilotMetricsPage, RefVehicleTypesPage, RefDocumentTypesPage, RefExpenseCategoriesPage } from './screens';
+import { QualityScreen, WorkspaceScreen, OfflineHistory, LiveJourneys, ClientDebtsScreen, ClientWalletScreen, ClientApiKeysScreen, SettingsScreen, DriverDebtsScreen, LoginPage, RegisterPage, ForgotPinPage, LandingPage, InstallPage, AProposPage, ContactPage, MentionsLegalesPage, ConfidentialitePage, CGUPage, ConditionsTransportPage, PaiementPage, RemboursementPage, ReclamationsPage, ColisInterditsPage, HelpScreen, PaymentStatusPage, ClientDashboard, MesColisScreen, ParcelDetailScreen, NewParcelScreen, OffresRecuesScreen, ClientAnnoncesScreen, AnnonceDetailScreen, DriverProfileScreen, SuiviScreen, ProfilScreen, TripDetailScreen, ConfirmDeliveryScreen, DriverDashboard, LibreServiceScreen, MissionsScreen, HandoverConfirmScreen, RevenusScreen, HistoriqueScreen, MonGarageScreen, DriverProfilScreen, DriverParametresScreen, DriverPointsScreen, MesAnnoncesScreen, VehicleDocumentsScreen, ItineraireScreen, AdvertisementManifestScreen, AdvertisementReachedStopsScreen, OperationsHubPage, ShuttleOverviewPage, ShuttleLinesPage, ShuttleVehiclesPage, ShuttleSchedulesPage, ShuttleLivePage, MessagesScreen, AdminSupportScreen, SupportDashboard, SupportConversationsScreen, ModerationScreen, StaffProfilScreen, LogsScreen, AuditLogsScreen, IncidentsScreen, TicketsScreen, LeadsScreen, CoverageScreen, SuperAdminDashboard, ColisPage, ChauffeursPage, UtilisateursPage, ZonesPage, StatistiquesPage, RapportsPage, SystemePage, ConfigConsommationPage, FinanceDashboardPage, WalletsPage, PaymentsPage, CashDeclarationsPage, PaymentNotificationsPage, ReputationDashboardPage, ScoresPage, ClassementPage, DriverDetailPage, BrevoConfigScreen, PaydunyaConfigScreen, BroadcastsPage, WalletDetailPage, ScoreDetailPage, WithdrawalsPage, AssistancesPage, ExpensesPage, IdentityVerificationsPage, NotificationsScreen, GarageDashboard, GarageColisPage, GarageChauffeursPage, GarageAssignationsPage, GarageRapportsPage, GarageParcelDetailPage, PilotMetricsPage, RefVehicleTypesPage, RefDocumentTypesPage, RefExpenseCategoriesPage, RefParcelCategoriesPage, RefPaymentMethodsPage, RefDriverStatusesPage, RefIncidentSeveritiesPage } from './screens';
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RequireAuth, RequireRole } from "./guards";
 import { DashboardLayout, type NavSection } from "@/layouts/DashboardLayout";
@@ -243,6 +243,26 @@ const SUPER_NAV: NavSection[] = [
         label: "Catégories de dépenses",
         icon: "receipt_long",
         to: "/admin/reference/expense-categories",
+      },
+      {
+        label: "Catégories de colis",
+        icon: "inventory_2",
+        to: "/admin/reference/parcel-categories",
+      },
+      {
+        label: "Moyens de paiement",
+        icon: "payments",
+        to: "/admin/reference/payment-methods",
+      },
+      {
+        label: "Statuts chauffeur",
+        icon: "badge",
+        to: "/admin/reference/driver-statuses",
+      },
+      {
+        label: "Sévérité incidents",
+        icon: "report",
+        to: "/admin/reference/incident-severities",
       },
     ],
   },
@@ -501,6 +521,10 @@ export const router = createBrowserRouter([
       { path: "reference/vehicle-types", element: <RefVehicleTypesPage /> },
       { path: "reference/document-types", element: <RefDocumentTypesPage /> },
       { path: "reference/expense-categories", element: <RefExpenseCategoriesPage /> },
+      { path: "reference/parcel-categories", element: <RefParcelCategoriesPage /> },
+      { path: "reference/payment-methods", element: <RefPaymentMethodsPage /> },
+      { path: "reference/driver-statuses", element: <RefDriverStatusesPage /> },
+      { path: "reference/incident-severities", element: <RefIncidentSeveritiesPage /> },
       { path: "qualite", element: <QualityScreen /> },
       { path: "support", element: <SupportConversationsScreen /> },
       { path: "moderation", element: <ModerationScreen /> },
