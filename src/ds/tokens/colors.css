@@ -73,10 +73,20 @@
   /* ============================================================
      SEMANTIC ALIASES — use these in product UI, not raw scales
      ============================================================ */
-  --color-primary:        var(--teal-600); /* Texte blanc lisible sur les actions. */
+  --color-primary:        #018982; /* Teal-500 au repos ; écrasé par applyBranding() au runtime. */
   --color-primary-hover:  var(--teal-700);
   --color-primary-active: var(--teal-800);
   --color-primary-soft:   var(--teal-50);
+  /* Forme RGB (`"r g b"`) du primary — consommée via
+     `rgb(var(--color-primary-rgb) / <alpha>)` pour les opacités.
+     Mise à jour par applyBranding() depuis `branding.primaryColor`. */
+  --color-primary-rgb:    1 137 130;
+  /* Branding admin : fallback sécurité quand `/public/config` n'a pas
+     encore répondu (évite le flash of unstyled content). Ces deux-là sont
+     consommées uniquement par applyBranding() ; conserver pour cohérence. */
+  --color-theme:          #018982;
+  --color-background:     #FFFFFF;
+  --color-secondary:      #026D68;
 
   --color-accent:         var(--amber-400);
   --color-accent-hover:   var(--amber-500);

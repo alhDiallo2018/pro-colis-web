@@ -117,6 +117,12 @@ function TripStopsMap({ points }: { points: Point[] }) {
 
   useEffect(() => {
     if (!ready || !map.current) return
+    // Google Maps overlays ne consomment pas les CSS vars : on résout la
+    // couleur de marque au moment du dessin pour que le trajet suive
+    // `applyBranding()` (Phase 7B).
+    const brandPrimary =
+      getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() ||
+      '#018982'
     const markers = points.map((p, i) => new google.maps.Marker({
       map: map.current,
       position: p,
@@ -124,7 +130,7 @@ function TripStopsMap({ points }: { points: Point[] }) {
       icon: {
         path: google.maps.SymbolPath.CIRCLE,
         scale: 12,
-        fillColor: i === 0 ? '#10B981' : i === points.length - 1 ? '#EF4444' : '#018982',
+        fillColor: i === 0 ? '#10B981' : i === points.length - 1 ? '#EF4444' : brandPrimary,
         fillOpacity: 1,
         strokeColor: '#fff',
         strokeWeight: 2,
@@ -134,7 +140,7 @@ function TripStopsMap({ points }: { points: Point[] }) {
       ? new google.maps.Polyline({
           map: map.current,
           path: points,
-          strokeColor: '#018982',
+          strokeColor: brandPrimary,
           strokeOpacity: 0.9,
           strokeWeight: 4,
         })

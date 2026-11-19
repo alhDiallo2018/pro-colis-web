@@ -460,6 +460,11 @@ export const PaydunyaConfigScreen = lazy(() =>
     default: module.PaydunyaConfigScreen,
   })),
 );
+export const SystemConfigPage = lazy(() =>
+  import("@/features/superAdmin/SystemConfigPage").then((module) => ({
+    default: module.SystemConfigPage,
+  })),
+);
 export const BroadcastsPage = lazy(
   () => import("@/features/superAdmin/BroadcastsPage"),
 );

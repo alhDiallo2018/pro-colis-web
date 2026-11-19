@@ -6,6 +6,13 @@ import type { BrandingConfig } from '@/lib/api/publicConfig'
  *  - `--color-primary` / `--color-theme` exposées à tout le CSS applicatif
  *    (DS, composants) pour piloter boutons, accents et bordures sans
  *    redéploiement.
+ *  - `--color-primary-rgb` (`"r g b"`) exposée pour les utilisations en
+ *    opacité : `rgb(var(--color-primary-rgb) / 0.1)`.
+ *  - Alias teintes `--teal-500/600/700/800` + `--color-primary-hover/-active
+ *    /-soft` dérivés de la couleur admin pour que tous les composants qui
+ *    consomment encore les tokens bruts du scale `teal-*` (ex. citymapper
+ *    tokens, écrans dashboard) suivent la couleur choisie. L'alternative (migrer
+ *    146 usages un par un) a été jugée trop invasive pour la Phase 7B.
  *  - `<meta name="theme-color">` mis à jour dynamiquement pour que la barre
  *    système du navigateur (mobile) reflète la couleur choisie par l'admin.
  *  - `<link rel="icon">` remplacé si `faviconUrl` diverge du défaut compilé :
@@ -28,7 +35,28 @@ export function applyBranding(branding: Partial<BrandingConfig> | undefined | nu
   // (fallback inline au cas où la variable n'existe pas). On n'écrase pas
   // si la valeur est falsy pour tolérer un seed partiel.
   if (branding.primaryColor) {
-    root.style.setProperty('--color-primary', branding.primaryColor)
+    const primary = branding.primaryColor
+    root.style.setProperty('--color-primary', primary)
+
+    // Exposer la forme RGB pour les usages en opacité
+    // (`rgb(var(--color-primary-rgb) / 0.1)`).
+    const rgb = hexToRgb(primary)
+    if (rgb) root.style.setProperty('--color-primary-rgb', rgb)
+
+    // Dériver une échelle courte (500/600/700/800) + hover/active/soft à
+    // partir de la couleur admin. Objectif : tous les composants qui
+    // consomment encore `--teal-*` (DS tokens citymapper, badges, etc.)
+    // suivent la couleur choisie sans migration ligne à ligne.
+    const scale = deriveTealScale(primary)
+    if (scale) {
+      root.style.setProperty('--teal-500', scale.base)
+      root.style.setProperty('--teal-600', scale.d10)
+      root.style.setProperty('--teal-700', scale.d20)
+      root.style.setProperty('--teal-800', scale.d30)
+      root.style.setProperty('--color-primary-hover', scale.d10)
+      root.style.setProperty('--color-primary-active', scale.d20)
+      root.style.setProperty('--color-primary-soft', scale.soft)
+    }
   }
   if (branding.themeColor) {
     root.style.setProperty('--color-theme', branding.themeColor)
@@ -43,6 +71,43 @@ export function applyBranding(branding: Partial<BrandingConfig> | undefined | nu
 
   if (branding.faviconUrl) {
     updateFavicon(branding.faviconUrl)
+  }
+}
+
+/** `#RRGGBB` → `"R G B"` (format compatible `rgb(var(--…) / <alpha>)`).
+ *  Retourne `null` si l'entrée n'est pas un hex valide 6 chiffres. */
+function hexToRgb(hex: string): string | null {
+  const clean = hex.trim().replace('#', '')
+  if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null
+  const r = parseInt(clean.substring(0, 2), 16)
+  const g = parseInt(clean.substring(2, 4), 16)
+  const b = parseInt(clean.substring(4, 6), 16)
+  return `${r} ${g} ${b}`
+}
+
+/** `#RRGGBB` → nuances dérivées. Les shades plus foncées sont obtenues par
+ *  multiplication linéaire (0.8/0.65/0.5) : pas parfait colorimétriquement
+ *  mais suffisant pour préserver une hiérarchie hover/active cohérente avec
+ *  l'ancienne échelle teal (500/600/700/800). `soft` est une teinte très
+ *  claire (5 % d'opacité) utilisée pour les fonds de bouton ghost. */
+function deriveTealScale(hex: string): { base: string; d10: string; d20: string; d30: string; soft: string } | null {
+  const clean = hex.trim().replace('#', '')
+  if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null
+  const r = parseInt(clean.substring(0, 2), 16)
+  const g = parseInt(clean.substring(2, 4), 16)
+  const b = parseInt(clean.substring(4, 6), 16)
+  const darken = (factor: number): string => {
+    const dr = Math.max(0, Math.min(255, Math.round(r * factor)))
+    const dg = Math.max(0, Math.min(255, Math.round(g * factor)))
+    const db = Math.max(0, Math.min(255, Math.round(b * factor)))
+    return `#${dr.toString(16).padStart(2, '0')}${dg.toString(16).padStart(2, '0')}${db.toString(16).padStart(2, '0')}`
+  }
+  return {
+    base: `#${clean.toLowerCase()}`,
+    d10: darken(0.8),
+    d20: darken(0.65),
+    d30: darken(0.5),
+    soft: `rgba(${r}, ${g}, ${b}, 0.1)`,
   }
 }
 
