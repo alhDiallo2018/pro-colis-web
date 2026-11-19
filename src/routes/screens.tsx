@@ -380,6 +380,11 @@ export const ShuttleSchedulesPage = lazy(() =>
     default: module.ShuttleSchedulesPage,
   })),
 );
+export const ShuttleLivePage = lazy(() =>
+  import("@/features/shuttleOperator/ShuttleLivePage").then((module) => ({
+    default: module.ShuttleLivePage,
+  })),
+);
 export const StatistiquesPage = lazy(() =>
   import("@/features/superAdmin/StatistiquesPage").then((module) => ({
     default: module.StatistiquesPage,

@@ -177,6 +177,62 @@ export async function deleteSchedule(scheduleId: string): Promise<void> {
   await api.delete(`/shuttle-operator/schedules/${scheduleId}`)
 }
 
+// SCP-006 — Supervision temps réel : trajets actifs sur les lignes de l'opérateur.
+export interface ShuttleLivePosition {
+  latitude: number
+  longitude: number
+  accuracyMeters: number
+  capturedAt: string
+  expiresAt: string
+}
+
+export interface ShuttleLiveNextStop {
+  order: number
+  label: string
+  zoneId: string
+}
+
+export interface ShuttleLiveConfirmations {
+  pickupDone: number
+  pickupTotal: number
+  dropoffDone: number
+  dropoffTotal: number
+}
+
+export interface ShuttleLiveJourney {
+  advertisementId: string
+  departureAt: string | null
+  driver: { id: string; fullName: string | null } | null
+  line: { id: string; number: string; name: string; direction: TransitDirection } | null
+  position: ShuttleLivePosition | null
+  stopsTotal: number
+  stopsReached: number
+  nextStop: ShuttleLiveNextStop | null
+  confirmations: ShuttleLiveConfirmations
+}
+
+export interface ShuttleLiveFleet {
+  available: number
+  maintenance: number
+  retired: number
+}
+
+export interface ShuttleLiveSnapshot {
+  activeJourneys: ShuttleLiveJourney[]
+  fleet: ShuttleLiveFleet
+  generatedAt: string
+}
+
+export async function getLive(): Promise<ShuttleLiveSnapshot> {
+  const { data } = await api.get('/shuttle-operator/live')
+  const d = (data?.data ?? {}) as Partial<ShuttleLiveSnapshot>
+  return {
+    activeJourneys: d.activeJourneys ?? [],
+    fleet: d.fleet ?? { available: 0, maintenance: 0, retired: 0 },
+    generatedAt: d.generatedAt ?? new Date().toISOString(),
+  }
+}
+
 export const DAY_LABELS_FR = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
 export function formatDaysOfWeek(days: number[]): string {
   if (!days.length) return '—'
