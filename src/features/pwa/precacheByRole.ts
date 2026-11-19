@@ -34,6 +34,7 @@ const PRELOADS: Partial<Record<UserRole, Array<() => Promise<unknown>>>> = {
     () => import('@/features/client/ClientDebtsScreen'),
     () => import('@/features/experience/WorkspaceScreen'),
     () => import('@/features/shared/MessagesScreen'),
+    () => import('@/features/shared/AiAssistantScreen'),
     () => import('@/features/pwa/OfflineHistory'),
   ],
   driver: [

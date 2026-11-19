@@ -190,6 +190,11 @@ export const ConfirmDeliveryScreen = lazy(() =>
     default: module.ConfirmDeliveryScreen,
   })),
 );
+export const AiAssistantScreen = lazy(() =>
+  import("@/features/shared/AiAssistantScreen").then((module) => ({
+    default: module.AiAssistantScreen,
+  })),
+);
 export const DriverDashboard = lazy(() =>
   import("@/features/driver/DriverDashboard").then((module) => ({
     default: module.DriverDashboard,

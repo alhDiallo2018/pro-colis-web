@@ -18,6 +18,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDriverFinancialState, useMyAdvertisements } from './hooks'
 import { CommissionDebtNotice } from './CommissionDebtNotice'
+import { BackhaulSuggestionsDialog } from './BackhaulSuggestionsDialog'
 
 const STATUS_META: Record<string, { label: string; tone: 'amber' | 'green' | 'red' | 'neutral' }> = {
   pending: { label: 'En attente', tone: 'amber' },
@@ -167,6 +168,7 @@ function AdCard({
   const status = ad.status || 'open'
   const s = AD_STATUS_LABELS[status] ?? AD_STATUS_LABELS.open
   const hasStops = (ad.itinerary?.stops?.length ?? 0) > 0
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
 
   return (
     <section className="cm-ad-card">
@@ -178,6 +180,16 @@ function AdCard({
           {locationLabel(ad, 'arrival')}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {status === 'open' && (
+            <Button
+              size="sm"
+              variant="ghost"
+              icon="auto_awesome"
+              onClick={() => setSuggestionsOpen(true)}
+            >
+              Suggestions
+            </Button>
+          )}
           {hasStops && (
             <>
               <Button size="sm" variant="ghost" icon="receipt_long" onClick={() => navigate(`/driver/annonces/${ad.id}/manifest`)}>
@@ -191,6 +203,12 @@ function AdCard({
           <Badge tone={s.tone}>{s.label}</Badge>
         </div>
       </header>
+      {suggestionsOpen && (
+        <BackhaulSuggestionsDialog
+          advertisementId={ad.id}
+          onClose={() => setSuggestionsOpen(false)}
+        />
+      )}
 
       <div className="cm-ad-card-body">
         <TripStops ad={ad} />

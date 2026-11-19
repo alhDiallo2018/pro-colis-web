@@ -128,6 +128,13 @@ export function ClientDashboard() {
             sub="Historique complet"
             onClick={() => navigate('/client/colis')}
           />
+          <ActionTile
+            color="violet"
+            icon="auto_awesome"
+            label="Assistant IA"
+            sub="Créer un colis via le chat ou la voix"
+            onClick={() => navigate('/client/assistant')}
+          />
         </div>
       </section>
 

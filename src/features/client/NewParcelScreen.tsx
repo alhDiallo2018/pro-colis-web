@@ -50,6 +50,7 @@ import { useLimits, getLimits } from "@/lib/usePublicConfig";
 import { LocationInput } from "@/components/LocationInput";
 import { ParcelTemplatesDialog } from "@/components/ParcelTemplatesDialog";
 import type { ParcelTemplate, ParcelTemplateData } from "@/lib/parcelTemplateStore";
+import { consumeAiParcelDraft } from "@/features/shared/aiDraftStore";
 import { ALL_COUNTRIES } from "@/components/CountryCodePicker";
 import {
   CONTACT_PICKER_PROPERTIES,
@@ -385,6 +386,41 @@ export function NewParcelScreen() {
     setMaxStep((m) => Math.max(m, 1));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preselectedDriverId]);
+
+  // Arrivée depuis l'Assistant IA : on consomme le brouillon stocké en
+  // sessionStorage (usage unique) et on applique les champs disponibles.
+  // Attend que les zones soient chargées pour résoudre senderCity/receiverCity.
+  const aiApplied = useRef(false);
+  useEffect(() => {
+    if (aiApplied.current) return;
+    if (searchParams.get("from") !== "ai") return;
+    if (!zones.data) return;
+    const draft = consumeAiParcelDraft();
+    aiApplied.current = true;
+    if (!draft) return;
+    const matchZone = (city: string | null) => {
+      if (!city) return null;
+      const norm = city.trim().toLowerCase();
+      return (
+        zones.data!.find(
+          (z) =>
+            (z.city ?? "").toLowerCase() === norm ||
+            z.name.toLowerCase() === norm,
+        ) ?? null
+      );
+    };
+    if (draft.receiverName) setValue("receiverName", draft.receiverName);
+    if (draft.receiverPhone) setValue("receiverPhone", draft.receiverPhone);
+    if (draft.weightKg != null && draft.weightKg > 0)
+      setValue("weight", draft.weightKg);
+    if (draft.type) setValue("type", draft.type);
+    if (draft.isUrgent) setValue("isUrgent", true);
+    if (draft.notes) setValue("description", draft.notes);
+    const depZone = matchZone(draft.senderCity);
+    if (depZone) setValue("departureZoneId", depZone.id);
+    const arrZone = matchZone(draft.receiverCity);
+    if (arrZone) setValue("arrivalZoneId", arrZone.id);
+  }, [searchParams, zones.data, setValue]);
 
   const accountDialCode = inferDialCode(
     user?.phone,
