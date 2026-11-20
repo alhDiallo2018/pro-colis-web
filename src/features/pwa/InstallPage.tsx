@@ -11,10 +11,10 @@ export function InstallPage() {
         <section className="pwa-intro" aria-labelledby="install-title">
           <p className="pwa-eyebrow">IPHONE & IPAD</p>
           <h1 id="install-title">Vos colis.<br />À portée de main.</h1>
-          <p>Retrouvez ProColis sur votre écran d’accueil, avec votre compte habituel. Sans passer par l’App Store.</p>
+          <p>Retrouvez SendProColis sur votre écran d’accueil, avec votre compte habituel. Sans passer par l’App Store.</p>
           <div className="pwa-app-preview">
-            <img src="/icons/apple-touch-icon.png" alt="Icône ProColis" width="88" height="88" />
-            <div><strong>ProColis</strong><span>Envoyez. Suivez. Recevez.</span></div>
+            <img src="/icons/apple-touch-icon.png" alt="Icône SendProColis" width="88" height="88" />
+            <div><strong>SendProColis</strong><span>Envoyez. Suivez. Recevez.</span></div>
           </div>
           <Link className="pwa-primary-link" to="/app">{installed ? 'Ouvrir mon espace' : 'Continuer dans le navigateur'} <span aria-hidden="true">→</span></Link>
         </section>
@@ -22,7 +22,7 @@ export function InstallPage() {
           {installed ? (
             <>
               <p className="pwa-eyebrow">VOUS ÊTES PRÊT</p>
-              <h2 id="steps-title">ProColis est ouvert en mode application.</h2>
+              <h2 id="steps-title">SendProColis est ouvert en mode application.</h2>
               <p>Connectez-vous pour retrouver vos colis et vos messages.</p>
             </>
           ) : (
@@ -32,7 +32,7 @@ export function InstallPage() {
               <ol>
                 <li><strong>Ouvrez ce site dans Safari</strong><p>Si vous venez de WhatsApp, Facebook ou d’un autre navigateur, copiez le lien de cette page puis ouvrez-le dans Safari.</p></li>
                 <li><strong>Touchez Partager</strong><p>Repérez le carré avec une flèche vers le haut. Selon votre version d’iOS, il se trouve dans le menu de la page.</p></li>
-                <li><strong>Choisissez « Sur l’écran d’accueil »</strong><p>Activez « Ouvrir comme app web » si cette option apparaît, puis touchez « Ajouter ». L’icône ProColis est prête.</p></li>
+                <li><strong>Choisissez « Sur l’écran d’accueil »</strong><p>Activez « Ouvrir comme app web » si cette option apparaît, puis touchez « Ajouter ». L’icône SendProColis est prête.</p></li>
               </ol>
               <p className="pwa-tip">L’option n’apparaît pas ? Faites défiler le menu Partager et vérifiez « Modifier les actions ».</p>
             </>

@@ -190,7 +190,7 @@ export function useSyncLimitsCache(): void {
 
 /** Phase 6 externalisation : branding PWA + Web (nom, couleurs, logo,
  *  favicon). Fusion `DEFAULT_BRANDING` + overrides. Null-safe : si
- *  `/public/config` n'a pas répondu, les defaults historiques (ProColis /
+ *  `/public/config` n'a pas répondu, les defaults historiques (SendProColis /
  *  turquoise #018982) évitent le flash of unstyled content. */
 export function useBranding(): BrandingConfig {
   const { data } = usePublicConfig()

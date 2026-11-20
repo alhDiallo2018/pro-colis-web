@@ -20,7 +20,7 @@ function worker() {
   return { listeners, cache, caches, fetch, self, request }
 }
 
-describe('service worker ProColis', () => {
+describe('service worker SendProColis', () => {
   it('ne prend jamais en charge les API, uploads, paiements POST ou domaines externes', () => {
     const { request, caches } = worker()
     for (const url of ['/api/v1/auth/me', '/uploads/identity.png', '/collect/faro', 'https://payment.test/test']) {

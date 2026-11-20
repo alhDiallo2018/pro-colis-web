@@ -22,7 +22,7 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
 
 it('propose le guide Safari sur iPhone et permet de masquer le bandeau', async () => {
   render(withQuery(<PwaProvider><MemoryRouter><InstallPage /></MemoryRouter></PwaProvider>))
-  expect(screen.getByRole('link', { name: /ProColis sur votre iPhone/ })).toHaveAttribute('href', '/installer')
+  expect(screen.getByRole('link', { name: /SendProColis sur votre iPhone/ })).toHaveAttribute('href', '/installer')
   expect(screen.getByText('Touchez Partager')).toBeInTheDocument()
   await userEvent.click(screen.getByRole('button', { name: /Masquer l’aide/ }))
   expect(screen.queryByRole('complementary')).not.toBeInTheDocument()

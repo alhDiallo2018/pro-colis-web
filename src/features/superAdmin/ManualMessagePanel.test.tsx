@@ -120,7 +120,7 @@ it('reprend la sélection des listes et envoie la fiche personnelle via le chat'
   const user = userEvent.setup()
   render(<ManualMessagePanel initialRecipients={accounts} initialKind="account_summary" />)
   expect(screen.queryByLabelText('Message')).not.toBeInTheDocument()
-  expect(screen.getByLabelText('Objet / titre')).toHaveValue('Vos informations ProColis')
+  expect(screen.getByLabelText('Objet / titre')).toHaveValue('Vos informations SendProColis')
   await user.click(screen.getByRole('checkbox', { name: 'Email' }))
   await user.click(screen.getByRole('checkbox', { name: 'Chat privé' }))
   await user.click(screen.getByRole('button', { name: 'Envoyer à 2 utilisateurs' }))

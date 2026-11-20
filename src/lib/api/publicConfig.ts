@@ -239,8 +239,8 @@ export const DEFAULT_LIMITS: LimitsConfig = {
  *  `src/utils/branding-config.js` côté API. Les hot paths évitent le flash of
  *  unstyled content en lisant ces valeurs au premier render. */
 export const DEFAULT_BRANDING: BrandingConfig = {
-  appName: 'ProColis',
-  shortName: 'ProColis',
+  appName: 'SendProColis',
+  shortName: 'SendProColis',
   themeColor: '#018982',
   backgroundColor: '#FFFFFF',
   logoUrl: '/icons/icon-192.png',
@@ -256,7 +256,7 @@ export const DEFAULT_BRANDING: BrandingConfig = {
  *  répondu. Doit rester synchronisé avec `NOTIFICATIONS_DEFAULTS` dans
  *  `src/utils/branding-config.js` côté API. */
 export const DEFAULT_NOTIFICATIONS: NotificationsConfig = {
-  fallbackTitle: 'ProColis',
+  fallbackTitle: 'SendProColis',
   fallbackBody: 'Nouvelle activité',
   defaultIconUrl: '/icons/icon-192.png',
   defaultBadgeUrl: '/icons/icon-72.png',

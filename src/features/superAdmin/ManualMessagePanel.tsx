@@ -21,7 +21,7 @@ export function ManualMessagePanel({ initialRecipients = [], initialKind = 'mess
   const [pickerOpen, setPickerOpen] = useState(false)
   const role = useAuthStore(state => state.user?.role)
   const [channels, setChannels] = useState<MessageChannel[]>(['email'])
-  const [subject, setSubject] = useState(initialKind === 'account_summary' ? 'Vos informations ProColis' : '')
+  const [subject, setSubject] = useState(initialKind === 'account_summary' ? 'Vos informations SendProColis' : '')
   const [content, setContent] = useState('')
   const [results, setResults] = useState<Delivery[]>([])
   const [sending, setSending] = useState(false)
@@ -136,7 +136,7 @@ export function ManualMessagePanel({ initialRecipients = [], initialKind = 'mess
             onChange={event => {
               const next = event.target.value as 'message' | 'account_summary'
               setKind(next)
-              if (next === 'account_summary') setSubject('Vos informations ProColis')
+              if (next === 'account_summary') setSubject('Vos informations SendProColis')
             }} options={[{ value: 'message', label: 'Message personnalisé' },
               { value: 'account_summary', label: 'Renvoyer les données du compte' }]} />
         {kind === 'account_summary' && <p role="note">Chaque personne reçoit uniquement sa propre fiche : nom, e-mail, téléphone, profil, ville et statut. Les codes PIN et mots de passe ne sont pas envoyés.</p>}

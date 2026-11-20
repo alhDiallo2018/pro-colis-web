@@ -64,7 +64,7 @@ export function LoginPage() {
         <p className="auth-lead">Entrez votre identifiant et votre code PIN.</p>
         <p style={{ margin: 0, fontSize: 13.5 }}>
           <Link to="/installer" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
-            Installer ProColis sur iPhone ou iPad
+            Installer SendProColis sur iPhone ou iPad
           </Link>
         </p>
       </div>

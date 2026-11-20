@@ -158,9 +158,9 @@ export function PwaProvider({ children }: { children: ReactNode }) {
         </div>
       )}
       {appleMobile && !installed && !dismissed && (
-        <aside className="pwa-install-banner" aria-label="Installer ProColis">
+        <aside className="pwa-install-banner" aria-label="Installer SendProColis">
           <img src="/icons/apple-touch-icon.png" width="40" height="40" alt="" />
-          <a href="/installer"><strong>ProColis sur votre iPhone ou iPad</strong><span>Installer sans App Store</span></a>
+          <a href="/installer"><strong>SendProColis sur votre iPhone ou iPad</strong><span>Installer sans App Store</span></a>
           <button type="button" aria-label="Masquer l’aide à l’installation" onClick={() => setDismissed(true)}>×</button>
         </aside>
       )}

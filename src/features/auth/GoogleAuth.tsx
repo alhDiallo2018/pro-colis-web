@@ -125,8 +125,8 @@ export function GoogleAuth({ onSuccess, onFlowChange, initialRole = 'client' }: 
   return <section className="pc-google-auth pc-google-profile" aria-label="Finaliser la connexion Google" aria-busy={busy}>
     <p className="pc-google-eyebrow">COMPTE GOOGLE VÉRIFIÉ</p>
     <p className="pc-google-email">{challenge.email}</p>
-    <h2>{view === 'link' ? 'Retrouver mon compte' : 'Bienvenue chez ProColis'}</h2>
-    <p>{view === 'link' ? 'Saisissez le PIN de votre compte ProColis pour l’associer à Google.' : 'Confirmez votre téléphone pour recevoir les informations de livraison.'}</p>
+    <h2>{view === 'link' ? 'Retrouver mon compte' : 'Bienvenue chez SendProColis'}</h2>
+    <p>{view === 'link' ? 'Saisissez le PIN de votre compte SendProColis pour l’associer à Google.' : 'Confirmez votre téléphone pour recevoir les informations de livraison.'}</p>
     <form onSubmit={event => {
       event.preventDefault()
       if (locked) return
@@ -171,7 +171,7 @@ export function GoogleAuth({ onSuccess, onFlowChange, initialRole = 'client' }: 
         {view === 'link' ? 'Associer et me connecter' : 'Créer mon compte avec Google'}
       </Button>
     </form>
-    {view === 'profile' && <Button type="button" disabled={locked} onClick={() => { setView('link'); setPin(''); setError('') }}>J’ai déjà un compte ProColis</Button>}
+    {view === 'profile' && <Button type="button" disabled={locked} onClick={() => { setView('link'); setPin(''); setError('') }}>J’ai déjà un compte SendProColis</Button>}
     {view === 'link' && challenge.status === 'profile_required' && <Button type="button" disabled={locked} onClick={() => { setView('profile'); setPin(''); setError('') }}>Créer un nouveau compte</Button>}
     <Button type="button" onClick={reset}>{expired ? 'Recommencer avec Google' : 'Utiliser une autre méthode'}</Button>
   </section>
