@@ -42,7 +42,13 @@ export function CancellationDialog({ parcel, onClose }: CancellationDialogProps)
   if (!parcel) return null
 
   const outcome = result ?? quote.data
-  const reasons = outcome?.reasons ?? null
+  // Si l'API renvoie un `scope`, on retire les motifs qui ne concernent pas
+  // le client (ex. motifs spécifiques chauffeur). Sans scope (ancienne API),
+  // on garde la liste telle quelle.
+  const rawReasons = outcome?.reasons ?? null
+  const reasons = rawReasons
+    ? rawReasons.filter((r) => !r.scope || r.scope === 'client' || r.scope === 'both')
+    : null
   const error = cancel.error
 
   const submit = () => {

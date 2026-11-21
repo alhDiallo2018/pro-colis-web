@@ -2,7 +2,7 @@ import { QualityScreen, WorkspaceScreen, OfflineHistory, LiveJourneys, ClientDeb
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RequireAuth, RequireRole } from "./guards";
 import { DashboardLayout, type NavSection } from "@/layouts/DashboardLayout";
-import { NavButton, NotifButton } from "@/components/actions";
+import { NavButton, NotifButton, TrackParcelButton } from "@/components/actions";
 
 import { SupportChatWrapper } from "@/features/shared/SupportChatWrapper";
 import { MarketingLayout } from "@/features/marketing/MarketingLayout";
@@ -376,6 +376,7 @@ export const router = createBrowserRouter([
           actions={
             <>
               <AvailabilityToggle />
+              <TrackParcelButton />
               <NotifButton />
             </>
           }
@@ -416,7 +417,12 @@ export const router = createBrowserRouter([
           roleLabel="Opérateur"
           greetOnIndex
           banner={<BroadcastBanner />}
-          actions={<NotifButton />}
+          actions={
+            <>
+              <TrackParcelButton />
+              <NotifButton />
+            </>
+          }
         />
       </RequireRole>
     ),
@@ -441,7 +447,12 @@ export const router = createBrowserRouter([
           roleLabel="Admin zone"
           greetOnIndex
           banner={<BroadcastBanner />}
-          actions={<NotifButton />}
+          actions={
+            <>
+              <TrackParcelButton />
+              <NotifButton />
+            </>
+          }
         />
       </RequireRole>
     ),
@@ -470,6 +481,7 @@ export const router = createBrowserRouter([
           banner={<BroadcastBanner />}
           actions={
             <>
+              <TrackParcelButton />
               <NotifButton />
               <NavButton to="/admin/zones?new=1" icon="add">
                 Nouvelle zone

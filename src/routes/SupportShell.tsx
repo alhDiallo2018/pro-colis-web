@@ -1,5 +1,5 @@
 import { DashboardLayout, type NavSection } from "@/layouts/DashboardLayout";
-import { NotifButton } from "@/components/actions";
+import { NotifButton, TrackParcelButton } from "@/components/actions";
 import { BroadcastBanner } from "@/components/BroadcastBanner";
 import { useAuthStore } from "@/store/auth";
 
@@ -128,7 +128,12 @@ export function SupportShell() {
       roleLabel="Support"
       greetOnIndex
       banner={<BroadcastBanner />}
-      actions={<NotifButton />}
+      actions={
+        <>
+          <TrackParcelButton />
+          <NotifButton />
+        </>
+      }
     />
   );
 }

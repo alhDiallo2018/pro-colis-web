@@ -123,6 +123,41 @@ export function NegotiationChat({
     ? thread.data
     : (thread.data?.messages ?? []);
 
+  // Bids chargés pour cette conversation : alimente la bannière d'offre en
+  // cours au-dessus du fil (le détail colis n'embarque pas toujours les bids).
+  const parcelBids = useQuery({
+    queryKey: ["chat", "parcel-bids", parcelId ?? null],
+    queryFn: () =>
+      parcelId ? bidsApi.listForParcel(parcelId) : Promise.resolve([]),
+    enabled: Boolean(parcelId) && !supportConversationId,
+    refetchInterval: 10_000,
+  });
+
+  const activeBid = (() => {
+    const list = parcelBids.data;
+    if (!list || list.length === 0 || !userId) return null;
+    const matching = list.filter((b: any) => {
+      // Côté client (owner), le bid pertinent est celui du chauffeur courant
+      // (peerId). Côté chauffeur, c'est son propre bid.
+      if (_isOwner || canAccept !== undefined ? _isOwner : role === "client") {
+        return b.driverId === peerId;
+      }
+      return b.driverId === userId;
+    });
+    if (matching.length === 0) return null;
+    matching.sort((a: any, b: any) => {
+      const aActive =
+        a.status === "pending" || a.status === "countered" ? 1 : 0;
+      const bActive =
+        b.status === "pending" || b.status === "countered" ? 1 : 0;
+      if (aActive !== bActive) return bActive - aActive;
+      return (
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    });
+    return matching[0];
+  })();
+
   const send = useMutation({
     mutationFn: (payload: {
       body?: string;
@@ -462,6 +497,41 @@ export function NegotiationChat({
     setText(`Contre-proposition a ${nf(amount)} FCFA : `);
   };
 
+  const rejectPrice = useMutation({
+    mutationFn: async (_payload: { amount: number }) => {
+      if (!bidId) return;
+      if (role === "driver") {
+        return bidsApi.driverRespond(bidId, { action: "reject" });
+      }
+      if (parcelId) {
+        return bidsApi.reject(parcelId, bidId);
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["client", "bids"] });
+      qc.invalidateQueries({ queryKey: ["driver", "bids"] });
+      qc.invalidateQueries({ queryKey: key });
+    },
+  });
+
+  const handleRejectPrice = (amount: number) => {
+    if (rejectPrice.isPending) return;
+    const ok = window.confirm(
+      `Refuser le prix de ${nf(amount)} FCFA ? Cette action est définitive pour cette offre.`,
+    );
+    if (!ok) return;
+    rejectPrice.mutate(
+      { amount },
+      {
+        onSuccess: () => {
+          send.mutate({
+            body: `Je refuse le prix de ${nf(amount)} FCFA. Je reste ouvert à une nouvelle proposition.`,
+          });
+        },
+      },
+    );
+  };
+
   return (
     <div
       style={{
@@ -563,6 +633,147 @@ export function NegotiationChat({
           </div>
         )}
 
+      {/* Bannière d'offre en cours — visible dès l'ouverture du chat depuis
+          une carte d'offre, pour ne jamais perdre l'offre active de vue. */}
+      {activeBid &&
+        (() => {
+          const price =
+            Number(activeBid.lastPrice ?? activeBid.price) || 0;
+          const lastBy = activeBid.lastOfferBy;
+          const lastByMe =
+            role === "driver" ? lastBy === "driver" : lastBy === "client";
+          const isActive =
+            activeBid.status === "pending" ||
+            activeBid.status === "countered" ||
+            activeBid.status === "negotiating";
+          const canAct = isActive && !lastByMe;
+          const statusLabel = !isActive
+            ? activeBid.status === "accepted"
+              ? "Offre acceptée ✓"
+              : "Offre refusée"
+            : lastByMe
+              ? "Offre envoyée — en attente de réponse"
+              : "Offre reçue — à vous de répondre";
+          const tone =
+            activeBid.status === "accepted"
+              ? "var(--green-600)"
+              : activeBid.status === "rejected"
+                ? "var(--red-500)"
+                : "var(--amber-600)";
+          const bg =
+            activeBid.status === "accepted"
+              ? "var(--green-50)"
+              : activeBid.status === "rejected"
+                ? "var(--red-50)"
+                : "var(--amber-50)";
+          const border =
+            activeBid.status === "accepted"
+              ? "var(--green-200)"
+              : activeBid.status === "rejected"
+                ? "var(--red-200)"
+                : "var(--amber-200)";
+          return (
+            <div
+              style={{
+                background: bg,
+                border: `1px solid ${border}`,
+                borderRadius: "var(--radius-md)",
+                padding: "10px 14px",
+                marginBottom: 8,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  marginBottom: 6,
+                }}
+              >
+                <span
+                  className="material-symbols-rounded"
+                  style={{ fontSize: 16, color: tone }}
+                >
+                  local_offer
+                </span>
+                <span
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 800,
+                    fontSize: 12,
+                    color: tone,
+                    letterSpacing: "0.03em",
+                    textTransform: "uppercase",
+                    flex: 1,
+                  }}
+                >
+                  {statusLabel}
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: 8,
+                  flexWrap: "wrap",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontWeight: 800,
+                    fontSize: 22,
+                    color: tone,
+                  }}
+                >
+                  {nf(price)}
+                </span>
+                <span style={{ fontWeight: 700, fontSize: 12, color: tone }}>
+                  FCFA
+                </span>
+                <span
+                  style={{
+                    marginLeft: "auto",
+                    fontSize: 11,
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  {lastByMe ? "Proposé par vous" : `Proposé par ${peerName}`}
+                </span>
+              </div>
+              {canAct && (
+                <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    icon="close"
+                    onClick={() => handleRejectPrice(price)}
+                  >
+                    Refuser
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    icon="swap_horiz"
+                    onClick={() => handleCounterPrice(price)}
+                  >
+                    Négocier
+                  </Button>
+                  <Button
+                    size="sm"
+                    icon={acceptBlocked ? "lock" : "check"}
+                    disabled={acceptBlocked}
+                    title={acceptBlocked ? acceptBlockedLabel : undefined}
+                    onClick={() => handleAcceptPrice(price)}
+                  >
+                    {acceptBlocked ? acceptBlockedLabel : "Accepter"}
+                  </Button>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
       {/* messages list */}
       <div
         ref={scrollRef}
@@ -645,6 +856,7 @@ export function NegotiationChat({
                   acceptBlockedLabel={acceptBlockedLabel}
                   onAcceptPrice={(amount) => handleAcceptPrice(amount)}
                   onCounterPrice={(amount) => handleCounterPrice(amount)}
+                  onRejectPrice={(amount) => handleRejectPrice(amount)}
                   onEdit={
                     supportConversationId || readOnly
                       ? undefined
@@ -1145,6 +1357,7 @@ interface BubbleProps {
   acceptBlockedLabel?: string;
   onAcceptPrice?: (amount: number) => void;
   onCounterPrice?: (amount: number) => void;
+  onRejectPrice?: (amount: number) => void;
   onEdit?: (body: string) => void;
   onDelete?: () => void;
   busy?: boolean;
@@ -1164,12 +1377,13 @@ function MessageBubble({
   supportMessage = false,
   message,
   mine,
-  isOwner = false,
+  isOwner: _isOwner = false,
   isLastNonMinePrice = false,
   acceptBlocked = false,
   acceptBlockedLabel = "Dette à régler",
   onAcceptPrice,
   onCounterPrice,
+  onRejectPrice,
   onEdit,
   onDelete,
   busy = false,
@@ -1252,24 +1466,39 @@ function MessageBubble({
               {priceData.message}
             </div>
           )}
-          {!mine && isOwner && isLastNonMinePrice && onAcceptPrice && (
+          {!mine && isLastNonMinePrice && (onAcceptPrice || onRejectPrice) && (
             <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => onCounterPrice?.(priceData.amount)}
-              >
-                Contre-proposition
-              </Button>
-              <Button
-                size="sm"
-                icon={acceptBlocked ? "lock" : "check"}
-                disabled={acceptBlocked}
-                title={acceptBlocked ? acceptBlockedLabel : undefined}
-                onClick={() => onAcceptPrice(priceData.amount)}
-              >
-                {acceptBlocked ? acceptBlockedLabel : "Accepter"}
-              </Button>
+              {onRejectPrice && (
+                <Button
+                  size="sm"
+                  variant="danger"
+                  icon="close"
+                  onClick={() => onRejectPrice(priceData.amount)}
+                >
+                  Refuser
+                </Button>
+              )}
+              {onCounterPrice && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  icon="swap_horiz"
+                  onClick={() => onCounterPrice(priceData.amount)}
+                >
+                  Négocier
+                </Button>
+              )}
+              {onAcceptPrice && (
+                <Button
+                  size="sm"
+                  icon={acceptBlocked ? "lock" : "check"}
+                  disabled={acceptBlocked}
+                  title={acceptBlocked ? acceptBlockedLabel : undefined}
+                  onClick={() => onAcceptPrice(priceData.amount)}
+                >
+                  {acceptBlocked ? acceptBlockedLabel : "Accepter"}
+                </Button>
+              )}
             </div>
           )}
           <div

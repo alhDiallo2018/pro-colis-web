@@ -37,10 +37,17 @@ export interface PublicConfig {
     topics: { icon: string; title: string }[]
     faqs: { question: string; answer: string }[]
   }
-  /** Motifs d'annulation (value/label uniquement). Les règles financières ne
-   *  sont jamais exposées ici : la responsabilité reste calculée côté serveur. */
+  /** Motifs d'annulation : value/label + scope pour filtrer par rôle. Les
+   *  règles financières (pénalité, exemption) restent côté serveur ; le
+   *  `scope` permet au client/chauffeur de ne voir que les motifs qui le
+   *  concernent (`client` | `driver` | `both`). Champ ajouté par l'API sous
+   *  `scope`, dérivé côté serveur de `responsibility`. */
   cancellation: {
-    reasons: { value: string; label: string }[]
+    reasons: {
+      value: string
+      label: string
+      scope?: 'client' | 'driver' | 'both'
+    }[]
   }
   /** Identité légale configurée par l'administrateur (affichée dans les pages
    *  Mentions légales / Confidentialité / CGU). Champs vides = « à compléter ». */

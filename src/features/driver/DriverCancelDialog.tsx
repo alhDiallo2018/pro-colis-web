@@ -42,7 +42,12 @@ export function DriverCancelDialog({ parcel, onClose }: DriverCancelDialogProps)
 
   if (!parcel) return null
 
-  const reasons = publicConfig.data?.cancellation?.reasons ?? []
+  // Côté chauffeur, on retire tout motif strictement destiné au client pour
+  // éviter d'exposer un motif qui ne le concerne pas. Sans scope (API ancienne
+  // version), on garde le motif par défaut.
+  const reasons = (publicConfig.data?.cancellation?.reasons ?? []).filter(
+    (r) => !r.scope || r.scope === 'driver' || r.scope === 'both',
+  )
   const outcome = result
   const error = cancel.error
 

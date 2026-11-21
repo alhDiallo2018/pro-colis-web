@@ -339,6 +339,9 @@ export interface CancellationPartyBreakdown {
 export interface CancellationReasonOption {
   value: string
   label: string
+  /** Rôle auquel le motif est destiné (dérivé côté serveur de
+   *  `responsibility`). `undefined` = motif universel (ancienne API). */
+  scope?: 'client' | 'driver' | 'both'
 }
 
 /**

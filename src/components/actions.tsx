@@ -18,6 +18,24 @@ export function NavButton({ to, icon, children }: { to: string; icon?: string; c
   )
 }
 
+/**
+ * Bouton de recherche de colis (QR + n° de suivi) à placer dans la barre
+ * d'actions des espaces non-client. Discret : icône seule, ouvre la page
+ * publique `/track`.
+ */
+export function TrackParcelButton() {
+  const navigate = useNavigate()
+  return (
+    <Button
+      variant="ghost"
+      icon="qr_code_scanner"
+      aria-label="Rechercher un colis"
+      title="Rechercher un colis"
+      onClick={() => navigate('/track')}
+    />
+  )
+}
+
 const TYPE_ICON: Record<string, string> = {
   parcel_status: 'local_shipping',
   delivery_confirmed: 'task_alt',
