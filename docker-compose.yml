@@ -83,6 +83,7 @@ services:
       BREVO_SMS_SENDER: ${BREVO_SMS_SENDER}
     volumes:
       - api-uploads:/app/uploads
+      - ../SendProColis-Api/data:/app/data
     networks:
       - default
       # Prometheus scrape api:8080/internal/metrics depuis ce réseau ; la route
