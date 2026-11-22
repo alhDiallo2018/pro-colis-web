@@ -76,3 +76,25 @@ export async function getWallet(): Promise<DriverWallet> {
   const w = data.wallet ?? data.data ?? data
   return { ...w, balance: w.balance ?? w.availableBalance ?? 0 }
 }
+
+export interface ClientWallet {
+  userId?: string
+  balance: number
+  totalDeposited: number
+  totalSpent: number
+  totalRefunded: number
+  status?: string
+}
+
+export async function getClientWallet(): Promise<ClientWallet> {
+  const { data } = await api.get('/client/wallet')
+  const payload = data.data ?? data
+  const w = payload.wallet ?? payload
+  return {
+    ...w,
+    balance: Number(w.balance ?? w.availableBalance ?? 0),
+    totalDeposited: Number(w.totalDeposited ?? 0),
+    totalSpent: Number(w.totalSpent ?? 0),
+    totalRefunded: Number(w.totalRefunded ?? 0),
+  }
+}

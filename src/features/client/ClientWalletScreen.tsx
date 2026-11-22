@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Button, Icon } from '@/ds'
 import { Panel } from '@/components/Panel'
 import { QueryState } from '@/components/QueryState'
-import { getWallet } from '@/lib/api/score'
+import { getClientWallet } from '@/lib/api/score'
 import { formatFcfa } from '@/lib/format'
 import { useAuthStore } from '@/store/auth'
 
@@ -11,7 +11,7 @@ export function ClientWalletScreen() {
   const user = useAuthStore((s) => s.user)
   const wallet = useQuery({
     queryKey: ['client', 'wallet', user?.id],
-    queryFn: getWallet,
+    queryFn: getClientWallet,
     enabled: !!user?.id,
   })
 

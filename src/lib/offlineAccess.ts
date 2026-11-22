@@ -17,6 +17,7 @@ const personalReads = new Set([
   '/driver/proposals',
   '/driver/vehicle',
   '/driver/wallet',
+  '/client/wallet',
   '/driver/cash-declarations',
   '/payments/history',
   '/score/balance',
